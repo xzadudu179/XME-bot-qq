@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from ..xmetools import pair as p
 import time
 
-__plugin_name__ = 'wife'
+__plugin_name__ = '/wife'
 __plugin_usage__ = r"""
 今日老婆
 

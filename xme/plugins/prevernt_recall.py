@@ -2,7 +2,7 @@
 import json
 from nonebot import on_command, CommandSession
 
-__plugin_name__ = 'prevrecall'
+__plugin_name__ = '/prevrecall'
 __plugin_usage__ = r"""
 防撤回
 

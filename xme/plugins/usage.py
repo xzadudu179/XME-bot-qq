@@ -4,7 +4,7 @@ from nonebot import on_command, CommandSession
 没什么用 写个文档后就扔了
 """
 
-__plugin_name__ = 'usage'
+__plugin_name__ = '/usage'
 __plugin_usage__ = r"""
 查看帮助
 

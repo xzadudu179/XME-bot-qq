@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 from pandas import read_json
 
-__plugin_name__ = 'weather'
+__plugin_name__ = '/weather'
 __plugin_usage__ = r"""
 查看天气
 

@@ -10,7 +10,7 @@ wife [at] at参数用于at老婆
 """.strip()
 
 @on_command('wife', aliases=('今日老婆'), only_to_me=False, permission=lambda sender: sender.is_groupchat)
-async def echo(session: CommandSession):
+async def _(session: CommandSession):
     user_id = session.event.user_id
     group_id = session.event.group_id
     members_full = await session.bot.get_group_member_list(group_id=group_id)

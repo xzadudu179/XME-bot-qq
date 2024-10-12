@@ -50,6 +50,7 @@ async def _(session: CommandSession):
         return
     wife = await search_wife(wifeinfo, group_id, at_id, session)
     print(at_id, session.self_id)
+    # print(wife)
     at_name = "我"
     try:
         if at_id != session.self_id:
@@ -118,7 +119,8 @@ async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: Base
         用户信息
     """
     pairs = wifeinfo.get(group_id, {}).get("members", [])
-    pair = p.find_pair(pairs, str(user_id))
+    # print(pairs)
+    pair = p.find_pair(pairs, user_id)
     if pair == "":
         user = None
     else:

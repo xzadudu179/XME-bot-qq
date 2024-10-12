@@ -19,7 +19,7 @@ weather <城市名> <未来天气预测(1~3)>
 @on_command('weather', aliases=('天气', 'wea'), only_to_me=False)
 async def _(session: CommandSession):
     params = session.current_arg_text.strip()
-    message = rt.rand_str("请发送你要查询的地区名哦", "发送地区名吧", "发送地区名查询哦", "你想查询哪里的天气呢") + "，或发送 \"取消\" 取消哦"
+    message = rt.rand_str("请在下面发送你要查询的地区名~", "在下面发送地区名吧", "你想查询哪里的天气呢") + "，或发送 \"取消\" 取消哦"
     if not params:
         params = (await session.aget(prompt=message)).strip()
         if params == "取消":
@@ -40,7 +40,7 @@ async def _(session: CommandSession):
                 await session.send(message)
                 return
         except:
-            message = "天数需要写整数哦"
+            message = f"请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
             await session.send(message)
             return
     try:
@@ -79,7 +79,7 @@ async def _(session: CommandSession):
             message += f'未来 {future_days} 天{("" if future_days <= 1 else "")}{("有" if rainning_days == future_days and future_days <= 1 else "")}{("有 " + str(rainning_days) + " 天有" if future_days > 1 and rainning_days < future_days else "都有" if rainning_days == future_days else "没有")}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃'
         message += f"\n{rt.rand_str('数据来自于高德开放平台~', '数据是高德开放平台的哦~', '通过高德开放平台查询的~')}"
     except:
-        message = "查询出错了, 呜呜, 请确认地区名称是否输入正确哦"
+        message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}"
     await session.send(message)
 
 

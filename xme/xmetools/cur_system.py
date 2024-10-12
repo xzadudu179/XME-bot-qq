@@ -38,8 +38,7 @@ def bytes_to_gib(bytes):
 
 def system_info():
     mem = pt.virtual_memory()
-    content = f"""
-    === 当前系统状态 ===
+    content = f"""    === 当前系统状态 ===
 - 机器名: {platform.node()}
 - 系统: {platform.system()} {platform.version()} {platform.machine()}
 - CPU 数量: {pt.cpu_count()}

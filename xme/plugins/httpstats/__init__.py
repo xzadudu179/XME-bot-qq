@@ -1,13 +1,19 @@
 from nonebot import on_command, CommandSession
 from . import httpstats as h
 
-@on_command('httpstats', aliases=('http', 'http状态码', 'httpstatus'), only_to_me=False, permission=lambda sender: sender.is_groupchat)
+__plugin_name__ = 'httpstats'
+__plugin_usage__ = r"""
+查看指定 http 状态码
+httpstats [状态码]
+""".strip()
+
+@on_command('httpstats', aliases=('http', 'http状态码', 'httpstatus'), only_to_me=False)
 async def _(session: CommandSession):
     message = "你没输入状态码诶"
     # doc = httpstats
     params = session.current_arg_text.strip()
     if not params:
-        params = (await session.aget(prompt="请发送状态码哦")).strip()
+        params: str = (await session.aget(prompt="请发送你想要查询的状态码")).strip()
 
     if params:
         search = params.strip()

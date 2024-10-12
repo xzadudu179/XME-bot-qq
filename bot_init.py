@@ -3,8 +3,6 @@ import os
 from nonebot.log import logger
 
 WIFE_INFO = {
-    "days": 0,
-    "groups": {}
 }
 BASIC_INFO = {
     "name": "默认机器人",

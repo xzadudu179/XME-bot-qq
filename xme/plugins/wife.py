@@ -22,7 +22,7 @@ async def _(session: CommandSession):
     user_id = session.event.user_id
     group_id = str(session.event.group_id)
     wifeinfo = await group_init(group_id)
-    pairs = wifeinfo["groups"].get(group_id, [])
+    pairs = wifeinfo.get(group_id, {}).get("members")
     pair = p.find_pair(pairs, user_id)
     if pair == "":
         message = f"[CQ:at,qq={user_id}] 你今日似乎没有老婆 ovo"
@@ -93,11 +93,13 @@ def wife_update(group_id: str, members) -> dict:
     wifeinfo: dict = {}
     with open("./data/wife.json", 'r', encoding='utf-8') as file:
         wifeinfo = json.load(file)
-    pairs = wifeinfo["groups"].get(group_id, [])
-    wifeinfo["days"] = days
-    if pairs == [] or days > wifeinfo['days']:
+    # print(wifeinfo)
+    pairs = wifeinfo.get(group_id, {}).get("members", [])
+    if pairs == [] or days > wifeinfo[group_id]['days']:
+        wifeinfo[group_id]["days"] = days
+        print("|||更新老婆数据|||")
         pairs = p.create_pairs(members)
-        wifeinfo["groups"][group_id] = pairs
+        wifeinfo[group_id]['members'] = pairs
     with open("./data/wife.json", 'w', encoding='utf-8') as file:
         file.write(json.dumps(wifeinfo))
     return wifeinfo
@@ -115,8 +117,8 @@ async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: Base
     Returns:
         用户信息
     """
-    pairs = wifeinfo["groups"].get(group_id, [])
-    pair = p.find_pair(pairs, user_id)
+    pairs = wifeinfo.get(group_id, {}).get("members", [])
+    pair = p.find_pair(pairs, str(user_id))
     if pair == "":
         user = None
     else:

@@ -1,7 +1,6 @@
 import random
 
-def create_pairs(seed: int, lst: list[int]) -> list[tuple]:
-    random.seed(seed)
+def create_pairs(lst: list[int]) -> list[tuple[int,int]]:
     # print(f"seed: {random.seed}")
     random.shuffle(lst)  # 打乱顺序
     pairs = []
@@ -16,10 +15,12 @@ def create_pairs(seed: int, lst: list[int]) -> list[tuple]:
 
 def find_pair(pairs, item):
     for pair in pairs:
+        # print(pair)
         if item in pair:
+            # print(item)
             # 如果找到，返回配对的那个值，如果没有配对则返回 0
             try:
                 return pair[1] if pair[0] == item else pair[0]
-            except:
+            except Exception as ex:
                 return ""
     return ""

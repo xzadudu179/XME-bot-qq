@@ -1,6 +1,7 @@
 from nonebot import on_notice, NoticeSession, log
 from nonebot import Message
 import json
+
 # 撤回
 @on_notice('group_recall')
 async def _(session: NoticeSession):
@@ -13,10 +14,10 @@ async def _(session: NoticeSession):
     if (str(session.event.user_id) != str(session.event.operator_id)) and is_prev_recall:
         return await session.send(f"刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了一条{'我' if session.event.user_id == session.self_id else '别人'}的消息ovo")
     if is_prev_recall:
-        await session.send(f"↓ 刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了以下消息ovo ↓\n{Message(recalled_message['message'])}")
-
-# 将函数注册为群成员增加通知处理器
-@on_notice('group_increase')
-async def _(session: NoticeSession):
-    # 发送欢迎消息
-    await session.send(f'欢迎 [CQ:at,qq={session.event.user_id}] 进群（？')
+        str_message = ""
+        try:
+            cqmessage = str(Message(recalled_message['message']))
+            str_message = cqmessage
+        except:
+            str_message = recalled_message['message']
+        await session.send(f"↓ 刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了以下消息ovo ↓\n{str_message}")

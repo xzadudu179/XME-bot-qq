@@ -1,4 +1,5 @@
 from nonebot import on_command, CommandSession
+from nonebot import on_natural_language, NLPSession, IntentCommand
 from ..xmetools import random_tools as rt
 from ..xmetools import request_tools as req
 from ..xmetools import date_tools as dt
@@ -7,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from pandas import read_json
 
-__plugin_name__ = '/weather'
+__plugin_name__ = 'weather'
 __plugin_usage__ = r"""
 查看天气
 
@@ -80,3 +81,8 @@ async def _(session: CommandSession):
     except:
         message = "查询出错了, 呜呜, 请确认地区名称是否输入正确哦"
     await session.send(message)
+
+
+@on_natural_language(keywords={'天气'})
+async def _(session: NLPSession):
+    return IntentCommand(90, 'weather')

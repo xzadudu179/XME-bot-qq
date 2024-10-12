@@ -1,10 +1,11 @@
 import nonebot
+import config
 from nonebot import on_command, CommandSession
 """
 没什么用 写个文档后就扔了
 """
 
-__plugin_name__ = '/usage'
+__plugin_name__ = 'usage'
 __plugin_usage__ = r"""
 查看帮助
 
@@ -20,7 +21,7 @@ async def _(session: CommandSession):
     if not arg:
         # 如果用户没有发送参数，则发送功能列表
         await session.send(
-            'XME-bot 现在有以下功能哦：\n\n' + '\n'.join(p.name for p in plugins))
+            f'[XME-bot]\n指令开头字符: {" ".join(config.COMMAND_START)} 中任选\nXME-bot 现在有以下功能哦：\n' + '\n'.join(p.name for p in plugins))
         return
 
     # 如果发了参数则发送相应命令的使用帮助

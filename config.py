@@ -1,7 +1,7 @@
 from nonebot.default_config import *
 
 SUPERUSERS = {1795886524}
-COMMAND_START = {'!', '/', '！', '.'}
+COMMAND_START = ['/', '!', '！', '.']
 HOST = '0.0.0.0'
 PORT = 17980
 NICKNAME = {'XME', 'xme'}

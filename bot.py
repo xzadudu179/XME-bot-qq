@@ -1,4 +1,5 @@
 import nonebot
+import logging
 from os import path
 from xme.xmetools import color_manage as c
 import os
@@ -7,6 +8,7 @@ import config
 import bot_init
 
 if __name__ == '__main__':
+    bot_init.saving_log(logging.getLogger())
     nonebot.init(config)
     nonebot.load_plugins(
         path.join(path.dirname(__file__), 'xme', 'plugins'),

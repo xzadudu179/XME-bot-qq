@@ -4,20 +4,32 @@ from nonebot.session import BaseSession
 from ..xmetools import pair as p
 from ..xmetools import date_tools as d
 import json
-import time
+import config
 
+alias = ['今日老婆']
+cancanneedalias = ['看看老婆', 'peekwife', 'kkndwife', 'kkndlp', 'kklp']
 __plugin_name__ = 'wife'
-__plugin_usage__ = r"""
-今日老婆
-
-wife [at] at参数用于at老婆
-cancanneedwife [at用户] 看看被at人的老婆
+__plugin_usage__ = rf"""
+指令 {__plugin_name__} & cancanneedwife
+简介：今日老婆相关指令
+作用：
+- {__plugin_name__}: 查看今日老婆群员
+- ancanneedwife: 查看指定人的老婆群员
+用法：
+- {config.COMMAND_START[0]}{__plugin_name__}
+- {config.COMMAND_START[0]}cancanneedwife (at用户)
+权限/可用范围：
+- {__plugin_name__}: 在群内使用
+- cancanneedwife: 在群内使用
+别名：
+- {__plugin_name__}: {', '.join(alias)}
+- cancanneedwife: {', '.join(cancanneedalias)}
 """.strip()
+
 
 members = []
 
-
-@on_command('wife', aliases=('今日老婆'), only_to_me=False, permission=lambda sender: sender.is_groupchat)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
 async def _(session: CommandSession):
     user_id = session.event.user_id
     group_id = str(session.event.group_id)
@@ -33,7 +45,7 @@ async def _(session: CommandSession):
     await session.send(message)
 
 
-@on_command('cancanneedwife', aliases=('看看老婆', 'peekwife', 'kkndwife', 'kkndlp', 'kklp'), only_to_me=False, permission=lambda sender: sender.is_groupchat)
+@on_command('cancanneedwife', aliases=cancanneedalias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
 async def _(session: CommandSession):
     user_id = session.event.user_id
     group_id = str(session.event.group_id)

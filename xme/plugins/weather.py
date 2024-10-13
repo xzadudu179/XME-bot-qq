@@ -7,16 +7,23 @@ from math import ceil
 from collections import defaultdict
 from datetime import datetime
 from pandas import read_json
+import config
 
+alias = ['天气', 'wea', '查看天气']
 __plugin_name__ = 'weather'
-__plugin_usage__ = r"""
-查看天气
-
-weather <城市名> <未来天气预测(1~3)>
+__plugin_usage__ = rf"""
+指令 {__plugin_name__}
+简介：查询天气
+作用：查看指定城市的天气
+用法：
+- {config.COMMAND_START[0]}{__plugin_name__} <城市名> <未来天气预测天数(1~3)>
+权限/可用范围：无
+别名：{', '.join(alias)}
 """.strip()
 
+
 # 天气预报查看
-@on_command('weather', aliases=('天气', 'wea'), only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     params = session.current_arg_text.strip()
     message = rt.rand_str("请在下面发送你要查询的地区名~", "在下面发送地区名吧", "你想查询哪里的天气呢") + "，或发送 \"取消\" 取消哦"

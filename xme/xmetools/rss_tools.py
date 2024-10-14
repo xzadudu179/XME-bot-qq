@@ -11,9 +11,9 @@ def show_rss(rss_list, k):
     result = ""
     for i, rss in enumerate(rss_list):
         if i >= k: break
-        result += f"{i + 1}. {rss['title']}\n\t发布时间: {rss['published']}\n\t链接: {rss['link']}\n\t标签: {', '.join([tag['term'] for tag in rss['tags']])}\n\n"
+        result += f"{i + 1}. 《{rss['title']}》\n\t发布时间: {rss['published']}\n\t链接: {rss['link']}\n\t标签: {', '.join([tag['term'] for tag in rss['tags']])}\n\n"
         # print(rss)
-    return result
+    return result.strip()
 
 if __name__ == "__main__":
     print(show_rss(catch_179rss(), 5))

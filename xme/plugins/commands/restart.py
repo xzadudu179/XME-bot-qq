@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 import subprocess
 import os, signal
 import bot_variables as v
+import config
 from xme.xmetools.doc_gen import CommandDoc
 
 alias = ['重启']
@@ -21,7 +22,8 @@ async def _(session: CommandSession):
     await session.send("正在重启 uwu")
     try:
         subprocess.Popen(['python', './bot.py'])
-        await session.send("已启动新的 xmebot 进程啦, 正在杀死原进程...")
+        if config.DEBUG:
+            await session.send("[DEBUG] 已启动新的 xmebot 进程啦, 正在杀死原进程...")
         try:
             # os.kill(oldpid, signal.SIGTERM)
             os._exit(0)

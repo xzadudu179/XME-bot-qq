@@ -8,7 +8,7 @@ throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 @on_command('throw', aliases=throw_alias, only_to_me=False, permission=lambda x: x.is_groupchat)
 async def _(session: CommandSession):
     if not session.current_arg_text.strip():
-        await session.send(f"{config.COMMAND_START[0]}throw (漂流瓶内容)")
+        await session.send(f"漂流瓶似乎没有内容呢ovo\n格式：\n{config.COMMAND_START[0]}throw (漂流瓶内容)")
         return
     if len(session.current_arg_text.strip()) > 200:
         await session.send(f"瓶子的内容太多啦！要 200 字以内哦")

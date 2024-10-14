@@ -1,5 +1,40 @@
 from datetime import datetime, timedelta
 
+def secs_to_ymdh(secs):
+    """将秒数转换为年月天小时分钟秒
+
+    Args:
+        secs (int): 秒数
+
+    Returns:
+        str: 转换成的时间格式
+    """
+    days = secs / 86400
+    # 计算年数
+    years = days // 365
+    # 计算剩余天数
+    remaining_days = days % 365
+    # 计算月数
+    months = remaining_days // 30
+    # 计算剩余天数
+    remaining_days = remaining_days % 30
+    # 计算小时数
+    hours = 24 * (remaining_days % 1)
+
+    mins = 24 * 60 * (remaining_days % 1) % 60
+
+    remaining_secs = secs % 60 % 60
+
+    # 返回格式化后的字符串z
+    formatted_string = "" if years < 1 else str(int(years)) + "年"
+    formatted_string += "" if months < 1 else str(int(months)) + "个月"
+    formatted_string += "" if remaining_days < 1 else str(int(remaining_days)) + "天"
+    formatted_string += str(int(hours)) + "小时"
+    formatted_string += str(int(mins)) + "分钟"
+    formatted_string += str(int(remaining_secs)) + "秒"
+    return formatted_string
+
+
 def curr_days():
     """当前天数(从1970年1月1日算)
     """

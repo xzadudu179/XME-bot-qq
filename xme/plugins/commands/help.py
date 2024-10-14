@@ -29,7 +29,7 @@ async def _(session: CommandSession):
     if config.DEBUG:
         for p in plugins:
             try:
-                help_list_str += "\n- " + f"{p.name}\t" + p.usage.split('简介：')[1].split('\n')[0].strip()
+                help_list_str += "\n- " + f"{p.usage.split(']')[0]}] {p.name}\t" + p.usage.split('简介：')[1].split('\n')[0].strip()
             except:
-                help_list_str += "\n- " + f"{p.name}\t"
-    await session.send(f'[XME-bot V0.1.0]\n指令开头字符: {" ".join(config.COMMAND_START)} 中任选\n' + "XME-Bot 现在有以下功能哦：" + help_list_str + f"\nXME-Bot 机器人帮助文档: http://docs.xme.179.life/#/help\n可以使用 {config.COMMAND_START[0]}help 功能名 查看某功能的详细介绍哦")
+                help_list_str += "\n- " + f"[未知] {p.name}\t"
+    await session.send(f'[XME-bot V0.1.1]\n指令开头字符: {" ".join(config.COMMAND_START)} 中任选\n' + "XME-Bot 现在有以下功能哦：" + help_list_str + f"\nXME-Bot 机器人帮助文档: http://docs.xme.xzadudu179.top/#/help\n可以使用 {config.COMMAND_START[0]}help 功能名 查看某功能的详细介绍哦")

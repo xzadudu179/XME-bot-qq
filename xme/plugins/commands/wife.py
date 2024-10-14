@@ -1,30 +1,34 @@
 from nonebot import on_command, CommandSession
 import nonebot
 from nonebot.session import BaseSession
-from ..xmetools import pair as p
-from ..xmetools import date_tools as d
+from ...xmetools import pair as p
+from ...xmetools import date_tools as d
 import json
-import config
+from ...xmetools.doc_gen import PluginDoc
 
+commands = ['wife', 'cancanneedwife']
+command_properties = [
+    {
+        'name': 'wife',
+        'introduction': '查看你今日的老婆群员'
+    },
+    {
+        'name': 'cancanneedwife',
+        'introduction': '查看指定群员的今日老婆群员'
+    }
+]
 alias = ['今日老婆']
 cancanneedalias = ['看看老婆', 'peekwife', 'kkndwife', 'kkndlp', 'kklp']
 __plugin_name__ = 'wife'
-__plugin_usage__ = rf"""
-指令 {__plugin_name__} & cancanneedwife
-简介：今日老婆相关指令
-作用：
-- {__plugin_name__}: 查看今日老婆群员
-- ancanneedwife: 查看指定人的老婆群员
-用法：
-- {config.COMMAND_START[0]}{__plugin_name__}
-- {config.COMMAND_START[0]}cancanneedwife (at用户)
-权限/可用范围：
-- {__plugin_name__}: 在群内使用
-- cancanneedwife: 在群内使用
-别名：
-- {__plugin_name__}: {', '.join(alias)}
-- cancanneedwife: {', '.join(cancanneedalias)}
-""".strip()
+__plugin_usage__ = str(PluginDoc(
+    name=__plugin_name__,
+    desc="今日老婆相关指令",
+    introduction="查看自己的今日老婆，或者是别人的今日老婆",
+    contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
+    usages=[f'{__plugin_name__}', 'cancanneedwife (at用户)'],
+    permissions=[['在群内使用'], ['在群内使用']],
+    alias_list=[alias, cancanneedalias]
+))
 
 
 members = []
@@ -53,7 +57,7 @@ async def _(session: CommandSession):
     arg = session.current_arg.strip()
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
-        at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0])
+        at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
     # 如果是对 xme 说
     elif session.ctx['to_me']:
         at_id = session.self_id

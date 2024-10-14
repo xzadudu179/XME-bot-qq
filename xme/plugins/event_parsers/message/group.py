@@ -1,9 +1,6 @@
 from nonebot import Message
 import nonebot
 from nonebot.session import BaseSession
-from ...xmetools import color_manage as c
-import time
-import random
 
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 

@@ -2,15 +2,21 @@ from nonebot import on_command, CommandSession
 import subprocess
 import os, signal
 import bot_variables as v
+from xme.xmetools.doc_gen import CommandDoc
 
+alias = ['重启']
 __plugin_name__ = 'restart'
-__plugin_usage__ = r"""
-重启 bot
-权限：需要 SUPERUSER 身份
-restart
-""".strip()
 
-@on_command('restart', aliases=('重启'), only_to_me=True, permission=lambda x: x.is_superuser)
+__plugin_usage__ = str(CommandDoc(
+    name=__plugin_name__,
+    desc='重启 bot',
+    introduction='使机器人实例重新启动',
+    usage=f'',
+    permissions=["需要 @ bot 或是呼叫 bot", "是 SUPERUSER"],
+    alias=alias
+))
+
+@on_command('restart', aliases=alias, only_to_me=True, permission=lambda x: x.is_superuser)
 async def _(session: CommandSession):
     await session.send("正在重启 uwu")
     try:

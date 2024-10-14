@@ -1,6 +1,6 @@
 import nonebot
 from nonebot.session import BaseSession
-from ...xmetools import color_manage as c
+from ....xmetools import color_manage as c
 from zhipuai import ZhipuAI
 import time
 import random

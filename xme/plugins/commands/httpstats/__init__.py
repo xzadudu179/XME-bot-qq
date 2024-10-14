@@ -1,18 +1,27 @@
 from nonebot import on_command, CommandSession
 from . import httpstats as h
 import config
+from xme.xmetools.doc_gen import CommandDoc
 
 alias = ['http', 'http状态码']
 __plugin_name__ = 'httpcode'
-__plugin_usage__ = rf"""
-指令 {__plugin_name__}
-简介：查询状态码
-作用：查看指定 http 状态码和它的猫猫图
-用法：
-- {config.COMMAND_START[0]}{__plugin_name__} <状态码>
-权限/可用范围：无
-别名：{', '.join(alias)}
-""".strip()
+# __plugin_usage__ = rf"""
+# 指令 {__plugin_name__}
+# 简介：查询状态码
+# 作用：查看指定 http 状态码和它的猫猫图
+# 用法：
+# - {config.COMMAND_START[0]}{__plugin_name__} <状态码>
+# 权限/可用范围：无
+# 别名：{', '.join(alias)}
+# """.strip()
+__plugin_usage__ = str(CommandDoc(
+    name=__plugin_name__,
+    desc='查询状态码',
+    introduction='查看指定 http 状态码和它的猫猫图',
+    usage=f'<状态码>',
+    permissions=[],
+    alias=alias
+))
 
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)

@@ -1,25 +1,32 @@
 from nonebot import on_command, CommandSession
 from nonebot import on_natural_language, NLPSession, IntentCommand
-from ..xmetools import random_tools as rt
-from ..xmetools import request_tools as req
-from ..xmetools import date_tools as dt
-from math import ceil
-from collections import defaultdict
+from ...xmetools import random_tools as rt
+from ...xmetools import request_tools as req
+from ...xmetools import date_tools as dt
+from xme.xmetools.doc_gen import CommandDoc
 from datetime import datetime
-from pandas import read_json
 import config
 
 alias = ['天气', 'wea', '查看天气']
 __plugin_name__ = 'weather'
-__plugin_usage__ = rf"""
-指令 {__plugin_name__}
-简介：查询天气
-作用：查看指定城市的天气
-用法：
-- {config.COMMAND_START[0]}{__plugin_name__} <城市名> <未来天气预测天数(1~3)>
-权限/可用范围：无
-别名：{', '.join(alias)}
-""".strip()
+# __plugin_usage__ = rf"""
+# 指令 {__plugin_name__}
+# 简介：查询天气
+# 作用：查看指定地区的天气
+# 用法：
+# - {config.COMMAND_START[0]}{__plugin_name__} <地区名> <未来天气预测天数(1~3)>
+# 权限/可用范围：无
+# 别名：{', '.join(alias)}
+# """.strip()
+
+__plugin_usage__ = str(CommandDoc(
+    name=__plugin_name__,
+    desc='查询天气',
+    introduction='查看指定地区的天气',
+    usage=f'<地区名> <未来天气预测天数(1~3)>',
+    permissions=[],
+    alias=alias
+))
 
 
 # 天气预报查看

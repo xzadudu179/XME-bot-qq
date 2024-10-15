@@ -39,11 +39,11 @@ def bot_init():
     init_json(wife_path, WIFE_INFO)
 
     # botinfo
-    botinfo_path = f'./data/botinfo.json'
+    botinfo_path = f'./data/_botinfo.json'
     init_json(botinfo_path, BASIC_INFO)
 
     # botsettings
-    botsettings_path = "./data/botsettings.json"
+    botsettings_path = "./data/_botsettings.json"
     init_json(botsettings_path, BOT_SETTINGS)
 
     bottles_path = "./data/drift_bottles.json"

@@ -29,7 +29,7 @@ async def _(session: CommandSession):
     group_id = str(session.event.group_id)
     settings = {}
     try:
-        with open("./data/botsettings.json", 'r', encoding='utf-8') as jsonfile:
+        with open("./data/_botsettings.json", 'r', encoding='utf-8') as jsonfile:
             settings = json.load(jsonfile)
     except:
         settings = {
@@ -47,5 +47,5 @@ async def _(session: CommandSession):
         await session.send("防撤回功能已关ovo")
     else:
         await session.send(message)
-    with open ("./data/botsettings.json", 'w', encoding='utf-8') as jsonfile:
+    with open ("./data/_botsettings.json", 'w', encoding='utf-8') as jsonfile:
         jsonfile.write(json.dumps(settings, indent=4))

@@ -18,6 +18,7 @@ BASIC_INFO = {
 }
 
 DRIFT_BOTTLES_INFO = {
+    "max_index": 0,
     "bottles": [
     ]
 }

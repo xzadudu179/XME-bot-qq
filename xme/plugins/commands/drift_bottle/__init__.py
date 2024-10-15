@@ -8,11 +8,13 @@ command_properties = [
         'name': 'throw',
         'introduction': '扔一个漂流瓶',
         'usage': '(瓶子内容)',
+        'permission': ['在群内使用']
     },
     {
         'name': 'pickup',
         'introduction': '尝试捡一个漂流瓶',
-        'usage': ''
+        'usage': '',
+        'permission': []
     }
 ]
 aliases = [
@@ -26,6 +28,6 @@ __plugin_usage__ = str(PluginDoc(
     introduction="扔/捡来自各个群组的漂流瓶~",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
-    permissions=[['在群内使用'], ['在群内使用']],
+    permissions=[f"{prop['permission']}" for prop in command_properties],
     alias_list=aliases
 ))

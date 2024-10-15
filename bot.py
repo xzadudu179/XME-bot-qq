@@ -17,7 +17,8 @@ if __name__ == '__main__':
     load_plugins_list(
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'commands'), 'xme.plugins.commands'],
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'event_parsers'), 'xme.plugins.event_parsers'],
-        [path.join(path.dirname(__file__), 'xme', 'plugins', 'server_app'), 'xme.plugins.server_app']
+        [path.join(path.dirname(__file__), 'xme', 'plugins', 'server_app'), 'xme.plugins.server_app'],
+        [path.join(path.dirname(__file__), 'xme', 'plugins', 'schedulers'), 'xme.plugins.schedulers'],
     )
 
     bot_init.bot_init()

@@ -8,6 +8,7 @@ command_properties = [
         'name': 'dice',
         'introduction': '投指定面数 * 指定数量的骰子',
         'usage': '(骰子面数) <骰子数量>',
+        'permission': []
     }
 ]
 aliases = [
@@ -20,6 +21,6 @@ __plugin_usage__ = str(PluginDoc(
     introduction="自定义面数or规则的骰子",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
-    permissions=[],
+    permissions=[f"{prop['permission']}" for prop in command_properties],
     alias_list=aliases
 ))

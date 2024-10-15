@@ -10,7 +10,7 @@ from xme.xmetools import date_tools
 async def send_time_message():
     bot = nonebot.get_bot()
     say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-    something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{say['from_who']}"
+    something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{'无名' if not (x:=say['from_who']) else x}"
     now = datetime.now(pytz.timezone('Asia/Shanghai'))
     try:
         for group in config.GROUPS_WHITELIST:
@@ -21,16 +21,20 @@ async def send_time_message():
 
 @nonebot.scheduler.scheduled_job('cron', hour='12')
 async def _():
+    print("send")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='8')
 async def _():
+    print("send")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='20')
 async def _():
+    print("send")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='0')
 async def _():
+    print("send")
     await send_time_message()

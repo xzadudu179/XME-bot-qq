@@ -20,7 +20,7 @@ __plugin_usage__= str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias)
 async def jrrp(session: CommandSession):
-    qq = session.ctx['user_id']
+    qq = session.event.user_id
     key = base64_encode("嘿嘿嘿...179....嘿嘿嘿")
     result = get_luck(qq, key)
     if result == 0:

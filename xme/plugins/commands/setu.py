@@ -20,7 +20,7 @@ __plugin_usage__= str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias)
 async def setu(session: CommandSession):
-    api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true"
+    api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
     result = fetch_image_data(api_url)
     if result:
         await session.send(f"""

@@ -36,16 +36,16 @@ class PluginDoc(Doc):
             contents_lines += f"{content}\n"
 
         return rf"""
-[插件] {self.name}
-简介：{self.desc}
-作用：{self.introduction}
-内容：
-{contents_lines}所有指令用法：
-- {config.COMMAND_START[0]}{usages_lines}
-权限/可用范围：
-{permissions_lines}别名：
-{alias_lines}
-""".strip()
+        [插件] {self.name}
+        简介：{self.desc}
+        作用：{self.introduction}
+        内容：
+        {contents_lines}所有指令用法：
+        - {config.COMMAND_START[0]}{usages_lines}
+        权限/可用范围：
+        {permissions_lines}别名：
+        {alias_lines}
+        """.strip()
 
 class CommandDoc(Doc):
 
@@ -57,11 +57,11 @@ class CommandDoc(Doc):
 
     def __str__(self) -> str:
         return rf"""
-[指令] {self.name}
-简介：{self.desc}
-作用：{self.introduction}
-用法：
-- {config.COMMAND_START[0]}{self.name} {self.usage}
-权限/可用范围：{DEFAULT_PERMISSIONS if len(self.permissions) < 1 else ' & '.join(self.permissions)}
-别名：{'无' if len(self.alias) < 1 else ', '.join(self.alias)}
-""".strip()
+        [指令] {self.name}
+        简介：{self.desc}
+        作用：{self.introduction}
+        用法：
+        - {config.COMMAND_START[0]}{self.name} {self.usage}
+        权限/可用范围：{DEFAULT_PERMISSIONS if len(self.permissions) < 1 else ' & '.join(self.permissions)}
+        别名：{'无' if len(self.alias) < 1 else ', '.join(self.alias)}
+        """.strip()

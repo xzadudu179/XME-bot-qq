@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 import config
 
+DEFAULT_PERMISSIONS = "在群内使用"
+
 class Doc():
     def __init__(self, name: str, desc: str, introduction: str) -> None:
         self.name = name
@@ -28,7 +30,7 @@ class PluginDoc(Doc):
                 alias_lines += f"{line_head}无\n"
             try:
                 # print(self.permissions[i])
-                permissions_lines += f"{line_head}{'无' if len(self.permissions[i]) < 1 else ' & '.join(self.permissions[i])}\n"
+                permissions_lines += f"{line_head}{DEFAULT_PERMISSIONS if len(self.permissions[i]) < 1 else ' & '.join(self.permissions[i])}\n"
             except:
                 permissions_lines += f"{line_head}无\n"
             contents_lines += f"{content}\n"
@@ -60,6 +62,6 @@ class CommandDoc(Doc):
 作用：{self.introduction}
 用法：
 - {config.COMMAND_START[0]}{self.name} {self.usage}
-权限/可用范围：{'无' if len(self.permissions) < 1 else ' & '.join(self.permissions)}
+权限/可用范围：{DEFAULT_PERMISSIONS if len(self.permissions) < 1 else ' & '.join(self.permissions)}
 别名：{'无' if len(self.alias) < 1 else ', '.join(self.alias)}
 """.strip()

@@ -17,3 +17,6 @@ async def send_cmd(cmd_string, session, check_permission=True):
         name=name,
         current_arg=args,
         check_perm=check_permission)
+
+async def find_command_by_args(input_string):
+    return CommandManager._aliases.get(input_string, False)

@@ -12,7 +12,7 @@ async def send_time_message():
     say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
     something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{'无名' if not (x:=say['from_who']) else x}"
     now = datetime.now(pytz.timezone('Asia/Shanghai'))
-    for group in config.GROUPS_WHITELIST:
+    for group in config.SCHEDULER_GROUP:
         try:
             await bot.send_group_msg(group_id=group,
                                 message=f'{something_to_say}')

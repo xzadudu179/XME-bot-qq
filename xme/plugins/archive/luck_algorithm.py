@@ -43,5 +43,6 @@ def get_luck(__identifier__, __key__, date=None, digits=8):
         code %= divider
 
         return code
-    except (TypeError, ValueError):
+    except (TypeError, ValueError) as ex:
+        print(ex)
         return -1

@@ -43,6 +43,7 @@ class ImageData:
 async def fetch_image_data(url):
     response = await request_tools.fetch_data(url)
     data = json.loads(response)
+    print(data)
 
     if data.get('error'):
         print(f"Error: {data['error']}")
@@ -51,7 +52,7 @@ async def fetch_image_data(url):
     image_data = data['data'][0]
     return ImageData(
         title=image_data['title'],
-        url=image_data['urls']['original'],
+        url=image_data['urls']['small'],
         pid=image_data['pid'],
         author=image_data['author'],
         tags=image_data['tags']

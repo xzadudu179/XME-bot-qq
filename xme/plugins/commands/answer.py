@@ -16,13 +16,13 @@ __plugin_usage__ = str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
-    message = "呜呜，出现未知错误"
+    message = "呜呜，书突然找不到了"
     try:
         ans_json = json.loads(await request_tools.fetch_data('https://api.andeer.top/API/answer.php'))
         if ans_json['code'] != 200:
-            message = "呜呜，答案获取失败"
+            message = "呜呜，书翻不开了..."
         else:
-            message = f"[CQ:at,qq={session.event.user_id}]\n答案之书：\n\"{ans_json['data']['zh']}\""
+            message = f"[CQ:at,qq={session.event.user_id}]\n答案之书：\n\"{ans_json['data']['zh']}\"\n\"{ans_json['data']['en']}\""
     except Exception as ex:
         print(ex)
     finally:

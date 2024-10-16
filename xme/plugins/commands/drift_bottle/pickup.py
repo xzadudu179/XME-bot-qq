@@ -39,6 +39,7 @@ async def _(session: CommandSession):
         bottle_card += f"\n你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。"
     await session.send(bottle_card)
     print("捡到了瓶子")
+    content = ""
     if broken:
         print("瓶子碎了")
         await session.send("啊，你不小心把瓶子摔碎了...")
@@ -52,21 +53,24 @@ async def _(session: CommandSession):
         reply = (await session.aget()).strip()
         if reply == '-like':
             # 重新读取
+            content = "点赞成功~"
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
-            print("点赞了")
+            print("重新读取")
             bottles_dict['bottles'][bottle['index'] - 1]['likes'] += 1
+            print("点赞了")
             print(bottles_dict['bottles'][bottle['index'] - 1])
-            await session.send("点赞成功~")
         elif reply == '-rep':
-            await session.send("举报成功")
+            content = "举报成功"
             for superuser in config.SUPERUSERS:
                 await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nIndex: {bottle['index']}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
         else:
             await send_cmd(reply, session)
-            bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+            return
+            # print("重新读取")
+            # bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
             # 重新读取
-            print("重新读取")
     print("保存文件中")
     print(bottles_dict['bottles'][bottle['index'] - 1])
     # print(bottle)
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+    await session.send(content)

@@ -52,24 +52,11 @@ async def _(session: CommandSession):
         elif reply == '-rep':
             await session.send("举报成功")
             for superuser in config.SUPERUSERS:
-                await session.bot.send_private_msg(user_id=session[superuser],message=f"有人举报漂流瓶内容，漂流瓶信息如下：\n{bottle}")
+                await session.bot.send_private_msg(user_id=superuser,message=f"有人举报漂流瓶内容，漂流瓶信息如下：\n{bottle}")
         else:
-            send_cmd(reply, session)
-            # name = reply.split(" ")[0]
-            # if name[0] in config.COMMAND_START:
-            #     name = name[1:]
-            # alias_cmd: Command = CommandManager._aliases.get(name, False)
-            # if alias_cmd:
-            #     name = alias_cmd.name
-            # # print(CommandManager._find_command(self=CommandManager, name=name))
-            # args = " ".join((reply.split(" ")[1:])) if len(reply.split(" ")) > 1 else ""
-            # print(f"parse command: {name} | {args}")
-            # await call_command(
-            #     bot=session.bot,
-            #     event=session.event,
-            #     name=name,
-            #     current_arg=args,
-            #     check_perm=True)
+            await send_cmd(reply, session)
+    print("保存文件中")
+    print(bottle)
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))

@@ -4,7 +4,7 @@ import config
 from xme.xmetools.doc_gen import CommandDoc
 from nonebot import on_command, CommandSession
 
-alias = ["九九文章", "rss179", "atom179", "xmeatom"]
+alias = ["九九文章", "rss179", "atom179", "xmeatom", "rss"]
 __plugin_name__ = 'xmerss'
 
 __plugin_usage__ = str(CommandDoc(

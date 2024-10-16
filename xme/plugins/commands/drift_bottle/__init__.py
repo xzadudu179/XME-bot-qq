@@ -28,6 +28,6 @@ __plugin_usage__ = str(PluginDoc(
     introduction="扔/捡来自各个群组的漂流瓶~",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
-    permissions=[f"{prop['permission']}" for prop in command_properties],
+    permissions=[prop['permission'] for prop in command_properties],
     alias_list=aliases
 ))

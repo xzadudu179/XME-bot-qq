@@ -27,6 +27,7 @@ class PluginDoc(Doc):
             except:
                 alias_lines += f"{line_head}无\n"
             try:
+                # print(self.permissions[i])
                 permissions_lines += f"{line_head}{'无' if len(self.permissions[i]) < 1 else ' & '.join(self.permissions[i])}\n"
             except:
                 permissions_lines += f"{line_head}无\n"

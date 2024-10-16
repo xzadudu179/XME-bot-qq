@@ -21,6 +21,6 @@ __plugin_usage__ = str(PluginDoc(
     introduction="自定义面数or规则的骰子",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
-    permissions=[f"{prop['permission']}" for prop in command_properties],
+    permissions=[prop['permission'] for prop in command_properties],
     alias_list=aliases
 ))

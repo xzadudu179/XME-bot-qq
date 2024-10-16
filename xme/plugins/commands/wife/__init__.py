@@ -23,6 +23,6 @@ __plugin_usage__ = str(PluginDoc(
     introduction="查看自己的今日老婆，或者是别人的今日老婆",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f'{__plugin_name__}', 'cancanneedwife (at用户)'],
-    permissions=[f"{prop['permission']}" for prop in command_properties],
+    permissions=[prop['permission'] for prop in command_properties],
     alias_list=[wife_alias, cancanneedalias]
 ))

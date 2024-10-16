@@ -27,6 +27,8 @@ async def setu(session: CommandSession):
 作者: {result.author}
 -----------
 [CQ:image,file={result.url}]""".strip())
+    else:
+        await session.send("无法获取图片信息.")
 
 
 class ImageData:

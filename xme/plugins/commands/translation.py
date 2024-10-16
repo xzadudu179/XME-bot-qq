@@ -41,7 +41,7 @@ async def _(session: CommandSession):
         content = response.choices[0].message.content
         print(content)
         if content.strip() == "|NONE|":
-            await session.send(f"无法翻译哦，因为你先前指定了一个未知的语言 \"{lan}\" xwx")
+            await session.send(f"无法翻译哦，因为你先前指定了一个未知的语言 \"{lan}\"，或是ChatGLM并不知道你要翻译的内容的语言是什么 xwx")
             return
         await session.send(f"以下是 GLM-4 输出结果：\n{content}")
     except Exception as ex:

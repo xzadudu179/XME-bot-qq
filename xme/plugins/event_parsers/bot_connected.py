@@ -13,6 +13,7 @@ async def connect(event: aiocqhttp.Event):
     if not n.is_prime(var.currentpid):
         message = f"[DEBUG] XME-bot 准备好啦~"
         if not config.DEBUG: return
+    # 我不觉得它有可能是质数
     else:
         message = f"我的 PID 是质数诶~ ({var.currentpid})"
     for group_id in config.GROUPS_WHITELIST:

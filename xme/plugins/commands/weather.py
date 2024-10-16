@@ -58,7 +58,7 @@ async def _(session: CommandSession):
             await session.send(message)
             return
     try:
-        weathers = req.get_weather(city)["forecasts"][0]
+        weathers = await req.get_weather(city)["forecasts"][0]
         city_name = weathers["city"]
         report_time = weathers["reporttime"]
         weather_today = weathers["casts"][0]

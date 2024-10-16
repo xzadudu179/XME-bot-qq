@@ -2,27 +2,17 @@ from nonebot import on_notice, NoticeSession, log
 from datetime import datetime
 from xme.xmetools import color_manage as c
 import aiohttp
-from nonebot import Message
 import json
+from nonebot import Message
+from xme.xmetools import json_tools
+from xme.xmetools.request_tools import fetch_data
 
-async def fetch_data(session, url):
-    try:
-        async with session.get(url) as response:
-            if response.status == 200:
-                data = await response.text()
-                return data
-            else:
-                return None
-    except Exception as e:
-        print(e)
-        return None
 
 # 撤回
 @on_notice('group_recall')
 async def _(session: NoticeSession):
     settings = {}
-    with open ("./data/botsettings.json", 'r', encoding='utf-8') as jsonfile:
-        settings = json.load(jsonfile)
+    settings = json_tools.read_from_path("./data/_botsettings.json")
     recalled_message = await session.bot.api.get_msg(message_id=session.event['message_id'])
     # print(session.event.group_id, session.event.user_id)
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.operator_id)
@@ -30,21 +20,20 @@ async def _(session: NoticeSession):
     group = await session.bot.get_group_info(group_id=session.event.group_id)
 
     # 读取 qq 等级
-    async with aiohttp.ClientSession() as aiosession:
-        try:
-            user_qq_data = await fetch_data(aiosession, f"https://apis.kit9.cn/api/qq_material/api.php?qq={session.event.operator_id}")
-            # print(c.gradient_text("#dda3f8","#66afff" ,text=user_qq_data))
-            user_qq_level = json.loads(user_qq_data)['data']['level']
-        except Exception as ex:
-            print(ex)
-            user_qq_level = "无法获取"
-        try:
-            sender_qq_data = await fetch_data(aiosession, f"https://apis.kit9.cn/api/qq_material/api.php?qq={sender['user_id']}")
-            # print(c.gradient_text("#dda3f8","#66afff" ,text=sender_qq_data))
-            sender_qq_level = json.loads(sender_qq_data)['data']['level']
-        except Exception as ex:
-            print(ex)
-            sender_qq_level = "无法获取"
+    try:
+        user_qq_data = await fetch_data(f"https://apis.kit9.cn/api/qq_material/api.php?qq={session.event.operator_id}")
+        # print(c.gradient_text("#dda3f8","#66afff" ,text=user_qq_data))
+        user_qq_level = json.loads(user_qq_data)['data']['level']
+    except Exception as ex:
+        print(ex)
+        user_qq_level = "无法获取"
+    try:
+        sender_qq_data = await fetch_data(f"https://apis.kit9.cn/api/qq_material/api.php?qq={sender['user_id']}")
+        # print(c.gradient_text("#dda3f8","#66afff" ,text=sender_qq_data))
+        sender_qq_level = json.loads(sender_qq_data)['data']['level']
+    except Exception as ex:
+        print(ex)
+        sender_qq_level = "无法获取"
 
     # 输出内容
     recall_info = f"群 \"{group['group_name']}[{session.event.group_id}]\": 来自 {sender['nickname']}[{sender['user_id']}] 的消息被 {user['nickname']}[{session.event.user_id}]撤回，内容为：{recalled_message['message']}"

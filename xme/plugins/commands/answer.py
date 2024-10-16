@@ -1,7 +1,7 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools import request_tools
 import json
-import requests
 
 alias = ['答案之书', 'ans']
 __plugin_name__ = 'answer'
@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     message = "呜呜，出现未知错误"
     try:
-        ans_json = json.loads(requests.get('https://api.andeer.top/API/answer.php').text)
+        ans_json = json.loads(await request_tools.fetch_data('https://api.andeer.top/API/answer.php'))
         if ans_json['code'] != 200:
             message = "呜呜，答案获取失败"
         else:

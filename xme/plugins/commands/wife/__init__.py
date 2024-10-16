@@ -16,7 +16,7 @@ command_properties = [
     }
 ]
 
-__plugin_name__ = 'wife'
+__plugin_name__ = '今日老婆'
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
     desc="今日老婆相关指令",

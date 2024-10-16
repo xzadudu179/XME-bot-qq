@@ -34,6 +34,12 @@ def init_json(path, data):
             file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
 def bot_init():
+    if not os.path.exists("./data"):
+        logger.info(f"创建 data 文件夹")
+        os.mkdir("./data")
+    if not os.path.exists("./logs"):
+        logger.info(f"创建 logs 文件夹")
+        os.mkdir("./logs")
     # 老婆数据
     wife_path = "./data/wife.json"
     init_json(wife_path, WIFE_INFO)

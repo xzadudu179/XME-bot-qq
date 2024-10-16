@@ -27,4 +27,4 @@ async def _(session: CommandSession):
                 print("最多查看 10 个文章哦")
         except:
             return await session.send(f"请输入正确的文章数量哦")
-    await session.send(f"[CQ:at,qq={session.event.user_id}] 以下是九九最近的五个文章哦！\n{show_rss(catch_179rss(), count)}")
+    await session.send(f"[CQ:at,qq={session.event.user_id}] 以下是九九最近的 {count} 个文章哦！\n{show_rss(catch_179rss(), count)}")

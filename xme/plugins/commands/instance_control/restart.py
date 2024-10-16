@@ -5,19 +5,8 @@ import bot_variables as v
 import config
 from xme.xmetools.doc_gen import CommandDoc
 
-alias = ['重启']
-__plugin_name__ = 'restart'
-
-__plugin_usage__ = str(CommandDoc(
-    name=__plugin_name__,
-    desc='重启 bot',
-    introduction='使机器人实例重新启动',
-    usage=f'',
-    permissions=["需要 @ bot 或是呼叫 bot", "是 SUPERUSER"],
-    alias=alias
-))
-
-@on_command('restart', aliases=alias, only_to_me=True, permission=lambda x: x.is_superuser)
+restart_alias = ['重启', 'rebot', 'reboot']
+@on_command('restart', aliases=restart_alias, only_to_me=True, permission=lambda x: x.is_superuser)
 async def _(session: CommandSession):
     await session.send("正在重启 uwu")
     try:

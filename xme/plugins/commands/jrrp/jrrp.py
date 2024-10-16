@@ -31,7 +31,7 @@ async def jrrp(session: CommandSession):
         如：砸坏您的电子设备、对于其他人造成不可逆的影响等一切行为时，
         本插件一律不付任何的责任
         本插件开发者绝对不会做出任何的干预行为
-        """)
+        """.strip())
         await sleep(100)
         await session.send(f"很抱歉，您的今日人品为:{result}")
     elif result == 100:

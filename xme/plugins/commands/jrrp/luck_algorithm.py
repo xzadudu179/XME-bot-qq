@@ -8,7 +8,7 @@ def get_luck(__identifier__, __key__, date=None, digits=8):
 
     Args:
         __identifier__: A unique identifier, usually a long integer.
-        key: A secret key used for HMAC calculation, in base64 format.
+        __key__: A secret key used for HMAC calculation, in base64 format.
         date: An optional date object. If not provided, the current date is used.
         digits: The number of digits in the returned luck value.
 
@@ -30,7 +30,7 @@ def get_luck(__identifier__, __key__, date=None, digits=8):
 
     # Calculate the HMAC-SHA1 hash
     try:
-        __key__ = base64.b64decode(key)
+        __key__ = base64.b64decode(__key__)
         hmac_sha1 = hmac.new(__key__, seed_bytes, hashlib.sha1)
         hash_value = hmac_sha1.digest()
 

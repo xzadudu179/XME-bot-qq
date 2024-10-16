@@ -1,4 +1,7 @@
+
+
 import requests
+from itsdangerous import base64_encode
 from nonebot import on_command, CommandSession
 
 from xme.xmetools.doc_gen import CommandDoc
@@ -20,14 +23,15 @@ async def setu(session: CommandSession):
     api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true"
     result = fetch_image_data(api_url)
     if result:
-        (session.send
-         (f"""
+        await session.send(f"""
          图片标题: {result.title}
          图片pid: {result.pid}
          作者: {result.author}
          -----------
-         [CQ:Image , url={result.url}]
-        """))
+         [CQ:image , file={base64_encode(result.url)}]
+        """)
+    else:
+        await session.send("无法获取图片信息.")
 
 
 class ImageData:

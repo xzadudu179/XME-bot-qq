@@ -52,3 +52,7 @@ def top_k_sim(l: list[str], target_str: str, k: int=5, min: float=0.5) -> list[s
     sim_topk_items = sorted(str_list_sim(l, target_str).items(), key=lambda item: item[1], reverse=True)[:k]
     sim_topk_items = [item for item in sim_topk_items if item[1] >= min]
     return sim_topk_items
+
+def split_list(lst, chunk_size=10):
+    # 使用列表切片将列表分割成 chunk_size 大小的子列表
+    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]

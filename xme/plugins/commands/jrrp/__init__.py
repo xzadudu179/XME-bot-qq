@@ -29,6 +29,6 @@ async def jrrp(session: CommandSession):
     if result < 10:
         await session.send(content + f"....{result}？uwu")
     elif result >= 90:
-        await session.send(content + f"{result}!owo!")
+        await session.send(content + f"{result}！owo！")
     else:
         await session.send(content + f"{result} ovo")

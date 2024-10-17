@@ -1,5 +1,6 @@
 from xme.xmetools.date_tools import *
 from xme.xmetools.command_tools import send_cmd
+import keys
 from xme.xmetools import json_tools
 import json
 import random
@@ -35,21 +36,25 @@ async def _(session: CommandSession):
     bottle['views'] += 1
     like_message = f"获得了{bottle['likes']}个赞owo" if bottle['likes'] > 0 else f"还没有任何赞ovo"
     bottle_card = f"[CQ:at,qq={user_id}] 你捡到了一个漂流瓶~\n[#{index}号漂流瓶，来自 \"{bottle['from_group']}\"]：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} 投出\n这个瓶子{view_message}，{like_message}"
+    if str(index) == keys.ERROR_BOTTLE_INDEX:
+        bottle_card = f"[CQ:at,qq={user_id}] 你捡?到了一个漂流..??瓶..?\n[#{index}号?...瓶，来..自. \"{bottle['from_group']}\"]..：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} [生成]\n这...个..{view_message}，{like_message} uwu"
     # ----------------------------
     # 手滑摔碎了瓶子 (1% 概率)
-    broken = (random.randint(0, 100) > 99)
+    broken = (random.randint(0, 100) > 97)
     if not broken:
-        bottle_card += f"\n你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。"
+        if str(index) == keys.ERROR_BOTTLE_INDEX:
+            bottle_card += keys.ERROR_BOTTLE_INFO_MSG
+        else:
+            bottle_card += f"\n你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。"
     await session.send(bottle_card)
     print("捡到了瓶子")
     content = ""
     if broken:
         content = "啊，你不小心把瓶子摔碎了..."
-        if str(index) == "-179":
-            content = "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里..."
-            print("瓶子碎了...?")
+        if str(index) == keys.ERROR_BOTTLE_INDEX:
+            content = keys.ERROR_BOTTLE_BROKE_MSG
         await session.send(content)
-        if str(index) != "-179":
+        if str(index) != keys.ERROR_BOTTLE_INDEX:
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
             del bottles_dict['bottles'][index]
             print("瓶子碎了")

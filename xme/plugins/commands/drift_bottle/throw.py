@@ -28,17 +28,16 @@ async def _(session: CommandSession):
         id = bottles_dict["max_index"] + 1
     except:
         id = 0
-    bottles_dict['bottles'].append({
+    bottles_dict['bottles'][id] = {
         "content": arg,
         "sender": user['nickname'],
-        "index": id,
         "likes": 0,
         'views': 0,
         "from_group": group["group_name"],
         "send_time": datetime.now().strftime(format="%Y年%m月%d日 %H:%M:%S"),
         "sender_id": user['user_id'],
         "group_id": user['group_id'],
-    })
+    }
     bottles_dict["max_index"] = id
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:

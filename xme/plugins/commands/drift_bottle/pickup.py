@@ -44,12 +44,17 @@ async def _(session: CommandSession):
     print("捡到了瓶子")
     content = ""
     if broken:
-        print("瓶子碎了")
-        await session.send("啊，你不小心把瓶子摔碎了...")
-        bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
-        del bottles_dict['bottles'][index]
-        print("保存文件中")
-        json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+        content = "啊，你不小心把瓶子摔碎了..."
+        if str(index) == "-179":
+            content = "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里..."
+            print("瓶子碎了...?")
+        await session.send(content)
+        if str(index) != "-179":
+            bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+            del bottles_dict['bottles'][index]
+            print("瓶子碎了")
+            print("保存文件中")
+            json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         return
     else:
         # 处理之后可能的输入

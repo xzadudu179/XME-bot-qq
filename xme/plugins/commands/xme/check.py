@@ -12,4 +12,4 @@ def check_users(conn):
 
 if __name__ == "__main__":
     conn = connect_db()
-    print(check_users(conn))
+    print('\n'.join([str(i) for i in check_users(conn)]))

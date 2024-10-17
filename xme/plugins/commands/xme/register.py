@@ -2,6 +2,8 @@
 from xme.xmetools import date_tools
 from .xme_config import *
 import sqlite3
+from .user import *
+from .database import *
 from nonebot import log
 import random
 import config
@@ -12,7 +14,7 @@ register_alias = ["reg", "r"]
 async def _(session: CommandSession):
     user_id = session.event.user_id
     nickname = (await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']
-    xme_user_db_init()
+    Xme_database.xme_user_db_init()
     conn = sqlite3.connect(XME_DB_PATH)
     try:
         message = "签到成功~"
@@ -49,15 +51,3 @@ async def _(session: CommandSession):
     finally:
         conn.close()
 
-# 初始化用户数据库
-def xme_user_db_init():
-    conn = sqlite3.connect(XME_DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            last_reg_days INTEGER,
-            coins INTEGER
-        )
-    ''')

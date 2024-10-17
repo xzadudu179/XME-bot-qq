@@ -33,13 +33,14 @@ def init_json(path, data):
         with open(path, 'w', encoding='utf-8') as file:
             file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
+def create_folder_if_not_exists(*paths):
+    for path in paths:
+        if not os.path.exists(path):
+            logger.info(f"创建 {path} 文件夹")
+            os.mkdir(path)
+
 def bot_init():
-    if not os.path.exists("./data"):
-        logger.info(f"创建 data 文件夹")
-        os.mkdir("./data")
-    if not os.path.exists("./logs"):
-        logger.info(f"创建 logs 文件夹")
-        os.mkdir("./logs")
+    create_folder_if_not_exists("./logs", "./data", "./data/xme")
     # 老婆数据
     wife_path = "./data/wife.json"
     init_json(wife_path, WIFE_INFO)

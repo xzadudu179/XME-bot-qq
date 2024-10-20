@@ -1,6 +1,7 @@
 import nonebot
 import config
 from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.command_tools import send_cmd
 from xme.xmetools.list_ctrl import split_list
 from nonebot import on_command, CommandSession
 
@@ -46,7 +47,7 @@ async def _(session: CommandSession):
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
     # print(pages)
     prefix = f'[XME-Bot V0.1.2]\n指令开头字符: {" ".join(config.COMMAND_START)} 中任选'
-    suffix = f'XME-Bot 机器人帮助文档: http://docs.xme.xzadudu179.top/#/help\n可以使用 {config.COMMAND_START[0]}help 功能名 查看某功能的详细介绍哦\n输入指定数量的 \">\" 或 \"<\" 或者是 \"翻页[页数]\" 来向前后翻页哦，页数可以是负数，箭头可以叠加'
+    suffix = f'XME-Bot 机器人帮助文档: http://docs.xme.xzadudu179.top/#/help\n可以使用 {config.COMMAND_START[0]}help 功能名 查看某功能的详细介绍哦\n输入指定数量的 \">\" \"<\" 或 \"》\" \"《\" 也可以是 \"翻页[页数]\" 来向前后翻页哦，页数可以是负数，箭头可以叠加'
     # 展示第一页
     curr_page_num = 1
     content = f"XME-Bot 功能列表 ({curr_page_num}/{len(pages)}页)：\n" + pages[0]
@@ -56,8 +57,11 @@ async def _(session: CommandSession):
     # 翻页
     while True:
         reply: str = (await session.aget()).strip()
+        reply = reply.replace("》", ">").replace("《", "<")
         more_page = 0
-        if not reply.startswith((">", "<", "翻页")): return
+        if not reply.startswith((">", "<", "翻页")):
+            await send_cmd(reply, session)
+            return
         if reply.startswith((">", "<")):
             for c in reply:
                 if c == ">":
@@ -66,6 +70,7 @@ async def _(session: CommandSession):
                     more_page -= 1
                 else:
                     # 不可以有除了那两个箭头之外的字符
+                    await send_cmd(reply, session)
                     return
         else:
             try:

@@ -14,13 +14,16 @@ async def _(session: CommandSession):
     # 如果是对 xme 说
     elif session.ctx['to_me']:
         at_id = session.self_id
+        at_name = "我"
     else:
-        await session.send("请 at 你要看的人哦")
+        # await session.send("请 at 你要看的人哦")
+        at_name = "你"
+        at_id = session.event.user_id
         return
     wife = await search_wife(wifeinfo, group_id, at_id, session)
     print(at_id, session.self_id)
     # print(wife)
-    at_name = "我"
+
     try:
         if at_id != session.self_id:
             at = await session.bot.get_group_member_info(group_id=group_id, user_id=at_id)
@@ -29,7 +32,8 @@ async def _(session: CommandSession):
         if wife:
             # print(pair_user)
             name = wife['nickname']
-            message = f"[CQ:at,qq={user_id}] {at_name}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name} ({wife['user_id']})"
+            who = f"[CQ:at,qq={user_id}] {at_name}"
+            message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name} ({wife['user_id']})"
     except:
         message = "呜呜，无法获取到你 at 的群员信息"
     await session.send(message)

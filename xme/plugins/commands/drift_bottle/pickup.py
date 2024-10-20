@@ -3,6 +3,7 @@ from xme.xmetools.command_tools import send_cmd
 import keys
 from xme.xmetools import json_tools
 import json
+from xme.xmetools import random_tools
 import random
 from nonebot import on_command, CommandSession
 import config
@@ -21,7 +22,7 @@ async def _(session: CommandSession):
     if len(bottles) < 1:
         await session.send("海里一个瓶子里都没有...")
         return
-    pickedup = (random.randint(0, 100) > 10)
+    pickedup = random_tools.random_percent(10)
     if not pickedup:
         await session.send("你没有捡到瓶子ovo")
         return
@@ -39,8 +40,8 @@ async def _(session: CommandSession):
     if str(index) == keys.ERROR_BOTTLE_INDEX:
         bottle_card = f"[CQ:at,qq={user_id}] 你捡?到了一个漂流..??瓶..?\n[#{index}号?...瓶，来..自. \"{bottle['from_group']}\"]..：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} [生成]\n这...个..{view_message}，{like_message} uwu"
     # ----------------------------
-    # 手滑摔碎了瓶子 (1% 概率)
-    broken = (random.randint(0, 100) > 97)
+    # 手滑摔碎了瓶子
+    broken = random_tools.random_percent(3)
     if not broken:
         if str(index) == keys.ERROR_BOTTLE_INDEX:
             bottle_card += keys.ERROR_BOTTLE_INFO_MSG

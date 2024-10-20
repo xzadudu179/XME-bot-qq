@@ -3,6 +3,7 @@ from .xme_config import *
 from .classes.user import *
 from .classes.database import *
 from nonebot import log
+import random
 import config
 from nonebot import on_command, CommandSession
 

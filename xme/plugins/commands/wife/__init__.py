@@ -1,28 +1,26 @@
 from .wife import *
-from .cancanneedwife import *
+# from .cancanneedwife import *
 from xme.xmetools.doc_gen import PluginDoc
 
-commands = ['wife', 'cancanneedwife']
+commands = ['wife']
 command_properties = [
     {
         'name': 'wife',
-        'introduction': '查看你今日的老婆群员',
+        'introduction': '查看自己或别人的今日老婆',
+        'usage': '<at想看的人>',
         'permission': ['在群内使用']
     },
-    {
-        'name': 'cancanneedwife',
-        'introduction': '查看指定群员的今日老婆群员',
-        'permission': ['在群内使用']
-    }
 ]
-
+aliases = [
+    wife_alias,
+]
 __plugin_name__ = '今日老婆'
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
     desc="今日老婆相关指令",
-    introduction="查看自己的今日老婆，或者是别人的今日老婆",
+    introduction="扔/查看自己的今日老婆，或者是别人的今日老婆~",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
-    usages=[f'{__plugin_name__}', 'cancanneedwife (at用户)'],
+    usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
     permissions=[prop['permission'] for prop in command_properties],
-    alias_list=[wife_alias, cancanneedalias]
+    alias_list=aliases
 ))

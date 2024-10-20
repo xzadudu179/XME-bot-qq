@@ -14,6 +14,10 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
+REPLACE_STR_ZH = {
+    "办何自己不肯妥协，先问一下自已的能力。": "为何自己不肯妥协，先问一下自己的能力。"
+}
+
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     message = "呜呜，书突然找不到了"
@@ -22,7 +26,8 @@ async def _(session: CommandSession):
         if ans_json['code'] != 200:
             message = "呜呜，书翻不开了..."
         else:
-            message = f"[CQ:at,qq={session.event.user_id}]\n答案之书：\n\"{ans_json['data']['zh']}\"\n\"{ans_json['data']['en']}\""
+            data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
+            message = f"[CQ:at,qq={session.event.user_id}]\n答案之书：\n\"{data}\"\n\"{ans_json['data']['en']}\""
     except Exception as ex:
         print(ex)
     finally:

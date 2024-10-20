@@ -1,4 +1,6 @@
 import random
+import string
+from .json_tools import read_from_path
 
 def random_percent(percent : float) -> bool:
     """指定百分比概率返回True

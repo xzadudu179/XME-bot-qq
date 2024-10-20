@@ -7,9 +7,8 @@ def connect_db():
 
 def check_users(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    return cursor.fetchall()
+    cursor.execute("ALTER TABLE users ADD COLUMN items TEXT")
 
 if __name__ == "__main__":
     conn = connect_db()
-    print('\n'.join([str(i) for i in check_users(conn)]))
+    check_users(conn)

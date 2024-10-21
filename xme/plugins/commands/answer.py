@@ -15,7 +15,8 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 REPLACE_STR_ZH = {
-    "办何自己不肯妥协，先问一下自已的能力。": "为何自己不肯妥协，先问一下自己的能力。"
+    "办何自己不肯妥协，先问一下自已的能力。": "为何自己不肯妥协，先问一下自己的能力。",
+    "有。": "是的"
 }
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)

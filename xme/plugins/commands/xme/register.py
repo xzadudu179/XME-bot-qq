@@ -2,25 +2,17 @@
 from .xme_config import *
 from .classes.user import *
 from .classes.database import *
-from nonebot import log
 import config
 from nonebot import on_command, CommandSession
+from .tools.pre_checks import *
 
-register_alias = ["reg", "r"]
+register_alias = ["reg", "r", "签到"]
 @on_command('register', aliases=register_alias, only_to_me=True, permission=lambda x: x.from_group(config.GROUPS_WHITELIST))
-async def _(session: CommandSession):
-    """注册或签到"""
+@pre_check() # 执行前检查
+async def _(session: CommandSession, user: User):
+    """签到"""
     user_id = session.event.user_id
-    nickname = (await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']
-    database = Xme_database("./data/xme/xme.db")
-    users = User.load_user(database, "id", user_id)
-    print(users)
     suffix = ""
-    if len(users) < 1:
-        user = User(database, user_id, nickname)
-        suffix = "\n顺便帮你注册了账号哦 owo"
-    else:
-        user = users[0]
     curr_coins = user.coins
     if user.register():
         coins = user.coins - curr_coins

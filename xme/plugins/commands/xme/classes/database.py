@@ -1,6 +1,7 @@
 import sqlite3
 import traceback
 from xme.xmetools import date_tools
+from xme.plugins.commands.xme.xme_config import XME_DB_PATH
 from .user import User
 from nonebot import log
 from functools import wraps
@@ -8,26 +9,29 @@ from functools import wraps
 class Xme_database:
     """XME 数据库相关类
     """
-    def __init__(self, db_path) -> None:
+    DB_PATH = XME_DB_PATH
+    def __init__(self) -> None:
         """初始化数据库
         """
-        self.db_path = "./data/xme/xme.db"
 
     USER_DATAS = (
         "id",
         "name",
         "last_reg_days",
-        "coins"
+        "coins",
+        "permission",
+        "bio",
+        "inventory",
     )
 
     def database_control(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            result = None
+            result = False
             try:
                 # 初始化局部变量
                 # print("初始化")
-                connection = sqlite3.connect(self.db_path)
+                connection = sqlite3.connect(self.DB_PATH)
                 cursor = connection.cursor()
                 # 将变量传递给原始函数
                 result = func(self, cursor, *args, **kwargs)
@@ -37,7 +41,7 @@ class Xme_database:
                 connection.rollback()
                 raise type(ex)(ex)
             finally:
-                print("连接结束，关闭连接")
+                print("关闭连接")
                 connection.close()
                 return result
         return wrapper
@@ -51,7 +55,10 @@ class Xme_database:
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
                 last_reg_days INTEGER,
-                coins INTEGER
+                coins INTEGER,
+                permission INTEGER DEFAULT 1,
+                bio TEXT,
+                inventory TEXT
             )
         ''')
 
@@ -66,6 +73,7 @@ class Xme_database:
         Returns:
             list[tuple]: 查询结果
         """
+        query = query
         print("正在执行语句:\n", query, params)
         cursor.execute(query, params)
         return cursor.fetchall()
@@ -75,10 +83,12 @@ class Xme_database:
 
 
     def add_user_info(self, user):
+        values = ', '.join(['?' for _ in self.USER_DATAS])
+        query_add = ', '.join([data for data in self.USER_DATAS])
         self.exec_query(f'''
-                INSERT INTO users ({self.USER_DATAS[0]}, {self.USER_DATAS[1]}, {self.USER_DATAS[2]}, {self.USER_DATAS[3]})
-                VALUES (?, ?, ?, ?)
-            ''', (user.id, user.name, user.last_reg_days, user.coins))
+                INSERT INTO users ({query_add})
+                VALUES ({values})
+            ''', (user.id, user.name, user.last_reg_days, user.coins, user.permission, user.bio, str(user.inventory)))
 
 
     def save_user_info(self, user):
@@ -92,9 +102,10 @@ class Xme_database:
             # 没有数据就插入数据
             self.add_user_info(user)
         else:
-            self.exec_query(f'''
+            query_add = ''.join([data + " = ?, " for data in self.USER_DATAS[1:]]).strip()[:-1]
+            return self.exec_query(f'''
                 UPDATE users
-                SET {self.USER_DATAS[2]} = ?, {self.USER_DATAS[3]} = ?
+                SET {query_add}
                 WHERE id = ?
-            ''', (user.last_reg_days, user.coins,
+            ''', (user.name, user.last_reg_days, user.coins, user.permission, user.bio, str(user.inventory),
                 user.id))

@@ -1,8 +1,8 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 
-alias = ['inst_退群', 'inst_退出群聊', 'inst_exit']
-__plugin_name__ = 'inst_leave'
+alias = ['bot_退群', 'bot_退出群聊', 'bot_exit']
+__plugin_name__ = 'bot_leave'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc='机器人退群',

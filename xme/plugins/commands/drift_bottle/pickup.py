@@ -22,7 +22,7 @@ async def _(session: CommandSession):
     if len(bottles) < 1:
         await session.send("海里一个瓶子里都没有...")
         return
-    pickedup = random_tools.random_percent(10)
+    pickedup = random_tools.random_percent(90)
     if not pickedup:
         await session.send("你没有捡到瓶子ovo")
         return

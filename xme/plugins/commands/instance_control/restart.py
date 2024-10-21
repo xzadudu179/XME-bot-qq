@@ -5,7 +5,7 @@ import bot_variables as v
 import config
 from xme.xmetools.doc_gen import CommandDoc
 
-restart_alias = ['inst_重启', 'inst_rebot', 'inst_reboot']
+restart_alias = ['inst_重启', 'inst_rebot', 'inst_reboot', 'instRestart', 'instRebot', 'instReboot']
 @on_command('inst_restart', aliases=restart_alias, only_to_me=True, permission=lambda x: x.is_superuser)
 async def _(session: CommandSession):
     await session.send("正在重启 uwu")

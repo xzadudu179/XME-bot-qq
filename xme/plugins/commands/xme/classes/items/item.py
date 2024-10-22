@@ -54,7 +54,7 @@ class Item:
         return str(self.id)
 
     def info(self) -> str:
-        price = '\n基本价格: ' + str(self.price) if self.has_tag(Tag.SALEABLE) else ''
+        price = '\n基准价格: ' + str(self.price) if self.has_tag(Tag.SALEABLE) else ''
         return f"""
 [{self.rarity.value}] {self.name}
 标签：{', '.join([tag.value for tag in self.tags])}{price}

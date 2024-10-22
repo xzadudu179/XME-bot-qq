@@ -23,6 +23,6 @@ async def _(session: CommandSession, user: User):
         message += f"{i + 1}.\t{item_info} *{item[1]}\n"
     if not has_item:
         message += "唔，好像什么也没有...\n"
-    else:
-        message += "使用 xme.drop [物品栏编号] <数量> 来扔掉物品哦~"
+    # else:
+        # message += "使用 xme.drop [物品栏编号] <数量> 来扔掉物品哦~"
     await session.send(message)

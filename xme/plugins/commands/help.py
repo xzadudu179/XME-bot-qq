@@ -24,6 +24,7 @@ async def _(session: CommandSession):
     # 如果发了参数则发送相应命令的使用帮助
     print("发送帮助")
     if arg:
+        arg = arg.replace("/", "")
         for p in plugins:
             if p.name.lower() != arg: continue
             return await session.send(p.usage if p.usage else "无内容")
@@ -36,9 +37,9 @@ async def _(session: CommandSession):
     for p in plugins:
         index += 1
         try:
-            total_pages += "\n- " + f"{p.usage.split(']')[0]}] {p.name}\t" + p.usage.split('简介：')[1].split('\n')[0].strip()
+            total_pages += "\n\t" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] == '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
         except:
-            total_pages += "\n- " + f"[未知] {p.name}\t"
+            total_pages += "\n\t" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
         await session.send(f"{prefix}\nXME-Bot 现在还没有任何指令哦")
@@ -46,12 +47,12 @@ async def _(session: CommandSession):
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
     # print(pages)
-    prefix = f'[XME-Bot V0.1.2]\n指令开头字符: {" ".join(config.COMMAND_START)} 中任选'
-    suffix = f'XME-Bot 机器人帮助文档: http://docs.xme.xzadudu179.top/#/help\n可以使用 {config.COMMAND_START[0]}help 功能名 查看某功能的详细介绍哦\n输入指定数量的 \">\" \"<\" 或 \"》\" \"《\" 也可以是 \"翻页[页数]\" 来向前后翻页哦，页数可以是负数，箭头可以叠加'
+    prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示第一页
     curr_page_num = 1
-    content = f"XME-Bot 功能列表 ({curr_page_num}/{len(pages)}页)：\n" + pages[0]
-    await session.send(prefix + '\n' + content + '\n' + suffix)
+    suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
+    content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[0]
+    await session.send(prefix + content + '\n' + suffix)
     if len(pages) <= 1:
         return
     # 翻页
@@ -86,7 +87,7 @@ async def _(session: CommandSession):
             reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
             await session.send(reply_message)
             curr_page_num = len(pages)
-        content = f"XME-Bot 功能列表 ({curr_page_num}/{len(pages)}页)：\n" + pages[curr_page_num - 1]
-        await session.send(prefix + '\n' + content + '\n' + suffix)
+        content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
+        await session.send(prefix + content + '\n' + suffix)
 
 

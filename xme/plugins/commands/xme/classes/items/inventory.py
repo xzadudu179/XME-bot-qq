@@ -1,28 +1,26 @@
 from .item import Tag, Item, item_table, init_item_table
 from .itemblock import ItemBlock
+from ..fixed_list import FixedList
 
 class Inventory:
     """物品栏类
     """
-    def __init__(self, length: int, itemblocks: list[ItemBlock]=None) -> None:
+    def __init__(self, length: int, itemblocks: FixedList=None) -> None:
         if length <= 0:
             raise ValueError("长度必须大于 0")
         if not itemblocks:
-            self.blocks: list[ItemBlock] = []
-            for _ in range(length):
-                self.blocks.append(ItemBlock())
-        elif len(itemblocks) < length:
-            self.blocks: list[ItemBlock] = itemblocks
-            for _ in range(length - len(itemblocks)):
-                self.blocks.append(ItemBlock())
+            self.blocks: FixedList = FixedList(20, ItemBlock)
+            # for _ in range(length):
+            #     self.blocks.append(ItemBlock())
         else:
-            self.blocks = itemblocks
+            self.blocks = FixedList(20, itemblocks.getlist())
+        self.blocks.fillwith(ItemBlock())
         self.length = length
 
-    def get_itemblocks(itemblocks_str: str | None):
-        itemblocks = []
+    def get_itemblocks(itemblocks_str: str | None, length: int):
+        itemblocks = FixedList(length)
         if not itemblocks_str:
-            for _ in range(20):
+            for _ in range(length):
                 itemblocks.append(ItemBlock())
                 return itemblocks
         for itemblock_str in itemblocks_str.split("|"):

@@ -5,7 +5,7 @@ from xme.xmetools.command_tools import send_cmd
 from xme.xmetools.list_ctrl import split_list
 from nonebot import on_command, CommandSession
 
-alias = ["xme帮助", "usage", "xmehelp", "docs", "帮助"]
+alias = ["usage", "docs", "帮助"]
 __plugin_name__ = 'help'
 
 __plugin_usage__ = str(CommandDoc(

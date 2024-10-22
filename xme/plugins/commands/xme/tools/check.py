@@ -16,3 +16,9 @@ if __name__ == "__main__":
     conn = connect_db()
     print('\n'.join([str(i) for i in check_users(conn)]))
     # print(check_users(conn))
+    # cursor = conn.cursor()
+    # cursor.execute("DELETE FROM users WHERE id = 2197504382")
+    # conn.commit()
+
+    # # 关闭连接
+    # conn.close()

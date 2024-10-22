@@ -1,4 +1,4 @@
-from items.itemblock import ItemBlock
+
 class FixedList:
     """定长列表
     """
@@ -40,6 +40,14 @@ class FixedList:
         if self.items[index] == None:
             raise ValueError("索引范围过大，请先使用 append() 添加默认值再更改内容")
         self.__items[index] = value
+
+    def __len__(self):
+        return len(self.items)
+
+    def sort_out(self):
+        """将 None 放到最后
+        """
+        self.sort(key=lambda x: (x is None, x))
 
     def fillwith(self, item, replace=False):
         """将定长列表填充默认值

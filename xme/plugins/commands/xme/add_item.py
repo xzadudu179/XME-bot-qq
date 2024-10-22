@@ -1,4 +1,4 @@
-# 注册账号 或签到
+
 from .xme_config import *
 from .classes.user import *
 from .classes.database import *
@@ -14,11 +14,14 @@ async def _(session: CommandSession, user: User):
     args = session.current_arg_text.strip().split(" ")
     id = args[0]
     count = int(args[1]) if len(args) > 1 else 1
-    try:
-        item = find_item_by_id(id)
-        if user.add_item(item, count):
-            await session.send(f"添加物品 \"{item.name}\" 成功~")
-        else:
-            await session.send(f"添加物品 \"{item.name}\" 失败 xwx")
-    except KeyError:
+    item = find_item_by_id(id)
+    if item == None:
         await session.send(f"呜呜 没有 ID 为 {id} 的物品...")
+        return
+    (stats, leftstats) = user.add_item(item, count)
+    if stats:
+        suffix = "" if stats and leftstats <= 0 else f"\n物品过多了哦，有 {leftstats} 个物品并没有被添加"
+        await session.send(f"尝试添加物品 \"{item.name}\" *{count} 成功~{suffix}")
+    else:
+        suffix = "\n不能添加 0 或小于 0 数量的物品哦" if leftstats == -1 else ""
+        await session.send(f"添加物品 \"{item.name}\" *{count} 失败 xwx{suffix}")

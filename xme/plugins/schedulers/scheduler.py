@@ -6,7 +6,9 @@ import pytz
 import json
 from aiocqhttp.exceptions import Error as CQHttpError
 from nonebot import log
+from xme.xmetools import random_tools
 from xme.xmetools import date_tools
+import random
 
 async def send_time_message():
     bot = nonebot.get_bot()
@@ -19,6 +21,27 @@ async def send_time_message():
         except CQHttpError:
             log.logger.error(f"定时器在 {group} 发消息失败")
             pass
+
+idles = [
+    "owo",
+    "有点无聊ovo",
+    "看看群友在干嘛（？"
+]
+
+@nonebot.scheduler.scheduled_job('cron', second='*')
+async def _():
+    if not random_tools.random_percent(0.1): return
+    bot = nonebot.get_bot()
+    group = random.choice([item['group_id'] for item in (await bot.get_group_list())])
+    print(f"发一条随机消息给{group}")
+    try:
+        await bot.send_group_msg(group_id=group,
+                            message=str(random.choice(idles)))
+    except CQHttpError:
+        log.logger.error(f"定时器在 {group} 发消息失败")
+        pass
+
+
 
 
 @nonebot.scheduler.scheduled_job('cron', hour='12')

@@ -65,3 +65,14 @@ class CommandDoc(Doc):
 权限/可用范围：{DEFAULT_PERMISSIONS if len(self.permissions) < 1 else ' & '.join(self.permissions)}
 别名：{'无' if len(self.alias) < 1 else ', '.join(self.alias)}
 """.strip()
+
+class SpecialDoc(Doc):
+    def __init__(self, name, desc, introduction) -> None:
+        super().__init__(name, desc, introduction)
+
+    def __str__(self) -> str:
+        return rf"""
+[特殊] {self.name}
+简介：{self.desc}
+{self.introduction}
+""".strip()

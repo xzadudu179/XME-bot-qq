@@ -44,14 +44,17 @@ class ItemBlock:
             bool: 是否成功删除
         """
         if not self.item:
-            return (False, 0)
-        new_count = self.itemcount - count
-        if new_count <= 0:
+            return (False, count)
+        item_left = self.itemcount - count
+        if item_left <= 0:
             # return False
             self.item = None
-        last_item = abs(new_count)
-        new_count = 0
-        self.itemcount = new_count
+        else:
+            self.itemcount = item_left
+            return (True, 0)
+        # 剩余物品
+        last_item = abs(item_left)
+        self.itemcount = 0
         return (True, last_item)
 
     def __str__(self) -> str:

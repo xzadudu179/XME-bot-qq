@@ -30,6 +30,9 @@ class User:
             if not result:
                 # 如果返回 False 等值不执行保存
                 return result
+            if type(result) == tuple:
+                if not result[0]: return result
+                # result = result[1]
             # 在函数执行完毕后执行的指令
             self.database.save_user_info(self)
             print("用户数据已更新.")
@@ -69,10 +72,10 @@ class User:
         self.database = database
         self.database.init_user_info()
 
-    def check_and_replace_username(self):
+    def check_and_replace_username(self, name):
         """将用户名确定为合法字符范围
         """
-        self.name = text_tools.characters_only_contains_ch_en_num_udline_horzline(self.name)
+        self.name = text_tools.characters_only_contains_ch_en_num_udline_horzline(name)
 
     @update_user_data
     def update(self):
@@ -123,8 +126,16 @@ class User:
         return User.load_user(database, "id", user_id)
 
     @update_user_data
-    def add_item(self, item, count) -> bool:
+    def add_item(self, item, count) -> tuple[bool, int]:
         return self.inventory.add_item(item, count)
+
+    @update_user_data
+    def del_item(self, item, count) -> tuple[bool, int]:
+        return self.inventory.del_item(item, count)
+
+    # @update_user_data
+    # def drop_item(self, item, count) -> tuple[bool, int]:
+    #     return self.inventory.drop_item(item, count)
 
     @update_user_data
     def change_name(self, new_name: str) -> bool:
@@ -138,8 +149,7 @@ class User:
         """
         if len(new_name) > self.MAX_NAME_LENGTH:
             return False
-        self.check_and_replace_username()
-        self.name = new_name
+        self.check_and_replace_username(new_name)
         return True
 
     @update_user_data
@@ -152,7 +162,7 @@ class User:
         Returns:
             bool: 是否成功
         """
-        if len(new_bio) > self.MAX_BIO_LENGTH or new_bio.count('\n') > 15:
+        if len(new_bio) > self.MAX_BIO_LENGTH or new_bio.count('\n') > 15 or new_bio.count('\r') > 15:
             return False
         self.bio = new_bio
         return True

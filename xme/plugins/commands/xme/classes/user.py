@@ -4,8 +4,11 @@ from functools import wraps
 import random
 from .items.inventory import Inventory
 from xme.xmetools import text_tools
+from .faction import *
+from .db_readable import DbReadable
+import sqlite3
 
-class User:
+class User(DbReadable):
     """XME 用户类
     """
     MAX_NAME_LENGTH = 20
@@ -18,28 +21,7 @@ class User:
         4: "ROOT"
     }
 
-    def update_user_data(func):
-        """用户数据更新装饰函数
-
-        Args:
-            func (_type_): 装饰函数
-        """
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            result = func(self, *args, **kwargs)  # 调用原始函数
-            if not result:
-                # 如果返回 False 等值不执行保存
-                return result
-            if type(result) == tuple:
-                if not result[0]: return result
-                # result = result[1]
-            # 在函数执行完毕后执行的指令
-            self.database.save_user_info(self)
-            print("用户数据已更新.")
-            return result
-        return wrapper
-
-    def __init__(self, database, id: int, name: str, bio: str="", last_reg_days: int=0, coins: int=0, permission: int=1, inventory: Inventory=Inventory(20)) -> None:
+    def __init__(self, database, id: int, name: str, bio: str="", last_reg_days: int=0, coins: int=0, permission: int=1, faction=None, inventory: Inventory=Inventory(20)) -> None:
         """初始化用户
 
         Args:
@@ -50,94 +32,95 @@ class User:
             last_reg_days (int, optional): 上次签到时间. Defaults to 0.
             coins (int, optional): 虚拟星币数. Defaults to 0.
             permission (int, optional): 权限等级. Defaults to 1.
+            faction: 所属阵营. Defaults to None
             inventory (Inventory, optional): 物品栏. Defaults to Inventory(20).
 
         Raises:
             ValueError: 名称过长
         """
         # 更新
-        (database, id, name, bio, last_reg_days, coins, permission, inventory) = self.check_default(database, id, name, bio, last_reg_days, coins, permission, inventory)
+        # (database, id, name, bio, last_reg_days, coins, permission, inventory) = self.check_default(database, id, name, bio, last_reg_days, coins, permission, inventory)
         if len(name) > self.MAX_NAME_LENGTH:
             raise ValueError(f"name 参数长度过长 (>{self.MAX_NAME_LENGTH})")
         if len(bio) > self.MAX_BIO_LENGTH:
             raise ValueError(f"bio 参数长度过长 (>{self.MAX_BIO_LENGTH})")
         # text_tools.characters_only_contains_ch_en_num_udline_horzline(name)
-        self.id = id
+        # self.id = id
         self.name = name
         self.bio = bio
         self.permission = permission
         self.last_reg_days = last_reg_days
         self.coins = coins
+        self.faction = faction
         self.inventory = inventory
-        self.database = database
-        self.database.init_user_info()
+        super().__init__(id, database)
+        self.init_table()
+        # self.database = database
+        # self.database.init_user_info()
 
+    @DbReadable.update_data
     def check_and_replace_username(self, name):
         """将用户名确定为合法字符范围
         """
         self.name = text_tools.characters_only_contains_ch_en_num_udline_horzline(name)
-
-    @update_user_data
-    def update(self):
-        """把没有默认值的 None 改成有默认值的样子
-        """
-        self = User(self.database,
-                    self.id,
-                    self.name,
-                    self.bio if self.bio else "",
-                    self.last_reg_days if self.last_reg_days else 0,
-                    self.coins if self.coins else 0,
-                    self.permission if self.permission else 1,
-                    self.inventory if self.inventory else Inventory(20))
         return True
 
-    def check_default(self, database, id, name, bio, last_reg_days, coins, permission, inventory):
-        """同上 但是用于构造函数等
-        """
-        name = text_tools.characters_only_contains_ch_en_num_udline_horzline(name)
-        return (database,
-                    id,
-                    name,
-                    bio if bio else "",
-                    last_reg_days if last_reg_days else 0,
-                    coins if coins else 0,
-                    permission if permission else 1,
-                    inventory if inventory else Inventory(20))
-
-    def load_user(database, query: str, search: str):
-        """通过数据库表寻找并且返回符合的用户
+    @DbReadable.update_data
+    def join_faction(self, faction: Faction):
+        """加入阵营
 
         Args:
-            database (_type_): 数据库
-            query (str): 数据库内表的项名
-            search (str): 需要查询的值
-
-        Returns:
-            list[User]: 用户列表
+            faction (Faction): 阵营
         """
-        results = database.get_user_info(query, search)
-        users = []
-        for result in results:
-            (id, name, last_reg_days, coins, permission, bio, inventory) = result
-            users.append(User(database, id, name, bio, last_reg_days, coins, permission, Inventory(20, Inventory.get_itemblocks(inventory))))
-        return users
+        faction.add_user(self)
+        self.faction = faction
+        return True
 
-    def get_user_by_id(database, user_id):
-        return User.load_user(database, "id", user_id)
+    @DbReadable.update_data
+    def leave_faction(self):
+        """离开阵营
 
-    @update_user_data
-    def add_item(self, item, count) -> tuple[bool, int]:
-        return self.inventory.add_item(item, count)
+        Args:
+            faction (Faction): 阵营
+        """
+        self.faction.remove_user(self)
+        self.faction = None
+        return True
 
-    @update_user_data
+    def load_by_id(database, id, table_name='user'):
+        """加载用户数据
+
+        Args:
+            database (Xme_database): 数据库
+            id (int): 类 id
+        """
+        dict = {}
+        try:
+            dict = database.load_from_db(id=id, table_name=table_name)
+        except sqlite3.OperationalError:
+            # 这个 User只是临时数据
+            print("创建用户表中")
+            temp_user = User(database, 1, '1', '1')
+            temp_user.init_table()
+            dict = database.load_from_db(id=id, table_name=table_name)
+        return User(**dict) if dict else None
+
+    # def get_user_by_id(database, user_id):
+    #     return User.load_user(database, "id", user_id)
+
+    @DbReadable.update_data
+    def add_item(self, itemid, count) -> tuple[bool, int]:
+        return self.inventory.add_item(itemid, count)
+
+    @DbReadable.update_data
     def del_item(self, item, count) -> tuple[bool, int]:
         return self.inventory.del_item(item, count)
 
-    # @update_user_data
+    # @DbReadable.update_data
     # def drop_item(self, item, count) -> tuple[bool, int]:
     #     return self.inventory.drop_item(item, count)
 
-    @update_user_data
+    @DbReadable.update_data
     def change_name(self, new_name: str) -> bool:
         """修改名称
 
@@ -152,7 +135,7 @@ class User:
         self.check_and_replace_username(new_name)
         return True
 
-    @update_user_data
+    @DbReadable.update_data
     def change_bio(self, new_bio: str) -> bool:
         """修改个人介绍
 
@@ -167,7 +150,7 @@ class User:
         self.bio = new_bio
         return True
 
-    @update_user_data
+    @DbReadable.update_data
     def register(self) -> bool:
         curr_days = date_tools.curr_days()
         # 没到时间不给注册
@@ -184,10 +167,11 @@ class User:
 
     def __str__(self) -> str:
         bio = '----------\n' + self.bio + "\n" if self.bio != "" else ""
+        coin = f'拥有 {self.coins} 枚虚拟星币' if self.coins > 0 else f'没有任何虚拟星币'
         return f"""
-[{self.PERMISSIONS_DICT[self.permission]}] {self.name}
+[{self.faction if self.faction else '无阵营'}][{self.PERMISSIONS_DICT[self.permission]}] {self.name}
 {bio}----------
-目前拥有 {self.coins} 枚虚拟星币
+目前{coin}
 物品栏占用: [{self.inventory.get_space()}/{self.inventory.length}]
-上次签到时间: {date_tools.int_to_days(self.last_reg_days)}
+上次签到时间: {date_tools.int_to_days(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
 """.strip()

@@ -25,7 +25,7 @@ def check_cblack(qq_id, return_colorful_text=True):
     Returns:
         str: 云黑查询结果
     """
-    yunhei_url = "https://yunhei.furrynet.top/"
+    yunhei_url = "https://yunhei.furrynet.top/oldindex.php"
     # 启动浏览器
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # 启用无头模式

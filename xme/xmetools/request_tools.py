@@ -2,7 +2,7 @@ import aiohttp
 import json
 
 async def get_weather(city: str) -> dict:
-    response = fetch_data(f"https://restapi.amap.com/v3/weather/weatherInfo?key=4689bd09a31f3d65937db430bdae8327&city={city}&extensions=all")
+    response = await fetch_data(f"https://restapi.amap.com/v3/weather/weatherInfo?key=4689bd09a31f3d65937db430bdae8327&city={city}&extensions=all")
     json_dict = json.loads(response)
     return json_dict
 

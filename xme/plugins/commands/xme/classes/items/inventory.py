@@ -140,7 +140,7 @@ class Inventory:
         print(f"删除失败，还剩余 {curr_count} 个物品")
         return (False, curr_count)
 
-    def add_item(self, item: Item, count: int) -> tuple[bool, int]:
+    def add_item(self, itemid: int, count: int) -> tuple[bool, int]:
         """尝试添加物品
 
         Args:
@@ -154,7 +154,7 @@ class Inventory:
             return (False, -1)
         curr_count = count
         for block in self.blocks:
-            (stats, curr_count) = block.add_item(item, curr_count)
+            (stats, curr_count) = block.add_item(itemid, curr_count)
             # print(curr_count, curr_count)
             if stats and curr_count <= 0:
                 print("添加成功")

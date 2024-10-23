@@ -53,6 +53,9 @@ class Item:
     def __str__(self) -> str:
         return str(self.id)
 
+    def get_item(id):
+        return item_table[id]
+
     def info(self) -> str:
         price = '\n基准价格: ' + str(self.price) if self.has_tag(Tag.SALEABLE) else ''
         return f"""

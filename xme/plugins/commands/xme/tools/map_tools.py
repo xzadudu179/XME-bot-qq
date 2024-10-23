@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 import math
 
@@ -62,8 +62,8 @@ def random_node_lines(draw, count, node_range: tuple[int, int], lightness_range:
             # 随机起点
             # 随机角度生成终点，保证长度不超过 max_length
             angle = random.uniform(0.5, 2 * math.pi)
-            end_x = int(start[0] + max_length * math.cos(angle))
-            end_y = int(start[1] + max_length * math.sin(angle))
+            end_x = int(start[0] + random.randint(0, max_length) * math.cos(angle))
+            end_y = int(start[1] + random.randint(0, max_length) * math.sin(angle))
             end = (max(0, min(width, end_x)), max(0, min(height, end_y)))  # 确保终点在图像范围内
             line_points.append((start, end))
             start = end
@@ -73,12 +73,13 @@ def random_node_lines(draw, count, node_range: tuple[int, int], lightness_range:
         # 生成线条
         gen_node_lines(line_points, draw, color, node_size, line_width)
 
-def mark_point(draw, point, regular_point, sides_or_cross: int, color, line_width, radius, name='', font_size=12, text_space=8):
+def mark_point(draw: ImageDraw, point, regular_point, sides_or_cross: int, color, line_width, radius, name='', font_size=12, text_space=8):
     # 标记坐标点
     if sides_or_cross < 3:
         write_crosshair(draw, point, radius * 0.8, int(radius * 0.7) * 0.8, color, line_width)
     else:
         draw_polygon(draw, point, radius, sides_or_cross, (random.randint(0, 314) / 100), color, line_width)
+    # draw.ellipse((point[0] - 1, point[1] - 1, point[0] + 1, point[1] + 1), fill=color)
     draw_text_on_image(draw, str(regular_point), (point[0] + radius, point[1] + radius), font_size, color, text_space)
     draw_text_on_image(draw, name, (point[0] + radius + text_space, point[1] - radius), font_size, color, text_space)
 
@@ -146,80 +147,33 @@ def draw_text_on_image(draw: ImageDraw, text, position, font_size, color, spacin
     # 在指定位置绘制文字
     draw.text(position, text, font=font, fill=color, spacing=spacing)
 
-def draw_map(center:tuple[int, int], zoom_factor: int|float, map_size, map, padding=100, line_width=1):
-    # 星图绘制中心
-    # center = (500, 500)
-    # zoom_factor = 1
-    map_width, map_height = map_size, map_size
-    zoom_width, zoom_height = map_width // zoom_factor // 2, map_height // zoom_factor // 2
-    append = (((-center[0] + zoom_width) * zoom_factor), (-center[1] + zoom_height) * zoom_factor)
-
-    # 计算图像宽高
-    width, height = int(zoom_width * 2 * zoom_factor + padding * 2), int(zoom_height * 2 * zoom_factor + padding * 2)
-    print(width, height)
-    # 坐标点列表，(x, y)
-    # regular_points = [(0, 0), (10, 1), (700, 750), (1000, 1000), (323, 400)]
-    points = [(int(point[0] * zoom_factor + padding + append[0]), int(point[1] * zoom_factor + padding + append[1])) for point in regular_points]
-
-    # 创建画布
-    img = Image.new('RGB', (width, height), 'black')
-    draw = ImageDraw.Draw(img)
-
-    # 背景
-    # 绘制随机线条
-    random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_factor), width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_factor), node_size=int(1 * zoom_factor))
-    # 绘制网格
-    write_grid(draw, int(35 * zoom_factor), width, height, '#102735', int(1 * zoom_factor))
-
-    # 前景
-    # 绘制多边形
-    # draw_polygon(draw, points[2], 12, 3, (random.randint(0, 314) / 100), 'green', line_width)
-    mark_point(draw, points[2], regular_points[2], 3, '#00FF00', line_width, 10, '测试空间站')
-    mark_point(draw, points[1], regular_points[1], 3, '#00FF00', line_width, 10, '测试空间站')
-    mark_point(draw, points[3], regular_points[3], 4, 'yellow', line_width, 10, '测试舰队')
-    mark_point(draw, points[4], regular_points[4], 5, 'magenta', line_width, 10, '测试星球')
-    # draw_polygon(draw, points[1], 12, 3, (random.randint(0, 314) / 100), 'green', line_width)
-    # draw_polygon(draw, points[3], 12, 4, (random.randint(0, 314) / 100), 'yellow', line_width)
-
-
-    # 绘制圆加十字
-    mark_point(draw, points[0],regular_points[0], 0, 'cyan', line_width, 10)
-
-    # # 绘制边栏（矩形）
-    # draw.rectangle([(0, 0), (1000, 50)], fill='black', outline='cyan')
-    # draw.rectangle([(1000, 0), (1050, 1000)], fill='black', outline='cyan')
-
-    # 绘制文字
-    font_size = 12
-    # draw_text_on_image(draw, '[用户] xzadudu179', (15, 5), font_size, 'white')
-    # draw_text_on_image(draw, '[HIUN 星图终端]', (15, 70), font_size, 'white')
-    text = f'[HIUN 星图终端]\n[用户] xzadudu179\n坐标轴中心: {center}  缩放倍率: {zoom_factor}x\n你在坐标 [0, 0]'
-    draw_text_on_image(draw, text, (15, (height - 40 - font_size * (text.count('\n') + 1))), font_size, 'white', spacing=10)
-    # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
-    # 保存图片
-    img.save('data/images/temp/chart.png')
-
-    # 显示图片
-    img.show()
-
+# 计算像素亮度
+def calculate_brightness(r, g, b):
+    return 0.299 * r + 0.587 * g + 0.114 * b
 
 if __name__ == "__main__":
     # 图表大小
     # 星图绘制中心
-    center = (0, 0)
-    zoom_factor = 0.5
-    ui_zoom_factor = 2
-    map_width, map_height = 1000, 1000
+    center = (125, 125)
+    img_zoom = 3
+    zoom_factor = 1
+    size_factor = 1
+    ui_zoom_factor = 1
+    map_width, map_height = 250, 250
     zoom_width, zoom_height = map_width // zoom_factor // 2, map_height // zoom_factor // 2
     append = (((-center[0] + zoom_width) * zoom_factor), (-center[1] + zoom_height) * zoom_factor)
     padding = 100
 
     # 计算图像宽高
-    width, height = int(zoom_width * 2 * zoom_factor + padding * 2), int(zoom_height * 2 * zoom_factor + padding * 2)
+    width, height = int(zoom_width * 2 * zoom_factor + padding * 2) * img_zoom, int(zoom_height * 2 * zoom_factor + padding * 2) * img_zoom
     print(width, height)
     # 坐标点列表，(x, y)
-    regular_points = [(0, 0), (10, 1), (700, 750), (1000, 1000), (323, 400)]
-    points = [(int(point[0] * zoom_factor + padding + append[0]), int(point[1] * zoom_factor + padding + append[1])) for point in regular_points]
+    regular_points = []
+    # 随便绘制一些物体的位置
+    for i in range(25):
+        regular_points.append((random.randint(0, map_width), random.randint(0, map_height)))
+
+    points = [(int(point[0] * zoom_factor + padding + append[0]) * img_zoom, int(point[1] * zoom_factor + padding + append[1]) * img_zoom) for point in regular_points]
 
     # 创建画布
     img = Image.new('RGB', (width, height), 'black')
@@ -229,35 +183,42 @@ if __name__ == "__main__":
 
     # 背景
     # 绘制随机线条
-    random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_factor), width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_factor), node_size=int(1 * zoom_factor))
+    random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_factor) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_factor * img_zoom), node_size=int(1 * zoom_factor))
     # 绘制网格
-    write_grid(draw, int(35 * zoom_factor), width, height, '#102735', int(1 * zoom_factor))
+    write_grid(draw, int(35 * zoom_factor * img_zoom), width, height, '#102735', int(1 * zoom_factor * img_zoom))
 
     font_size = 12
 
     # 前景
     # 绘制多边形
     # draw_polygon(draw, points[2], 12, 3, (random.randint(0, 314) / 100), 'green', line_width)
-    mark_point(draw, points[2], regular_points[2], 3, '#00FF00', line_width * ui_zoom_factor, 10 * ui_zoom_factor, '测试空间站', font_size * ui_zoom_factor)
-    mark_point(draw, points[1], regular_points[1], 3, '#00FF00', line_width * ui_zoom_factor, 10 * ui_zoom_factor, '测试空间站', font_size * ui_zoom_factor)
-    mark_point(draw, points[3], regular_points[3], 4, 'yellow', line_width * ui_zoom_factor, 10 * ui_zoom_factor, '测试舰队', font_size * ui_zoom_factor)
-    mark_point(draw, points[4], regular_points[4], 5, 'magenta', line_width * ui_zoom_factor, 10 * ui_zoom_factor, '测试星球', font_size * ui_zoom_factor)
-    # draw_polygon(draw, points[1], 12, 3, (random.randint(0, 314) / 100), 'green', line_width)
-    # draw_polygon(draw, points[3], 12, 4, (random.randint(0, 314) / 100), 'yellow', line_width)
+    names = {
+        3: "测试空间站",
+        4: "测试舰队",
+        5: "测试行星"
+    }
+    colors = ["#FE4A56", "#FEF060", "#44ff6c", "#e58bff", "#AAAACC", "#44a0ff"]
+    # colors = ["#FF0000", "#FFFF00", "#0F0", "#0FF", "#AAA", "#F0F"]
+    relas = {
+        colors[0]: "敌对",
+        colors[1]: "中立",
+        colors[2]: "友好",
+        colors[3]: "玩家",
+        colors[4]: "无所属",
+        colors[5]: "联盟",
+    }
 
+    for i, point in enumerate(regular_points):
+        if i == 0: continue
+        side = random.randint(3, 5)
+        color = random.choice(colors)
+        mark_point(draw, points[i], point, side, color, int(line_width * ui_zoom_factor), int(10 * ui_zoom_factor), f'[{relas[color]}] {names[side]}{i}', int(font_size * ui_zoom_factor))
 
     # 绘制圆加十字
-    mark_point(draw, points[0],regular_points[0], 0, 'cyan', line_width * ui_zoom_factor, 10 * ui_zoom_factor,'xzadudu179', font_size * ui_zoom_factor)
+    mark_point(draw, points[0],regular_points[0], 0, 'cyan', int(line_width * ui_zoom_factor), int(10 * ui_zoom_factor),'xzadudu179 (你)', int(font_size * ui_zoom_factor))
 
-    # # 绘制边栏（矩形）
-    # draw.rectangle([(0, 0), (1000, 50)], fill='black', outline='cyan')
-    # draw.rectangle([(1000, 0), (1050, 1000)], fill='black', outline='cyan')
-
-    # 绘制文字
-    # draw_text_on_image(draw, '[用户] xzadudu179', (15, 5), font_size, 'white')
-    # draw_text_on_image(draw, '[HIUN 星图终端]', (15, 70), font_size, 'white')
-    text = f'[HIUN 星图终端]\n[用户] xzadudu179\n坐标轴中心: {center}  缩放倍率: {zoom_factor}x | {ui_zoom_factor}x\n你在坐标 [0, 0]'
-    draw_text_on_image(draw, text, (15 * ui_zoom_factor, (height - 30 * ui_zoom_factor - font_size * (text.count('\n') + 1) * ui_zoom_factor)), font_size * ui_zoom_factor, 'white', spacing=10)
+    text = f'[HIUN 星图终端]\n[用户] xzadudu179\n坐标轴中心: {center}  缩放倍率: {zoom_factor}x | {ui_zoom_factor}x\n你在坐标 [{regular_points[0][0]}, {regular_points[0][1]}]'
+    draw_text_on_image(draw, text, (int(15 * ui_zoom_factor), int(height - 40 * ui_zoom_factor - font_size * (text.count('\n') + 1) * ui_zoom_factor)), int(font_size * ui_zoom_factor), 'white', spacing=10)
     # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
     # 保存图片
     img.save('data/images/temp/chart.png')

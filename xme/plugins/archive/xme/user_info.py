@@ -1,4 +1,4 @@
-# 注册账号 或签到
+
 from .xme_config import *
 from .classes.user import *
 from .classes.database import *

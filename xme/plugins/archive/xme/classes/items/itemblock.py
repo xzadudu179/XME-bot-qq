@@ -1,10 +1,11 @@
 # 背包里的一格
 from .item import item_table, Item
+import copy
 
 class ItemBlock:
-    def __init__(self, item: Item|None=None, count: int=0) -> None:
-        self.item: Item = item
-        if self.item and count > self.item.maxcount:
+    def __init__(self, item: Item=None, count: int=0) -> None:
+        self.item = item
+        if self.item != None and count > self.item.maxcount:
             raise ValueError("物品堆叠过多")
         self.itemcount = count
 
@@ -43,16 +44,33 @@ class ItemBlock:
         Returns:
             bool: 是否成功删除
         """
-        if not self.item:
-            return (False, 0)
-        new_count = self.itemcount - count
-        if new_count <= 0:
+        if self.item == None:
+            return (False, count)
+        item_left = self.itemcount - count
+        if item_left <= 0:
             # return False
             self.item = None
-        last_item = abs(new_count)
-        new_count = 0
-        self.itemcount = new_count
+        else:
+            self.itemcount = item_left
+            return (True, 0)
+        # 剩余物品
+        last_item = abs(item_left)
+        self.itemcount = 0
         return (True, last_item)
 
     def __str__(self) -> str:
         return f"{self.item if self.item else -1},{self.itemcount}"
+
+    # def __getstate__(self):
+    #     return str(self)
+
+    # def __setstate__(self, s):
+    #     item_name = s.split(",")[0]
+    #     item = item_table.get(item_name, None)
+    #     amount = int(s.split(",")[1])
+
+    #     # 如果 item 是可变对象，确保它不会被共享
+    #     if item is not None:
+    #         self.__init__(copy.deepcopy(item), amount)
+    #     else:
+    #         self.__init__(None, amount)

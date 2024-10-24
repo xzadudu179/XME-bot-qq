@@ -26,7 +26,7 @@ async def send_time_message():
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
     if not (6 <= datetime.now().hour <= 24): return
-    if not random_tools.random_percent(0.1): return
+    if not random_tools.random_percent(0.05): return
     bot = nonebot.get_bot()
     group = random.choice(await bot.get_group_list())
     group_id = group['group_id']

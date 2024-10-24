@@ -50,6 +50,12 @@ class Item:
             # 基本方法
         }
 
+    def __getstate__(self):
+        return self.id
+
+    def __setstate__(self, id):
+        self.get_item(id)
+
     def __str__(self) -> str:
         return str(self.id)
 

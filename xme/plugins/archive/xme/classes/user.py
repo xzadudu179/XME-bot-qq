@@ -97,7 +97,7 @@ class User(DbReadable):
         dict = {}
         try:
             dict = database.load_from_db(id=id, table_name=table_name)
-        except sqlite3.OperationalError:
+        except:
             # 这个 User只是临时数据
             print("创建用户表中")
             temp_user = User(database, 1, '1', '1')
@@ -109,8 +109,8 @@ class User(DbReadable):
     #     return User.load_user(database, "id", user_id)
 
     @DbReadable.update_data
-    def add_item(self, itemid, count) -> tuple[bool, int]:
-        return self.inventory.add_item(itemid, count)
+    def add_item(self, item, count) -> tuple[bool, int]:
+        return self.inventory.add_item(item, count)
 
     @DbReadable.update_data
     def del_item(self, item, count) -> tuple[bool, int]:

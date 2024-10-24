@@ -18,7 +18,7 @@ def pre_check(pre_func=None, end_func=None):
             except TypeError:
                 # 出错时尝试更新一下用户数据
                 print("用户出现 TypeError")
-                update_user_data(session)
+                # update_user_data(session)
                 print(xme_user)
                 result = await func(session, xme_user, *args, **kwargs)
             except Exception as ex:
@@ -32,12 +32,11 @@ def pre_check(pre_func=None, end_func=None):
         return wrapper
     return decorator
 
-def update_user_data(session):
-    database = Xme_database()
-    user_id = session.event.user_id
-    users = User.load_by_id(database, user_id)
-    user: User = users[0]
-    user.update()
+# def update_user_data(session):
+#     database = Xme_database()
+#     user_id = session.event.user_id
+#     user: User = User.load_by_id(database, user_id)
+#     user.update()
 
 def save_data(session):
     database = Xme_database()

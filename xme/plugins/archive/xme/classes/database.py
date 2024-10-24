@@ -94,7 +94,7 @@ class Xme_database:
         # 寻找 BLOB 数据并且反序列化
         for column in columns:
             if isinstance(data_dict[column], bytes):
-                print(f"反序列化字段 {column}")
+                print(f"反序列化字段 {column}\n{data_dict[column]}")
                 data_dict[column] = pickle.loads(data_dict[column])  # 反序列化
         # print(data_dict)
         data_dict['database'] = self

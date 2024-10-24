@@ -1,15 +1,15 @@
 # 背包里的一格
 from .item import item_table, Item
+import copy
 
 class ItemBlock:
-    def __init__(self, itemid: int=None, count: int=0) -> None:
-        self.itemid = itemid
-        if self.itemid != None and count > Item.get_item(self.itemid).maxcount:
+    def __init__(self, item: Item=None, count: int=0) -> None:
+        self.item = item
+        if self.item != None and count > self.item.maxcount:
             raise ValueError("物品堆叠过多")
         self.itemcount = count
-        print("itemblock初始化")
 
-    def add_item(self, id: int, count) -> tuple[bool, int]:
+    def add_item(self, item: Item, count) -> tuple[bool, int]:
         """尝试添加物品
 
         Args:
@@ -22,16 +22,16 @@ class ItemBlock:
         # 如果没有就添加第一个物品
         if count < 0:
             return (False, 0)
-        if item_table.get(self.itemid, None) == None:
-            self.itemid = id
-        elif self.itemid != id:
+        if not self.item:
+            self.item = item
+        elif self.item != item:
             # 不同类物品不允许添加
             return (False, 0)
         new_count = self.itemcount + count
-        if new_count > Item.get_item(self.itemid).maxcount:
+        if new_count > self.item.maxcount:
             # new_count = self.item.maxcount
-            self.itemcount = Item.get_item(self.itemid).maxcount
-            return (True, new_count - Item.get_item(self.itemid).maxcount)
+            self.itemcount = self.item.maxcount
+            return (True, new_count - self.item.maxcount)
         self.itemcount = new_count
         return (True, 0)
 
@@ -44,12 +44,12 @@ class ItemBlock:
         Returns:
             bool: 是否成功删除
         """
-        if self.itemid == None:
+        if self.item == None:
             return (False, count)
         item_left = self.itemcount - count
         if item_left <= 0:
             # return False
-            self.itemid = None
+            self.item = None
         else:
             self.itemcount = item_left
             return (True, 0)
@@ -59,4 +59,18 @@ class ItemBlock:
         return (True, last_item)
 
     def __str__(self) -> str:
-        return f"{self.itemid if self.itemid else -1},{self.itemcount}"
+        return f"{self.item if self.item else -1},{self.itemcount}"
+
+    # def __getstate__(self):
+    #     return str(self)
+
+    # def __setstate__(self, s):
+    #     item_name = s.split(",")[0]
+    #     item = item_table.get(item_name, None)
+    #     amount = int(s.split(",")[1])
+
+    #     # 如果 item 是可变对象，确保它不会被共享
+    #     if item is not None:
+    #         self.__init__(copy.deepcopy(item), amount)
+    #     else:
+    #         self.__init__(None, amount)

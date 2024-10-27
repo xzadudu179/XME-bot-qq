@@ -1,5 +1,6 @@
 import re
 from pypinyin import lazy_pinyin
+import spacy
 
 # 中文占比
 def chinese_proportion(input_str) -> float:
@@ -49,3 +50,16 @@ def jaccard_similarity(str1: str, str2: str) -> float:
     intersection = len(set1.intersection(set2))
     union = len(set1.union(set2))
     return intersection / union
+
+def is_question_product(question, question_of):
+    # 加载中文模型
+    nlp = spacy.load("zh_core_web_sm")
+
+    # 处理句子
+    doc = nlp(question)
+
+    # 识别实体
+    for ent in doc.ents:
+        if ent.text == question_of:
+            return True
+    return False

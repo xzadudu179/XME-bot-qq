@@ -42,4 +42,4 @@ async def _(session: CommandSession):
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
-    await session.send(f"瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")
+    await session.send(f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")

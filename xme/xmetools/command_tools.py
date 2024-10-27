@@ -5,6 +5,8 @@ async def send_cmd(cmd_string, session, check_permission=True):
     name = cmd_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
+    else:
+        return
     alias_cmd: Command = CommandManager._aliases.get(name, False)
     if alias_cmd:
         name = alias_cmd.name
@@ -18,5 +20,8 @@ async def send_cmd(cmd_string, session, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
-async def find_command_by_args(input_string):
-    return CommandManager._aliases.get(input_string, False)
+def find_command_by_args(input_string):
+    name = input_string.split(" ")[0]
+    if name[0] in config.COMMAND_START:
+        name = name[1:]
+    return CommandManager._aliases.get(name, False)

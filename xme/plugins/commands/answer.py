@@ -1,6 +1,9 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools import request_tools
+from xme.xmetools import random_tools
+from xme.xmetools import text_tools
+
 import json
 
 alias = ['答案之书', 'ans']
@@ -16,12 +19,21 @@ __plugin_usage__ = str(CommandDoc(
 
 REPLACE_STR_ZH = {
     "办何自己不肯妥协，先问一下自已的能力。": "为何自己不肯妥协，先问一下自己的能力。",
-    "有。": "是的"
+    "有。": "是的。"
 }
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     message = "呜呜，书突然找不到了"
+    args = session.current_arg_text.strip()
+    print(args)
+    if args and text_tools.is_question_product(args, '550W'):
+        print("有人在询问 550W")
+        if random_tools.random_percent(0.01):
+            print("没错，我是550W")
+            await session.send("答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"")
+            return
+
     try:
         ans_json = json.loads(await request_tools.fetch_data('https://api.andeer.top/API/answer.php'))
         if ans_json['code'] != 200:

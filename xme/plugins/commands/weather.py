@@ -58,7 +58,8 @@ async def _(session: CommandSession):
             await session.send(message)
             return
     try:
-        weathers = await req.get_weather(city)["forecasts"][0]
+        weathers = await req.get_weather(city)
+        weathers = weathers["forecasts"][0]
         city_name = weathers["city"]
         report_time = weathers["reporttime"]
         weather_today = weathers["casts"][0]
@@ -74,7 +75,7 @@ async def _(session: CommandSession):
         day_wind = [weather_today["daywind"], weather_today["daypower"]]
         night_wind = [weather_today["nightwind"], weather_today["nightpower"]]
         message = f"[CQ:at,qq={session.event.user_id}] "
-        message += f'{rt.rand_str("我来看看天气~ owo", "让我看看天气~", "让我查询一下这里的天气~", "我看看这里的天气~ owo", "看看地球的天气怎么样啦~")}\n======※今日天气: {city_name}※======\n{datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日")} {dt.week_str(week)}\n{day_night_weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind[0]}风 {day_wind[1]} 级\t夜间: {night_wind[0]}风 {night_wind[1]} 级\n查询时间: {report_time}'
+        message += f'{rt.rand_str("我来看看天气~ owo", "让我看看天气~", "让我查询一下这里的天气~", "我看看这里的天气~ owo", "让我看看天气怎么样啦~")}\n======※今日天气: {city_name}※======\n{datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日")} {dt.week_str(week)}\n天气：{day_night_weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind[0]}风 {day_wind[1]} 级\t夜间: {night_wind[0]}风 {night_wind[1]} 级\n查询时间: {report_time}'
         if len(params.split(" ")) > 1:
             message += "\n========================\n"
             max_temp = 0
@@ -92,8 +93,8 @@ async def _(session: CommandSession):
             future_days = days_num - 1
             message += f'未来 {future_days} 天{("" if future_days <= 1 else "")}{("有" if rainning_days == future_days and future_days <= 1 else "")}{("有 " + str(rainning_days) + " 天有" if future_days > 1 and rainning_days < future_days else "都有" if rainning_days == future_days else "没有")}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃'
         message += f"\n{rt.rand_str('数据来自于高德开放平台~', '数据是高德开放平台的哦~', '通过高德开放平台查询的~')}"
-    except:
-        message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}"
+    except Exception as ex:
+        message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
     await session.send(message)
 
 

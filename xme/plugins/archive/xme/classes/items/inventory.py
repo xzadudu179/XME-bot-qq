@@ -1,28 +1,41 @@
 from .item import Tag, Item, item_table, init_item_table
 from .itemblock import ItemBlock
+from ..fixed_list import FixedList
 
 class Inventory:
     """物品栏类
     """
-    def __init__(self, length: int, itemblocks: list[ItemBlock]=None) -> None:
+    def __init__(self, length: int, itemblocks: list=None) -> None:
         if length <= 0:
             raise ValueError("长度必须大于 0")
         if not itemblocks:
-            self.blocks: list[ItemBlock] = []
-            for _ in range(length):
-                self.blocks.append(ItemBlock())
-        elif len(itemblocks) < length:
-            self.blocks: list[ItemBlock] = itemblocks
-            for _ in range(length - len(itemblocks)):
-                self.blocks.append(ItemBlock())
+            self.blocks: FixedList = FixedList(length)
+            # for _ in range(length):
+            #     self.blocks.append(ItemBlock())
         else:
-            self.blocks = itemblocks
+            self.blocks = FixedList(length, itemblocks.getlist())
+        self.blocks.fillwith(ItemBlock())
         self.length = length
 
-    def get_itemblocks(itemblocks_str: str | None):
-        itemblocks = []
+    def find_item_by_index(self, index: int) -> Item:
+        try:
+            return self.blocks[index].item
+        except:
+            return None
+
+    def get_itemblocks(itemblocks_str: str | None, length: int=20):
+        """从字符串获取物品栏到列表
+
+        Args:
+            itemblocks_str (str | None): 物品栏字符
+            length (int, optional): 列表长度. Defaults to 20.
+
+        Returns:
+            FixedList: 物品栏列表
+        """
+        itemblocks = FixedList(length)
         if not itemblocks_str:
-            for _ in range(20):
+            for _ in range(length):
                 itemblocks.append(ItemBlock())
                 return itemblocks
         for itemblock_str in itemblocks_str.split("|"):
@@ -92,7 +105,19 @@ class Inventory:
         if not self.del_item(item, 1): return (False, "物品数量不足")
         return (True, action())
 
-    def del_item(self, item: Item, count: int) -> bool:
+    # def drop_item(self, index: int, count: int) -> tuple[bool, int]:
+    #     """尝试丢弃物品
+
+    #     Args:
+    #         index (int): 物品栏索引
+    #         count (int): 数量
+
+    #     Returns:
+    #         bool: 是否丢弃成功
+    #     """
+    #     return self.del_item(self.blocks[index], count)
+
+    def del_item(self, item: Item, count: int) -> tuple[bool, int]:
         """尝试删除物品
 
         Args:
@@ -102,12 +127,20 @@ class Inventory:
         Returns:
             bool: 是否删除成功
         """
-        for block in self.blocks:
+        if count <= 0:
+            return (False, -1)
+        curr_count = count
+        for block in reversed(self.blocks):
+            # print(f"还剩 {curr_count} 个物品")
             if block.item != item: continue
-            if block.del_item(count): return True
-        return False
+            (stats, curr_count) = block.del_item(curr_count)
+            if stats and curr_count <= 0:
+                print("删除成功")
+                return (True, 0)
+        print(f"删除失败，还剩余 {curr_count} 个物品")
+        return (False, curr_count)
 
-    def add_item(self, item: Item, count: int) -> bool:
+    def add_item(self, item: Item, count: int) -> tuple[bool, int]:
         """尝试添加物品
 
         Args:
@@ -117,14 +150,22 @@ class Inventory:
         Returns:
             bool: 是否成功
         """
+        if count <= 0:
+            return (False, -1)
         curr_count = count
         for block in self.blocks:
             (stats, curr_count) = block.add_item(item, curr_count)
             print(curr_count, curr_count)
             if stats and curr_count <= 0:
-                print("fanhuie")
-                return True
-        return False
+                print("添加成功")
+                print(str(block))
+                print(self.blocks)
+                return (True, 0)
+        if curr_count == count:
+            print("添加失败")
+            return (False, curr_count)
+        print(f"添加成功，但是还剩余 {curr_count} 个物品")
+        return (True, curr_count)
 
     def __str__(self) -> str:
         return '|'.join([str(block) for block in self.blocks])

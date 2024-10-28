@@ -16,11 +16,12 @@ DEFAULT_COMMAND_PERMISSION = lambda s: s.is_groupchat
 # 用户自定义 config
 GROUPS_WHITELIST = [
     727949269,
-    945066540
+    945066540,
+    913581215,
 ]
 # 报时
 SCHEDULER_GROUP = [
     727949269,
     913581215,
-    164072032
+    164072032,
 ]

@@ -1,5 +1,5 @@
 import heapq
-from . import str_similarity as sim
+from . import text_tools as sim
 
 def heap_top_k(nums: list, k: int) -> list[int]:
     """使用最小堆的 top k

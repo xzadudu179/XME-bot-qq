@@ -50,11 +50,42 @@ class Item:
             # 基本方法
         }
 
+    def __getstate__(self):
+        return self.id
+
+    def __setstate__(self, id):
+        self.get_item(id)
+
     def __str__(self) -> str:
         return str(self.id)
 
+    def get_item(id):
+        return item_table[id]
+
+    def info(self) -> str:
+        price = '\n基准价格: ' + str(self.price) if self.has_tag(Tag.SALEABLE) else ''
+        return f"""
+[{self.rarity.value}] {self.name}
+标签：{', '.join([tag.value for tag in self.tags])}{price}
+-------------------------
+{self.desc}
+-------------------------
+最大堆叠数量: {self.maxcount}
+    """.strip()
+
     def set_action(self, name: str, action):
         self.actions[name] = action
+
+    def perform_action(self, action_name, *args):
+        """使用物品自定方法
+
+        Args:
+            action_name (str): 物品方法名
+        """
+        if action_name in self.actions and self.actions[action_name]:
+            return (True, self.actions[action_name](self, args))
+        else:
+            return (False)
 
 
 item_table = {
@@ -66,12 +97,17 @@ def init_item_table():
     # 物品列表在这定义
     # 几何挂件
     geo_pendant = Item(0, "几何挂件", "HIUN 中常见的小挂件，可以散发清香，几何体可以随意编辑样式。", Rarity.COMMON, [Tag.SALEABLE], 20)
-    geo_pendant.set_action('use', lambda x:"f")
+    geo_pendant.price = 10
+    def get_pendant_sell():
+        return geo_pendant.price
+    geo_pendant.set_action('sell', get_pendant_sell)
     items.append(geo_pendant)
 
     for item in items:
         item_table[str(item.id)] = item
 
-    print(item_table)
+    print(f"物品表初始化：{item_table}")
 
 init_item_table()
+# item = item_table['0']
+# print(item.info())

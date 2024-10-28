@@ -24,10 +24,14 @@ async def jrrp(session: CommandSession):
     # key = base64_encode("嘿嘿嘿...179....嘿嘿嘿")
     # result = get_luck(qq, key)
     random.seed(int(str(curr_days()) + str(qq)))
-    result = random.randint(0, 100)
+    result = random.randint(-1, 101)
     content = f"[CQ:at,qq={qq}] 你的今日人品为"
-    if result < 10:
+    if result < 0:
+        await session.send(content + f"{result}...？ xwx")
+    elif result < 10:
         await session.send(content + f"....{result}？uwu")
+    elif result > 100:
+        await session.send(content + f"{result}.0000% ！All Perfect+ owo！！")
     elif result >= 90:
         await session.send(content + f"{result}！owo！")
     else:

@@ -8,29 +8,30 @@ __plugin_name__ = 'setu'
 
 __plugin_usage__= str(CommandDoc(
     name=__plugin_name__,
-    desc='涩图',
-    introduction='返回一张涩图以及信息（非 R18） [by 千枫]',
-    usage=f'setu',
+    desc='涩图？',
+    introduction='返回一张涩图？',
+    usage=f'',
     permissions=[],
     alias=alias
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def setu(session: CommandSession):
-    api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
-    result = await fetch_image_data(api_url)
-    if result:
-        # await session.send("已找到图片，正在发送...")
-        print(result.url)
-        await session.send(f"""
-        图片标题: {result.title}
-        图片pid: {result.pid}
-        作者: {result.author}
-        tags: {result.tags}
-        --------------------
-        [CQ:image,file={result.url}]""".strip())
-    else:
-        await session.send("无法获取图片信息.")
+    # api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
+    # result = await fetch_image_data(api_url)
+    # if result:
+    #     # await session.send("已找到图片，正在发送...")
+    #     print(result.url)
+    #     await session.send(f"""
+    #     图片标题: {result.title}
+    #     图片pid: {result.pid}
+    #     作者: {result.author}
+    #     tags: {result.tags}
+    #     --------------------
+    #     [CQ:image,file={result.url}]""".strip())
+    # else:
+    #     await session.send("无法获取图片信息.")
+    await session.send("哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 
 class ImageData:

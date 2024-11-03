@@ -26,12 +26,12 @@ REPLACE_STR_ZH = {
 async def _(session: CommandSession):
     message = "呜呜，书突然找不到了"
     args = session.current_arg_text.strip()
-    print(args)
-    if args and text_tools.is_question_product(args, '550W'):
+    print(args.upper())
+    if args and text_tools.is_question_product(args.upper(), '550W'):
         print("有人在询问 550W")
-        if random_tools.random_percent(0.01):
+        if random_tools.random_percent(0.5):
             print("没错，我是550W")
-            await session.send("答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"")
+            await session.send(f"[CQ:at,qq={session.event.user_id}]\n答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"")
             return
 
     try:

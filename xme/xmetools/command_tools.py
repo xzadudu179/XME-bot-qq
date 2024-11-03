@@ -24,4 +24,10 @@ def find_command_by_args(input_string):
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
-    return CommandManager._aliases.get(name, False)
+    elif name[0] not in config.COMMAND_START:
+        return False
+    if CommandManager._commands.get((name,), False) == False:
+        return CommandManager._aliases.get(name, False)
+    else:
+        print("有这个指令")
+        return CommandManager._commands.get((name,), False)

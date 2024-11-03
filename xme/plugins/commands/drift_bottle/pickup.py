@@ -63,6 +63,8 @@ async def _(session: CommandSession):
             json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         return
     elif str(index) == keys.ERROR_BOTTLE_INDEX:
+        print("保存中")
+        json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         return
     else:
         for _ in range(3):
@@ -76,6 +78,7 @@ async def _(session: CommandSession):
             print("重新读取")
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
             print(find_command_by_args(reply))
+            print(reply)
             if reply == '-like':
                 # 重新读取
                 content = f"[CQ:at,qq={user_id}] 点赞成功~"
@@ -103,4 +106,4 @@ async def _(session: CommandSession):
     print(bottles_dict['bottles'][index])
     # print(bottle)
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-    await session.send(content)
+    # await session.send(content)

@@ -6,7 +6,7 @@ commands = ['wife']
 command_properties = [
     {
         'name': 'wife',
-        'introduction': '查看自己或别人的今日老婆',
+        'introduction': '查看自己或别人的今日老婆，参数填写 at 则会同时 at 你今日的老婆',
         'usage': '<at想看的人>',
         'permission': ['在群内使用']
     },

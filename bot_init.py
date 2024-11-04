@@ -1,7 +1,7 @@
 import json
 import os
 from nonebot.log import logger
-import nonebot
+from logging.handlers import TimedRotatingFileHandler
 import logging
 from xme.xmetools import color_manage as c
 from logging.handlers import RotatingFileHandler
@@ -57,15 +57,16 @@ def bot_init():
     init_json(bottles_path, DRIFT_BOTTLES_INFO)
 
 
-def saving_log(logger: logging.Logger, filepath=f'./logs/{datetime.now().strftime(format="%Y-%m-%d")}_nonebot.log'):
-    file_handler = RotatingFileHandler(filepath, maxBytes=15 * 1024 * 1024, backupCount=10, encoding='utf-8')
+def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):
     # 设置日志的格式
+    log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1, encoding="utf-8")
+    log_handler.suffix = "%Y-%m-%d"  # 按年-月-日格式保存日志文件
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    file_handler.setFormatter(formatter)
+    log_handler.setFormatter(formatter)
     # 添加文件处理器到 logger
-    logger.addHandler(file_handler)
     print(c.gradient_text("#dda3f8","#66afff" ,text=f"当前日志将会被记录到文件 \"{filepath}\" 中。"))
+    logger.addHandler(log_handler)
 
 

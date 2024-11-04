@@ -7,8 +7,6 @@ from xme.xmetools import random_tools
 import random
 from nonebot import on_command, CommandSession
 import config
-from nonebot.command import call_command, CommandManager, Command
-
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
 

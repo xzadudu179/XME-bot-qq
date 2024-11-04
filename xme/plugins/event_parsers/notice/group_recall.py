@@ -13,7 +13,11 @@ from xme.xmetools.request_tools import fetch_data
 async def _(session: NoticeSession):
     settings = {}
     settings = json_tools.read_from_path("./data/_botsettings.json")
-    recalled_message = await session.bot.api.get_msg(message_id=session.event['message_id'])
+    try:
+        recalled_message = await session.bot.api.get_msg(message_id=session.event['message_id'])
+    except:
+        print("无法获取撤回信息")
+        return
     # print(session.event.group_id, session.event.user_id)
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.operator_id)
     sender =  await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)

@@ -60,6 +60,9 @@ def bot_init():
     bottles_path = "./data/drift_bottles.json"
     init_json(bottles_path, DRIFT_BOTTLES_INFO)
 
+    usage_path = "./data/usage_stats.json"
+    init_json(usage_path, USAGE_STATS)
+
 
 def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):
     # 设置日志的格式

@@ -7,8 +7,6 @@ from xme.xmetools import random_tools
 import random
 from nonebot import on_command, CommandSession
 import config
-from nonebot.command import call_command, CommandManager, Command
-
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
 
@@ -63,6 +61,8 @@ async def _(session: CommandSession):
             json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         return
     elif str(index) == keys.ERROR_BOTTLE_INDEX:
+        print("保存中")
+        json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         return
     else:
         for _ in range(3):
@@ -76,6 +76,7 @@ async def _(session: CommandSession):
             print("重新读取")
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
             print(find_command_by_args(reply))
+            print(reply)
             if reply == '-like':
                 # 重新读取
                 content = f"[CQ:at,qq={user_id}] 点赞成功~"
@@ -95,6 +96,8 @@ async def _(session: CommandSession):
                 return
             elif find_command_by_args(reply) != False:
                 print("执行指令")
+                # if find_command_by_args(reply).name[0] == "wife":
+                #     await session.send("注意：你在 pickup 指令的后面 3 句话内执行了 wife 指令，会默认显示我的老婆 uwu")
                 await send_cmd(reply, session)
                 return
             # 重新读取
@@ -103,4 +106,4 @@ async def _(session: CommandSession):
     print(bottles_dict['bottles'][index])
     # print(bottle)
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-    await session.send(content)
+    # await session.send(content)

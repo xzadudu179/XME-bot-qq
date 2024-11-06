@@ -163,6 +163,7 @@ cython_debug/
 
 
 data/*
+logs/*
 test.py
 keys.py
 linescount.py

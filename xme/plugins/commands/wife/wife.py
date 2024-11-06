@@ -37,9 +37,9 @@ async def _(session: CommandSession):
             # print(pair_user)
             name = x if (x:=wife['card']) else wife['nickname']
             who = f"[CQ:at,qq={user_id}] {at_name}"
-            message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name} ({wife['user_id']})"
+            message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
     except Exception as ex:
-        message = f"呜呜，无法获取到你 at 的群员信息"
+        message = f"呜呜，无法获取到群员信息"
         print(ex)
     await session.send(message)
 

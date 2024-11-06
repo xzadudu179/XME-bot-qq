@@ -96,6 +96,8 @@ async def _(session: CommandSession):
                 return
             elif find_command_by_args(reply) != False:
                 print("执行指令")
+                # if find_command_by_args(reply).name[0] == "wife":
+                #     await session.send("注意：你在 pickup 指令的后面 3 句话内执行了 wife 指令，会默认显示我的老婆 uwu")
                 await send_cmd(reply, session)
                 return
             # 重新读取

@@ -9,6 +9,10 @@ from datetime import datetime
 
 WIFE_INFO = {
 }
+USAGE_STATS = {
+    "start_time": datetime.now().strftime("%Y年%m月%d日 %H:%M:%S"),
+    "datas": [] # datas 字典列表, key 为群号
+}
 BASIC_INFO = {
     "name": "默认机器人",
     "author": "unknown",
@@ -28,16 +32,16 @@ BOT_SETTINGS = {
 }
 
 def init_json(path, data):
-    if not os.path.exists(path):
-        logger.warning(f"不存在 {path}, 正在重新创建")
-        with open(path, 'w', encoding='utf-8') as file:
-            file.write(json.dumps(data, indent=4, ensure_ascii=False))
+    if os.path.exists(path): return
+    logger.warning(f"不存在 {path}, 正在重新创建")
+    with open(path, 'w', encoding='utf-8') as file:
+        file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
 def create_folder_if_not_exists(*paths):
     for path in paths:
-        if not os.path.exists(path):
-            logger.info(f"创建 {path} 文件夹")
-            os.mkdir(path)
+        if os.path.exists(path): continue
+        logger.info(f"创建 {path} 文件夹")
+        os.mkdir(path)
 
 def bot_init():
     create_folder_if_not_exists("./logs", "./data", "./data/xme")

@@ -26,6 +26,9 @@ def rgb_text(text, f=(255, 255, 255), b=(0, 0, 0), background=False):
         return_content = f"{fg_color_sequence}{bg_color_sequence}{text}{reset_sequence}"
     return return_content
 
+def hex_text(text, f="#FFFFFF", b="#000000", background=False):
+    rgb_text(text=text , f=hex_to_rgb(f), b=hex_to_rgb(b))
+
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB."""
     hex_color = hex_color.lstrip('#')
@@ -47,7 +50,15 @@ def lab_to_hex(lab_color):
     rgb_color = np.clip(rgb_color * 255, 0, 255).astype(int)
     return rgb_to_hex(tuple(rgb_color))
 
-def clear_text_color(text):
+def clear_text_color(text: str) -> str:
+    """清除文本里的颜色字符
+
+    Args:
+        text (str): 文本
+
+    Returns:
+        str: 没有颜色的字符串
+    """
     # ANSI转义序列的正则表达式模式
     ansi_escape = re.compile(r'\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))')
     return ansi_escape.sub('', text)
@@ -83,7 +94,7 @@ def gradient_text(*hex_colors, text: str, background=False, bgc=(255, 255, 255),
         bgc (tuple): 背景颜色rgb
         use_list (bool): 是否将颜色识别为列表
     Returns:
-        _type_: 渐变后的字符串
+        str: 渐变后的字符串
     """
     # 分成几份
     parsed_colors = list(hex_colors)
@@ -124,5 +135,5 @@ def split_string(s, group_count):
     return groups
 
 if __name__ == "__main__":
-    gra_text = gradient_text("#5aa3ed", "#9e8fea", "#e3798b", text="测试一下渐变字符串的效果嗷呜, 测试")
+    gra_text = gradient_text("#FF5555", "#FFFF55", "#55FF55", "#55FFFF", "#5555FF", "#FF55FF", text="测试一下渐变字符串的效果嗷呜, 测试")
     print(gra_text)

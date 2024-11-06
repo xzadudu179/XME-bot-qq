@@ -1,13 +1,17 @@
 import json
 import os
 from nonebot.log import logger
-import nonebot
+from logging.handlers import TimedRotatingFileHandler
 import logging
 from xme.xmetools import color_manage as c
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 WIFE_INFO = {
+}
+USAGE_STATS = {
+    "start_time": datetime.now().strftime("%Y年%m月%d日 %H:%M:%S"),
+    "datas": [] # datas 字典列表, key 为群号
 }
 BASIC_INFO = {
     "name": "默认机器人",
@@ -28,16 +32,16 @@ BOT_SETTINGS = {
 }
 
 def init_json(path, data):
-    if not os.path.exists(path):
-        logger.warning(f"不存在 {path}, 正在重新创建")
-        with open(path, 'w', encoding='utf-8') as file:
-            file.write(json.dumps(data, indent=4, ensure_ascii=False))
+    if os.path.exists(path): return
+    logger.warning(f"不存在 {path}, 正在重新创建")
+    with open(path, 'w', encoding='utf-8') as file:
+        file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
 def create_folder_if_not_exists(*paths):
     for path in paths:
-        if not os.path.exists(path):
-            logger.info(f"创建 {path} 文件夹")
-            os.mkdir(path)
+        if os.path.exists(path): continue
+        logger.info(f"创建 {path} 文件夹")
+        os.mkdir(path)
 
 def bot_init():
     create_folder_if_not_exists("./logs", "./data", "./data/xme")
@@ -56,16 +60,20 @@ def bot_init():
     bottles_path = "./data/drift_bottles.json"
     init_json(bottles_path, DRIFT_BOTTLES_INFO)
 
+    usage_path = "./data/usage_stats.json"
+    init_json(usage_path, USAGE_STATS)
 
-def saving_log(logger: logging.Logger, filepath=f'./logs/{datetime.now().strftime(format="%Y-%m-%d")}_nonebot.log'):
-    file_handler = RotatingFileHandler(filepath, maxBytes=15 * 1024 * 1024, backupCount=10, encoding='utf-8')
+
+def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):
     # 设置日志的格式
+    log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1, encoding="utf-8")
+    log_handler.suffix = "%Y-%m-%d"  # 按年-月-日格式保存日志文件
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    file_handler.setFormatter(formatter)
+    log_handler.setFormatter(formatter)
     # 添加文件处理器到 logger
-    logger.addHandler(file_handler)
     print(c.gradient_text("#dda3f8","#66afff" ,text=f"当前日志将会被记录到文件 \"{filepath}\" 中。"))
+    logger.addHandler(log_handler)
 
 

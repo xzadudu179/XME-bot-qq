@@ -45,6 +45,9 @@ async def _(session: CommandSession):
             bottle_card += keys.ERROR_BOTTLE_INFO_MSG
         else:
             bottle_card += f"\n你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。"
+    # 保存防止消息没发出来
+    print("保存中")
+    json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     await session.send(bottle_card)
     print("捡到了瓶子")
     content = ""
@@ -67,14 +70,13 @@ async def _(session: CommandSession):
     else:
         for _ in range(3):
             # 处理之后可能的输入
-            # 时间可能较长 先保存
-            print("保存文件中")
-            # print(bottle)
-            json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-            reply = (await session.aget()).strip()
             # 重新读取
             print("重新读取")
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+            # print("保存文件中")
+            # # print(bottle)
+            # json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+            reply = (await session.aget()).strip()
             print(find_command_by_args(reply))
             print(reply)
             if reply == '-like':
@@ -102,6 +104,8 @@ async def _(session: CommandSession):
                 return
             # 重新读取
             # bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+    # print("重新读取")
+    # bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
     print("保存文件中")
     print(bottles_dict['bottles'][index])
     # print(bottle)

@@ -13,7 +13,7 @@ async def send_cmd(cmd_string, session, check_permission=True):
     # print(CommandManager._find_command(self=CommandManager, name=name))
     args = " ".join((cmd_string.split(" ")[1:])) if len(cmd_string.split(" ")) > 1 else ""
     if name == "wife" and not args:
-        await session.send("注意：你在一个可回复指令的后面 3 句话内执行了 wife 指令，会默认显示我的老婆 uwu")
+        await session.send("注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
     print(f"parse command: {name} | {args}")
     await call_command(
         bot=session.bot,

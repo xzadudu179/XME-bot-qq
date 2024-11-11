@@ -15,7 +15,7 @@ async def _(session: CommandSession):
     if len(arg) > 200:
         await session.send(f"瓶子的内容太多啦！要 200 字以内哦")
         return
-    if arg.count('\n') > 15:
+    if arg.count('\n') > 15 or arg.count('\r') > 15:
         await session.send(f"瓶子的行数太多啦！最多 15 行哦")
         return
     # bottles_dict = {}

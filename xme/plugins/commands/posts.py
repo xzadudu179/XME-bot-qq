@@ -4,8 +4,8 @@ import config
 from xme.xmetools.doc_gen import CommandDoc
 from nonebot import on_command, CommandSession
 
-alias = ["九九文章", "rss179", "atom179", "xmeatom", "rss"]
-__plugin_name__ = 'xmerss'
+alias = ["九九文章", "rss179", "posts179", "blogposts", "posts", "post"]
+__plugin_name__ = 'xmeposts'
 
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
-    count = 5
+    count = 1
     arg = session.current_arg_text.strip()
     if arg:
         try:
@@ -27,4 +27,4 @@ async def _(session: CommandSession):
                 print("最多查看 10 个文章哦")
         except:
             return await session.send(f"请输入正确的文章数量哦")
-    await session.send(f"[CQ:at,qq={session.event.user_id}] 以下是九九最近的 {count} 个文章哦！\n{show_rss(catch_179rss(), count)}")
+    await session.send(f"[CQ:at,qq={session.event.user_id}] 以下是九九最新的 {count} 个文章哦！\n{show_rss(catch_179rss(), count)}")

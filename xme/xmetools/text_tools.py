@@ -51,6 +51,12 @@ def jaccard_similarity(str1: str, str2: str) -> float:
     union = len(set1.union(set2))
     return intersection / union
 
+def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0) -> list[tuple[str, int]]:
+    similarities = []
+    for s in str_list:
+        similarities.append((s, jaccard_similarity(input_str, s)))
+    return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
+
 def is_question_product(question, question_of):
     # 加载中文模型
     nlp = spacy.load("zh_core_web_sm")

@@ -7,8 +7,8 @@ dicealias = ["d"]
 async def _(session: CommandSession):
     arg = session.current_arg_text.strip()
     if arg == "":
-        return await session.send("/dice [骰子面数] <骰子数量>")
-    message = "投骰子出现错误 xwx，请确定骰子面数是不小于 1 的整数哦"
+        return await session.send("使用方法：/dice [骰子面数] <骰子数量>")
+    message = "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦"
     points_list = []
     args = arg.split(" ")
     try:
@@ -22,6 +22,8 @@ async def _(session: CommandSession):
         if faces * counts > 100_000_000:
             message = "骰子总面数过大啦ovo (>100000000)"
             return await session.send(message=message)
+        if counts < 1:
+            return await session.send("骰子数量不可以小于 1 哦")
         if faces < 1:
             return await session.send(message="骰子面数不可以小于 1 哦")
         for _ in range(counts):

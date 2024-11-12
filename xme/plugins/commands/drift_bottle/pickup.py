@@ -93,7 +93,7 @@ async def _(session: CommandSession):
             elif reply == '-rep':
                 content = f"[CQ:at,qq={user_id}] 举报成功"
                 for superuser in config.SUPERUSERS:
-                    await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nIndex: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
+                    await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nid: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
                 await session.send(content)
                 return
             elif find_command_by_args(reply) != False:

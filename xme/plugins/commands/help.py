@@ -65,7 +65,7 @@ async def _(session: CommandSession):
     prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
     suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
-    content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[0]
+    content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
     await session.send(prefix + content + '\n' + suffix)
     if len(pages) <= 1:
         return

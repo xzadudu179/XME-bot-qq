@@ -6,9 +6,8 @@ import config
 
 async def recall_handler(session: BaseSession, bot: NoneBot):
     recalls = json_tools.read_from_path('./recalls.json')['recalls']
-    if session['group_id'] not in config.GROUPS_WHITELIST:
+    if session['group_id'] not in config.GROUPS_WHITELIST or session['user_id'] == session.self_id:
         return
-    # print(session)
     for recall in recalls:
         if type(recall) == list:
             if session['raw_message'].strip() not in recall: continue

@@ -8,8 +8,8 @@ PORT = 17980
 NICKNAME = {'XME', 'xme'}
 DEFAULT_VALIDATION_FAILURE_EXPRESSION = '发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦'
 DEBUG = False
-SESSION_EXPIRE_TIMEOUT = timedelta(minutes=2)
-SESSION_RUN_TIMEOUT = timedelta(seconds=60)
+SESSION_EXPIRE_TIMEOUT = timedelta(minutes=3)
+SESSION_RUN_TIMEOUT = timedelta(seconds=180)
 SESSION_RUNNING_EXPRESSION = '我还有指令未处理 uwu'
 DEFAULT_COMMAND_PERMISSION = lambda s: s.is_groupchat
 

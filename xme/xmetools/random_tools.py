@@ -37,3 +37,20 @@ def rand_str(*strings) -> str:
         str: 随机字符串
     """
     return random_item(list(strings))
+
+def character_message(character, message_name) -> str | bool:
+    """返回指定角色设定的文本
+
+    Args:
+        character (str): 角色设定名键
+        message_name (str): 消息名键
+
+    Returns:
+        str | bool: 消息文本，或者 False 代表无消息/角色
+    """
+    message = read_from_path("./characters.json")
+    chac = message.get(character, False)
+    if not chac:
+        return False
+    result = message[character].get(message_name, False)
+    return result

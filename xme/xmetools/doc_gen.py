@@ -76,3 +76,9 @@ class SpecialDoc(Doc):
 简介：{self.desc}
 {self.introduction}
 """.strip()
+
+def shell_like_usage(option_name, options: list[dict]):
+    content = f"{option_name.upper()}:"
+    for option in options:
+        content += f"\n\t-{option['abbr']}, --{option['name']}\t{option['desc']}"
+    return content

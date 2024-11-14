@@ -1,0 +1,82 @@
+from nonebot import on_command, CommandSession
+from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
+from nonebot.argparse import ArgumentParser
+import xme.xmetools.text_tools as t
+from . import game_commands as games
+
+introduction = "各种小游戏"
+alias = ["游戏", "小游戏", "play", "玩"]
+cmd_name = 'game'
+
+arg_usage = shell_like_usage("OPTIONS", [
+    {
+        "name": "help",
+        "abbr": "h",
+        "desc": "查看帮助"
+    },
+    {
+        "name": "args",
+        "abbr": "a",
+        "desc": "指定小游戏的参数"
+    },
+    {
+        "name": "info",
+        "abbr": "i",
+        "desc": "查看你输入的小游戏的帮助而不是游玩"
+    }
+])
+
+game_list_str = "\n".join([f"- {k}\t{v['meta']['desc']}" for k, v in games.games.items()])
+
+docs = str(CommandDoc(
+    name=cmd_name,
+    desc=introduction,
+    introduction=f'游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{game_list_str}',
+    usage=f'(小游戏名) [OPTIONS]\n{arg_usage}',
+    permissions=[],
+    alias=alias
+))
+
+def get_game_help(game_name) -> str | bool:
+    result = games.games.get(game_name, False)
+    if not result:
+        return False
+    args_str = "\n".join(f"{k}\t {v}" for k, v in result['meta']['args'].items())
+    return f"""
+游戏名称：{result['meta']['name']}
+介绍：{result['meta']['introduction']}
+参数列表：
+{args_str}
+""".strip()
+
+@on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda x: x.is_groupchat, shell_like=True)
+async def _(session: CommandSession):
+    parser = ArgumentParser(session=session, usage=docs)
+    parser.add_argument('-a', '--args', nargs='+')
+    parser.add_argument('-i', '--info', action='store_true')
+    parser.add_argument('text', nargs='+')
+    args = parser.parse_args(session.argv)
+    text = ' '.join(args.text).strip()
+    game_args = {}
+    if args.args:
+        game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
+    print(game_args)
+    if args.info:
+        info = get_game_help(text)
+        if not info:
+            return await session.send(f"[CQ:at,qq={session.event.user_id}] 找不到游戏 \"{args.info}\" 的帮助诶")
+        return await session.send(info)
+
+    game_to_play = games.games.get(text, False)
+    # if not text:
+    #     await session.send(f"请用 /play 游戏名 指定你想玩的游戏哦\n使用 /play -h 查看该指令帮助")
+    #     return
+    if not game_to_play:
+        await session.send(f"[CQ:at,qq={session.event.user_id}] 找不到你想玩的游戏 \"{text}\" 哦 ovo")
+        return
+    # 玩游戏
+    # 游戏以后会返回东西
+    game_return = await game_to_play['func'](session, game_args)
+    if game_return['message']:
+        await session.send(game_return['message'])
+    print("游戏执行结束")

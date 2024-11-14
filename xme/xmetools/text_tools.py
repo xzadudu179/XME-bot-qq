@@ -33,6 +33,38 @@ def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=Fa
     return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\n-]', '_' if not replace_to_horzline else '-', s).replace("\n", "")
 # print(chinese_proportion("你这个 situation 我觉得很 weird"))
 
+def replace_chinese_punctuation(text: str) -> str:
+    """替换中文标点到英文
+
+    Args:
+        text (str): 需要替换的字符串
+
+    Returns:
+        str: 替换好的字符串
+    """
+    punctuation_map = {
+        "，": ",",
+        "。": ".",
+        "！": "!",
+        "？": "?",
+        "：": ":",
+        "；": ";",
+        "“": "\"",
+        "”": "\"",
+        "‘": "'",
+        "’": "'",
+        "（": "(",
+        "）": ")",
+        "【": "[",
+        "】": "]",
+        "《": "<",
+        "》": ">",
+        "、": ",",
+    }
+    for chinese_punc, english_punc in punctuation_map.items():
+        text = re.sub(re.escape(chinese_punc), english_punc, text)
+    return text
+
 def jaccard_similarity(str1: str, str2: str) -> float:
     """计算字符串集合的交集与并集的比例相似度（中文会被转换为拼音）
 

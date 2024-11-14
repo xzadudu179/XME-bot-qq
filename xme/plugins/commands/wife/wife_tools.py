@@ -68,6 +68,7 @@ async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: Base
     pairs = wifeinfo.get(group_id, {}).get("members", [])
     # print(pairs)
     pair = p.find_pair(pairs, user_id)
+    print(f"pair: {pair}")
     if pair == "":
         user = None
     else:

@@ -5,16 +5,29 @@ import traceback
 from json import JSONDecodeError
 import keys
 import xme.xmetools.text_tools as t
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 import json
 
 alias = ['翻译', 'trans']
+arg_usage = shell_like_usage("OPTION", [
+    {
+        "name": "help",
+        "abbr": "h",
+        "desc": "查看帮助"
+    },
+    {
+        "name": "language",
+        "abbr": "l",
+        "desc": "指定要翻译成的语言"
+    }
+])
+
 __plugin_name__ = 'translate'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc='翻译内容',
-    introduction='使用 ChatGLM-4 模型进行文本翻译，参数可填如英语 法语 俄语 中文等',
-    usage=f'(需要翻译的文本内容) [OPTION]\nOPTION:\n\t-h, --help\t查看帮助\n\t-l, --language\t指定要翻译成的语言',
+    introduction='使用 ChatGLM-4 模型进行文本翻译，参数可填如英语 法语 俄语 中文等\n注意：该指令可能将会在不久后删除',
+    usage=f'(需要翻译的文本内容) [OPTION]\n{arg_usage}',
     permissions=[],
     alias=alias
 ))

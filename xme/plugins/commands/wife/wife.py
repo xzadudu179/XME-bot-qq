@@ -21,11 +21,11 @@ async def _(session: CommandSession):
         at_name = "你"
         at_id = session.event.user_id
         # return
-    wife = await search_wife(wifeinfo, group_id, at_id, session)
-    print(at_id, session.self_id)
-    # print(wife)
-
     try:
+        print(at_id, session.self_id, group_id)
+        wife = await search_wife(wifeinfo, group_id, at_id, session)
+        # print(wife)
+
         if at_id != session.self_id and at_id != session.event.user_id:
             at = await session.bot.get_group_member_info(group_id=group_id, user_id=at_id)
             at_name = f"{x if (x:=at['card']) else at['nickname']} ({at_id}) "
@@ -39,7 +39,7 @@ async def _(session: CommandSession):
             who = f"[CQ:at,qq={user_id}] {at_name}"
             message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
     except Exception as ex:
-        message = f"呜呜，无法获取到群员信息"
+        message = f"呜呜，无法获取到群员信息：{ex}"
         print(ex)
     await session.send(message)
 

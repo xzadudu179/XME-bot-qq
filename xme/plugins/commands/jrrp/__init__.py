@@ -13,11 +13,13 @@ __plugin_name__ = 'jrrp'
 __plugin_usage__= str(CommandDoc(
     name=__plugin_name__,
     desc='今日人品',
-    introduction='返回你今天的人品值（？） [by 千枫]\n参数填写整数，正数为人品最高排名，负数为最低',
-    usage=f'jrrp <群员人品值排行人数>',
+    introduction='查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值',
+    usage=f'jrrp <参数>',
     permissions=[],
     alias=alias
 ))
+
+
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def jrrp(session: CommandSession):
@@ -26,6 +28,10 @@ async def jrrp(session: CommandSession):
     qq = session.event.user_id
     if args:
         members = await jrrp_rank(session)
+        if args == 'avg':
+            avg = int(sum([member['jrrp'] for member in members]) / len(members))
+            await session.send(f"今日群员人品的平均值是 {avg} {'owo' if avg > 60 else 'ovo' if avg > 20 else 'uwu'}")
+            return
         try:
             count = int(args)
         except:

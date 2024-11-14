@@ -53,19 +53,18 @@ async def _(session: CommandSession):
     content = ""
     if broken:
         content = f"[CQ:at,qq={user_id}] 啊，你不小心把瓶子摔碎了..."
-        if str(index) == keys.ERROR_BOTTLE_INDEX:
-            content = keys.ERROR_BOTTLE_BROKE_MSG
-        await session.send(content)
         if str(index) != keys.ERROR_BOTTLE_INDEX:
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
             del bottles_dict['bottles'][index]
             print("瓶子碎了")
             print("保存文件中")
             json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-        return
-    elif str(index) == keys.ERROR_BOTTLE_INDEX:
-        print("保存中")
-        json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+        elif str(index) == keys.ERROR_BOTTLE_INDEX or type(index) != int:
+            # print("保存中")
+            print("瓶子碎了？")
+            content = keys.ERROR_BOTTLE_BROKE_MSG
+            # json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+        await session.send(content)
         return
     else:
         for _ in range(3):

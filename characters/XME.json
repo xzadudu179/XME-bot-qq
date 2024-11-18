@@ -1,0 +1,252 @@
+{
+    "bot_info": {
+        "name": "XME-bot",
+        "author": "xzadudu179",
+        "nickname": [
+            "XME",
+            "xme"
+        ]
+    },
+    "config": {
+        "busy": "我还有指令未处理 uwu",
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+    },
+    "schedulers": {
+        "idles": [
+            "owo",
+            "有点无聊ovo",
+            "看看群友在干嘛（？",
+            "8",
+            "嗷呜——",
+            "冒泡",
+            "ovo",
+            "喵",
+            "猜猜我是谁",
+            "/a b30",
+            "/a bind 171142422",
+            "汪",
+            "看看179",
+            ".pick",
+            "我是 550W",
+            ".wife",
+            ".jrrp",
+            "b50"
+        ],
+        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from}》"
+    },
+    "event_parsers": {
+        "message_bursts": "不要刷屏 uwu",
+        "cmd_bursts": "指令发送过快 uwu",
+        "message_prohibited": "不要发奇怪的词汇 uwu",
+        "welcome": "欢迎 {at} 进群（？",
+        "welcome_self": "欢迎自己进群（？",
+        "other_recalled_info": "刚刚 {operator} 撤回了一条{user}的消息ovo",
+        "prevented_recall_info": "↓ 刚刚 {operator} 撤回了以下消息ovo ↓\n{recalled_message}"
+    },
+    "other": {
+        "wife_error": "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu"
+    },
+    "answer": {
+        "desc": "查看答案之书",
+        "introduction": "随机翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
+        "default_error": "呜呜，书突然找不到了...",
+        "550w": "答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"",
+        "cannot_fetch": "呜呜，书翻不开了...",
+        "answer": "答案之书："
+    },
+    "choice": {
+        "desc": "随机决定事情",
+        "introduction": "让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数",
+        "no_args": "你还没有说我要决定的事情哦 ovo",
+        "choice_message": "我觉得可以选择 \"{choice}\"！"
+    },
+    "help": {
+        "desc": "显示帮助",
+        "introduction": "显示帮助，或某个功能的帮助，功能名若填写数字则是翻到数字所指的页数",
+        "no_usage": "无内容",
+        "no_cmds": "{prefix}\nXME-Bot 现在还没有任何指令哦",
+        "prefix": "[XME-Bot V{version}]\n指令以 {command_seps} 中任意字符开头\n当前功能列表",
+        "suffix": "帮助文档: {docs_link}\n使用 \"{cmd_sep}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页",
+        "page_too_small": "页数不能小于 1 啦 xwx",
+        "page_too_big": "页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
+    },
+    "bot_leave": {
+        "desc": "机器人退群",
+        "introduction": "使机器人退出群聊",
+        "leave_message": "正在退出群聊..."
+    },
+    "xmeposts": {
+        "desc": "查看九九最近的文章",
+        "introduction": "通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个",
+        "too_many": "最多查看 {max} 个文章哦",
+        "invalid_count": "请输入正确的文章数量哦",
+        "post_msg": "以下是九九最新的 {count} 个文章哦！\n{posts}"
+    },
+    "prevrecall": {
+        "desc": "防撤回",
+        "introduction": "防撤回功能相关",
+        "stats": "本群 ({group_id}) 的防撤回功能：{stats}",
+        "open": "防撤回功能已开 owo",
+        "close": "防撤回功能已关 owo",
+        "opened_message": "已开启",
+        "closed_message": "已关闭"
+    },
+    "setu": {
+        "desc": "涩图？",
+        "introduction": "返回一张涩图？",
+        "not_setu_msg": "哪有涩图，XME找不到涩图呜，但是有{image_name}！\n{image}"
+    },
+    "status": {
+        "desc": "查看系统状态",
+        "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
+        "fetch_failed": "当前运行设备暂不支持展示系统状态——"
+    },
+    "weather": {
+        "desc": "查询天气",
+        "introduction": "查看指定地区的天气",
+        "error_param": "出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{future_days}",
+        "cancel_message": "取消",
+        "enter_city_prompt": [
+            "请在下面发送你要查询的地区名~",
+            "在下面发送地区名吧",
+            "你想查询哪里的天气呢~在下面发送地区名吧 owo "
+        ],
+        "enter_city_prompt_cancel": "，或发送 \"{cancel_message}\" 取消哦",
+        "search_cancelled": "取消天气查询啦",
+        "future_days": [
+            "设置的天数",
+            "未来天数",
+            "天数"
+        ],
+        "invalid_days": "{future_days}还不可以大于 3 或小于 1 哦",
+        "result_prefix": [
+            "我来看看天气~ owo",
+            "让我看看天气~",
+            "让我查询一下这里的天气~",
+            "我看看这里的天气~ owo",
+            "让我看看天气怎么样啦~"
+        ],
+        "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
+        "result_future": "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
+        "data_from": [
+            "数据来自于高德开放平台~",
+            "数据是高德开放平台的哦~",
+            "通过高德开放平台查询的~"
+        ],
+        "error": "查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
+    },
+    "今日老婆": {
+        "desc": "今日老婆相关指令",
+        "introduction": "查看自己的今日老婆，或者是别人的今日老婆~\n注意：本功能仅供娱乐",
+        "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 则会同时 at 你今日的老婆",
+        "wife_message": "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
+        "no_wife": "{name}今天并没有老婆 ovo",
+        "error": "呜呜，无法获取到群员信息：{ex}"
+    },
+    "jrrp": {
+        "desc": "今日人品相关指令",
+        "introduction": "查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+        "avg_message": "今日群员人品的平均值是 {avg} {reaction}",
+        "reaction>60": "owo",
+        "reaction>20": "ovo",
+        "reaction<=20": "uwu",
+        "jrrp_row": "\n{index}. {card} ({id})：今日人品值为 {jrrp}",
+        "rank_message": "这是今天人品最{high_or_low}的前 {count} 位群员排名 {reaction}",
+        "rank_too_long": "指定的成员数量太多了哦uwu，范围是 -{max} ~ {max}",
+        "rank_error": "成员数量需要是整数哦 ovo",
+        "jrrp_prefix": "你的今日人品为",
+        "jrrp<0": "{result}...？ xwx",
+        "jrrp<10": "....{result}？uwu",
+        "jrrp>100": "{result}.0000%！All Perfect+ owo！！",
+        "jrrp>=90": "{result}！owo！",
+        "jrrp_default": "{result} ovo"
+    },
+    "实例控制": {
+        "desc": "机器人实例相关指令",
+        "introduction": "全部用于控制后台机器人实例的指令，需要 SUPERUSER 才可使用。",
+        "kill_introduction": "结束 bot 进程",
+        "restart_introduction": "使机器人实例重新启动",
+        "kill_prompt": "请输入 Y 确定结束 bot 进程...",
+        "kill_cancelled": "取消结束 bot 进程。",
+        "on_kill": "(正在结束 bot 进程) uwu",
+        "restarting": "正在重启 uwu",
+        "restart_failed_kill": "无法退出原 xmebot 进程 xwx\n错误原因: {ex}",
+        "restart_failed": "重启失败 xwx\n错误原因: {ex}\ntraceback:\n{traceback}"
+    },
+    "httpcode": {
+        "desc": "查询状态码",
+        "introduction": "获取 http 状态码信息和它的猫猫图",
+        "default": "你没输入状态码诶",
+        "code_prompt": "请发送你想要查询的状态码~",
+        "code_not_found": "查询不到 {search} 状态码代表什么意思诶",
+        "code_found": "状态码 {search} 的意思是: {stat}\n{image}"
+    },
+    "game": {
+        "desc": "各种小游戏",
+        "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
+        "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
+        "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
+        "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 ovo",
+        "option_help_desc": "查看帮助",
+        "option_args_desc": "指定小游戏的参数",
+        "option_info_desc": "查看你输入的小游戏的帮助而不是游玩",
+        "guess": {
+            "desc": "猜数字游戏",
+            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小",
+            "arg_range": "数字范围 (r=范围开始~范围结束)",
+            "arg_times_limit": "猜测次数限制 (t=次数限制)",
+            "guess_start": "游戏开始~ 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} ~ {number_max} 的整数！",
+            "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}",
+            "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}",
+            "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
+            "range_equals": "数字范围不能是相同的哦 uwu",
+            "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
+            "guess_prompt_prefix_default": "{start}\n请",
+            "guess_prompt": "{at} {prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
+            "quit_message": "退出游戏啦 ovo",
+            "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
+            "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
+            "num_too_big_result": "大啦~",
+            "num_too_small_result": "小啦~",
+            "num_right_result": "正确~",
+            "guess_result": "{num} {result}",
+            "remaining_times": "你还可以猜 {times} 次数字ovo"
+        }
+    },
+    "漂流瓶": {
+        "desc": "漂流瓶相关指令",
+        "introduction": "扔/捡来自各个群组的漂流瓶~",
+        "throw_introduction": "扔一个漂流瓶",
+        "pickup_introduction": "尝试捡一个漂流瓶",
+        "no_bottle": "海里一个瓶子里都没有...",
+        "no_bottle_picked": "你没有捡到瓶子ovo",
+        "view_message": "被捡到了 {times} 次",
+        "no_view_message": "第一次被捡到",
+        "like_message": "获得了{count}个赞owo",
+        "no_like_message": "还没有任何赞ovo",
+        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\"]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+        "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
+        "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
+        "bottle_broken": "啊，你不小心把瓶子摔碎了...",
+        "bottle_broken?": "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
+        "liked": "点赞成功~",
+        "reported": "举报成功",
+        "nothing_to_throw": "漂流瓶似乎没有内容呢ovo\n格式：\n{command_name} (漂流瓶内容)",
+        "content_too_many": "瓶子的内容太多啦！要 {max_length} 字以内哦",
+        "lines_too_many": "瓶子的行数太多啦！最多 {max_lines} 行哦",
+        "throwed": "瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo"
+    },
+    "骰子": {
+        "desc": "骰子相关指令",
+        "introduction": "自定义面数or规则的骰子",
+        "dice_introduction": "投指定面数 * 指定数量的骰子",
+        "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
+        "dice_error": "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦",
+        "count_too_many": "最多投 {max_count} 个骰子哦",
+        "faces_too_many": "骰子总面数过大啦ovo (>{max_faces})",
+        "count_too_low": "骰子数量不可以小于 1 哦",
+        "faces_too_low": "骰子面数不可以小于 1 哦",
+        "count_morethan_1_prefix": "总共",
+        "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+    }
+}

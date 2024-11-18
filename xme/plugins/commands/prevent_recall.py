@@ -3,28 +3,22 @@ import json
 import config
 from xme.xmetools.doc_gen import CommandDoc
 from nonebot import on_command, CommandSession
+from character import get_message
 
 alias = ['防撤回', "precall", "防撤", '防撤回功能']
 __plugin_name__ = 'prevrecall'
-# __plugin_usage__ = rf"""
-# 指令 {__plugin_name__}
-# 简介：防撤回
-# 作用：防撤回功能相关
-# 用法：
-# - {config.COMMAND_START[0]}{__plugin_name__} <开|关|T|F>
-# 权限/可用范围：在群聊内 & 是 SUPERUSER
-# 别名：{', '.join(alias)}
-# """.strip()
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc='防撤回',
-    introduction='防撤回功能相关',
+    desc=get_message(__plugin_name__, "desc"),
+    # desc='防撤回',
+    introduction=get_message(__plugin_name__, "introduction"),
+    # introduction='防撤回功能相关',
     usage=f'<开|关|T|F>',
     permissions=["在群聊内", "是 SUPERUSER"],
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda sender: (sender.is_groupchat and (sender.is_superuser)))
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda sender: (sender.is_groupchat and sender.is_superuser))
 async def _(session: CommandSession):
     group_id = str(session.event.group_id)
     settings = {}
@@ -37,14 +31,17 @@ async def _(session: CommandSession):
         }
     # print(settings)
     prev = settings['prevent_recall'].get(group_id, False)
-    message = f"本群 ({group_id}) 的防撤回功能：{'已开启' if prev else '已关闭'}"
+    message = get_message(__plugin_name__, "stats").format(group_id=group_id, stats=get_message(__plugin_name__, "opened_message") if prev else get_message(__plugin_name__, "closed_message"))
+    # message = f"本群 ({group_id}) 的防撤回功能：{'已开启' if prev else '已关闭'}"
     arg = session.current_arg_text.strip()
     if arg.capitalize() == "开" or arg.capitalize() == "T":
         settings['prevent_recall'][group_id] = True
-        await session.send("防撤回功能已开owo")
+        await session.send(get_message(__plugin_name__, "open"))
+        # await session.send("防撤回功能已开owo")
     elif arg.capitalize() == "关" or arg.capitalize() == "F":
         settings['prevent_recall'][group_id] = False
-        await session.send("防撤回功能已关ovo")
+        await session.send(get_message(__plugin_name__, "close"))
+        # await session.send("防撤回功能已关ovo")
     else:
         await session.send(message)
     with open ("./data/_botsettings.json", 'w', encoding='utf-8') as jsonfile:

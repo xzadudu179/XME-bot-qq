@@ -1,0 +1,530 @@
+{
+    "bot_info": {
+        "name": "漠月",
+        "author": "xzadudu179",
+        "nickname": [
+            "Deon",
+            "deon",
+            "漠月"
+        ]
+    },
+    "config": {
+        "busy": "忙不过来啦 呜...",
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+    },
+    "schedulers": {
+        "idles": [
+            "owo",
+            "嗷呜..有点无聊 owo",
+            "嗷呜！",
+            "冒泡冒泡~",
+            "嗷呜——",
+            "冒泡",
+            "漠月只是在操作机器人 漠月不是机器人汪！",
+            "呜呜 被图灵测试了...",
+            "ovo",
+            "汪",
+            "汪！",
+            "看看179",
+            "看看179 owo",
+            ".pick"
+        ],
+        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from}》"
+    },
+    "event_parsers": {
+        "message_bursts": [
+            "不要刷屏 uwu",
+            "呜...不要刷屏",
+            "不要刷屏呜...",
+            "不要刷屏哇...",
+            "消息发太快啦..."
+        ],
+        "cmd_bursts": [
+            "指令发送太快啦...",
+            "呜...不要那么快的发指令",
+            "指令不要发太快呜..."
+        ],
+        "message_prohibited": [
+            "不要发奇怪的词汇呜...",
+            "这里面的词汇不能发呜...",
+            "不要发不好的词汇呜...",
+            "不能发不好的词汇呜..."
+        ],
+        "welcome": [
+            "欢迎 {at} 进群~",
+            "{at} 欢迎进群~"
+        ],
+        "welcome_self": [
+            "嗷呜！我是漠月~",
+            "嗷呜！我来啦 owo",
+            "我来啦 owo",
+            "漠月来啦 owo",
+            "嗷呜~ 漠月来啦 owo",
+            "嗷呜！我是漠月 owo"
+        ],
+        "other_recalled_info": [
+            "刚刚 {operator} 撤回了一条{user}的消息ovo",
+            "唔...刚刚 {operator} 撤回了一条{user}的消息ovo"
+        ],
+        "prevented_recall_info": "↓ 刚刚 {operator} 撤回了以下消息ovo ↓\n{recalled_message}"
+    },
+    "other": {
+        "wife_error": [
+            "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 ovo",
+            "唔...你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 ovo"
+        ]
+    },
+    "answer": {
+        "desc": "翻开答案之书",
+        "introduction": "让漠月翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
+        "default_error": [
+            "呜呜，书不见了...",
+            "呜...找不到书了..."
+        ],
+        "550w": [
+            "答案？之书？：\n\"我是 55...???\n嗷呜！漠月不是 550W 汪！",
+            "汪？答案之书说它是 550W 呜！",
+            "答案之书说它是 550W...漠月不是 550W 汪！"
+        ],
+        "cannot_fetch": [
+            "呜呜，书翻不开了...",
+            "翻不开书了，呜呜..."
+        ],
+        "answer": [
+            "汪！答案之书上写着...：",
+            "答案之书上写着...：",
+            "汪！答案之书说...：",
+            "答案之书说...：",
+            "答案之书上写着这个...："
+        ]
+    },
+    "choice": {
+        "desc": "随机决定事情",
+        "introduction": "让漠月帮忙决定事情吧！\n漠月会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数",
+        "no_args": [
+            "你还没有说我要决定的事情哦",
+            "漠月还不知道决定什么诶",
+            "我还不知道决定什么哦"
+        ],
+        "choice_message": [
+            "汪！我觉得可以选择 \"{choice}\"！",
+            "漠月觉得选择 \"{choice}\"！",
+            "我觉得选择 \"{choice}\" 汪！",
+            "嗷呜！我选 \"{choice}\"！",
+            "嗷呜！我选 \"{choice}\" 汪！",
+            "我选 \"{choice}\" 汪！"
+        ]
+    },
+    "help": {
+        "desc": "显示帮助",
+        "introduction": "显示帮助，或某个功能的帮助，功能名填写数字就是是翻到数字所指的页数哦",
+        "no_usage": [
+            "这个功能没有帮助汪！",
+            "这个功能没有写帮助诶",
+            "这里什么都没有...",
+            "这里没有内容诶..."
+        ],
+        "no_cmds": [
+            "{prefix}\n看起来 XME-Bot 里面还没有任何指令哦...",
+            "{prefix}\n指令列表空空的...",
+            "{prefix}\n指令列表里面好像什么都没有..."
+        ],
+        "prefix": [
+            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n当前功能列表",
+            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n现在有这些功能~"
+        ],
+        "suffix": [
+            "帮助文档在 {docs_link} 哦汪\n使用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
+            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
+            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦"
+        ],
+        "page_too_small": [
+            "页数不能小于 1 哦 ovo",
+            "页数不能小于 1 诶...",
+            "页数太小啦汪...",
+            "页数太小啦...",
+            "指定的页数太小啦...",
+            "指定的页数不能小于 1 哦 ovo"
+        ],
+        "page_too_big": [
+            "页数 {curr_page_num} 太大啦，我就展示最后一页吧 owo",
+            "页数 {curr_page_num} 超过最大页数啦，我就展示最后一页吧~",
+            "页数太大啦，我来展示最后一页吧 owo"
+        ]
+    },
+    "bot_leave": {
+        "desc": "使机器人退群",
+        "introduction": "使漠月操控 XME-Bot 退出群聊",
+        "leave_message": [
+            "唔，知道啦，漠月现在就走..",
+            "漠月现在就走..",
+            "正在退出群聊呜...",
+            "正在退出群聊 汪...",
+            "唔...知道啦，漠月马上退群"
+        ]
+    },
+    "xmeposts": {
+        "desc": "查看九九最近的文章",
+        "introduction": "通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个",
+        "too_many": [
+            "最多查看 {max} 个文章哦",
+            "文章数太多啦... 最多只能看 {max} 个哦",
+            "文章数太多啦... 最多 {max} 个哦",
+            "最多只能看 {max} 个文章哦...",
+            "最多只能看 {max} 个文章诶..."
+        ],
+        "invalid_count": [
+            "请输入正确的文章数量哦",
+            "漠月不知道文章数量的意思呜...",
+            "文章数量应该是正整数哦"
+        ],
+        "post_msg": [
+            "以下是九九最新的 {count} 个文章哦！\n{posts}\n期待新的文章汪！",
+            "以下是九九最新的 {count} 个文章哦！\n{posts}\n好奇什么时候会继续上新呢...",
+            "这些是九九最新的 {count} 个文章哦！\n{posts}\n期待新的文章~"
+        ]
+    },
+    "prevrecall": {
+        "desc": "防撤回",
+        "introduction": "防撤回功能相关",
+        "stats": [
+            "这个群 ({group_id}) 的防撤回功能是{stats}哦",
+            "这个群 ({group_id}) 的防撤回功能是{stats}哦 owo",
+            "群 {group_id} 的防撤回功能是{stats}哦 owo",
+            "防撤回功能在本群是{stats}哦~"
+        ],
+        "open": "防撤回功能已开 owo",
+        "close": "防撤回功能已关 owo",
+        "opened_message": [
+            "开着的",
+            "开了的"
+        ],
+        "closed_message": [
+            "关着的",
+            "关了的"
+        ]
+    },
+    "setu": {
+        "desc": "涩图？",
+        "introduction": "发送一张涩图？",
+        "not_setu_msg": [
+            "漠月找不到涩图呜，但是可以看{image_name}！\n{image}",
+            "漠月没有涩图，漠月只有{image_name}哦！\n{image}",
+            "涩图是什么呜，我只能找到{image_name} owo！\n{image}",
+            "涩图是什么呜，漠月只有{image_name}！\n{image}"
+        ]
+    },
+    "status": {
+        "desc": "查看系统状态",
+        "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
+        "fetch_failed": [
+            "这个运行设备好像不可以展示系统状态诶...",
+            "这个运行设备好像无法展示系统状态诶...",
+            "当前的运行设备好像无法展示系统状态诶..."
+        ]
+    },
+    "weather": {
+        "desc": "查询天气",
+        "introduction": "查看指定地区的天气",
+        "error_param": [
+            "呜呜，处理出错了...请确认被解析的参数是否是你想的那样哦：\n城市名是：{city}\n未来天数是：{future_days}",
+            "呜呜，出现错误...请确认你的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}",
+            "呜...出错了...请确认被处理的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}"
+        ],
+        "cancel_message": "取消",
+        "enter_city_prompt": [
+            "在下面发送你要查询的地区名吧~",
+            "在下面发送地区名吧~嗷呜",
+            "你想查询哪里的天气哇，在下面发送地区名吧 owo"
+        ],
+        "enter_city_prompt_cancel": [
+            "，或者发送 \"{cancel_message}\" 取消哦",
+            "，也可以发送 \"{cancel_message}\" 取消查询哦",
+            "，也可以发送 \"{cancel_message}\" 取消哦",
+            "，或者可以发送 \"{cancel_message}\" 取消哦"
+        ],
+        "search_cancelled": [
+            "取消天气查询啦",
+            "取消天气查询啦 嗷呜",
+            "天气查询已取消 owo",
+            "天气查询取消啦",
+            "天气查询取消啦 嗷呜"
+        ],
+        "future_days": [
+            "未来天数",
+            "未来天气天数",
+            "未来的天数",
+            "天数"
+        ],
+        "invalid_days": [
+            "{future_days}还不可以设置大于 3 或小于 1 哦",
+            "{future_days}还不可以设置大于 3 或小于 1 汪...",
+            "{future_days}还不能大于 3 或小于 1 哦...",
+            "{future_days}还不可以大于 3 或小于 1 哦...",
+            "{future_days}只能在 1 和 3 之间哦...",
+            "{future_days}还不可以设置大于 3 或小于 1 哦 ovo"
+        ],
+        "result_prefix": [
+            "我来看看天气~ owo",
+            "我来看看天气~ 嗷呜~",
+            "让我看看天气~",
+            "让我查询一下这里的天气~ owo",
+            "我看看这里的天气~ owo",
+            "让我看看天气怎么样啦~",
+            "其实我也很好奇地球的天气呢~",
+            "看看地球的天气怎么样啦~"
+        ],
+        "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
+        "result_future": [
+            "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
+            "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ 嗷呜~",
+            "之后的 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ 嗷呜~"
+        ],
+        "data_from": [
+            "数据来自于高德开放平台 owo",
+            "数据是高德开放平台的哦 owo",
+            "在高德开放平台的查询的数据哦~",
+            "通过高德开放平台的查询的数据哦~",
+            "通过高德开放平台查询的 owo"
+        ],
+        "error": [
+            "呜呜...查询出错了, 请确认地区名称是否输入正确哦...\n地区名：{city}\n{ex}",
+            "呜呜...查询出错了, 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
+            "查询出错了...呜..., 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
+            "呜...出错了, 请确认地区名称是否输入正确哦...\n识别到的地区名：{city}\n{ex}"
+        ]
+    },
+    "今日老婆": {
+        "desc": "今日老婆相关指令",
+        "introduction": "查看自己的今日老婆，或者是别人的今日老婆\n注意：这个功能仅供娱乐 呜呜",
+        "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 会同时 at 你今日的老婆~",
+        "wife_message": [
+            "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
+            "{who}今天的老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
+        ],
+        "no_wife": [
+            "{name}今天并没有老婆 ovo",
+            "{name}今天没有老婆...",
+            "{name}今天没有老婆 ovo",
+            "{name}今天没有老婆诶..."
+        ],
+        "error": [
+            "呜呜，无法获取到群员信息：{ex}",
+            "呜呜，获取群员信息的时候出错了...：{ex}",
+            "呜...拿不到群员的信息...：{ex}",
+            "呜呜，获取不到群员的信息...：{ex}"
+        ]
+    },
+    "jrrp": {
+        "desc": "今日人品相关指令",
+        "introduction": "查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+        "avg_message": [
+            "今日群员人品的平均值是 {avg}， {reaction}",
+            "今日大家的平均人品值是 {avg}， {reaction}",
+            "今天大家的平均人品值是 {avg}， {reaction}"
+        ],
+        "reaction>60": [
+            "嗷呜！",
+            "owo！",
+            "owo",
+            "好诶"
+        ],
+        "reaction>20": [
+            "ovo",
+            "汪!",
+            "嗷呜"
+        ],
+        "reaction<=20": [
+            "呜...",
+            "呜呜...",
+            "汪...",
+            "xwx"
+        ],
+        "jrrp_row": "\n{index}. {card} ({id})：今日人品是 {jrrp}",
+        "rank_message": [
+            "这是今天人品最{high_or_low}的前 {count} 位群员排名 {reaction}",
+            "以下是今日人品最{high_or_low}的前 {count} 位群员排名 {reaction}"
+        ],
+        "rank_too_long": [
+            "指定的成员数量太多了哦...，范围是 -{max} ~ {max}",
+            "成员排行的长度最大只能有 {max} 行哦",
+            "成员排行的长度最长只能有 {max} 行哇",
+            "指定成员数量太多啦，最多只能看 {max} 个哦"
+        ],
+        "rank_error": [
+            "成员数量需要是整数哦 ovo",
+            "漠月不知道成员数量是多少呜...",
+            "成员数量需要是整数哦..."
+        ],
+        "jrrp_prefix": [
+            "你的今日人品为",
+            "汪！你的今日人品为",
+            "汪！你今天的人品值是",
+            "你今天的人品值是",
+            "你今天的人品是",
+            "汪！你今天的人品是",
+            "你今日的人品是"
+        ],
+        "jrrp<0": [
+            "{result}...？ xwx",
+            "{result}...？ 呜呜...",
+            "..{result}..？ 呜呜...",
+            "...{result}... 呜...",
+            "...{result}... xwx..."
+        ],
+        "jrrp<10": [
+            "....{result}？uwu",
+            "{result}...呜...",
+            "...{result}？呜...",
+            "...{result}？呜呜..."
+        ],
+        "jrrp>100": [
+            "{result}！owo！嗷呜！",
+            "{result}！owo！好耶！",
+            "{result}！好诶！嗷呜！",
+            "{result}！好诶！owo！",
+            "{result}！好耶！owo！",
+            "{result}！好耶！嗷呜！"
+        ],
+        "jrrp>=90": [
+            "{result}！owo！",
+            "{result}！嗷呜！",
+            "{result}！"
+        ],
+        "jrrp_default": [
+            "{result}，ovo",
+            "{result}，嗷呜",
+            "{result}，汪"
+        ]
+    },
+    "实例控制": {
+        "desc": "机器人实例相关指令",
+        "introduction": "全部用于控制后台机器人实例的指令，需要 SUPERUSER 才可使用。",
+        "kill_introduction": "结束 bot 进程",
+        "restart_introduction": "使机器人实例重新启动",
+        "kill_prompt": [
+            "请输入 Y 确定结束 bot 进程哦",
+            "输入 Y 来确定结束 bot 进程哦",
+            "输入 Y 来确定关闭 bot 哦",
+            "输入 Y 确定结束 bot 进程哦"
+        ],
+        "kill_cancelled": [
+            "取消结束 bot 进程啦 ovo",
+            "取消关闭 bot 啦 ovo",
+            "取消结束 bot 进程 ovo"
+        ],
+        "on_kill": [
+            "正在结束 bot 进程哦",
+            "正在结束 bot 进程 ovo",
+            "正在关闭 bot...",
+            "正在关闭 bot... ovo",
+            "正在结束 bot 进程..."
+        ],
+        "restarting": [
+            "正在重启 bot 哦",
+            "正在重启 bot 中~",
+            "正在重启机器人哦",
+            "正在重启机器人中~",
+            "正在重启 xme-bot 哦"
+        ],
+        "restart_failed_kill": [
+            "呜呜...关闭 bot 时出错了\n{ex}",
+            "呜...关闭 bot 失败了\n{ex}",
+            "呜...关闭 bot 时出错了\n{ex}",
+            "呜呜...关闭 bot 时出现错误\n{ex}"
+        ],
+        "restart_failed": [
+            "呜呜...重启失败了\n{ex}\n{traceback}",
+            "呜呜...重启时出问题了\n{ex}\n{traceback}"
+        ]
+    },
+    "httpcode": {
+        "desc": "查询状态码",
+        "introduction": "获取 http 状态码信息和它的猫猫图",
+        "default": [
+            "你没输入状态码诶",
+            "你没有输入状态码哦",
+            "你没有输入状态码诶..."
+        ],
+        "code_prompt": [
+            "请发送你想要查询的状态码~",
+            "发送你想要查询的状态码吧~",
+            "请输入你想要查询的状态码 owo"
+        ],
+        "code_not_found": [
+            "查询不到 {search} 状态码代表什么意思诶...",
+            "查找不到 {search} 状态码是什么意思诶...",
+            "找不到状态码 {search} 是什么意思诶...",
+            "唔...找不到 {search} 状态码是什么意思诶",
+            "唔，不知道 {search} 状态码代表什么意思诶..."
+        ],
+        "code_found": [
+            "owo 状态码 {search} 的意思是: {stat}\n{image}",
+            "状态码 {search} 的意思是这个 owo: {stat}\n{image}",
+            "状态码 {search} 的意思是: {stat}\n{image}",
+            "嗷呜，状态码 {search} 的意思是: {stat}\n{image}",
+            "owo 我找到状态码 {search} 的意思是: {stat}\n{image}"
+        ]
+    },
+    "game": {
+        "desc": "各种小游戏",
+        "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
+        "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
+        "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
+        "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 ovo",
+        "guess": {
+            "desc": "猜数字游戏",
+            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小",
+            "arg_range": "数字范围 (r=范围开始~范围结束)",
+            "arg_times_limit": "猜测次数限制 (t=次数限制)",
+            "guess_start": "游戏开始~ 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} ~ {number_max} 的整数！",
+            "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}",
+            "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}",
+            "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
+            "range_equals": "数字范围不能是相同的哦 uwu",
+            "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
+            "guess_prompt_prefix_default": "{start}\n请",
+            "guess_prompt": "{at} {prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
+            "quit_message": "退出游戏啦 ovo",
+            "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
+            "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
+            "num_too_big_result": "大啦~",
+            "num_too_small_result": "小啦~",
+            "num_right_result": "正确~",
+            "guess_result": "{num} {result}",
+            "remaining_times": "你还可以猜 {times} 次数字ovo"
+        }
+    },
+    "漂流瓶": {
+        "desc": "漂流瓶相关指令",
+        "introduction": "扔/捡来自各个群组的漂流瓶~",
+        "throw_introduction": "扔一个漂流瓶",
+        "pickup_introduction": "尝试捡一个漂流瓶",
+        "no_bottle": "海里一个瓶子里都没有...",
+        "no_bottle_picked": "你没有捡到瓶子ovo",
+        "view_message": "被捡到了 {times} 次",
+        "no_view_message": "第一次被捡到",
+        "like_message": "获得了{count}个赞owo",
+        "no_like_message": "还没有任何赞ovo",
+        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\"]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+        "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
+        "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
+        "bottle_broken": "啊，你不小心把瓶子摔碎了...",
+        "bottle_broken?": "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
+        "liked": "点赞成功~",
+        "reported": "举报成功"
+    },
+    "骰子": {
+        "desc": "骰子相关指令",
+        "introduction": "自定义面数or规则的骰子",
+        "dice_introduction": "投指定面数 * 指定数量的骰子",
+        "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
+        "dice_error": "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦",
+        "count_too_many": "最多投 {max_count} 个骰子哦",
+        "faces_too_many": "骰子总面数过大啦ovo (>{max_faces})",
+        "count_too_low": "骰子数量不可以小于 1 哦",
+        "faces_too_low": "骰子面数不可以小于 1 哦",
+        "count_morethan_1_prefix": "总共",
+        "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+    }
+}

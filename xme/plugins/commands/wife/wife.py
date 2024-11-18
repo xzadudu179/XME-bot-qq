@@ -1,5 +1,7 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools import pair as p
+import traceback
+import xme.plugins.commands.wife as w
+from character import get_message
 from .wife_tools import *
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
@@ -8,6 +10,7 @@ async def _(session: CommandSession):
     user_id = session.event.user_id
     group_id = str(session.event.group_id)
     wifeinfo = await group_init(group_id)
+    print(session.current_key)
     arg = session.current_arg.strip()
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
@@ -32,14 +35,21 @@ async def _(session: CommandSession):
         elif at_id == session.event.user_id:
             at_name = "你"
             at_id = session.event.user_id
-        message = f"{at_name}今天并没有老婆ovo"
+        message = get_message(w.__plugin_name__, "no_wife").format(name=at_name)
+        # message = f"{at_name}今天并没有老婆ovo"
         if wife:
             # print(pair_user)
-            name = x if (x:=wife['card']) else wife['nickname']
+            name = (x if (x:=wife['card']) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
             who = f"[CQ:at,qq={user_id}] {at_name}"
-            message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
+            message = get_message(w.__plugin_name__, "wife_message").format(
+                who=who,
+                avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
+                name=name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']',
+                user_id=wife['user_id'])
+            # message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
     except Exception as ex:
-        message = f"呜呜，无法获取到群员信息：{ex}"
-        print(ex)
+        message = get_message(w.__plugin_name__, "error").format(ex=ex)
+        # message = f"呜呜，无法获取到群员信息：{ex}"
+        print(traceback.format_exc())
     await session.send(message)
 

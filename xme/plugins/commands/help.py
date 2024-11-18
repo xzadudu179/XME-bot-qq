@@ -4,6 +4,7 @@ from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools.command_tools import send_cmd
 from xme.xmetools.list_ctrl import split_list
 from nonebot import on_command, CommandSession
+from character import get_message
 from xme.xmetools.text_tools import most_similarity_str
 
 alias = ["usage", "docs", "帮助"]
@@ -11,8 +12,10 @@ __plugin_name__ = 'help'
 
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc='显示帮助',
-    introduction='显示帮助，或某个指令的帮助，功能名若填写数字则是翻到数字所指的页数',
+    # desc='显示帮助',
+    desc=get_message(__plugin_name__, 'desc'),
+    introduction=get_message(__plugin_name__, 'introduction'),
+    # introduction='显示帮助，或某个指令的帮助，功能名若填写数字则是翻到数字所指的页数',
     usage=f'<功能名>',
     permissions=[],
     alias=alias
@@ -25,8 +28,8 @@ async def arg_help(arg, plugins, session):
     if p:
         for pl in plugins:
             if pl.name.lower() != p[0]: continue
-            return await session.send(pl.usage if pl.usage else "无内容")
-        # return await session.send(p.usage if p.usage else "无内容")
+            return await session.send(pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'))
+            # return await session.send(pl.usage if pl.usage else "无内容")
     print(p)
     return False
 
@@ -57,20 +60,26 @@ async def _(session: CommandSession):
             total_pages += "\n\t" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
-        await session.send(f"{prefix}\nXME-Bot 现在还没有任何指令哦")
+        await session.send(get_message(__plugin_name__, 'no_cmds').format(prefix=prefix))
+        # await session.send(f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
         return
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
     # print(pages)
-    prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
+    prefix = get_message(__plugin_name__, 'prefix').format(command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+    # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
-    suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
+    suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
+    # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
     content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
     await session.send(prefix + content + '\n' + suffix)
     if len(pages) <= 1:
         return
     # 翻页
     while True:
+        # 每次刷新前缀和后缀
+        prefix = get_message(__plugin_name__, 'prefix').format(command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+        suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
         reply: str = (await session.aget()).strip()
         reply = reply.replace("》", ">").replace("《", "<")
         more_page = 0
@@ -94,11 +103,13 @@ async def _(session: CommandSession):
                 return
         curr_page_num += more_page
         if curr_page_num < 1:
-            reply_message = "页数不能小于 1 啦 xwx"
+            reply_message = get_message(__plugin_name__, 'page_too_small')
+            # reply_message = "页数不能小于 1 啦 xwx"
             await session.send(reply_message)
             return
         elif curr_page_num > len(pages):
-            reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
+            reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=curr_page_num)
+            # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
             await session.send(reply_message)
             curr_page_num = len(pages)
         content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]

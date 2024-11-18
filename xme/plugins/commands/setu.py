@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools import request_tools
+from character import get_message
 from xme.xmetools.doc_gen import CommandDoc
 import json
 
@@ -8,8 +9,10 @@ __plugin_name__ = 'setu'
 
 __plugin_usage__= str(CommandDoc(
     name=__plugin_name__,
-    desc='涩图？',
-    introduction='返回一张涩图？',
+    desc=get_message(__plugin_name__, 'desc'),
+    # desc='涩图？',
+    introduction=get_message(__plugin_name__, 'introduction'),
+    # introduction='返回一张涩图？',
     usage=f'',
     permissions=[],
     alias=alias
@@ -31,7 +34,8 @@ async def setu(session: CommandSession):
     #     [CQ:image,file={result.url}]""".strip())
     # else:
     #     await session.send("无法获取图片信息.")
-    await session.send("哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
+    await session.send(get_message(__plugin_name__, 'not_setu_msg').format(image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
+    # await session.send("哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 
 class ImageData:

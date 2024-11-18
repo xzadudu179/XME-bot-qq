@@ -1,6 +1,6 @@
 from nonebot import on_request, RequestSession
 import config
-from ....xmetools import color_manage as c
+from ...xmetools import color_manage as c
 
 # 将函数注册为群请求处理器
 @on_request('group')

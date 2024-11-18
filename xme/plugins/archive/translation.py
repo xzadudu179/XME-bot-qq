@@ -2,18 +2,32 @@ from zhipuai import ZhipuAI
 from nonebot import on_command, CommandSession
 from nonebot.argparse import ArgumentParser
 import traceback
+from json import JSONDecodeError
 import keys
 import xme.xmetools.text_tools as t
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 import json
 
 alias = ['翻译', 'trans']
+arg_usage = shell_like_usage("OPTION", [
+    {
+        "name": "help",
+        "abbr": "h",
+        "desc": "查看帮助"
+    },
+    {
+        "name": "language",
+        "abbr": "l",
+        "desc": "指定要翻译成的语言"
+    }
+])
+
 __plugin_name__ = 'translate'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc='翻译内容',
-    introduction='使用 ChatGLM-4 模型进行文本翻译，参数可填如英语 法语 俄语 中文等',
-    usage=f'(需要翻译的文本内容) [OPTION]\nOPTION:\n\t-h, --help\t查看帮助\n\t-l, --language\t指定要翻译成的语言',
+    introduction='使用 ChatGLM-4 模型进行文本翻译，参数可填如英语 法语 俄语 中文等\n注意：该指令可能将会在不久后删除',
+    usage=f'(需要翻译的文本内容) [OPTION]\n{arg_usage}',
     permissions=[],
     alias=alias
 ))
@@ -57,6 +71,8 @@ async def _(session: CommandSession):
             await session.send(f"无法翻译哦，因为你先前指定了一个未知的语言 \"{lan}\"，或是ChatGLM并不知道你要翻译的内容的语言是什么 xwx")
             return
         await session.send(f"以下是 GLM-4 输出结果：\n{content}")
+    except JSONDecodeError as ex:
+        await session.send(f"json 解析出错，原 AI 返回内容为：\n{content}")
     except Exception as ex:
         print(f"执行出错：{ex}\n{traceback.format_exc()}")
         await session.send(f"呜呜呜，执行出错了，以下是错误信息：{ex}")

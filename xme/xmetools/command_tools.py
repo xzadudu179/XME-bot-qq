@@ -1,5 +1,6 @@
 import config
 from nonebot.command import call_command, CommandManager, Command
+from character import get_message
 
 async def send_cmd(cmd_string, session, check_permission=True):
     name = cmd_string.split(" ")[0]
@@ -12,8 +13,9 @@ async def send_cmd(cmd_string, session, check_permission=True):
         name = alias_cmd.name
     # print(CommandManager._find_command(self=CommandManager, name=name))
     args = " ".join((cmd_string.split(" ")[1:])) if len(cmd_string.split(" ")) > 1 else ""
-    if name == "wife" and not args:
-        await session.send("注意：你在一个可回复指令的后面 3 句话内执行了 wife 指令，会默认显示我的老婆 uwu")
+    if name == "wife" and '[CQ:at,qq=' not in args:
+        await session.send(get_message('other', 'wife_error'))
+        # await session.send("注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
     print(f"parse command: {name} | {args}")
     await call_command(
         bot=session.bot,
@@ -22,7 +24,7 @@ async def send_cmd(cmd_string, session, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
-def find_command_by_args(input_string):
+def get_cmd_by_alias(input_string):
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]

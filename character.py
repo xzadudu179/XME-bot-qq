@@ -48,7 +48,7 @@ def get_item(*keys: str, character: str="", default="[NULL]", search_dict: dict 
     return result
 
 def get_message(*keys: str, default: str="[NULL]", character: str="") -> str:
-    """获取 bot 输出消息
+    """获取 bot 角色字典消息
 
     Args:
         *key (str): 消息键

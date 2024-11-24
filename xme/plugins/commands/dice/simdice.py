@@ -46,8 +46,8 @@ async def _(session: CommandSession):
                                counts=format(counts, ','),
                                faces=format(faces, ','),
                                faces_result_prefix=count_morethan_1_prefix if len(args) > 1 else '',
-                               faces_formula='+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if len(args) > 1 else format(points_list[0], ','))
+                               faces_formula=('+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if len(args) > 1 else format(points_list[0], ',')))
         # await session.send(message=f"[CQ:at,qq={session.event.user_id}] 你投出了 {counts:,} 个 {faces:,} 面的骰子，{'总共' if len(args) > 1 else ''}投到了 {('+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if len(args) > 1 else format(points_list[0], ',')}！")
     except Exception as ex:
-        # print(f"{ex.with_traceback()}")
+        print(f"{ex.with_traceback()}")
         await session.send(message=message)

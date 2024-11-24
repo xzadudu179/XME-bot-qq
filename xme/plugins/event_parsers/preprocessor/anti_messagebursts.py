@@ -20,7 +20,10 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
     # recalls = json_tools.read_from_path('./recalls.json')['recalls']
     MSG_COUNT_THRESHOLD = 3
     SEC_AVG_MSGS = 0.8
-    key = f"{event['user_id']}{event['group_id']}"
+    try:
+        key = f"{event['user_id']}{event['group_id']}"
+    except:
+        return
     if event['user_id'] == event.self_id:
         return
     message = event['raw_message'].strip()
@@ -31,7 +34,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         message = message[1:] if message[0] in config.COMMAND_START else message
     if time.time() - last_messages['refresh_time'] > (SEC_AVG_MSGS * MSG_COUNT_THRESHOLD * 2) and last_messages['refresh_time'] > 0:
         # print(last_messages)
-        # print(f"清除以上缓存")
+        print(f"清除以上缓存")
         last_messages = {
             "refresh_time": time.time()
         }
@@ -52,7 +55,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         rate = 2 if is_cmd else 1
         # 如果在 x 秒内发的消息超过这么多则算刷屏
         time_period = time.time() - last_messages[key][message]["start_time"]
-        print(f'在 {time_period} 秒发了 {last_messages[key][message]["count"]} 条消息 {message}，{"是" if is_cmd else "不是"}指令，平均每秒发送了 {time_period / last_messages[key][message]["count"]} 条消息\n刷屏限制为每秒 {SEC_AVG_MSGS * rate} 条消息')
+        print(f'在 {time_period} 秒发了 {last_messages[key][message]["count"]} 条消息 {message}，{"是" if is_cmd else "不是"}指令，平均每秒发送了 {time_period / last_messages[key][message]["count"]} 条消息\n刷屏限制为每秒 {SEC_AVG_MSGS / rate} 条消息')
         if time_period > (SEC_AVG_MSGS * rate * last_messages[key][message]['count']): return
         if last_messages[key][message]['count'] < MSG_COUNT_THRESHOLD * 4:
             last_messages['refresh_time'] = time.time()
@@ -60,7 +63,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
             # 禁言 / 提醒
             print(f"消息 \"{message}\" 刷屏了")
             last_messages[key][message]["banned"] = True
-            if event['group_id'] in config.GROUPS_WHITELIST:
+            if event['group_id'] in config.GROUPS_WHITELIST and time_period <= (SEC_AVG_MSGS * last_messages[key][message]['count']):
                 print(f"尝试禁言群员")
                 await bot.api.set_group_ban(group_id=event['group_id'], user_id=event['user_id'], duration=120)
             if event['group_id'] in config.GROUPS_WHITELIST or is_cmd:

@@ -1,5 +1,6 @@
 import random
 from .json_tools import read_from_path
+from functools import wraps
 
 def random_percent(percent : float) -> bool:
     """指定百分比概率返回True
@@ -16,8 +17,26 @@ def random_percent(percent : float) -> bool:
     if not (0 <= percent <= 100):
         raise ValueError("百分比需要设置在 0 到 100 之间")
     rd = random.uniform(0, 100)
+    # print(rd)
     return rd < percent
 
+def change_seed(seed=None):
+    """修改函数内 random 的种子或让函数结束后种子重置
+
+    Args:
+        func (_type_): 函数
+        seed (int | float | str | bytes | bytearray): 种子
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if seed:
+                random.seed(seed)
+            result = func(*args, **kwargs)
+            random.seed()
+            return result
+        return wrapper
+    return decorator
 
 def rand_str(*strings) -> str:
     """返回参数中的随机一个字符串
@@ -44,12 +63,13 @@ def character_message(character, message_name) -> str | bool:
     result = message[character].get(message_name, False)
     return result
 
-def messy_string(string_input, temperature: float=50):
+def messy_string(string_input, temperature: float=50, resample_times=0):
     """返回一个混乱的字符串
 
     Args:
         string_input (str): 输入字符串
         temperature (float): 混乱程度 (0 ~ 100)
+        resample_times (int): 重新采样次数
 
     Returns:
         str: 混乱字符串
@@ -61,9 +81,19 @@ def messy_string(string_input, temperature: float=50):
         "%",
         "&",
         "*",
+        "**",
+        "^",
         ".",
         "..",
-        "??"
+        "??",
+        "$",
+        "\"",
+        "¿",
+        "¡",
+        "=",
+        "<",
+        ">",
+        ",",
     ]
     result = ""
     for c in string_input:
@@ -78,6 +108,9 @@ def messy_string(string_input, temperature: float=50):
                 result += random.choice(random_chars)
         else:
             result += c
+    # 重新采样
+    if resample_times > 0:
+        result = messy_string(result, temperature, resample_times-1)
     return result
 
 # print(messy_string('你捡到了一个漂流瓶~\n[#101号漂流瓶，来自 "寻找无处不在的179（？）"]：\n-----------\n你不许玩了！*抢走你的.pick\n-----------\n由 "仍然是一只AOS 喵～" 在2024年10月15日 15:24:12 投出\n这个瓶子被捡到了26次，还没有任何赞ovo\n你可以马上发送 "-like" 以点赞，或发送 "-rep" 以举报。\n'))

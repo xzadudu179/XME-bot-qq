@@ -113,7 +113,6 @@ async def play_game(session: CommandSession, args: dict):
     quit_inputs = ("quit", "退出游戏", "退出", "exit")
     while True:
         user_input = (await session.aget(prompt= f"{at} " + get_message(cmd_name, name, 'guess_prompt').format(
-            at=at,
             prefix=prefix,
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f"{at} {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()

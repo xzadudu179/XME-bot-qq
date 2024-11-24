@@ -18,7 +18,7 @@ async def send_time_message():
             period=date_tools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
-            from_=say['from']
+            from_where=say['from']
         )
         # something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{'无名' if not (x:=say['from_who']) else x} 《{say['from']}》"
         try:

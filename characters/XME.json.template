@@ -1,13 +1,22 @@
 {
+    // XME-bot 角色模板
+    // 请修改冒号右边的值以改变 bot 输出的文本内容（注意，如果冒号右边的值以大括号开头则不要修改，否则会出错）
+    // 请将修改好的此文件重命名为 角色名.json 并放置在 characters 目录下，并且删除所有 // 注释
+    // 字符串内大括号代表占位符，如果有不理解可以问 179 特定占位符的意思
+    // 如果没有特殊提醒，值可以是字符串或列表形式，如果是列表形式会从列表中随机抽取一个字符串返回。
     "bot_info": {
+        // ↓ 该值不建议是非字符串形式，可能会导致错误
         "name": "XME-bot",
+        // ↓ 该值如果是列表会按逗号分隔依次显示
         "author": "xzadudu179",
+        // ↓ 该值不可是非列表格式
         "nickname": [
             "XME",
             "xme"
         ]
     },
     "config": {
+        // config 值可以但是不建议修改为列表形式，因为一次运行只会读取一次 config 内容，所以并不能做到每次输出都随机的功能
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
     },
@@ -32,7 +41,7 @@
             ".jrrp",
             "b50"
         ],
-        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
+        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from}》"
     },
     "event_parsers": {
         "message_bursts": "不要刷屏 uwu",
@@ -202,7 +211,7 @@
             "range_equals": "数字范围不能是相同的哦 uwu",
             "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
             "guess_prompt_prefix_default": "{start}\n请",
-            "guess_prompt": "{prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
+            "guess_prompt": "{at} {prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
             "quit_message": "退出游戏啦 ovo",
             "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
             "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
@@ -224,7 +233,7 @@
         "no_view_message": "第一次被捡到",
         "like_message": "获得了{count}个赞owo",
         "no_like_message": "还没有任何赞ovo",
-        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\"，混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\"，混乱程度：{messy_rate}%]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
         "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
         "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
         "bottle_broken": "啊，你不小心把瓶子摔碎了...",
@@ -250,19 +259,5 @@
         "faces_too_low": "骰子面数不可以小于 1 哦",
         "count_morethan_1_prefix": "总共",
         "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
-    },
-    "title": {
-        "desc": "设置头衔",
-        "introduction": "为一个群员设置指定的头衔（需要 bot 是群主哦）",
-        "no_at_arg": "请先 at 你要我设置头衔的群员哦",
-        "no_name_arg": "请指定头衔名哦",
-        "successful": "头衔设置成功啦~",
-        "deleted": "头衔删除成功啦~",
-        "failed": "呜呜，设置失败了...\n错误内容：{ex}"
-    },
-    "whoru": {
-        "desc": "查看当前角色",
-        "introduction": "查看 xme-bot 当前使用的角色~",
-        "whoami": "我是 {chac_name} 哦~\n由 {author} 制作的！"
     }
 }

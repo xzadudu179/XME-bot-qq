@@ -1,5 +1,6 @@
 from xme.xmetools.date_tools import *
 from xme.xmetools import json_tools
+from xme.xmetools import text_tools
 from character import get_message
 from xme.plugins.commands.drift_bottle import __plugin_name__
 import config
@@ -32,6 +33,13 @@ async def _(session: CommandSession):
         id = bottles_dict["max_index"] + 1
     except:
         id = 0
+    for k, bottle in bottles_dict['bottles'].items():
+        # print(bottle)
+        if text_tools.jaccard_similarity(arg, bottle['content'], False) > 0.75:
+        # if arg == bottle['content']:
+            await session.send(get_message(__plugin_name__, "content_already_thrown").format(content=bottle['content'], id=k))
+            # await session.send(f"大海里已经有这个瓶子了哦ovo")
+            return
     bottles_dict['bottles'][id] = {
         "content": arg,
         "sender": user['nickname'],
@@ -46,5 +54,5 @@ async def _(session: CommandSession):
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
-    await session.send(f"[CQ:at,qq={user['user_id']}] " + {get_message(__plugin_name__, "throwed").format(id=id)})
+    await session.send(f"[CQ:at,qq={user['user_id']}] " + get_message(__plugin_name__, 'throwed').format(id=id))
     # await session.send(f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")

@@ -17,6 +17,7 @@ async def _(session: CommandSession):
     at = f"[CQ:at,qq={user_id}]"
     bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
     bottles = bottles_dict['bottles']
+    print("捡瓶子中")
     # 没捡到瓶子
     if len(bottles) < 1:
         await session.send(get_message(__plugin_name__, "no_bottle"))
@@ -24,19 +25,22 @@ async def _(session: CommandSession):
         return
     pickedup = random_tools.random_percent(90)
     if not pickedup:
-        await session.send(get_message(__plugin_name__, "no_bottle_picked"))
+        await session.send(f"{at} " + get_message(__plugin_name__, "no_bottle_picked"))
         # await session.send("你没有捡到瓶子ovo")
         return
 
-    print("捡瓶子中")
     # print(bottles)
     # bottle = random.choice(bottles)
     index, bottle = random.choice(list(bottles.items()))
+    print("捡到了瓶子")
     index_is_int = True
     try:
         int(index)
-    except:
+    except Exception as ex:
+        print(f"因为 {ex} 所以瓶子 id 不是整数")
         index_is_int = False
+    # 混乱值根据浏览量计算
+    messy_rate: float = min(100, max(0, bottle['views'] * 2 - bottle['likes'] * 3)) if index_is_int or str(index) != '-179' else 0
     # 增加浏览量以及构造卡片
     # ----------------------------
     view_message = get_message(__plugin_name__, "view_message").format(times=bottle['views'] + 1) if (bottle['views'] + 1) > 1 else get_message(__plugin_name__, "no_view_message").format(times=bottle['views'] + 1)
@@ -44,8 +48,16 @@ async def _(session: CommandSession):
     bottle['views'] += 1
     like_message = get_message(__plugin_name__, "like_message").format(count=bottle['likes']) if bottle['likes'] > 0 else get_message(__plugin_name__, "no_like_message").format(count=bottle['likes'])
     # like_message = f"获得了{bottle['likes']}个赞owo" if bottle['likes'] > 0 else f"还没有任何赞ovo"
-    bottle_card = f"{at} " + get_message(__plugin_name__, "bottle_card_content").format(
+    messy_rate_string = ""
+    if str(index) == '-179':
+        messy_rate_string = "##未知##"
+    elif not index_is_int:
+        messy_rate_string = "##纯洁无暇##"
+    else:
+        messy_rate_string = f"{messy_rate}%"
+    bottle_card = get_message(__plugin_name__, "bottle_card_content").format(
         index=index,
+        messy_rate=messy_rate_string,
         from_group=bottle['from_group'],
         content=bottle['content'],
         sender=bottle['sender'],
@@ -56,11 +68,21 @@ async def _(session: CommandSession):
     # bottle_card = f"{at} 你捡到了一个漂流瓶~\n[#{index}号漂流瓶，来自 \"{bottle['from_group']}\"]：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} 投出\n这个瓶子{view_message}，{like_message}"
     # 彩蛋瓶子
     if str(index) == "-179":
-        bottle_card = random_tools.messy_string(bottle_card)
+        bottle_card = f"{at} " + random_tools.messy_string(bottle_card, 35)
+    # elif index_is_int:
+    #     # 普通瓶子会越来越混乱
+    #     bottle_card = f"{at} " + random_tools.messy_string(bottle_card, messy_rate)
+    # ----------------------------
+    # 拼接回复
     #     bottle_card = f"{at} 你捡?到了一个漂流..??瓶..?\n[#{index}号?...瓶，来..自. \"{bottle['from_group']}\"]..：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} [生成]\n这...个..{view_message}，{like_message} uwu"
     # ----------------------------
     # 手滑摔碎了瓶子
-    broken = random_tools.random_percent(3)
+    # 越混乱的瓶子越容易摔碎
+    print(f"混乱程度：{messy_rate}%")
+    broken = random_tools.random_percent(min(100, 1 + messy_rate / 2) if messy_rate < 100 else 100)
+    if index_is_int and str(index) != "-179":
+        # 普通瓶子会越来越混乱
+        bottle_card = f"{at} " + random_tools.messy_string(bottle_card, messy_rate)
     if not broken:
         if str(index) == "-179":
             bottle_card += "\n" + get_message(__plugin_name__, "response_prompt_broken")
@@ -72,10 +94,11 @@ async def _(session: CommandSession):
     print("保存中")
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     await session.send(bottle_card)
-    print("捡到了瓶子")
     content = ""
     if broken:
         content = f"{at} " + get_message(__plugin_name__, "bottle_broken")
+        if messy_rate == 100:
+            content = f"{at} " + get_message(__plugin_name__, "bottle_broken_messy")
         # content = f"{at} 啊，你不小心把瓶子摔碎了..."
         if str(index) != "-179":
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')

@@ -9,6 +9,9 @@ from datetime import datetime
 
 WIFE_INFO = {
 }
+TIME_LIMIT_INFO = {
+
+}
 USAGE_STATS = {
     "start_time": datetime.now().strftime("%Y年%m月%d日 %H:%M:%S"),
     "datas": [] # datas 字典列表, key 为群号
@@ -62,6 +65,9 @@ def bot_init():
 
     usage_path = "./data/usage_stats.json"
     init_json(usage_path, USAGE_STATS)
+
+    time_limit_path = "./data/time_limit_usage.json"
+    init_json(time_limit_path, TIME_LIMIT_INFO)
 
 
 def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):

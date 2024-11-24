@@ -10,9 +10,9 @@ import character
 @on_websocket_connect
 async def connect(event: aiocqhttp.Event):
     bot = nonebot.get_bot()
-    print(c.gradient_text("#dda3f8","#66afff" ,text=f"{character.get_item('bot_info', 'name')} 准备好啦~"))
+    print(c.gradient_text("#dda3f8","#66afff" ,text=f"{character.get_message('bot_info', 'name')} 准备好啦~"))
     if not n.is_prime(var.currentpid):
-        message = f"[DEBUG] {character.get_item('bot_info', 'name')} 准备好啦~"
+        message = f"[DEBUG] {character.get_message('bot_info', 'name')} 准备好啦~"
         if not config.DEBUG: return
     else:
         # 我不觉得它有可能是质数

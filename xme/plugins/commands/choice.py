@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
+import jieba.posseg as pseg
 import random
 from xme.xmetools import text_tools
 from character import get_message
@@ -28,22 +29,76 @@ async def _(session: CommandSession):
     choice = ""
     # 只有一项选择
     if len(choices) <= 1:
-        if (x:=num_choice(choices[0], True)) != False:
-            choice = x
-        is_or_not = is_or_not_choice(choices)
-        if is_or_not:
+        # if (x:=num_choice(choices[0], True)) != False:
+        #     choice = x
+        is_num_choice = num_choice(choices[0], True)
+        has_or_not = has_or_not_choice(choices[0])
+        is_or_not = is_or_not_choice(choices[0])
+        ends_is_or_not = ends_is_or_not_choice(choices[0])
+        # print(is_or_not)
+
+        if is_num_choice:
+            choice = is_num_choice
+        elif has_or_not:
+            choice = has_or_not
+        elif is_or_not:
             choice = is_or_not
+        elif ends_is_or_not:
+            choice = ends_is_or_not
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
-    await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(__plugin_name__, 'choice_message').format(choice=choice))
+    await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(__plugin_name__, 'choice_message').format(choice=text_tools.me_to_you(choice)))
+
+
+def has_or_not_choice(input_str):
+    # 有没有
+    # *没*
+    splits, split_str = text_tools.try_split_left_right_equals(input_str, ["没", "不", "否"], True)
+    try:
+        print(splits, split_str)
+        split_str = split_str.replace("否", "不")
+        if len(splits) < 2: return False
+        # if splits[0][-1] != splits[1][0]:
+        #     return False
+        choice = random.randint(0, 1)
+        return text_tools.merge_positive_negative(splits[0]) + ((split_str[0] + splits[1]) if choice else split_str[1:] + splits[1])
+    except Exception as ex:
+        print(ex)
+        return False
+
+def ends_is_or_not_choice(text):
+    question_strings = ("否", "吗", "嘛")
+    if not text_tools.remove_punctuation(text).endswith(question_strings):
+        return False
+    # 使用jieba进行词性标注
+    words = list(pseg.cut(text))
+    choice = random.randint(0, 1)
+    print(words)
+    # 寻找动词作为分割点
+    for i, (word, flag) in enumerate(words):
+        if flag == 'v':
+            prefix = "".join([t for t, _ in words[:i]])
+            is_or_not = "" if choice else "不"
+            suffix = text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
+            return f"{prefix}{is_or_not}{suffix}"
+            # return ("".join([t for t, _ in words[:i]]), text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]]))))
+
+    # 如果没有找到特殊标志词，则返回
+    return False
 
 def is_or_not_choice(input_str):
     # 是否
-    split = input_str.split("是否")
-    if len(split) <= 1:
+    splits = input_str.split("是否")
+    # print(splits)
+    if len(splits) <= 1 or "是否".join(splits[1:]) == '':
         return False
-    message = random.choice([split[1], "不" + split[1]])
+    is_not = "是否".join(splits[1:])
+    try:
+        first_last = splits[0][-1]
+    except:
+        first_last = ""
+    message = ('' if splits[0] in ['我', '你'] else splits[0]) + random.choice([is_not if first_last == "是" else text_tools.merge_positive_negative(is_not), text_tools.merge_positive_negative("不" + is_not)])
     return message
 
 def num_choice(input_str, one_num=False):

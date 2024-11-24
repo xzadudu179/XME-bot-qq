@@ -5,6 +5,7 @@ import random
 from nonebot import on_command, CommandSession
 from xme.xmetools.date_tools import curr_days
 # from xme.plugins.commands.jrrp.luck_algorithm import get_luck
+from xme.xmetools import random_tools
 from xme.xmetools.doc_gen import CommandDoc
 from character import get_message
 
@@ -94,6 +95,7 @@ async def jrrp(session: CommandSession):
         await session.send(content + get_message(__plugin_name__, 'jrrp_default').format(result=result))
         # await session.send(content + f"{result} ovo")
 
+@random_tools.change_seed()
 def jrrp_gen(id):
     random.seed(int(str(curr_days()) + str(id)))
     return random.randint(-1, 101)

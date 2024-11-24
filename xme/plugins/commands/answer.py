@@ -4,6 +4,7 @@ from xme.xmetools import request_tools
 from xme.xmetools import random_tools
 from xme.xmetools import text_tools
 from xme.xmetools.date_tools import curr_days
+import time
 import random
 from character import get_message
 import json
@@ -26,6 +27,11 @@ REPLACE_STR_ZH = {
     "有。": "是的。"
 }
 
+@random_tools.change_seed(curr_days())
+def get_current_days_550w_percent():
+    percent = (random.random() * 17.4) + 0.5
+    return percent
+
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     message = get_message(__plugin_name__, "default_error")
@@ -35,15 +41,17 @@ async def _(session: CommandSession):
 
     if args and text_tools.is_question_product(args.upper(), '550W'):
         print("有人在询问 550W")
-        random.seed(curr_days())
-        percent = (random.random() * 17.4) + 0.5
+        # random.seed(curr_days())
+        percent = get_current_days_550w_percent()
+        # random.seed(time.time())
         print(f"今天是 550w 的概率是 {percent}%")
         if random_tools.random_percent(percent):
-            print("没错，我是550W")
+            print("没错，我是 550W")
             await session.send(f"[CQ:at,qq={session.event.user_id}]\n" + get_message(__plugin_name__, "550w"))
             # await session.send(f"[CQ:at,qq={session.event.user_id}]\n答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"")
             return
-
+        else:
+            print("550W 还没来")
     try:
         ans_json = json.loads(await request_tools.fetch_data('https://api.andeer.top/API/answer.php'))
         if ans_json['code'] != 200:

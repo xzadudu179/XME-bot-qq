@@ -1,6 +1,7 @@
 import re
 from pypinyin import lazy_pinyin
 import spacy
+import string
 
 # 中文占比
 def chinese_proportion(input_str) -> float:
@@ -32,6 +33,7 @@ def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=Fa
     # 使用正则表达式替换不符合的字符（保留换行符）
     return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\n-]', '_' if not replace_to_horzline else '-', s).replace("\n", "")
 # print(chinese_proportion("你这个 situation 我觉得很 weird"))
+
 
 def replace_chinese_punctuation(text: str) -> str:
     """替换中文标点到英文
@@ -69,7 +71,60 @@ def replace_chinese_punctuation(text: str) -> str:
         text = re.sub(re.escape(chinese_punc), english_punc, text)
     return text
 
-def jaccard_similarity(str1: str, str2: str) -> float:
+def me_to_you(content: str) -> str:
+    return content.replace("你", "<>WO1-<>").replace("我", "你").replace("<>WO1-<>", "我")
+
+def doubt_to_excl(content):
+    content = replace_chinese_punctuation(content)
+    return content.replace("嘛?", "!").replace("吗", "").replace("?", "!")
+
+def merge_positive_negative(content):
+    result_is = content.replace("不不", "是")
+    result_is = re.sub(r"(.*?)是是", lambda match: prefix + "是是" if (prefix:=match.group(1)) else prefix + "是", result_is)
+    return result_is
+
+def try_split_left_right_equals(text, splits, total_split_return=False):
+    """以 ABA 的格式分隔字符
+
+    Args:
+        text (str): 输入的文本
+        splits (str): 分割字符B
+        total_split_return (bool): 是否返回完整的被分割字符
+
+    Returns:
+        tuple(list, str): 分割完的字符，第一项为前后缀，第二项为被分割的字符
+    """
+    result = []
+    split_return = []
+    for s in splits:
+        pattern = rf"(.*?(.){s}\2)(.*)"
+        pt2 = rf".*((.){s}\2)"
+        match_split = re.match(pt2, text)
+        match = re.match(pattern, text)
+        if match is None: continue
+        prefix = match.groups()[0]
+        split_return = s
+        if total_split_return:
+            split_return = match_split.groups()[0]
+        result = list((prefix.split(match_split.groups()[0])[0], match.groups()[-1]))
+        break
+    return (result, split_return)
+
+def replace_all(*replace_strings: tuple[str, str] | tuple[str], text):
+    result = text
+    try:
+        for o, n in replace_strings:
+            result = result.replace(o, n)
+    except ValueError:
+        for o in replace_strings:
+            result = result.replace(o, "")
+    return result
+
+def remove_punctuation(text: str) -> str:
+    text = replace_chinese_punctuation(text)
+    return text.translate(str.maketrans('', '', string.punctuation))
+
+def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
     """计算字符串集合的交集与并集的比例相似度（中文会被转换为拼音）
 
     Args:
@@ -79,8 +134,11 @@ def jaccard_similarity(str1: str, str2: str) -> float:
     Returns:
         float: 相似度(0~1)
     """
-    str1 = ''.join(lazy_pinyin(str1))
-    str2 = ''.join(lazy_pinyin(str2))
+    if get_pinyin:
+        str1 = ''.join(lazy_pinyin(str1))
+        str2 = ''.join(lazy_pinyin(str2))
+    # str1 = ''.join(lazy_pinyin(str1))
+    # str2 = ''.join(lazy_pinyin(str2))
     set1 = set(str1)
     set2 = set(str2)
     intersection = len(set1.intersection(set2))

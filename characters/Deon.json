@@ -710,7 +710,7 @@
     "sign": {
         "desc": "签到",
         "introduction": "签到，并且得到一定量的{coin_name}",
-        "failed": [
+        "limited": [
             "你今天已经签到过了哦~",
             "你今天已经签到过了哦 ovo",
             "你今天已经签到过啦 ovo",
@@ -731,17 +731,50 @@
             "签到成功啦~"
         ],
         "login_no_coins": [
-            "你没获得任何{coin_name}...",
-            "你没有获得任何{coin_name}...",
-            "你没获得任何{coin_name}...呜呜",
-            "呜呜...你没获得任何{coin_name}...",
-            "呜...你没获得任何{coin_name}..."
+            "{login_success}，但是你没获得任何{coin_name}...",
+            "{login_success}，不过你没有获得任何{coin_name}...",
+            "{login_success}，但是你没获得任何{coin_name}...呜呜",
+            "{login_success}，不过呜呜...你没获得任何{coin_name}...",
+            "{login_success}，不过呜...你没获得任何{coin_name}..."
         ],
         "success": [
             "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦",
             "{login_success} 你{state} {coin_count} {coin_name}~",
             "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦~",
             "{login_success} 你{state} {coin_count} {coin_name}~\n你目前总共有 {coin_total} {coin_name}哦"
+        ]
+    },
+    "lottery": {
+        "desc": "抽奖",
+        "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
+        "limited": [
+            "你今天的抽奖次数用完啦~",
+            "诶...你今天的抽奖次数用完啦",
+            "诶...你今天的抽奖次数用完了哦",
+            "诶...你今天不能再抽{coin_name}了哦",
+            "你今天没有抽奖次数啦...",
+            "你今天没有更多抽奖次数啦..."
+        ],
+        "no_arg": "请指定投入{coin_name}的数量哦~",
+        "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
+        "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
+        "get_coin_result": [
+            "获得了 {get_count} {coin_pronoun}{coin_name}！",
+            "得到了 {get_count} {coin_pronoun}{coin_name}！",
+            "得到了 {get_count} {coin_pronoun}{coin_name}！owo",
+            "拿到了 {get_count} {coin_pronoun}{coin_name}！"
+        ],
+        "no_coin_result": [
+            "没有获得任何{coin_name}...",
+            "但是没有获得任何{coin_name}...",
+            "但是没有一{coin_pronoun}{coin_name}出来...呜呜",
+            "但是没有任何{coin_name}出来...呜呜"
+        ],
+        "result": [
+            "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜！",
+            "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，ovo",
+            "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}",
+            "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还有 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜——"
         ]
     }
 }

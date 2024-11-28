@@ -8,7 +8,7 @@ from xme.xmetools.command_tools import send_msg
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
 @on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
 async def _(session: CommandSession):
-    user_id = session.event.user_id
+    # user_id = session.event.user_id
     group_id = str(session.event.group_id)
     wifeinfo = await group_init(group_id)
     print(session.current_key)
@@ -41,7 +41,7 @@ async def _(session: CommandSession):
         if wife:
             # print(pair_user)
             name = (x if (x:=wife['card']) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
-            who = f"[CQ:at,qq={user_id}] {at_name}"
+            who = f"{at_name}"
             message = get_message(w.__plugin_name__, "wife_message").format(
                 who=who,
                 avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",

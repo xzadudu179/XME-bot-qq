@@ -1,7 +1,7 @@
 import nonebot
 import config
 from xme.xmetools.doc_gen import CommandDoc
-from xme.xmetools.command_tools import send_cmd
+from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
 from xme.xmetools.list_ctrl import split_list
 from xme.xmetools.command_tools import send_msg
 from nonebot import on_command, CommandSession
@@ -23,15 +23,22 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 async def arg_help(arg, plugins, session):
-    arg = arg.replace("/", "")
-    p = x[-1] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
-    print(x)
+    if arg[0] in config.COMMAND_START:
+        arg = arg[1:]
+    p = get_cmd_by_alias("/" + arg)
+    if not p:
+        p = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
+    else:
+        p = p.name[0]
+    print(p)
     if p:
         for pl in plugins:
-            if pl.name.lower() != p[0]: continue
+            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and p in [i.split(":")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[1:-1]]:
+                p = pl.name.lower()
+            if pl.name.lower() != p: continue
             return await send_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=False)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
-    print(p)
+    # print(p)
     return False
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
@@ -48,7 +55,7 @@ async def _(session: CommandSession):
             # 如果不能成数字那就是功能
             if await arg_help(arg, plugins, session) != False: return
     # help_list_str = ""
-    page_item_length = 6
+    page_item_length = 10
     # 分页
     pages = []
     index = 0

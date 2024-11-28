@@ -4,7 +4,6 @@ from xme.xmetools.command_tools import send_msg
 import random
 from ...xmetools import xme_user as u
 from xme.xmetools.xme_user import User
-from xme.xmetools import time_tools
 from character import get_message
 
 coin_name = get_message("config", "coin_name")
@@ -22,16 +21,18 @@ __plugin_usage__ = str(CommandDoc(
 ))
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 @u.using_user(save_data=True)
+@u.limit(__plugin_name__, 1, get_message(__plugin_name__, 'limited'))
 async def _(session: CommandSession, user: User):
-
-    message = get_message(__plugin_name__, 'failed')
+    message = ""
+    # message = get_message(__plugin_name__, 'failed')
     print(user)
-    if u.is_limit(user, __plugin_name__, 1, time_tools.TimeUnit.DAY, floor_float=True):
-        return await send_msg(session, message)
     append_coins = random.randint(0, 50)
     user.coins += append_coins
     if append_coins == 0:
-        message = get_message(__plugin_name__, 'login_no_coins')
+        message = get_message(__plugin_name__, 'login_no_coins').format(
+            coin_name=coin_name,
+            login_success=get_message(__plugin_name__, 'login_success')
+        )
     else:
         message = get_message(__plugin_name__, 'success').format(
             login_success=get_message(__plugin_name__, 'login_success'),
@@ -41,3 +42,4 @@ async def _(session: CommandSession, user: User):
             coin_total=user.coins
         )
     await send_msg(session, message)
+    return True

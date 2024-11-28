@@ -79,7 +79,7 @@ async def jrrp(session: CommandSession):
     # result = get_luck(qq, key)
     # random.seed(int(str(curr_days()) + str(qq)))
     result = jrrp_gen(qq)
-    content = f"[CQ:at,qq={qq}] " + get_message(__plugin_name__, 'jrrp_prefix')
+    content = get_message(__plugin_name__, 'jrrp_prefix')
     if result < 0:
         await send_msg(session, content + get_message(__plugin_name__, 'jrrp<0').format(result=result))
         # await send_msg(session, content + f"{result}...？ xwx")

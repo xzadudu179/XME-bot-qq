@@ -270,10 +270,21 @@
     "sign": {
         "desc": "签到",
         "introduction": "签到，并且得到一定量的{coin_name}",
-        "failed": "你今天已经签到过了哦~",
+        "limited": "你今天已经签到过了哦~",
         "get_state": "获得了",
         "login_success": "签到成功~",
         "login_no_coins": "你没获得任何{coin_name}...",
         "success": "{login_success} 你{state} {coin_count} {coin_name}~"
+    },
+    "lottery": {
+        "desc": "抽奖",
+        "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
+        "limited": "你今天的抽奖次数用完啦~",
+        "no_arg": "请指定投入{coin_name}的数量哦~",
+        "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
+        "not_enough_coins": "唔，你指定的{coin_name}数量 ({count}) 太多啦！超过了你拥有的{coin_name}总数呢...",
+        "get_coin_result": "获得了 {get_count} {coin_pronoun}{coin_name}！",
+        "no_coin_result": "没有获得任何{coin_name}...",
+        "result": "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} ovo"
     }
 }

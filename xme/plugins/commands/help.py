@@ -3,6 +3,7 @@ import config
 from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools.command_tools import send_cmd
 from xme.xmetools.list_ctrl import split_list
+from xme.xmetools.command_tools import send_msg
 from nonebot import on_command, CommandSession
 from character import get_message
 from xme.xmetools.text_tools import most_similarity_str
@@ -28,8 +29,8 @@ async def arg_help(arg, plugins, session):
     if p:
         for pl in plugins:
             if pl.name.lower() != p[0]: continue
-            return await session.send(pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'))
-            # return await session.send(pl.usage if pl.usage else "无内容")
+            return await send_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=False)
+            # return await send_msg(session, pl.usage if pl.usage else "无内容")
     print(p)
     return False
 
@@ -60,8 +61,8 @@ async def _(session: CommandSession):
             total_pages += "\n\t" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
-        await session.send(get_message(__plugin_name__, 'no_cmds').format(prefix=prefix))
-        # await session.send(f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
+        await send_msg(session, get_message(__plugin_name__, 'no_cmds').format(prefix=prefix))
+        # await send_msg(session, f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
         return
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
@@ -72,7 +73,7 @@ async def _(session: CommandSession):
     suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
     # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
     content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-    await session.send(prefix + content + '\n' + suffix)
+    await send_msg(session, prefix + content + '\n' + suffix)
     if len(pages) <= 1:
         return
     # 翻页
@@ -105,14 +106,14 @@ async def _(session: CommandSession):
         if curr_page_num < 1:
             reply_message = get_message(__plugin_name__, 'page_too_small')
             # reply_message = "页数不能小于 1 啦 xwx"
-            await session.send(reply_message)
+            await send_msg(session, reply_message)
             return
         elif curr_page_num > len(pages):
             reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=curr_page_num)
             # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
-            await session.send(reply_message)
+            await send_msg(session, reply_message)
             curr_page_num = len(pages)
         content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-        await session.send(prefix + content + '\n' + suffix)
+        await send_msg(session, prefix + content + '\n' + suffix)
 
 

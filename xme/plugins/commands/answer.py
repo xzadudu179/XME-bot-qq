@@ -3,9 +3,9 @@ from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools import request_tools
 from xme.xmetools import random_tools
 from xme.xmetools import text_tools
-from xme.xmetools.date_tools import curr_days
-import time
+from xme.xmetools.time_tools import curr_days
 import random
+from xme.xmetools.command_tools import send_msg
 from character import get_message
 import json
 
@@ -47,8 +47,7 @@ async def _(session: CommandSession):
         print(f"今天是 550w 的概率是 {percent}%")
         if random_tools.random_percent(percent):
             print("没错，我是 550W")
-            await session.send(f"[CQ:at,qq={session.event.user_id}]\n" + get_message(__plugin_name__, "550w"))
-            # await session.send(f"[CQ:at,qq={session.event.user_id}]\n答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"")
+            await send_msg(session, f"\n" + get_message(__plugin_name__, "550w"))
             return
         else:
             print("550W 还没来")
@@ -59,8 +58,8 @@ async def _(session: CommandSession):
             # message = "呜呜，书翻不开了..."
         else:
             data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
-            message = f"[CQ:at,qq={session.event.user_id}]\n{get_message(__plugin_name__, 'answer')}\n\"{data}\"\n\"{ans_json['data']['en']}\""
+            message = f"\n{get_message(__plugin_name__, 'answer')}\n\"{data}\"\n\"{ans_json['data']['en']}\""
     except Exception as ex:
         print(ex)
     finally:
-        await session.send(message)
+        await send_msg(session, message)

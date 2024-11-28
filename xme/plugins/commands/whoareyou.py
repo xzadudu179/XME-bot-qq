@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.command_tools import send_msg
 from character import get_message
 
 alias = ['你是谁', 'who', 'chac']
@@ -17,4 +18,4 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     chac_name = get_message("bot_info", "name")
     author = get_message("bot_info", "author")
-    await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(__plugin_name__, "whoami").format(chac_name=chac_name, author=author))
+    await send_msg(session, get_message(__plugin_name__, "whoami").format(chac_name=chac_name, author=author))

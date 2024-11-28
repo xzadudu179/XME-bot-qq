@@ -28,3 +28,5 @@ SCHEDULER_GROUP = [
 
 NICKNAME = character.get_item('bot_info', 'nickname', default=['XME', 'xme'])
 VERSION = '0.1.2'
+
+USER_PATH = "./data/users.json"

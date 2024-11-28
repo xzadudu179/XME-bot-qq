@@ -9,7 +9,9 @@
     },
     "config": {
         "busy": "我还有指令未处理 uwu",
-        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
+        "coin_name": "金币",
+        "coin_pronoun": "枚"
     },
     "schedulers": {
         "idles": [
@@ -264,5 +266,14 @@
         "desc": "查看当前角色",
         "introduction": "查看 xme-bot 当前使用的角色~",
         "whoami": "我是 {chac_name} 哦~\n由 {author} 制作的！"
+    },
+    "sign": {
+        "desc": "签到",
+        "introduction": "签到，并且得到一定量的{coin_name}",
+        "failed": "你今天已经签到过了哦~",
+        "get_state": "获得了",
+        "login_success": "签到成功~",
+        "login_no_coins": "你没获得任何{coin_name}...",
+        "success": "{login_success} 你{state} {coin_count} {coin_name}~"
     }
 }

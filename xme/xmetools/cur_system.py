@@ -1,7 +1,7 @@
 import psutil as pt
 import platform
 import time
-from .date_tools import secs_to_ymdh
+from .time_tools import secs_to_ymdh
 
 # 将字节转换为 MiB
 def bytes_to_mib(bytes):

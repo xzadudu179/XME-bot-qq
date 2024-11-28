@@ -6,6 +6,7 @@ import logging
 from xme.xmetools import color_manage as c
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
+import config
 
 WIFE_INFO = {
 }
@@ -28,6 +29,10 @@ DRIFT_BOTTLES_INFO = {
     "max_index": 0,
     "bottles": [
     ]
+}
+
+USERS = {
+    "users": {}
 }
 
 BOT_SETTINGS = {
@@ -68,6 +73,8 @@ def bot_init():
 
     time_limit_path = "./data/time_limit_usage.json"
     init_json(time_limit_path, TIME_LIMIT_INFO)
+
+    init_json(config.USER_PATH, USERS)
 
 
 def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):

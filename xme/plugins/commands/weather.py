@@ -1,8 +1,8 @@
 from nonebot import on_command, CommandSession
-from nonebot import on_natural_language, NLPSession, IntentCommand
+from xme.xmetools.command_tools import send_msg
 from ...xmetools import random_tools as rt
 from ...xmetools import request_tools as req
-from ...xmetools import date_tools as dt
+from ...xmetools import time_tools as dt
 from xme.xmetools.doc_gen import CommandDoc
 from datetime import datetime
 from character import get_message
@@ -41,8 +41,8 @@ async def _(session: CommandSession):
     if not params:
         params = (await session.aget(prompt=message)).strip()
         if params == cancel_message:
-            await session.send(get_message(__plugin_name__, 'search_cancelled'))
-            # await session.send("取消天气查询啦")
+            await send_msg(session, get_message(__plugin_name__, 'search_cancelled'))
+            # await send_msg(session, "取消天气查询啦")
             return
         while not params:
             params = (await session.aget(prompt=get_message(__plugin_name__, 're_enter_city_prompt'))).strip()
@@ -58,12 +58,12 @@ async def _(session: CommandSession):
             if days_num > 4 or days_num < 2:
                 message = get_message(__plugin_name__, 'invalid_days').format(future_days=get_message(__plugin_name__, 'future_days'))
                 # message = f"{rt.rand_str('设置的天数', '未来天数', '天数')}还不可以大于 3 或小于 1 哦"
-                await session.send(message)
+                await send_msg(session, message)
                 return
         except:
             message = get_message(__plugin_name__, 'error_param').format(city=city, future_days=params.split(' ')[1])
             # message = f"出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
-            await session.send(message)
+            await send_msg(session, message)
             return
     try:
         weathers = await req.get_weather(city)
@@ -82,7 +82,7 @@ async def _(session: CommandSession):
         temp_min = min(int(day_temp), int(night_temp))
         day_wind = [weather_today["daywind"], weather_today["daypower"]]
         night_wind = [weather_today["nightwind"], weather_today["nightpower"]]
-        message = f"[CQ:at,qq={session.event.user_id}] "
+        message = f""
         message += get_message(__plugin_name__, 'result_prefix') + get_message(__plugin_name__, 'result_content').format(
             city_name=city_name,
             date=datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日"),
@@ -124,4 +124,4 @@ async def _(session: CommandSession):
     except Exception as ex:
         message = get_message(__plugin_name__, 'error').format(city=city, ex=ex)
         # message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
-    await session.send(message)
+    await send_msg(session, message)

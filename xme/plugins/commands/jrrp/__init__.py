@@ -2,8 +2,9 @@ from anyio import sleep
 # from itsdangerous import base64_encode
 import nonebot
 import random
+from xme.xmetools.command_tools import send_msg
 from nonebot import on_command, CommandSession
-from xme.xmetools.date_tools import curr_days
+from xme.xmetools.time_tools import curr_days
 # from xme.plugins.commands.jrrp.luck_algorithm import get_luck
 from xme.xmetools import random_tools
 from xme.xmetools.doc_gen import CommandDoc
@@ -35,7 +36,7 @@ async def jrrp(session: CommandSession):
         members = await jrrp_rank(session)
         if args == 'avg':
             avg = int(sum([member['jrrp'] for member in members]) / len(members))
-            await session.send(
+            await send_msg(session,
                 get_message(__plugin_name__, 'avg_message')
                 .format(avg=avg, reaction=
                                     get_message(__plugin_name__, 'reaction>60') if
@@ -43,17 +44,17 @@ async def jrrp(session: CommandSession):
                                     get_message(__plugin_name__, 'reaction>20') if
                                     avg > 20 else
                                     get_message(__plugin_name__, 'reaction<=20')))
-            # await session.send(f"今日群员人品的平均值是 {avg} {'owo' if avg > 60 else 'ovo' if avg > 20 else 'uwu'}")
+            # await send_msg(session, f"今日群员人品的平均值是 {avg} {'owo' if avg > 60 else 'ovo' if avg > 20 else 'uwu'}")
             return
         try:
             count = int(args)
         except:
-            await session.send(get_message(__plugin_name__, 'rank_error'))
-            # await session.send(f"成员数量需要是整数哦ovo")
+            await send_msg(session, get_message(__plugin_name__, 'rank_error'))
+            # await send_msg(session, f"成员数量需要是整数哦ovo")
             return
         if abs(count) > max_rank_length:
-            await session.send(get_message(__plugin_name__, 'rank_too_long').format(max=max_rank_length))
-            # await session.send(f"指定的成员数量太多了哦uwu，范围是 -15 ~ 15")
+            await send_msg(session, get_message(__plugin_name__, 'rank_too_long').format(max=max_rank_length))
+            # await send_msg(session, f"指定的成员数量太多了哦uwu，范围是 -15 ~ 15")
             return
         elif count == 0:
             count = 5
@@ -72,7 +73,7 @@ async def jrrp(session: CommandSession):
         for i, member in enumerate(enum_list):
             message += get_message(__plugin_name__, 'jrrp_row').format(index=i + 1, card=member['card'], id=member['id'], jrrp=member['jrrp'])
             # message += f"\n{i + 1}. {member['card']} ({member['id']})：今日人品值为 {member['jrrp']}"
-        await session.send(message)
+        await send_msg(session, message)
         return
     # key = base64_encode("嘿嘿嘿...179....嘿嘿嘿")
     # result = get_luck(qq, key)
@@ -80,20 +81,20 @@ async def jrrp(session: CommandSession):
     result = jrrp_gen(qq)
     content = f"[CQ:at,qq={qq}] " + get_message(__plugin_name__, 'jrrp_prefix')
     if result < 0:
-        await session.send(content + get_message(__plugin_name__, 'jrrp<0').format(result=result))
-        # await session.send(content + f"{result}...？ xwx")
+        await send_msg(session, content + get_message(__plugin_name__, 'jrrp<0').format(result=result))
+        # await send_msg(session, content + f"{result}...？ xwx")
     elif result < 10:
-        await session.send(content + get_message(__plugin_name__, 'jrrp<10').format(result=result))
-        # await session.send(content + f"....{result}？uwu")
+        await send_msg(session, content + get_message(__plugin_name__, 'jrrp<10').format(result=result))
+        # await send_msg(session, content + f"....{result}？uwu")
     elif result > 100:
-        await session.send(content + get_message(__plugin_name__, 'jrrp>100').format(result=result))
-        # await session.send(content + f"{result}.0000%！All Perfect+ owo！！")
+        await send_msg(session, content + get_message(__plugin_name__, 'jrrp>100').format(result=result))
+        # await send_msg(session, content + f"{result}.0000%！All Perfect+ owo！！")
     elif result >= 90:
-        await session.send(content + get_message(__plugin_name__, 'jrrp>=90').format(result=result))
-        # await session.send(content + f"{result}！owo！")
+        await send_msg(session, content + get_message(__plugin_name__, 'jrrp>=90').format(result=result))
+        # await send_msg(session, content + f"{result}！owo！")
     else:
-        await session.send(content + get_message(__plugin_name__, 'jrrp_default').format(result=result))
-        # await session.send(content + f"{result} ovo")
+        await send_msg(session, content + get_message(__plugin_name__, 'jrrp_default').format(result=result))
+        # await send_msg(session, content + f"{result} ovo")
 
 @random_tools.change_seed()
 def jrrp_gen(id):

@@ -6,7 +6,7 @@ from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
 from nonebot import log
 from xme.xmetools import random_tools
-from xme.xmetools import date_tools
+from xme.xmetools import time_tools
 from character import get_message
 import random
 
@@ -15,7 +15,7 @@ async def send_time_message():
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
         something_to_say = get_message("schedulers", "time").format(
-            period=date_tools.get_time_period(),
+            period=time_tools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
             from_where=say['from']

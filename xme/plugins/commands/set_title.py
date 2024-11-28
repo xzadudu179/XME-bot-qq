@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.command_tools import send_msg
 from character import get_message
 
 alias = ['set_title', '设置头衔', '头衔']
@@ -20,14 +21,14 @@ async def _(session: CommandSession):
         at = args.split(" ")[0]
         name = args.split(" ")[1] if len(args.split(" ")) > 1 else ""
         if not name:
-            return await session.send(get_message(__plugin_name__, 'no_name_arg'))
+            return await send_msg(session, get_message(__plugin_name__, 'no_name_arg'))
         if at and "[CQ:at,qq=" in at:
             at_id = int(at.split("[CQ:at,qq=")[1].split(",")[0])
         else:
-            await session.send(get_message(__plugin_name__, 'no_at_arg'))
+            await send_msg(session, get_message(__plugin_name__, 'no_at_arg'))
             return
         print(at_id, name)
         await session.bot.set_group_special_title(group_id=session.event.group_id, user_id=at_id, special_title=name if name != "-delete" else "", duration=0)
-        await session.send(get_message(__plugin_name__, 'successful' if name != "-delete" else 'deleted'))
+        await send_msg(session, get_message(__plugin_name__, 'successful' if name != "-delete" else 'deleted'))
     except Exception as e:
-        await session.send(get_message(__plugin_name__, 'failed').format(ex=e))
+        await send_msg(session, get_message(__plugin_name__, 'failed').format(ex=e))

@@ -1,7 +1,7 @@
 import nonebot
 from nonebot.session import BaseSession
 from xme.xmetools import pair as p
-from xme.xmetools import date_tools as d
+from xme.xmetools import time_tools as d
 from .wife_tools import *
 import json
 

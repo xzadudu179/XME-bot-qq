@@ -10,7 +10,9 @@
     },
     "config": {
         "busy": "忙不过来啦 呜...",
-        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
+        "coin_name": "饼干",
+        "coin_pronoun": "块"
     },
     "schedulers": {
         "idles": [
@@ -19,8 +21,10 @@
             "嗷呜！",
             "冒泡冒泡~",
             "嗷呜——",
+            "水群！",
             "冒泡",
-            "漠月只是在操作机器人 漠月不是机器人汪！",
+            "冒泡~",
+            "好无聊哦~",
             "呜呜 被图灵测试了...",
             "ovo",
             "汪",
@@ -701,6 +705,43 @@
             "我是{chac_name}哦~\n被 {author} 拉过来的 嗷呜！",
             "我是{chac_name}~\n被 {author} 带过来的 嗷呜~",
             "owo！我是{chac_name}哦~\n被 {author} 拉过来玩啦~"
+        ]
+    },
+    "sign": {
+        "desc": "签到",
+        "introduction": "签到，并且得到一定量的{coin_name}",
+        "failed": [
+            "你今天已经签到过了哦~",
+            "你今天已经签到过了哦 ovo",
+            "你今天已经签到过啦 ovo",
+            "你今天的签到次数用光啦~",
+            "你今天已经签到过啦~"
+        ],
+        "get_state": [
+            "获得了",
+            "拿到了"
+        ],
+        "login_success": [
+            "签到成功~",
+            "签到成功！",
+            "签到成功！嗷呜，",
+            "签到成功 owo,",
+            "嗷呜~签到成功~",
+            "嗷呜！签到成功~",
+            "签到成功啦~"
+        ],
+        "login_no_coins": [
+            "你没获得任何{coin_name}...",
+            "你没有获得任何{coin_name}...",
+            "你没获得任何{coin_name}...呜呜",
+            "呜呜...你没获得任何{coin_name}...",
+            "呜...你没获得任何{coin_name}..."
+        ],
+        "success": [
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦",
+            "{login_success} 你{state} {coin_count} {coin_name}~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你目前总共有 {coin_total} {coin_name}哦"
         ]
     }
 }

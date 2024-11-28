@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools import request_tools
 from character import get_message
 from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.command_tools import send_msg
 import json
 
 alias = ["涩图", "setu", "色图" ]
@@ -23,9 +24,9 @@ async def setu(session: CommandSession):
     # api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
     # result = await fetch_image_data(api_url)
     # if result:
-    #     # await session.send("已找到图片，正在发送...")
+    #     # await send_msg(session, "已找到图片，正在发送...")
     #     print(result.url)
-    #     await session.send(f"""
+    #     await send_msg(session, f"""
     #     图片标题: {result.title}
     #     图片pid: {result.pid}
     #     作者: {result.author}
@@ -33,9 +34,9 @@ async def setu(session: CommandSession):
     #     --------------------
     #     [CQ:image,file={result.url}]""".strip())
     # else:
-    #     await session.send("无法获取图片信息.")
-    await session.send(get_message(__plugin_name__, 'not_setu_msg').format(image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
-    # await session.send("哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
+    #     await send_msg(session, "无法获取图片信息.")
+    await send_msg(session, get_message(__plugin_name__, 'not_setu_msg').format(image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
+    # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 
 class ImageData:

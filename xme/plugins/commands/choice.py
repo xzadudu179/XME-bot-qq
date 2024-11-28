@@ -4,6 +4,7 @@ import jieba.posseg as pseg
 import random
 from xme.xmetools import text_tools
 from character import get_message
+from xme.xmetools.command_tools import send_msg
 
 alias = ['选择', 'cho', '决定']
 __plugin_name__ = 'choice'
@@ -22,8 +23,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     args = session.current_arg_text.strip()
     if not args:
-        await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(__plugin_name__, "no_args"),)
-        # await session.send(f"[CQ:at,qq={session.event.user_id}] 你还没有说我要决定的事情哦 ovo")
+        await send_msg(session, get_message(__plugin_name__, "no_args"),)
         return
     choices = args.split(" ")
     choice = ""
@@ -48,7 +48,7 @@ async def _(session: CommandSession):
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
-    await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(__plugin_name__, 'choice_message').format(choice=text_tools.me_to_you(choice)))
+    await send_msg(session, get_message(__plugin_name__, 'choice_message').format(choice=text_tools.me_to_you(choice)))
 
 
 def has_or_not_choice(input_str):

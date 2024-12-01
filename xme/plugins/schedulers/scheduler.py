@@ -7,7 +7,7 @@ from datetime import datetime
 from nonebot import log
 from xme.xmetools import random_tools
 from xme.xmetools import time_tools
-from character import get_message
+from character import get_item, get_message
 import random
 
 async def send_time_message():
@@ -32,7 +32,7 @@ async def send_time_message():
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
     if not (6 <= datetime.now().hour <= 24): return
-    if not random_tools.random_percent(0.02): return
+    if not random_tools.random_percent(0.03): return
     bot = nonebot.get_bot()
     groups = await bot.get_group_list()
     # 群组太少就降低概率
@@ -41,7 +41,11 @@ async def _():
     group_id = group['group_id']
     # idles = get_message("schedulers", "idles")
     # idles = json_tools.read_from_path("bot_messages.json")['idles']
-    message = get_message("schedulers", "idles")
+    faces = await bot.api.call_action("fetch_custom_face")
+    # 随机发表情
+    message = get_item("schedulers", "idles").append(faces)
+    if message in faces:
+        message = f"[CQ:image,file={message}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")
     try:
         await bot.send_group_msg(group_id=group_id,

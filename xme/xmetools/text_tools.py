@@ -2,6 +2,22 @@ import re
 from pypinyin import lazy_pinyin
 import spacy
 import string
+from difflib import SequenceMatcher
+
+def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
+    """使用 difflib 判断字符串相似度
+
+    Args:
+        a (str): 字符串 a
+        b (str): 字符串 b
+
+    Returns:
+        float: 相似度比例
+    """
+    if get_pinyin:
+        a = ''.join(lazy_pinyin(a))
+        b = ''.join(lazy_pinyin(b))
+    return SequenceMatcher(None, a, b).ratio()
 
 # 中文占比
 def chinese_proportion(input_str) -> float:
@@ -19,6 +35,37 @@ def chinese_proportion(input_str) -> float:
         return 0
     true_ratio = true_count / total_count
     return true_ratio
+
+def calc_spacing(texts: list[str], target: str, padding: int=0) -> int:
+    return calc_len(max(texts, key=lambda x: calc_len(x))) - calc_len(target) + padding
+
+def calc_len(text):
+    pattern = r'[^\x00-\xff]'
+    length = 0
+    for char in text:
+        # 如果是中文字符，加2
+        if re.match(pattern, char):
+            # print(char)
+            length += 2
+        else:
+            # 如果是其他字符，加1
+            length += 1
+    return length
+
+
+def get_image_str(raw_message):
+    """仅保留并获取 qq 原消息中的图片
+
+    Args:
+        raw_message (str): 原本的消息
+
+    Returns:
+        tuple[str, tuple]: 返回待格式化消息和图片元组
+    """
+    images = [item.split(",")[0] for item in raw_message.split('[CQ:image,file=')[1:]]
+    raw_message = re.sub(r'\[CQ:image,.*?\]', '{}', raw_message)
+    raw_message = re.sub(r'\[CQ:.*?\]', '', raw_message)
+    return (raw_message, tuple(images))
 
 def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=False):
     """返回只包含中文 英文 数字 下划线 横线的字符串

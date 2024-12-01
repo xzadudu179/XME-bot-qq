@@ -8,7 +8,7 @@ from nonebot import on_command, CommandSession
 from character import get_message
 from xme.xmetools.text_tools import most_similarity_str
 
-alias = ["usage", "docs", "帮助"]
+alias = ["usage", "docs", "帮助", "h"]
 __plugin_name__ = 'help'
 
 __plugin_usage__ = str(CommandDoc(
@@ -25,7 +25,7 @@ __plugin_usage__ = str(CommandDoc(
 async def arg_help(arg, plugins, session):
     if arg[0] in config.COMMAND_START:
         arg = arg[1:]
-    p = get_cmd_by_alias("/" + arg)
+    p = get_cmd_by_alias(arg, False)
     if not p:
         p = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
     else:
@@ -33,10 +33,10 @@ async def arg_help(arg, plugins, session):
     print(p)
     if p:
         for pl in plugins:
-            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and p in [i.split(":")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[1:-1]]:
+            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and p in [i.split(":")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[:] if i]:
                 p = pl.name.lower()
             if pl.name.lower() != p: continue
-            return await send_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=False)
+            return await send_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)
     return False

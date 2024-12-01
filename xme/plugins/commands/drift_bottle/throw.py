@@ -13,6 +13,8 @@ command_name = 'throw'
 async def _(session: CommandSession):
     MAX_LENGTH = 200
     MAX_LINES = 15
+    # raw_arg_msg = session.current_arg.strip()
+    # arg, images = text_tools.get_image_str(raw_arg_msg)
     arg = session.current_arg_text.strip()
     if not arg:
         await send_msg(session, get_message(__plugin_name__, "nothing_to_throw").format(command_name=f"{config.COMMAND_START[0]}{command_name}"))
@@ -26,6 +28,10 @@ async def _(session: CommandSession):
         await send_msg(session, get_message(__plugin_name__, "lines_too_many").format(max_lines=MAX_LINES))
         # await send_msg(session, f"瓶子的行数太多啦！最多 MAX_LINES 行哦")
         return
+    # 保存图片并修改图片地址
+    # for image in images:
+    #     print(image)
+    #     await session.bot.api.get_image(file=image)
     # bottles_dict = {}
     bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
@@ -36,13 +42,14 @@ async def _(session: CommandSession):
         id = 0
     for k, bottle in bottles_dict['bottles'].items():
         # print(bottle)
-        if text_tools.jaccard_similarity(arg, bottle['content'], False) > 0.75:
+        if text_tools.difflib_similar(arg, bottle['content'], False) > 0.75:
         # if arg == bottle['content']:
             await send_msg(session, get_message(__plugin_name__, "content_already_thrown").format(content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
             return
     bottles_dict['bottles'][id] = {
         "content": arg,
+        # "images": list(images),
         "sender": user['nickname'],
         "likes": 0,
         'views': 0,

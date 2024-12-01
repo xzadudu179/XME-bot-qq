@@ -25,12 +25,13 @@ async def send_cmd(cmd_string, session, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
-def get_cmd_by_alias(input_string):
+def get_cmd_by_alias(input_string, judge_cmd_start=True):
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
     elif name[0] not in config.COMMAND_START:
-        return False
+        if judge_cmd_start:
+            return False
     if CommandManager._commands.get((name,), False) == False:
         return CommandManager._aliases.get(name, False)
     else:

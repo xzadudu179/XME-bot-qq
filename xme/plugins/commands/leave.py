@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools.command_tools import send_msg
-from character import get_message
+from character import get_message, CHARACTER
 
-alias = ['bot_退群', 'bot_退出群聊', 'bot_exit']
+alias = [f'{get_message("bot_info", "name")}退群', f'{get_message("bot_info", "name")}退出群聊', f'{CHARACTER}_exit']
 __plugin_name__ = 'bot_leave'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

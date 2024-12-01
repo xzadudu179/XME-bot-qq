@@ -12,7 +12,10 @@
         "busy": "忙不过来啦 呜...",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "coin_name": "饼干",
-        "coin_pronoun": "块"
+        "coin_pronoun": "块",
+        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name} owo\n{sign_message}",
+        "sign_message": "最近签到是{last_sign_time}~",
+        "no_sign": "没有签过到呢..."
     },
     "schedulers": {
         "idles": [
@@ -744,37 +747,77 @@
             "{login_success} 你{state} {coin_count} {coin_name}~\n你目前总共有 {coin_total} {coin_name}哦"
         ]
     },
-    "lottery": {
-        "desc": "抽奖",
-        "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
-        "limited": [
-            "你今天的抽奖次数用完啦~",
-            "诶...你今天的抽奖次数用完啦",
-            "诶...你今天的抽奖次数用完了哦",
-            "诶...你今天不能再抽{coin_name}了哦",
-            "你今天没有抽奖次数啦...",
-            "你今天没有更多抽奖次数啦..."
-        ],
-        "no_arg": "请指定投入{coin_name}的数量哦~",
-        "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
-        "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
-        "get_coin_result": [
-            "获得了 {get_count} {coin_pronoun}{coin_name}！",
-            "得到了 {get_count} {coin_pronoun}{coin_name}！",
-            "得到了 {get_count} {coin_pronoun}{coin_name}！owo",
-            "拿到了 {get_count} {coin_pronoun}{coin_name}！"
-        ],
-        "no_coin_result": [
-            "没有获得任何{coin_name}...",
-            "但是没有获得任何{coin_name}...",
-            "但是没有一{coin_pronoun}{coin_name}出来...呜呜",
-            "但是没有任何{coin_name}出来...呜呜"
-        ],
-        "result": [
-            "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜！",
-            "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，ovo",
-            "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}",
-            "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还有 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜——"
-        ]
+    "用户": {
+        "desc": "用户功能相关",
+        "introduction": "需要获取用户信息的功能",
+        "help_suffix": "使用 {help_cmd} 来查看详细的帮助哦~",
+        "userhelp": {
+            "desc": "用户功能帮助",
+            "introduction": "查看某一用户功能指令的详细帮助",
+            "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+        },
+        "lottery": {
+            "desc": "抽奖",
+            "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
+            "limited": [
+                "你今天的抽奖次数用完啦~",
+                "诶...你今天的抽奖次数用完啦",
+                "诶...你今天的抽奖次数用完了哦",
+                "诶...你今天不能再抽{coin_name}了哦",
+                "你今天没有抽奖次数啦...",
+                "你今天没有更多抽奖次数啦..."
+            ],
+            "no_arg": "请指定投入{coin_name}的数量哦~",
+            "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
+            "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
+            "get_coin_result": [
+                "获得了 {get_count} {coin_pronoun}{coin_name}！",
+                "得到了 {get_count} {coin_pronoun}{coin_name}！",
+                "得到了 {get_count} {coin_pronoun}{coin_name}！owo",
+                "拿到了 {get_count} {coin_pronoun}{coin_name}！"
+            ],
+            "no_coin_result": [
+                "没有获得任何{coin_name}...",
+                "但是没有获得任何{coin_name}...",
+                "但是没有一{coin_pronoun}{coin_name}出来...呜呜",
+                "但是没有任何{coin_name}出来...呜呜"
+            ],
+            "result": [
+                "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜！",
+                "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，ovo",
+                "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}",
+                "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还有 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜——"
+            ],
+            "too_many_coins": [
+                "{count} {coin_pronoun}{coin_name} 太多啦！不能多于 {count_max} 呢...",
+                "{count} {coin_pronoun}{coin_name} 太多啦...不能多于 {count_max} 呢 ovo",
+                "{count} {coin_pronoun}{coin_name} 太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
+                "饼干机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
+                "一次最多只能投入 {count_max} {coin_pronoun}{coin_name}哦..."
+            ]
+        },
+        "userinfo": {
+            "desc": "查看个人信息",
+            "introduction": "查看自己当前被记录的个人信息，比如{coin_name}数量等, 如果 at 人则会查看那个人的个人信息",
+            "no_user": [
+                "唔...我没有记录过这个人的信息呢",
+                "我没有记录过这个人的信息诶...",
+                "我没有记录过这个人的信息哦...",
+                "我没记录过这个人的信息哦...",
+                "唔...我没有记录过这个人的信息哦"
+            ]
+        },
+        "coinrank": {
+            "desc": "{coin_name}排行榜",
+            "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和",
+            "rank_msg_prefix": "以下是我记录的{coin_name}排行哦~",
+            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 owo",
+            "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦~",
+            "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
+            "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
+            "invalid_arg": "不明白指定的排名长度意思呢...",
+            "ranking_row": "{rank}. {nickname}:{spacing}拥有{coins_count} {coin_pronoun}{coin_name}",
+            "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 ovo"
+        }
     }
 }

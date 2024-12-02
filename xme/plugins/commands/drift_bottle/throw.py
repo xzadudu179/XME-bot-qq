@@ -9,7 +9,7 @@ from nonebot import on_command, CommandSession
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'
-@on_command('throw', aliases=throw_alias, only_to_me=False, permission=lambda x: x.is_groupchat)
+@on_command(command_name, aliases=throw_alias, only_to_me=False, permission=lambda x: x.is_groupchat)
 async def _(session: CommandSession):
     MAX_LENGTH = 200
     MAX_LINES = 15
@@ -62,5 +62,5 @@ async def _(session: CommandSession):
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
-    await send_msg(session, f"[CQ:at,qq={user['user_id']}] " + get_message(__plugin_name__, 'throwed').format(id=id))
+    await send_msg(session, get_message(__plugin_name__, 'throwed').format(id=id))
     # await send_msg(session, f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")

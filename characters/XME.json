@@ -241,7 +241,14 @@
         "content_too_many": "瓶子的内容太多啦！要 {max_length} 字以内哦",
         "lines_too_many": "瓶子的行数太多啦！最多 {max_lines} 行哦",
         "throwed": "瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo",
-        "content_already_thrown": "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}"
+        "content_already_thrown": "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
+        "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
+        "cthulhu_error_bottles": "其中这些 id 的瓶子出错了...:\n{ids}",
+        "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
+        "cthulhu_bottle_not_exist": "不存在",
+        "cthulhu_bottle_special": "是特殊瓶子",
+        "cthulhu_bottle_already_broken": "已经被混乱了哦",
+        "cthulhu_fail": "混乱瓶子失败了..."
     },
     "骰子": {
         "desc": "骰子相关指令",

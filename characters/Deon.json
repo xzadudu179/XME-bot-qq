@@ -613,7 +613,12 @@
             "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
             "唔...大海里已经有类似的瓶子了哦：\n[#{id} 号漂流瓶]：{content}",
             "大海里已经有类似的瓶子了哦...是第 #{id} 号：\n{content}"
-        ]
+        ],
+        "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
+        "cthulhu_error_bottles": "其中这些 id 的瓶子有问题...:\n{ids}",
+        "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
+        "cthulhu_bottle_already_broken": "已经被混乱了",
+        "cthulhu_fail": "混乱瓶子失败了..."
     },
     "骰子": {
         "desc": "骰子相关指令",
@@ -755,6 +760,33 @@
             "desc": "用户功能帮助",
             "introduction": "查看某一用户功能指令的详细帮助",
             "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+        },
+        "sign": {
+            "desc": "签到",
+            "introduction": "签到，并且得到一定量的{coin_name}",
+            "limited": [
+                "你今天已经签到过了哦~",
+                "明天再签到吧~",
+                "你今天签到过啦~"
+            ],
+            "get_state": [
+                "获得了",
+                "得到了",
+                "拿到了"
+            ],
+            "login_success": [
+                "签到成功~",
+                "签到成功啦~",
+                "签到成功嗷呜！",
+                "签到成功~嗷呜！"
+            ],
+            "login_no_coins": [
+                "你没获得任何{coin_name}...",
+                "你没拿到任何{coin_name}...",
+                "你没得到任何{coin_name}诶...",
+                "你没获得任何{coin_name}...呜呜..."
+            ],
+            "success": "{login_success} 你{state} {coin_count} {coin_name}~"
         },
         "lottery": {
             "desc": "抽奖",

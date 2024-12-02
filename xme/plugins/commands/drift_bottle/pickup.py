@@ -10,12 +10,12 @@ from xme.xmetools.command_tools import send_msg
 import config
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
+command_name = "pickup"
 
-
-@on_command('pickup', aliases=pickup_alias, only_to_me=False)
+@on_command(command_name, aliases=pickup_alias, only_to_me=False)
 async def _(session: CommandSession):
     user_id = session.event.user_id
-    at = f"[CQ:at,qq={user_id}]"
+    # at = f"[CQ:at,qq={user_id}]"
     bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
     bottles = bottles_dict['bottles']
     print("捡瓶子中")
@@ -26,7 +26,7 @@ async def _(session: CommandSession):
         return
     pickedup = random_tools.random_percent(90)
     if not pickedup:
-        await send_msg(session, f"{at} " + get_message(__plugin_name__, "no_bottle_picked"))
+        await send_msg(session, get_message(__plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
         return
 
@@ -69,10 +69,10 @@ async def _(session: CommandSession):
     # bottle_card = f"{at} 你捡到了一个漂流瓶~\n[#{index}号漂流瓶，来自 \"{bottle['from_group']}\"]：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} 投出\n这个瓶子{view_message}，{like_message}"
     # 彩蛋瓶子
     if str(index) == "-179":
-        bottle_card = f"{at} " + random_tools.messy_string(bottle_card, 35)
+        bottle_card = random_tools.messy_string(bottle_card, 35)
     # elif index_is_int:
     #     # 普通瓶子会越来越混乱
-    #     bottle_card = f"{at} " + random_tools.messy_string(bottle_card, messy_rate)
+    #     bottle_card = random_tools.messy_string(bottle_card, messy_rate)
     # ----------------------------
     # 拼接回复
     #     bottle_card = f"{at} 你捡?到了一个漂流..??瓶..?\n[#{index}号?...瓶，来..自. \"{bottle['from_group']}\"]..：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} [生成]\n这...个..{view_message}，{like_message} uwu"
@@ -83,7 +83,7 @@ async def _(session: CommandSession):
     broken = random_tools.random_percent(min(100, 1 + messy_rate / 2) if messy_rate < 100 else 100)
     if index_is_int and str(index) != "-179":
         # 普通瓶子会越来越混乱
-        bottle_card = f"{at} " + random_tools.messy_string(bottle_card, messy_rate)
+        bottle_card = random_tools.messy_string(bottle_card, messy_rate)
     if not broken:
         if str(index) == "-179":
             bottle_card += "\n" + get_message(__plugin_name__, "response_prompt_broken")
@@ -97,9 +97,9 @@ async def _(session: CommandSession):
     await send_msg(session, bottle_card)
     content = ""
     if broken:
-        content = f"{at} " + get_message(__plugin_name__, "bottle_broken")
+        content = get_message(__plugin_name__, "bottle_broken")
         if messy_rate == 100:
-            content = f"{at} " + get_message(__plugin_name__, "bottle_broken_messy")
+            content = get_message(__plugin_name__, "bottle_broken_messy")
         # content = f"{at} 啊，你不小心把瓶子摔碎了..."
         if str(index) != "-179":
             bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
@@ -110,7 +110,7 @@ async def _(session: CommandSession):
         elif str(index) == "-179" or not index_is_int:
             # print("保存中")
             print("瓶子碎了？")
-            content = f"{at} " + get_message(__plugin_name__, "bottle_broken?")
+            content = get_message(__plugin_name__, "bottle_broken?")
             # content = "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里..."
             # json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
         await send_msg(session, content)
@@ -129,7 +129,7 @@ async def _(session: CommandSession):
             print(reply)
             if reply == '-like':
                 # 重新读取
-                content = f"{at} " + get_message(__plugin_name__, "liked")
+                content = get_message(__plugin_name__, "liked")
                 # content = f"{at} 点赞成功~"
                 bottles_dict['bottles'][index]['likes'] += 1
                 print("点赞了")
@@ -140,7 +140,7 @@ async def _(session: CommandSession):
                 await send_msg(session, content)
                 return
             elif reply == '-rep':
-                content = f"{at} " + get_message(__plugin_name__, "reported")
+                content = get_message(__plugin_name__, "reported")
                 # content = f"{at} 举报成功"
                 for superuser in config.SUPERUSERS:
                     await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nid: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")

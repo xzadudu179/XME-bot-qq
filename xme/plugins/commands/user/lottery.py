@@ -73,7 +73,7 @@ async def _(session: CommandSession, user: User):
         get_count=result,
         coin_pronoun=coin_pronoun
     )
-    times_left = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
+    times_left = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1] - 1
     message = get_message(__plugin_name__, cmd_name, 'result').format(
         coin_name=coin_name,
         coin_pronoun=coin_pronoun,

@@ -9,4 +9,4 @@ async def _(session: NoticeSession):
     # 如果是自己换一种欢迎方法
     if session.event.user_id == session.self_id:
         return await send_msg(session, get_message("event_parsers", "welcome_self"))
-    await send_msg(session, get_message("event_parsers", "welcome").format(at=f"[CQ:at,qq={session.event.user_id}]"))
+    await send_msg(session, get_message("event_parsers", "welcome").format(at=f"[CQ:at,qq={session.event.user_id}]"), False)

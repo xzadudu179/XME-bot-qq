@@ -79,6 +79,9 @@ async def _(session: CommandSession):
     # 展示页数
     suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
     # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
+    curr_page_num = await verify_page(session, curr_page_num, pages)
+    if not curr_page_num:
+        return
     content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
     await send_msg(session, prefix + content + '\n' + suffix)
     if len(pages) <= 1:
@@ -110,17 +113,30 @@ async def _(session: CommandSession):
             except:
                 return
         curr_page_num += more_page
-        if curr_page_num < 1:
-            reply_message = get_message(__plugin_name__, 'page_too_small')
-            # reply_message = "页数不能小于 1 啦 xwx"
-            await send_msg(session, reply_message)
+        curr_page_num = await verify_page(session, curr_page_num, pages)
+        if not curr_page_num:
             return
-        elif curr_page_num > len(pages):
-            reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=curr_page_num)
-            # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
-            await send_msg(session, reply_message)
-            curr_page_num = len(pages)
+        # if curr_page_num < 1:
+        #     reply_message = get_message(__plugin_name__, 'page_too_small')
+        #     # reply_message = "页数不能小于 1 啦 xwx"
+        #     await send_msg(session, reply_message)
+        #     return
+        # elif curr_page_num > len(pages):
+        #     reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=curr_page_num)
+        #     # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
+        #     await send_msg(session, reply_message)
+        #     curr_page_num = len(pages)
         content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
         await send_msg(session, prefix + content + '\n' + suffix)
 
 
+async def verify_page(session, page_num: str, pages) -> bool | int:
+    if page_num < 1:
+        reply_message = get_message(__plugin_name__, 'page_too_small')
+        await send_msg(session, reply_message)
+        return False
+    elif page_num > len(pages):
+        reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=page_num)
+        await send_msg(session, reply_message)
+        return len(pages)
+    return page_num

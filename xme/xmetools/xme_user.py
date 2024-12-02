@@ -200,12 +200,6 @@ def limit(limit_name: str, limit: float | int, limit_message: str, count_limit: 
                 print("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
                 user.save()
-            # if result == True and not is_limit[0]:
-            #     print("重置计数器")
-            #     reset_limit(user, limit_name, unit, floor_float, count_add=True)
-            # elif result == True and is_limit[0] and not is_limit[1]:
-            #     print("更新计数器")
-            #     limit_count_tick(user, limit_name)
             return
         return wrapper
     return decorator
@@ -217,8 +211,10 @@ def using_user(save_data=False):
         async def wrapper(session, *args, **kwargs):
             print(session.event.user_id)
             user = try_load(session.event.user_id, User(session.event.user_id))
-            await func(session, user, *args, **kwargs)
-            if save_data:
+            result = await func(session, user, *args, **kwargs)
+            print(f"result: {result}")
+            if save_data and result != False:
+                print("保存用户数据中")
                 user.save()
             return
         return wrapper

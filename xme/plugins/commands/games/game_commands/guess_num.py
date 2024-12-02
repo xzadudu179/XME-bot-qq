@@ -76,8 +76,8 @@ def return_state(message: str="", state: str="OK", data: dict={}) -> str:
         }
 
 async def play_game(session: CommandSession, args: dict):
-    MAX_RANGE = 10000000
-    MAX_LIMIT = 1000
+    MAX_RANGE = 10_000_000_000
+    MAX_LIMIT = 35
     settings: dict = args
     try:
         times_limit = x if (x:=int(settings.get("t", 7))) > 0 else 7
@@ -112,7 +112,7 @@ async def play_game(session: CommandSession, args: dict):
     ask_to_guess = True
     quit_inputs = ("quit", "退出游戏", "退出", "exit")
     while True:
-        user_input = (await session.aget(prompt=get_message(cmd_name, name, 'guess_prompt').format(
+        user_input = (await session.aget(prompt=f'[CQ:at,qq={session.event.user_id}] ' + get_message(cmd_name, name, 'guess_prompt').format(
             prefix=prefix,
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f" {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()
@@ -126,6 +126,7 @@ async def play_game(session: CommandSession, args: dict):
         except:
             # prefix = f"转换整数出错，请确定你输入的是整数哦 uwu\n"
             # prefix += "请重新"
+            print("忽略")
             ask_to_guess = False
             if get_cmd_by_alias(user_input) != False:
                 await send_msg(session, get_message(cmd_name, name, 'cmd_in_game'))

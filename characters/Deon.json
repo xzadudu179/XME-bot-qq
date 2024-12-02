@@ -507,6 +507,7 @@
         "introduction": "扔/捡来自各个群组的漂流瓶~\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 owo",
         "throw_introduction": "扔一个漂流瓶",
         "pickup_introduction": "尝试捡一个漂流瓶",
+        "cthulhu_introduction": "毁掉指定的漂流瓶",
         "no_bottle": [
             "海里一个瓶子里都没有...",
             "大海里完全没有瓶子...",
@@ -790,7 +791,7 @@
         },
         "lottery": {
             "desc": "抽奖",
-            "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
+            "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}",
             "limited": [
                 "你今天的抽奖次数用完啦~",
                 "诶...你今天的抽奖次数用完啦",
@@ -841,15 +842,50 @@
         },
         "coinrank": {
             "desc": "{coin_name}排行榜",
-            "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和",
+            "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
             "rank_msg_prefix": "以下是我记录的{coin_name}排行哦~",
             "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 owo",
             "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦~",
             "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
             "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
             "invalid_arg": "不明白指定的排名长度意思呢...",
-            "ranking_row": "{rank}. {nickname}:{spacing}拥有{coins_count} {coin_pronoun}{coin_name}",
+            "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
             "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 ovo"
+        },
+        "sendcoin": {
+            "desc": "给人{coin_name}",
+            "introduction": "at 一个人并且给他指定数量的{coin_name}~",
+            "no_arg": "请 at 你要转账的用户哦",
+            "invalid_user": "找不到 at 的用户呢...",
+            "send_to_self": "你不能给自己{coin_name}哦",
+            "invalid_coin_count": [
+                "{coin_name}数量需要是大于 0 的整数哦",
+                "{coin_name}数量需要是大于 0 的整数哦 ovo",
+                "{coin_name}太少啦，要大于 0 哦 ovo",
+                "{coin_name}太少啦，要大于 0 哦~"
+            ],
+            "not_enough_coin": [
+                "{coin_name}数量不足诶，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
+                "诶...你只有 {coin_total} {coin_pronoun}{coin_name}，没法给这么多呢...",
+                "诶...你只有 {coin_total} {coin_pronoun}{coin_name}哦",
+                "诶...你只有 {coin_total} {coin_pronoun}{coin_name}..."
+            ],
+            "received_coin_react": [
+                "谢谢哇~",
+                "好耶~",
+                "谢谢 owo~",
+                "谢谢 owo！",
+                "嘿嘿 谢谢哇~"
+            ],
+            "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
+            "no_coin_count": [
+                "请指定饼干数量哦",
+                "唔...请指定饼干数量哦",
+                "请指定饼干数量哦 ovo",
+                "需要指定饼干数量呢...",
+                "唔...需要指定饼干数量哦",
+                "需要指定饼干数量哦"
+            ]
         }
     }
 }

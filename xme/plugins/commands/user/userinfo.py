@@ -25,10 +25,13 @@ async def _(session: CommandSession, user: User):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
     if at_id != 0:
         user = u.User.load(at_id, False)
+    else:
+        at_id = session.event.user_id
     if not user:
         message = get_message(__plugin_name__, cmd_name, 'no_user')
         await send_msg(session, message)
         return False
-    message = '\n' + str(user)
+    target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
+    message = f'\n{target_user}\n' + str(user)
     await send_msg(session, message)
     return True

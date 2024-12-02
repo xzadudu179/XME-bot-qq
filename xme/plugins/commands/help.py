@@ -25,17 +25,17 @@ __plugin_usage__ = str(CommandDoc(
 async def arg_help(arg, plugins, session):
     if arg[0] in config.COMMAND_START:
         arg = arg[1:]
-    p = get_cmd_by_alias(arg, False)
-    if not p:
-        p = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
+    ask_for_help = get_cmd_by_alias(arg, False)
+    if not ask_for_help:
+        ask_for_help = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
     else:
-        p = p.name[0]
-    print(p)
-    if p:
+        ask_for_help = ask_for_help.name[0]
+    print(ask_for_help)
+    if ask_for_help:
         for pl in plugins:
-            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and p in [i.split(":")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[:] if i]:
-                p = pl.name.lower()
-            if pl.name.lower() != p: continue
+            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].split(" ")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[:] if i]:
+                ask_for_help = pl.name.lower()
+            if pl.name.lower() != ask_for_help: continue
             return await send_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)

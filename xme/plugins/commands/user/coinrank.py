@@ -13,7 +13,7 @@ alias = ['rank', f'{coin_name}排行', 'ranking']
 MAX_RANK_COUNT = 20
 cmd_name = 'coinrank'
 usage = {
-    "name": __plugin_name__,
+    "name": cmd_name,
     "desc": get_message(__plugin_name__, cmd_name, 'desc').format(coin_name=coin_name),
     "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
     "usage": f'<参数>',
@@ -28,6 +28,11 @@ async def _(session: CommandSession):
     sender = session.event.user_id
     message = get_message(__plugin_name__, cmd_name, 'rank_msg_prefix').format(coin_name=coin_name, coin_pronoun=coin_pronoun)
     arg = session.current_arg_text.strip().lower()
+    spacing = False
+    if arg:
+        spacing = arg.split(" ")[-1] == 'spacing'
+        arg = arg.split(" ")[0].replace('spacing', '')
+    print(spacing)
     rank_count = 10
     rank_items = xme_user.get_rank('coins')
     if arg and arg == 'avg':
@@ -77,7 +82,7 @@ async def _(session: CommandSession):
             coins_count=v,
             coin_pronoun=coin_pronoun,
             coin_name=coin_name,
-            spacing=" " * text_tools.calc_spacing(list(u_names.values()), nickname, 2)
+            spacing=" " * text_tools.calc_spacing([f'{i + 1}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
         )
     # 关于发送者的金币数超过了多少人
     sender_coins_count = None

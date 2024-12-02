@@ -67,7 +67,7 @@ async def _(session: CommandSession, user: User):
         return False
     user.coins -= arg
     result = random.randint(0, int(arg * 2))
-    user.coins += result
+    user.add_coins(result)
     result_content = (get_message(__plugin_name__, cmd_name, 'get_coin_result') if result > 0 else get_message(__plugin_name__, cmd_name, 'no_coin_result')).format(
         coin_name=coin_name,
         get_count=result,

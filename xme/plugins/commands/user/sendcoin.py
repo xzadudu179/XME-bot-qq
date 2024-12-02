@@ -71,7 +71,7 @@ async def _(session: CommandSession, user: User):
         message = get_message(__plugin_name__, cmd_name, 'not_enough_coin').format(coin_name=coin_name, coin_total=curr_coins, coin_pronoun=coin_pronoun)
         await send_msg(session, message)
         return False
-    send_to_user.coins += coin_count
+    send_to_user.add_coins(coin_count)
     send_to_user.save()
     message = get_message(__plugin_name__, cmd_name, 'success').format(
         target_user=f' {target_user} ({at_id})' if not at_bot_self else '我',

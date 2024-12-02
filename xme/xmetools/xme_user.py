@@ -21,7 +21,7 @@ class User():
         try:
             last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
             sign_message = get_message("config", "sign_message").format(last_sign_time=last_sign_time)
-        except KeyError:
+        except:
             sign_message = get_message("config", "no_sign")
 
         return get_message("config", "user_info_str").format(
@@ -32,6 +32,24 @@ class User():
             sign_message=sign_message
         )
 
+    def spend_coins(self, amount: int) -> bool:
+        if amount > self.coins:
+            return False
+        self.coins -= amount
+        return True
+
+    def __dict__(self):
+        return {
+            "coins": self.coins,
+            "counters": self.counters
+        }
+
+    def add_coins(self, amount: int) -> bool:
+        if amount < 0:
+            return False
+        self.coins += amount
+        return True
+
     def load(id: int, create_default_user=True):
         user_dict = json_tools.read_from_path(config.USER_PATH)['users'].get(str(id), None)
         if user_dict == None and create_default_user:
@@ -41,10 +59,7 @@ class User():
         return load_from_dict(user_dict, id)
 
     def save(self):
-        data_to_save = {
-            "coins": self.coins,
-            "counters": self.counters
-        }
+        data_to_save = self.__dict__()
         users = json_tools.read_from_path(config.USER_PATH)
         users['users'][str(self.id)] = data_to_save
         json_tools.save_to_path(config.USER_PATH, users)
@@ -168,16 +183,24 @@ def get_rank(*rank_item_key, key=None):
     return rank_values
 
 
-def limit(limit_name: str, limit: float | int, limit_message: str, count_limit: int=1, unit: time_tools.TimeUnit=time_tools.TimeUnit.DAY, floor_float: bool=True, limit_func=None, *limit_func_args, **limit_func_kwargs):
+def limit(limit_name: str,
+          limit: float | int,
+          limit_message: str,
+          count_limit: int=1,
+          unit: time_tools.TimeUnit=time_tools.TimeUnit.DAY,
+          floor_float: bool=True,
+          fails=lambda x: x == False,
+          limit_func=None,):
     """对函数进行限制时间内只能执行数次
 
     Args:
         limit_name (str): 限制名
-        limit (float | int): 限制时间
+        limit (float | int): 多少时间单位后刷新限制
         limit_message (str): 限制时返回的消息
         count_limit (int, optional): 时间内限制次数. Defaults to 1.
         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
         floor_float (bool, optional): 是否向下取整时间. Defaults to True.
+        fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: x == False.
         limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
     """
     def decorator(func):
@@ -189,18 +212,18 @@ def limit(limit_name: str, limit: float | int, limit_message: str, count_limit: 
                     return await send_msg(session, limit_message)
                 # 有自定义函数传入情况
                 elif inspect.iscoroutinefunction(limit_func):
-                    return await limit_func(session, *limit_func_args, **limit_func_kwargs)
+                    return await limit_func(func, session, user, *args, **kwargs)
                 else:
-                    return limit_func(session, *limit_func_args, **limit_func_kwargs)
+                    return limit_func(func, session, user, *args, **kwargs)
             # user = try_load(session.event.user_id, User(session.event.user_id))
             print(user.counters)
             result = await func(session, user, *args, **kwargs)
             print(f"result: {result}")
-            if result == True:
+            if not fails(result):
                 print("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
                 user.save()
-            return
+            return result
         return wrapper
     return decorator
 
@@ -216,7 +239,7 @@ def using_user(save_data=False):
             if save_data and result != False:
                 print("保存用户数据中")
                 user.save()
-            return
+            return result
         return wrapper
     return decorator
 

@@ -28,7 +28,7 @@ async def _(session: CommandSession, user: User):
     # message = get_message(__plugin_name__, cmd_name, 'failed')
     print(user)
     append_coins = random.randint(0, 50)
-    user.coins += append_coins
+    user.coins.add_coins(append_coins)
     if append_coins == 0:
         message = get_message(__plugin_name__, cmd_name, 'login_no_coins').format(
             coin_name=coin_name,

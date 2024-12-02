@@ -18,7 +18,7 @@ async def _(session: CommandSession, user: User):
         coins = user.coins - curr_coins
         coins_message = f"总共拥有 {user.coins} 枚虚拟星币哦 {'owo' if user.coins >= 10 else 'uwu'}" if user.coins > 0 else f"没有任何的虚拟星币 uwu"
         reg_message = f"你获得了 {coins} 枚虚拟星币！" if coins > 0 else f"你没获得任何虚拟星币..."
-        message = f"[CQ:at,qq={user_id}] 签到成功~ {reg_message}\n你当前{coins_message}{suffix}"
+        message = f"签到成功~ {reg_message}\n你当前{coins_message}{suffix}"
     else:
-        message = f"[CQ:at,qq={user_id}] 你今天已经签到过了哦 ovo"
-    await session.send(message)
+        message = f"你今天已经签到过了哦 ovo"
+    await send_msg(session, message)

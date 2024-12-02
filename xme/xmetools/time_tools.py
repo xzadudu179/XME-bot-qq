@@ -1,4 +1,15 @@
 from datetime import datetime, timedelta
+from enum import Enum
+import time
+
+class TimeUnit(Enum):
+    SECOND = 1
+    MINUTE = 60
+    HOUR = 60 * 60
+    DAY = 60 * 60 * 24
+    WEEK = 60 * 60 * 24 * 7
+    MONTH = 60 * 60 * 24 * 30
+    YEAR = 60 * 60 * 24 * 365
 
 def secs_to_ymdh(secs):
     """将秒数转换为年月天小时分钟秒
@@ -34,7 +45,6 @@ def secs_to_ymdh(secs):
     formatted_string += str(int(remaining_secs)) + "秒"
     return formatted_string
 
-
 def curr_days():
     """当前天数(从1970年1月1日算)
     """
@@ -50,6 +60,11 @@ def days_differ(start_date: int):
     """
     current_date = datetime.now()
     return (current_date - start_date).days
+
+def timenow(offset: int=8, unit: TimeUnit=TimeUnit.HOUR) -> float:
+    """获取当前时间
+    """
+    return time.time() + offset * unit.value
 
 def int_to_days(date_num: int, format: str="%Y年%m月%d日") -> str:
     """将从1970年1月1日经过的天数变成日期

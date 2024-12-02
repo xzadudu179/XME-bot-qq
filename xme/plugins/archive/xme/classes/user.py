@@ -1,5 +1,5 @@
 # from .database import Xme_database
-from xme.xmetools import date_tools
+from xme.xmetools import time_tools
 from functools import wraps
 import random
 from .items.inventory import Inventory
@@ -152,7 +152,7 @@ class User(DbReadable):
 
     @DbReadable.update_data
     def register(self) -> bool:
-        curr_days = date_tools.curr_days()
+        curr_days = time_tools.curr_days()
         # 没到时间不给注册
         if self.last_reg_days >= curr_days:
             return False
@@ -173,5 +173,5 @@ class User(DbReadable):
 {bio}----------
 目前{coin}
 物品栏占用: [{self.inventory.get_space()}/{self.inventory.length}]
-上次签到时间: {date_tools.int_to_days(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
+上次签到时间: {time_tools.int_to_days(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
 """.strip()

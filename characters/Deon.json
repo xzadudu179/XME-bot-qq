@@ -10,7 +10,12 @@
     },
     "config": {
         "busy": "忙不过来啦 呜...",
-        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
+        "coin_name": "饼干",
+        "coin_pronoun": "块",
+        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name} owo\n{sign_message}",
+        "sign_message": "最近签到是{last_sign_time}~",
+        "no_sign": "没有签过到呢..."
     },
     "schedulers": {
         "idles": [
@@ -19,8 +24,10 @@
             "嗷呜！",
             "冒泡冒泡~",
             "嗷呜——",
+            "水群！",
             "冒泡",
-            "漠月只是在操作机器人 漠月不是机器人汪！",
+            "冒泡~",
+            "好无聊哦~",
             "呜呜 被图灵测试了...",
             "ovo",
             "汪",
@@ -29,7 +36,7 @@
             "看看179 owo",
             ".pick"
         ],
-        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from}》"
+        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
     },
     "event_parsers": {
         "message_bursts": [
@@ -484,7 +491,7 @@
             "range_equals": "数字范围不能是相同的哦 uwu",
             "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
             "guess_prompt_prefix_default": "{start}\n请",
-            "guess_prompt": "{at} {prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
+            "guess_prompt": "{prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
             "quit_message": "退出游戏啦 ovo",
             "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
             "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
@@ -497,34 +504,352 @@
     },
     "漂流瓶": {
         "desc": "漂流瓶相关指令",
-        "introduction": "扔/捡来自各个群组的漂流瓶~",
+        "introduction": "扔/捡来自各个群组的漂流瓶~\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 owo",
         "throw_introduction": "扔一个漂流瓶",
         "pickup_introduction": "尝试捡一个漂流瓶",
-        "no_bottle": "海里一个瓶子里都没有...",
-        "no_bottle_picked": "你没有捡到瓶子ovo",
-        "view_message": "被捡到了 {times} 次",
-        "no_view_message": "第一次被捡到",
-        "like_message": "获得了{count}个赞owo",
+        "no_bottle": [
+            "海里一个瓶子里都没有...",
+            "大海里完全没有瓶子...",
+            "大海里完全没有瓶子哦...",
+            "大海里很空旷...没有一点瓶子呢"
+        ],
+        "no_bottle_picked": [
+            "你没有捡到瓶子ovo",
+            "你没有捡到瓶子...",
+            "唔...你没有找到瓶子诶...",
+            "唔...你没有捡到瓶子诶...",
+            "没有瓶子漂过来...",
+            "你没有捡到瓶子诶"
+        ],
+        "view_message": [
+            "被捡到了 {times} 次",
+            "被捡到 {times} 次啦",
+            "已经被捡到 {times} 次啦"
+        ],
+        "no_view_message": [
+            "第一次被捡到",
+            "刚刚才被捡到",
+            "刚刚被捡到"
+        ],
+        "like_message": [
+            "获得了 {count} 个赞 owo",
+            "得到了 {count} 个赞 owo",
+            "一共得到了 {count} 个赞 owo",
+            "获得了 {count} 个赞~"
+        ],
         "no_like_message": "还没有任何赞ovo",
-        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\"]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
-        "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
+        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+        "response_prompt": [
+            "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
+            "可以马上发送 \"-like\" 点赞，或发送 \"-rep\" 举报哦。",
+            "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报哦。"
+        ],
         "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
-        "bottle_broken": "啊，你不小心把瓶子摔碎了...",
-        "bottle_broken?": "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
-        "liked": "点赞成功~",
-        "reported": "举报成功"
+        "bottle_broken": [
+            "啊，你不小心把瓶子摔碎了...",
+            "呜...你不小心把瓶子摔碎了...",
+            "呜...瓶子碎掉了...",
+            "啊...瓶子碎掉了...",
+            "啊...瓶子破碎了...",
+            "呜...瓶子被你不小心摔碎了...",
+            "啊...瓶子被你不小心摔碎了...",
+            "啊...瓶子被你一不小心摔碎了...",
+            "呜...瓶子被你一不小心摔碎了..."
+        ],
+        "bottle_broken_messy": [
+            "啊...这个瓶子好混乱...唔...它碎掉了！",
+            "...这个瓶子...自己碎掉了！",
+            "...这个瓶子好可怕...啊...它自己碎掉了...",
+            "这个瓶子好混乱...唔...它碎掉了！",
+            "啊...这个瓶子...它自己碎掉了！"
+        ],
+        "bottle_broken?": [
+            "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
+            "啊，你不小心把瓶子摔...诶？这个瓶子自己修复了，然后飞回了海里...汪？",
+            "呜...瓶子摔碎...诶？这个瓶子修复了，然后飞回了海里..."
+        ],
+        "liked": [
+            "点赞成功~ 瓶子似乎变得更稳定了！",
+            "点赞完成~ 瓶子好像变得更稳定啦！",
+            "点赞完成啦~ 瓶子似乎变得更稳定了！",
+            "汪！点赞成功~ 瓶子似乎变得更稳定了！",
+            "嗷呜！点赞成功啦~ 瓶子似乎变得更稳定了owo！",
+            "嗷呜！点赞成功~ 瓶子好像变得更稳定啦！",
+            "点赞成功嗷呜！瓶子好像变得更稳定啦！",
+            "点赞成功啦~ 瓶子似乎变得更稳定了！"
+        ],
+        "reported": [
+            "举报成功",
+            "举报成功哦",
+            "唔...举报成功"
+        ],
+        "nothing_to_throw": [
+            "漂流瓶似乎没有内容呢ovo\n格式：\n{command_name} (漂流瓶内容)",
+            "漂流瓶里面好像什么都没有诶...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦",
+            "漂流瓶里面好像什么都没有...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦"
+        ],
+        "content_too_many": [
+            "瓶子的内容太多啦！要 {max_length} 字以内哦",
+            "瓶子的内容太多啦...要 {max_length} 字以内哦",
+            "瓶子塞不下啦...要 {max_length} 字以内哦",
+            "唔...瓶子塞不下啦！内容要在 {max_length} 字以内哦",
+            "呜呜..瓶子的内容太多啦...要 {max_length} 字以内哦"
+        ],
+        "lines_too_many": [
+            "瓶子的行数太多啦！最多 {max_lines} 行哦",
+            "瓶子内容太长啦...最多 {max_lines} 行哦",
+            "瓶子塞不下啦！最多写 {max_lines} 行哦",
+            "呜呜...瓶子塞不下啦...最多写 {max_lines} 行哦"
+        ],
+        "throwed": [
+            "瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo",
+            "瓶子扔出去啦~ 这是第 {id} 号瓶子哦~",
+            "嗷呜！第 {id} 号瓶子开启了它的旅程~",
+            "嗷呜~ 第 {id} 号瓶子开启了它的旅程~",
+            "大海中的第 {id} 号瓶子开启了它的旅程~",
+            "瓶子扔出去啦~ 这是第 {id} 号瓶子哦 owo"
+        ],
+        "content_already_thrown": [
+            "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
+            "唔...大海里已经有类似的瓶子了哦：\n[#{id} 号漂流瓶]：{content}",
+            "大海里已经有类似的瓶子了哦...是第 #{id} 号：\n{content}"
+        ],
+        "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
+        "cthulhu_error_bottles": "其中这些 id 的瓶子有问题...:\n{ids}",
+        "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
+        "cthulhu_bottle_already_broken": "已经被混乱了",
+        "cthulhu_fail": "混乱瓶子失败了..."
     },
     "骰子": {
         "desc": "骰子相关指令",
         "introduction": "自定义面数or规则的骰子",
         "dice_introduction": "投指定面数 * 指定数量的骰子",
         "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
-        "dice_error": "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦",
-        "count_too_many": "最多投 {max_count} 个骰子哦",
-        "faces_too_many": "骰子总面数过大啦ovo (>{max_faces})",
-        "count_too_low": "骰子数量不可以小于 1 哦",
-        "faces_too_low": "骰子面数不可以小于 1 哦",
-        "count_morethan_1_prefix": "总共",
-        "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+        "dice_error": [
+            "唔...投骰子出现错误，请确定骰子面数及数量是不小于 1 的整数哦",
+            "呜呜...投骰子出错了，请确定骰子面数和数量是否正确哦",
+            "呜...投骰子出错了，请确定骰子面数和数量是否是大于 0 的整数哦",
+            "呜呜...漠月并不知道这样的骰子是什么样的..."
+        ],
+        "count_too_many": [
+            "最多投 {max_count} 个骰子哦",
+            "最多只能投 {max_count} 个骰子哦...",
+            "最多只能投出 {max_count} 个骰子哦",
+            "呜呜...骰子数量太多啦，要在 {max_count} 个以内哦",
+            "呜...骰子数量太多啦，要在 {max_count} 个之内哦"
+        ],
+        "faces_too_many": [
+            "唔...骰子加起来的面数太多啦！要小于 {max_faces} 哦",
+            "骰子总共的面数太多啦... 最多 {max_faces} 哦",
+            "骰子总和面数太多啦... 最多 {max_faces} 哦",
+            "骰子加起来的面数太多啦... 最多 {max_faces} 哦",
+            "骰子加起来的面数太多啦！要小于 {max_faces} 哦"
+        ],
+        "count_too_low": [
+            "骰子数量太少啦，至少要一个呢...",
+            "至少要投出一个骰子呢...",
+            "骰子数量不可以小于一个哦...",
+            "唔...至少要投出一个骰子呢"
+        ],
+        "faces_too_low": [
+            "骰子最少要有 1 面哦...",
+            "骰子至少要有 1 面哦...",
+            "骰子面数不可以小于 1 哦...",
+            "骰子面数不能小于 1 哦"
+        ],
+        "count_morethan_1_prefix": [
+            "总共",
+            "一共"
+        ],
+        "dice_result": [
+            "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！",
+            "你扔出了 {counts} 个 {faces} 面的骰子~ {faces_result_prefix}投到了 {faces_formula}！",
+            "嗷呜！你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+        ]
+    },
+    "title": {
+        "desc": "设置头衔",
+        "introduction": "为一个群员设置指定的头衔（需要 bot 是群主哦）",
+        "no_at_arg": [
+            "请先 at 你要我设置头衔的群员哦",
+            "请先 at 要设置头衔的群员哦",
+            "唔...需要 at 要设置头衔的群员哦",
+            "唔 需要在指令里 at 要设置头衔的群员哦"
+        ],
+        "no_name_arg": [
+            "请指定头衔名哦",
+            "唔...请指定头衔名哦",
+            "需要指定头衔名哦...",
+            "需要指定头衔名哦"
+        ],
+        "successful": [
+            "嗷呜~ 头衔设置成功啦~",
+            "头衔设置成功！",
+            "嗷呜~ 头衔设置完成！",
+            "头衔设置完成~",
+            "头衔设置好啦~",
+            "头衔设置成功~"
+        ],
+        "deleted": [
+            "头衔删除成功啦~",
+            "嗷呜~头衔删除成功啦~",
+            "嗷呜~头衔删除成功啦！",
+            "头衔删除掉啦~",
+            "已经把头衔去掉啦~",
+            "成功删除头衔~"
+        ],
+        "failed": [
+            "呜呜，设置失败了...\n错误内容：{ex}",
+            "呜呜...头衔设置失败...\n错误内容：{ex}",
+            "呜呜...头衔设置失败了...\n错误内容：{ex}",
+            "呜呜，设置不了头衔...\n错误内容：{ex}"
+        ]
+    },
+    "whoru": {
+        "desc": "查看当前角色",
+        "introduction": "查看 xme-bot 当前使用的角色~",
+        "whoami": [
+            "嗷呜！我是{chac_name}~\n被 {author} 拉过来的 owo！",
+            "我是{chac_name}哦~\n被 {author} 拉过来的 嗷呜！",
+            "我是{chac_name}~\n被 {author} 带过来的 嗷呜~",
+            "owo！我是{chac_name}哦~\n被 {author} 拉过来玩啦~"
+        ]
+    },
+    "sign": {
+        "desc": "签到",
+        "introduction": "签到，并且得到一定量的{coin_name}",
+        "limited": [
+            "你今天已经签到过了哦~",
+            "你今天已经签到过了哦 ovo",
+            "你今天已经签到过啦 ovo",
+            "你今天的签到次数用光啦~",
+            "你今天已经签到过啦~"
+        ],
+        "get_state": [
+            "获得了",
+            "拿到了"
+        ],
+        "login_success": [
+            "签到成功~",
+            "签到成功！",
+            "签到成功！嗷呜，",
+            "签到成功 owo,",
+            "嗷呜~签到成功~",
+            "嗷呜！签到成功~",
+            "签到成功啦~"
+        ],
+        "login_no_coins": [
+            "{login_success}，但是你没获得任何{coin_name}...",
+            "{login_success}，不过你没有获得任何{coin_name}...",
+            "{login_success}，但是你没获得任何{coin_name}...呜呜",
+            "{login_success}，不过呜呜...你没获得任何{coin_name}...",
+            "{login_success}，不过呜...你没获得任何{coin_name}..."
+        ],
+        "success": [
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦",
+            "{login_success} 你{state} {coin_count} {coin_name}~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你目前总共有 {coin_total} {coin_name}哦"
+        ]
+    },
+    "用户": {
+        "desc": "用户功能相关",
+        "introduction": "需要获取用户信息的功能",
+        "help_suffix": "使用 {help_cmd} 来查看详细的帮助哦~",
+        "userhelp": {
+            "desc": "用户功能帮助",
+            "introduction": "查看某一用户功能指令的详细帮助",
+            "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+        },
+        "sign": {
+            "desc": "签到",
+            "introduction": "签到，并且得到一定量的{coin_name}",
+            "limited": [
+                "你今天已经签到过了哦~",
+                "明天再签到吧~",
+                "你今天签到过啦~"
+            ],
+            "get_state": [
+                "获得了",
+                "得到了",
+                "拿到了"
+            ],
+            "login_success": [
+                "签到成功~",
+                "签到成功啦~",
+                "签到成功嗷呜！",
+                "签到成功~嗷呜！"
+            ],
+            "login_no_coins": [
+                "你没获得任何{coin_name}...",
+                "你没拿到任何{coin_name}...",
+                "你没得到任何{coin_name}诶...",
+                "你没获得任何{coin_name}...呜呜..."
+            ],
+            "success": "{login_success} 你{state} {coin_count} {coin_name}~"
+        },
+        "lottery": {
+            "desc": "抽奖",
+            "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}",
+            "limited": [
+                "你今天的抽奖次数用完啦~",
+                "诶...你今天的抽奖次数用完啦",
+                "诶...你今天的抽奖次数用完了哦",
+                "诶...你今天不能再抽{coin_name}了哦",
+                "你今天没有抽奖次数啦...",
+                "你今天没有更多抽奖次数啦..."
+            ],
+            "no_arg": "请指定投入{coin_name}的数量哦~",
+            "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
+            "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
+            "get_coin_result": [
+                "获得了 {get_count} {coin_pronoun}{coin_name}！",
+                "得到了 {get_count} {coin_pronoun}{coin_name}！",
+                "得到了 {get_count} {coin_pronoun}{coin_name}！owo",
+                "拿到了 {get_count} {coin_pronoun}{coin_name}！"
+            ],
+            "no_coin_result": [
+                "没有获得任何{coin_name}...",
+                "但是没有获得任何{coin_name}...",
+                "但是没有一{coin_pronoun}{coin_name}出来...呜呜",
+                "但是没有任何{coin_name}出来...呜呜"
+            ],
+            "result": [
+                "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜！",
+                "你将 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，ovo",
+                "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}",
+                "你把 {count} {coin_pronoun}{coin_name}放入了饼干机！{result_content}\n你还有 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜——"
+            ],
+            "too_many_coins": [
+                "{count} {coin_pronoun}{coin_name} 太多啦！不能多于 {count_max} 呢...",
+                "{count} {coin_pronoun}{coin_name} 太多啦...不能多于 {count_max} 呢 ovo",
+                "{count} {coin_pronoun}{coin_name} 太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
+                "饼干机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
+                "一次最多只能投入 {count_max} {coin_pronoun}{coin_name}哦..."
+            ]
+        },
+        "userinfo": {
+            "desc": "查看个人信息",
+            "introduction": "查看自己当前被记录的个人信息，比如{coin_name}数量等, 如果 at 人则会查看那个人的个人信息",
+            "no_user": [
+                "唔...我没有记录过这个人的信息呢",
+                "我没有记录过这个人的信息诶...",
+                "我没有记录过这个人的信息哦...",
+                "我没记录过这个人的信息哦...",
+                "唔...我没有记录过这个人的信息哦"
+            ]
+        },
+        "coinrank": {
+            "desc": "{coin_name}排行榜",
+            "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和",
+            "rank_msg_prefix": "以下是我记录的{coin_name}排行哦~",
+            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 owo",
+            "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦~",
+            "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
+            "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
+            "invalid_arg": "不明白指定的排名长度意思呢...",
+            "ranking_row": "{rank}. {nickname}:{spacing}拥有{coins_count} {coin_pronoun}{coin_name}",
+            "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 ovo"
+        }
     }
 }

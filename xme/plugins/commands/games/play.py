@@ -4,6 +4,7 @@ from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
 import xme.xmetools.text_tools as t
+from xme.xmetools.command_tools import send_msg
 from . import game_commands as games
 
 # introduction = "各种小游戏"
@@ -71,21 +72,16 @@ async def _(session: CommandSession):
     if args.info:
         info = get_game_help(text)
         if not info:
-            return await session.send(f"[CQ:at,qq={session.event.user_id}] " + get_message(cmd_name, 'help_not_found'))
-            # return await session.send(f"[CQ:at,qq={session.event.user_id}] 找不到游戏 \"{args.info}\" 的帮助诶")
-        return await session.send(info)
+            return await send_msg(session, get_message(cmd_name, 'help_not_found'))
+        return await send_msg(session, info)
 
     game_to_play = games.games.get(text, False)
-    # if not text:
-    #     await session.send(f"请用 /play 游戏名 指定你想玩的游戏哦\n使用 /play -h 查看该指令帮助")
-    #     return
     if not game_to_play:
-        await session.send(f"[CQ:at,qq={session.event.user_id}] "  + get_message(cmd_name, 'game_not_found').format(game_text=text))
-        # await session.send(f"[CQ:at,qq={session.event.user_id}] 找不到你想玩的游戏 \"{text}\" 哦 ovo")
+        await send_msg(session, get_message(cmd_name, 'game_not_found').format(game_text=text))
         return
     # 玩游戏
     # 游戏以后会返回东西
     game_return = await game_to_play['func'](session, game_args)
     if game_return['message']:
-        await session.send(game_return['message'])
+        await send_msg(session, game_return['message'])
     print("游戏执行结束")

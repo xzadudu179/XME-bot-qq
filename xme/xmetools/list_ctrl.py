@@ -21,7 +21,7 @@ def heap_top_k(nums: list, k: int) -> list[int]:
             heapq.heappush(heap, nums[i])
     return heap
 
-def str_list_sim(strings: list[str], target_str: str) -> dict:
+def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict:
     """字符串在字符串列表里与每个元素的相似度
 
     Args:
@@ -33,7 +33,10 @@ def str_list_sim(strings: list[str], target_str: str) -> dict:
     """
     similars = {}
     for string in strings:
-        similars[string] = sim.jaccard_similarity(string, target_str)
+        if jaccard_sim:
+            similars[string] = sim.jaccard_similarity(string, target_str)
+        else:
+            similars[string] = sim.difflib_similar(string, target_str)
     return similars
 
 def top_k_sim(l: list[str], target_str: str, k: int=5, min: float=0.5) -> list[str]:

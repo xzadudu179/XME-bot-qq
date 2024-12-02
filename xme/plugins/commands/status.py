@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 from ...xmetools import cur_system as st
 from character import get_message
+from xme.xmetools.command_tools import send_msg
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
@@ -24,4 +25,4 @@ async def _(session: CommandSession):
     except:
         message = get_message(__plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
-    await session.send(message)
+    await send_msg(session, message)

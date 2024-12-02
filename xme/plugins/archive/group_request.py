@@ -15,5 +15,5 @@ async def _(session: RequestSession):
         return
     # 验证信息错误，拒绝入群
     print("拒绝入群")
-    # await session.send('唔，我只能被 SUPERUSERS 拉进群哦')
+    # await send_msg(session, '唔，我只能被 SUPERUSERS 拉进群哦')
     await session.reject('唔，我只能被 SUPERUSERS 拉进群哦')

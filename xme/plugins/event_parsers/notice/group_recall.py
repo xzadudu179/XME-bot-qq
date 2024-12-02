@@ -3,6 +3,7 @@ from datetime import datetime
 from xme.xmetools import color_manage as c
 from character import get_message
 import json
+from xme.xmetools.command_tools import send_msg
 from nonebot import Message
 from xme.xmetools import json_tools
 from xme.xmetools.request_tools import fetch_data
@@ -50,10 +51,10 @@ async def _(session: NoticeSession):
         file.write(("-" * 50) + f"\n[{datetime.fromtimestamp(session.event['time'])}][GROUP_RECALL]{recall_info}\n{recall_detail}\n" + ("-" * 50) + "\n")
     is_prev_recall = settings['prevent_recall'].get(str(session.event.group_id), False)
     if (str(session.event.user_id) != str(session.event.operator_id)) and is_prev_recall:
-        return await session.send(get_message("event_parsers", "other_recalled_info").format(
+        return await send_msg(session, get_message("event_parsers", "other_recalled_info").format(
             operator=f"[CQ:at,qq={session.event.operator_id}]",
             user='我' if session.event.user_id == session.self_id else '别人'))
-        # return await session.send(f"刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了一条{'我' if session.event.user_id == session.self_id else '别人'}的消息ovo")
+        # return await send_msg(session, f"刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了一条{'我' if session.event.user_id == session.self_id else '别人'}的消息ovo")
 
     # 防撤回
     if is_prev_recall:
@@ -63,7 +64,7 @@ async def _(session: NoticeSession):
             str_message = cqmessage
         except:
             str_message = recalled_message['message']
-        await session.send(get_message("event_parsers", "prevented_recall_info").format(
+        await send_msg(session, get_message("event_parsers", "prevented_recall_info").format(
             operator=f"[CQ:at,qq={session.event.operator_id}]",
             recalled_message=str_message))
-        # await session.send(f"↓ 刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了以下消息ovo ↓\n{str_message}")
+        # await send_msg(session, f"↓ 刚刚 [CQ:at,qq={session.event.operator_id}] 撤回了以下消息ovo ↓\n{str_message}")

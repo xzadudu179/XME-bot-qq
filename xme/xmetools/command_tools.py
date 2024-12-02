@@ -1,5 +1,6 @@
 import config
 from nonebot.command import call_command, CommandManager, Command
+from nonebot import CommandSession
 from character import get_message
 
 async def send_cmd(cmd_string, session, check_permission=True):
@@ -14,8 +15,8 @@ async def send_cmd(cmd_string, session, check_permission=True):
     # print(CommandManager._find_command(self=CommandManager, name=name))
     args = " ".join((cmd_string.split(" ")[1:])) if len(cmd_string.split(" ")) > 1 else ""
     if name == "wife" and '[CQ:at,qq=' not in args:
-        await session.send(get_message('other', 'wife_error'))
-        # await session.send("注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
+        await send_msg(session, get_message('other', 'wife_error'))
+        # await send_msg(session, "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
     print(f"parse command: {name} | {args}")
     await call_command(
         bot=session.bot,
@@ -24,14 +25,18 @@ async def send_cmd(cmd_string, session, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
-def get_cmd_by_alias(input_string):
+def get_cmd_by_alias(input_string, judge_cmd_start=True):
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
     elif name[0] not in config.COMMAND_START:
-        return False
+        if judge_cmd_start:
+            return False
     if CommandManager._commands.get((name,), False) == False:
         return CommandManager._aliases.get(name, False)
     else:
         print("有这个指令")
         return CommandManager._commands.get((name,), False)
+
+async def send_msg(session: CommandSession, message, at=True, **kwargs):
+    await session.send(str(message), at_sender=at, **kwargs)

@@ -1,7 +1,8 @@
 import psutil as pt
 import platform
 import time
-from .date_tools import secs_to_ymdh
+from .time_tools import secs_to_ymdh
+import socket
 
 # 将字节转换为 MiB
 def bytes_to_mib(bytes):
@@ -10,6 +11,13 @@ def bytes_to_mib(bytes):
 # 将字节转换为 GiB
 def bytes_to_gib(bytes):
     return bytes / (1024 * 1024 * 1024)
+
+def get_bot_address():
+    try:
+        ip_address = socket.gethostbyname('xzadudu179.top')
+        return ip_address
+    except socket.gaierror as e:
+        return f"(获取失败: {e})"
 
 def system_info():
     mem = pt.virtual_memory()

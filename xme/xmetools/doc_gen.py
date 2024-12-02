@@ -10,12 +10,13 @@ class Doc():
         self.introduction = introduction
 
 class PluginDoc(Doc):
-    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]]) -> None:
+    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]], simple_output: bool = False) -> None:
         super().__init__(name, desc, introduction)
         self.permissions = permissions
         self.contents = contents
         self.usages = usages
         self.alias_list = alias_list
+        self.simple_output = simple_output
 
     def __str__(self) -> str:
         alias_lines = ""
@@ -34,18 +35,19 @@ class PluginDoc(Doc):
             except:
                 permissions_lines += f"{line_head}无\n"
             contents_lines += f"{content}\n"
-
-        return rf"""
-[插件] {self.name}
-简介：{self.desc}
-作用：{self.introduction}
-内容：
-{contents_lines}所有指令用法：
+        not_simple_output = rf"""
+所有指令用法：
 - {config.COMMAND_START[0]}{usages_lines}
 权限/可用范围：
 {permissions_lines}别名：
 {alias_lines}
 """.strip()
+        return rf"""
+[插件] {self.name}
+简介：{self.desc}
+作用：{self.introduction}
+内容：
+{contents_lines}""".strip() + ("\n" + not_simple_output if not self.simple_output else rf"""""")
 
 class CommandDoc(Doc):
 

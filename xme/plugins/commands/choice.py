@@ -48,7 +48,7 @@ async def _(session: CommandSession):
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
-    await send_msg(session, get_message(__plugin_name__, 'choice_message').format(choice=text_tools.me_to_you(str(choice))))
+    await send_msg(session, get_message(__plugin_name__, 'choice_message', choice=text_tools.me_to_you(str(choice))))
 
 
 def has_or_not_choice(input_str):

@@ -10,8 +10,8 @@ alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin']
 cmd_name = 'sendcoin'
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc').format(coin_name=coin_name),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
+    "desc": get_message(__plugin_name__, cmd_name, 'desc', coin_name=coin_name),
+    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'(at目标用户) ({coin_name}数量 以空格分隔)',
     "permissions": [],
     "alias": alias
@@ -33,7 +33,7 @@ async def _(session: CommandSession, user: User):
         return False
     # 是否 at 自己
     if at_id == session.event.user_id:
-        message = get_message(__plugin_name__, cmd_name, 'send_to_self').format(coin_name=coin_name)
+        message = get_message(__plugin_name__, cmd_name, 'send_to_self', coin_name=coin_name)
         await send_msg(session, message)
         return False
     # 是否设置了金币数量
@@ -47,7 +47,7 @@ async def _(session: CommandSession, user: User):
         await send_msg(session, message)
         return False
     if coin_count <= 0:
-        message = get_message(__plugin_name__, cmd_name, 'invalid_coin_count').format(coin_name=coin_name)
+        message = get_message(__plugin_name__, cmd_name, 'invalid_coin_count', coin_name=coin_name)
         await send_msg(session, message)
         return False
     # 验证用户是否存在
@@ -68,12 +68,12 @@ async def _(session: CommandSession, user: User):
     user.coins -= coin_count
     # 是否有足够金币
     if user.coins < 0:
-        message = get_message(__plugin_name__, cmd_name, 'not_enough_coin').format(coin_name=coin_name, coin_total=curr_coins, coin_pronoun=coin_pronoun)
+        message = get_message(__plugin_name__, cmd_name, 'not_enough_coin', coin_name=coin_name, coin_total=curr_coins, coin_pronoun=coin_pronoun)
         await send_msg(session, message)
         return False
     send_to_user.add_coins(coin_count)
     send_to_user.save()
-    message = get_message(__plugin_name__, cmd_name, 'success').format(
+    message = get_message(__plugin_name__, cmd_name, 'success',
         target_user=f' {target_user} ({at_id})' if not at_bot_self else '我',
         coin_name=coin_name,
         coin_count=coin_count,

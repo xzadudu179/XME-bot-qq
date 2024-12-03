@@ -44,10 +44,10 @@ async def _(session: CommandSession):
     messy_rate: float = min(100, max(0, bottle['views'] * 2 - bottle['likes'] * 3)) if index_is_int or str(index) != '-179' else 0
     # 增加浏览量以及构造卡片
     # ----------------------------
-    view_message = get_message(__plugin_name__, "view_message").format(times=bottle['views'] + 1) if (bottle['views'] + 1) > 1 else get_message(__plugin_name__, "no_view_message").format(times=bottle['views'] + 1)
+    view_message = get_message(__plugin_name__, "view_message", times=bottle['views'] + 1) if (bottle['views'] + 1) > 1 else get_message(__plugin_name__, "no_view_message", times=bottle['views'] + 1)
     # view_message = f"被捡到了{bottle['views'] + 1}次" if (bottle['views'] + 1) > 1 else f"第一次被捡到"
     bottle['views'] += 1
-    like_message = get_message(__plugin_name__, "like_message").format(count=bottle['likes']) if bottle['likes'] > 0 else get_message(__plugin_name__, "no_like_message").format(count=bottle['likes'])
+    like_message = get_message(__plugin_name__, "like_message", count=bottle['likes']) if bottle['likes'] > 0 else get_message(__plugin_name__, "no_like_message", count=bottle['likes'])
     # like_message = f"获得了{bottle['likes']}个赞owo" if bottle['likes'] > 0 else f"还没有任何赞ovo"
     messy_rate_string = ""
     if str(index) == '-179':
@@ -56,7 +56,7 @@ async def _(session: CommandSession):
         messy_rate_string = "##纯洁无暇##"
     else:
         messy_rate_string = f"{messy_rate}%"
-    bottle_card = get_message(__plugin_name__, "bottle_card_content").format(
+    bottle_card = get_message(__plugin_name__, "bottle_card_content",
         index=index,
         messy_rate=messy_rate_string,
         from_group=bottle['from_group'],

@@ -39,7 +39,7 @@ game_list_str = "\n".join([f"- {k}\t{v['meta']['desc']}" for k, v in games.games
 docs = str(CommandDoc(
     name=cmd_name,
     desc=desc,
-    introduction=get_message(cmd_name, 'introduction').format(games=game_list_str),
+    introduction=get_message(cmd_name, 'introduction', games=game_list_str),
     # introduction=f'游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{game_list_str}',
     usage=f'(小游戏名) [OPTIONS]\n{arg_usage}',
     permissions=[],
@@ -51,7 +51,7 @@ def get_game_help(game_name) -> str | bool:
     if not result:
         return False
     args_str = "\n".join(f"{k}\t {v}" for k, v in result['meta']['args'].items())
-    return get_message(cmd_name, 'game_help').format(name=result['meta']['name'], introduction=result['meta']['introduction'], args=args_str).strip()
+    return get_message(cmd_name, 'game_help', name=result['meta']['name'], introduction=result['meta']['introduction'], args=args_str).strip()
 #     return f"""
 # 游戏名称：{result['meta']['name']}
 # 介绍：{result['meta']['introduction']}
@@ -70,7 +70,10 @@ async def _(session: CommandSession, user: xme_user.User):
     text = ' '.join(args.text).strip()
     game_args = {}
     if args.args:
-        game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
+        try:
+            game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
+        except:
+            return await send_msg(session, get_message(cmd_name, 'invalid_args'))
     print(game_args)
     if args.info:
         info = get_game_help(text)
@@ -81,12 +84,12 @@ async def _(session: CommandSession, user: xme_user.User):
     game_to_play = games.games.get(text, False)
     print(text)
     if not game_to_play:
-        await send_msg(session, get_message(cmd_name, 'game_not_found').format(text=text))
+        await send_msg(session, get_message(cmd_name, 'game_not_found', text=text))
         return
     # 玩游戏
     cost = game_to_play['meta'].get('cost', 0)
     if not user.spend_coins(cost):
-        return await send_msg(session, get_message(cmd_name, 'not_enough_coins').format(cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
+        return await send_msg(session, get_message(cmd_name, 'not_enough_coins', cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
     # 游戏以后会返回东西
     game_return = await game_to_play['func'](session, user, game_args)
     print(game_return)

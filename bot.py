@@ -7,9 +7,11 @@ import bot_variables
 import config
 import bot_init
 
+
 def load_plugins_list(*args: list[str, str]):
     for arg in args:
         nonebot.load_plugins(arg[0], arg[1])
+
 
 if __name__ == '__main__':
     bot_init.saving_log(logger)
@@ -24,5 +26,5 @@ if __name__ == '__main__':
 
     bot_init.bot_init()
     bot_variables.currentpid = os.getpid()
-    print(c.gradient_text("#dda3f8","#66afff" ,text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))
+    print(c.gradient_text("#dda3f8", "#66afff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))
     nonebot.run()

@@ -68,16 +68,16 @@ async def _(session: CommandSession):
             total_pages += "\n\t" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
-        await send_msg(session, get_message(__plugin_name__, 'no_cmds').format(prefix=prefix))
+        await send_msg(session, get_message(__plugin_name__, 'no_cmds', prefix=prefix))
         # await send_msg(session, f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
         return
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
     # print(pages)
-    prefix = get_message(__plugin_name__, 'prefix').format(command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+    prefix = get_message(__plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
-    suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
+    suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
     # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
     curr_page_num = await verify_page(session, curr_page_num, pages)
     if not curr_page_num:
@@ -89,8 +89,8 @@ async def _(session: CommandSession):
     # 翻页
     while True:
         # 每次刷新前缀和后缀
-        prefix = get_message(__plugin_name__, 'prefix').format(command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
-        suffix = get_message(__plugin_name__, 'suffix').format(docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
+        prefix = get_message(__plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+        suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
         reply: str = (await session.aget()).strip()
         reply = reply.replace("》", ">").replace("《", "<")
         more_page = 0
@@ -122,7 +122,7 @@ async def _(session: CommandSession):
         #     await send_msg(session, reply_message)
         #     return
         # elif curr_page_num > len(pages):
-        #     reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=curr_page_num)
+        #     reply_message = get_message(__plugin_name__, 'page_too_big', curr_page_num=curr_page_num)
         #     # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
         #     await send_msg(session, reply_message)
         #     curr_page_num = len(pages)
@@ -136,7 +136,7 @@ async def verify_page(session, page_num: str, pages) -> bool | int:
         await send_msg(session, reply_message)
         return False
     elif page_num > len(pages):
-        reply_message = get_message(__plugin_name__, 'page_too_big').format(curr_page_num=page_num)
+        reply_message = get_message(__plugin_name__, 'page_too_big', curr_page_num=page_num)
         await send_msg(session, reply_message)
         return len(pages)
     return page_num

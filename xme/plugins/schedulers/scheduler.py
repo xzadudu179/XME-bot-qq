@@ -14,7 +14,7 @@ bot = nonebot.get_bot()
 async def send_time_message():
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        something_to_say = get_message("schedulers", "time").format(
+        something_to_say = get_message("schedulers", "time",
             period=time_tools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
@@ -48,9 +48,9 @@ async def _():
     # 随机发表情
     messages = get_item("schedulers", "idles")
     if has_faces:
-        message = random.choice(messages)
-    else:
         message = random.choice(messages.append(faces))
+    else:
+        message = random.choice(messages)
     if message in faces:
         message = f"[CQ:image,file={message}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")

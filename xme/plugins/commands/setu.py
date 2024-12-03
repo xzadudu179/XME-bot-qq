@@ -35,7 +35,7 @@ async def setu(session: CommandSession):
     #     [CQ:image,file={result.url}]""".strip())
     # else:
     #     await send_msg(session, "无法获取图片信息.")
-    await send_msg(session, get_message(__plugin_name__, 'not_setu_msg').format(image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
+    await send_msg(session, get_message(__plugin_name__, 'not_setu_msg', image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
     # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 

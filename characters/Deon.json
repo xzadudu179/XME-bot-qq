@@ -479,7 +479,8 @@
         "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
         "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
         "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 ovo",
-        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {coins} {coin_pronoun}哦",
+        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
+        "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦...",
         "guess": {
             "desc": "猜数字游戏",
             "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次~",

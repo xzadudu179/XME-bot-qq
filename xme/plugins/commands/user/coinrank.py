@@ -14,8 +14,8 @@ MAX_RANK_COUNT = 20
 cmd_name = 'coinrank'
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc').format(coin_name=coin_name),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
+    "desc": get_message(__plugin_name__, cmd_name, 'desc', coin_name=coin_name),
+    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'<参数>',
     "permissions": [],
     "alias": alias
@@ -26,7 +26,7 @@ def rank_operation(func, rank_items):
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     sender = session.event.user_id
-    message = get_message(__plugin_name__, cmd_name, 'rank_msg_prefix').format(coin_name=coin_name, coin_pronoun=coin_pronoun)
+    message = get_message(__plugin_name__, cmd_name, 'rank_msg_prefix', coin_name=coin_name, coin_pronoun=coin_pronoun)
     arg = session.current_arg_text.strip().lower()
     spacing = False
     if arg:
@@ -38,7 +38,7 @@ async def _(session: CommandSession):
     if arg and arg == 'avg':
         # 平均值消息
         rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
-        message = get_message(__plugin_name__, cmd_name, 'rank_msg_avg').format(
+        message = get_message(__plugin_name__, cmd_name, 'rank_msg_avg',
             coin_name=coin_name,
             coin_pronoun=coin_pronoun,
             avg=int(rank_avg)
@@ -48,7 +48,7 @@ async def _(session: CommandSession):
     elif arg and arg == 'sum':
         # 总和消息
         rank_sum = rank_operation(lambda x: sum(x), rank_items)
-        message = get_message(__plugin_name__, cmd_name, 'rank_msg_sum').format(
+        message = get_message(__plugin_name__, cmd_name, 'rank_msg_sum',
             coin_name=coin_name,
             coin_pronoun=coin_pronoun,
             sum=rank_sum
@@ -62,7 +62,7 @@ async def _(session: CommandSession):
                 await send_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_small'))
                 return False
             elif rank_count > MAX_RANK_COUNT:
-                await send_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_large').format(count_max=MAX_RANK_COUNT))
+                await send_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_large', count_max=MAX_RANK_COUNT))
                 return False
         except ValueError:
             await send_msg(session, get_message(__plugin_name__, cmd_name, 'invalid_arg'))
@@ -76,7 +76,7 @@ async def _(session: CommandSession):
     for i, (id, v) in enumerate(rank_items_short):
         # u_name = (await session.bot.api.get_stranger_info(user_id=id))['nickname']
         nickname = u_names[id]
-        message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_row').format(
+        message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_row',
             rank=i + 1,
             nickname=nickname,
             coins_count=v,
@@ -98,7 +98,7 @@ async def _(session: CommandSession):
     if sender_coins_count:
         # rank_ratio = rank_operation(lambda x: (bisect_left(x, rank_items[sender_index][1])), rank_items)
         rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
-        message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_suffix').format(
+        message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_suffix',
             count=sender_coins_count,
             rank_ratio=f"{rank_ratio:.2f}",
             coin_pronoun=coin_pronoun,

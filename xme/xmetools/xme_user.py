@@ -10,8 +10,10 @@ from xme.xmetools.command_tools import send_msg
 
 coin_name = get_message("config", "coin_name")
 coin_pronoun = get_message("config", "coin_pronoun")
-class User():
-    def __init__(self, user_id: int, coins: int=0):
+
+
+class User:
+    def __init__(self, user_id: int, coins: int = 0):
         self.id = user_id
         # self.name = user_name
         self.coins = coins
@@ -20,11 +22,11 @@ class User():
     def __str__(self):
         try:
             last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
-            sign_message = get_message("config", "sign_message").format(last_sign_time=last_sign_time)
+            sign_message = get_message("config", "sign_message", last_sign_time=last_sign_time)
         except:
             sign_message = get_message("config", "no_sign")
 
-        return get_message("config", "user_info_str").format(
+        return get_message("config", "user_info_str",
             id=self.id,
             coins_count=self.coins,
             coin_name=coin_name,
@@ -50,11 +52,12 @@ class User():
         self.coins += amount
         return True
 
+    @staticmethod
     def load(id: int, create_default_user=True):
         user_dict = json_tools.read_from_path(config.USER_PATH)['users'].get(str(id), None)
-        if user_dict == None and create_default_user:
+        if user_dict is None and create_default_user:
             user_dict = {}
-        elif user_dict == None:
+        elif user_dict is None:
             return None
         return load_from_dict(user_dict, id)
 
@@ -64,12 +67,14 @@ class User():
         users['users'][str(self.id)] = data_to_save
         json_tools.save_to_path(config.USER_PATH, users)
 
+
 def try_load(id, default):
     try:
         return User.load(id)
     except Exception as ex:
         # print(f"try load 出现异常：{traceback.format_exc()}")
         return default
+
 
 def verify_timers(user: User, name: str):
     if not name in user.counters or type(user.counters[name]) != dict:
@@ -78,7 +83,9 @@ def verify_timers(user: User, name: str):
     user.counters[name].setdefault("time", 0)
     user.counters[name].setdefault("count", 0)
 
-def reset_limit(user: User, name: str, unit: time_tools.TimeUnit=time_tools.TimeUnit.DAY, floor_float: bool=True, count_add=False):
+
+def reset_limit(user: User, name: str, unit: time_tools.TimeUnit = time_tools.TimeUnit.DAY, floor_float: bool = True,
+                count_add=False):
     """重置限制时间和数量
 
     Args:
@@ -96,6 +103,7 @@ def reset_limit(user: User, name: str, unit: time_tools.TimeUnit=time_tools.Time
         user.counters[name]["count"] += 1
     # user.save()
 
+
 def limit_count_tick(user: User, name: str):
     """增加一次计数器计数
 
@@ -106,7 +114,9 @@ def limit_count_tick(user: User, name: str):
     user.counters[name]["count"] += 1
     # user.save()
 
-def validate_limit(user: User, name: str, limit: float | int, count_limit: int=1,  unit: time_tools.TimeUnit=time_tools.TimeUnit.DAY, floor_float: bool=True) -> tuple[bool, bool]:
+
+def validate_limit(user: User, name: str, limit: float | int, count_limit: int = 1,
+                   unit: time_tools.TimeUnit = time_tools.TimeUnit.DAY, floor_float: bool = True) -> tuple[bool, bool]:
     """是否在时间 / 数量限制内，如果找不到时间限制名则创建
 
     Args:
@@ -148,6 +158,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int=1
         return False
     #     reset_limit(user, name, unit, floor_float)
 
+
 def get_limit_info(user, name):
     """返回限制情况
 
@@ -159,6 +170,7 @@ def get_limit_info(user, name):
         tuple(int | float, int): (当前记录时间, 当前记录次数)
     """
     return (user.counters[name]["time"], user.counters[name]["count"])
+
 
 def get_rank(*rank_item_key, key=None):
     """获取用户某项内容排名
@@ -186,11 +198,11 @@ def get_rank(*rank_item_key, key=None):
 def limit(limit_name: str,
           limit: float | int,
           limit_message: str,
-          count_limit: int=1,
-          unit: time_tools.TimeUnit=time_tools.TimeUnit.DAY,
-          floor_float: bool=True,
+          count_limit: int = 1,
+          unit: time_tools.TimeUnit = time_tools.TimeUnit.DAY,
+          floor_float: bool = True,
           fails=lambda x: x == False,
-          limit_func=None,):
+          limit_func=None, ):
     """对函数进行限制时间内只能执行数次
 
     Args:
@@ -203,11 +215,13 @@ def limit(limit_name: str,
         fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: x == False.
         limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
             print(user.counters)
-            if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit, floor_float=floor_float):
+            if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
+                              floor_float=floor_float):
                 if not limit_func:
                     return await send_msg(session, limit_message)
                 # 有自定义函数传入情况
@@ -224,7 +238,9 @@ def limit(limit_name: str,
                 limit_count_tick(user, limit_name)
                 user.save()
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -240,8 +256,11 @@ def using_user(save_data=False):
                 print("保存用户数据中")
                 user.save()
             return result
+
         return wrapper
+
     return decorator
+
 
 def load_from_dict(data: dict, id: int) -> User:
     user = User(id, data.get('coins', 0))

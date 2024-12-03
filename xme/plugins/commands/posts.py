@@ -25,11 +25,11 @@ async def _(session: CommandSession):
     try:
         count = 1 if not arg else int(arg)
         if count > max_count:
-            return await send_msg(session, get_message(__plugin_name__, 'too_many').format(max=max_count))
+            return await send_msg(session, get_message(__plugin_name__, 'too_many', max=max_count))
             # return await send_msg(session, f"最多查看 10 个文章哦")
         elif count <= 0:
             return await send_msg(session, get_message(__plugin_name__, 'invalid_count'))
     except:
         return await send_msg(session, get_message(__plugin_name__, 'invalid_count'))
         # return await send_msg(session, f"请输入正确的文章数量哦")
-    await send_msg(session, get_message(__plugin_name__, 'post_msg').format(count=count, posts=show_rss(catch_179rss(), count)))
+    await send_msg(session, get_message(__plugin_name__, 'post_msg', count=count, posts=show_rss(catch_179rss(), count)))

@@ -22,7 +22,7 @@ async def _(session: CommandSession):
         bottle = bottles.get(arg, None)
         if not bottles.get(arg, None):
             error_args.append((arg, get_message(__plugin_name__, 'cthulhu_bottle_not_exist')))
-            # await send_msg(session, get_message(__plugin_name__, 'cthulhu_bottle_not_exist').format(id=arg))
+            # await send_msg(session, get_message(__plugin_name__, 'cthulhu_bottle_not_exist', id=arg))
             # return
             continue
         is_special = False
@@ -41,10 +41,10 @@ async def _(session: CommandSession):
         bottle['views'] = 114514
     for error_arg in error_args:
         args.remove(error_arg[0])
-    message += get_message(__plugin_name__, 'cthulhu_error_bottles').format(ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
+    message += get_message(__plugin_name__, 'cthulhu_error_bottles', ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
     prefix = get_message(__plugin_name__, 'cthulhu_fail')
     if args:
-        prefix = get_message(__plugin_name__, 'cthulhu_success').format(ids=', '.join([f'#{arg}' for arg in args]))
+        prefix = get_message(__plugin_name__, 'cthulhu_success', ids=', '.join([f'#{arg}' for arg in args]))
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     message = prefix + '\n' + message
     await send_msg(session, message)

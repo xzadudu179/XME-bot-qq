@@ -15,7 +15,7 @@ game_meta = {
     "name": name,
     "desc": get_message(cmd_name, name, 'desc'),
     # "desc": "猜数字游戏",
-    "introduction": get_message(cmd_name, name, 'introduction').format(coin_name=coin_name, times_limit=TIMES_LIMIT),
+    "introduction": get_message(cmd_name, name, 'introduction', coin_name=coin_name, times_limit=TIMES_LIMIT),
     # "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小",
     "args": {
         "r": get_message(cmd_name, name, 'arg_range'),
@@ -47,7 +47,7 @@ class GuessNum(Game):
         # self.starting = True
         self.answer_num = random.randint(self.number_range[0], self.number_range[1])
         self.guessing_times = 0
-        return get_message(cmd_name, name, 'guess_start').format(
+        return get_message(cmd_name, name, 'guess_start',
             max_guessing_times=self.max_guessing_times,
             number_min=self.number_range[0],
             number_max=self.number_range[1])
@@ -116,16 +116,16 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
     try:
         times_limit = x if (x:=int(settings.get("t", 7))) > 0 else 7
     except Exception as ex:
-        return return_state(f"{get_message(cmd_name, name, 'times_limit_error').format(ex=ex)}", "ERROR")
+        return return_state(f"{get_message(cmd_name, name, 'times_limit_error', ex=ex)}", "ERROR")
         # return return_state(f" 猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}", "ERROR")
     try:
         num_range = (int(settings.get("r", "0~100").split("~")[0]), int(settings.get("r", "0~100").split("~")[1]))
     except Exception as ex:
-        return return_state(f"{get_message(cmd_name, name, 'range_error').format(ex=ex)}", "ERROR")
+        return return_state(f"{get_message(cmd_name, name, 'range_error', ex=ex)}", "ERROR")
         # return return_state(f" 数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}", "ERROR")
 
     if abs(num_range[0]) > MAX_RANGE or abs(num_range[1]) > MAX_RANGE:
-        return return_state(f"{get_message(cmd_name, name, 'range_out_of_range').format(max_range=format(MAX_RANGE, ','))}", "ERROR")
+        return return_state(f"{get_message(cmd_name, name, 'range_out_of_range', max_range=format(MAX_RANGE, ','))}", "ERROR")
         # return return_state(f" 数字范围不能大于或小于 {MAX_RANGE} 哦 uwu", "ERROR")
     elif num_range[0] > num_range[1]:
         # 交换一下
@@ -135,23 +135,23 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
         return return_state(f"{get_message(cmd_name, name, 'range_equals')}", "ERROR")
         # return return_state(f" 数字范围不能是相同的哦 uwu", "ERROR")
     if times_limit > MAX_LIMIT:
-        return return_state(f"{get_message(cmd_name, name, 'times_out_of_range').format(max_limit=format(MAX_LIMIT, ','))}", "ERROR")
+        return return_state(f"{get_message(cmd_name, name, 'times_out_of_range', max_limit=format(MAX_LIMIT, ','))}", "ERROR")
         # return return_state(f" 猜测次数不能大于 {MAX_LIMIT} 哦 uwu", "ERROR")
     guess = GuessNum(num_range, times_limit)
     # await send_msg(session, guess.start())
-    prefix = get_message(cmd_name, name, 'guess_prompt_prefix_default').format(
-        start=get_message(cmd_name, name, 'cost_message').format(cost=game_meta['cost'], coin_name=coin_name, coin_pronoun=coin_pronoun,) + guess.start(),
+    prefix = get_message(cmd_name, name, 'guess_prompt_prefix_default',
+        start=get_message(cmd_name, name, 'cost_message', cost=game_meta['cost'], coin_name=coin_name, coin_pronoun=coin_pronoun,) + guess.start(),
     )
     # prefix = f"{guess.start()}\n请"
     ask_to_guess = True
     quit_inputs = ("quit", "退出游戏", "退出", "exit")
     while True:
-        user_input = (await session.aget(prompt=f'[CQ:at,qq={session.event.user_id}] ' + get_message(cmd_name, name, 'guess_prompt').format(
+        user_input = (await session.aget(prompt=f'[CQ:at,qq={session.event.user_id}] ' + get_message(cmd_name, name, 'guess_prompt',
             prefix=prefix,
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f" {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()
         if user_input.lower().strip() in quit_inputs:
-            await send_msg(session, get_message(cmd_name, name, 'quit_message') if start_guessing else get_message(cmd_name, name, 'quit_message_not_start').format(coin_name=coin_name))
+            await send_msg(session, get_message(cmd_name, name, 'quit_message') if start_guessing else get_message(cmd_name, name, 'quit_message_not_start', coin_name=coin_name))
             # await send_msg(session, f" 退出游戏啦 ovo")
             if start_guessing:
                 return return_state(state="OK", data={
@@ -174,10 +174,10 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
         result = guess.parse_game_step(num)
         start_guessing = True
         if result == 2:
-            await send_msg(session, get_message(cmd_name, name, 'game_over').format(answer=format(guess.answer_num, ',')))
+            await send_msg(session, get_message(cmd_name, name, 'game_over', answer=format(guess.answer_num, ',')))
             # await send_msg(session, f" 你的猜测次数用完啦，正确答案应该是 {guess.answer_num} ovo")
             return return_state(state="FAILED")
-        message = get_message(cmd_name, name, 'guess_result').format(
+        message = get_message(cmd_name, name, 'guess_result',
             num=format(num, ','),
             result= get_message(cmd_name, name, 'num_too_big_result') if
                     result == 1 else
@@ -189,10 +189,10 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
         if result == 0:
             await send_msg(session, message)
             break
-        message += f"\n" + get_message(cmd_name, name, 'remaining_times').format(times=guess.max_guessing_times - guess.guessing_times)
+        message += f"\n" + get_message(cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
         # message += f"\n你还可以猜 {guess.max_guessing_times - guess.guessing_times} 次数字ovo"
         # await send_msg(session, message)
-        prefix = get_message(cmd_name, name, 'guess_prompt_prefix_default').format(
+        prefix = get_message(cmd_name, name, 'guess_prompt_prefix_default',
             start=message,
         )
         # prefix = f"{message}\n请"

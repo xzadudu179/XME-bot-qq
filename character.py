@@ -47,21 +47,27 @@ def get_item(*keys: str, character: str="", default="[NULL]", search_dict: dict 
         result = default
     return result
 
-def get_message(*keys: str, default: str="[NULL]", character: str="") -> str:
+def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) -> str:
     """获取 bot 角色字典消息
 
     Args:
-        *key (str): 消息键
+        *keys (str): 消息键
         default (str, optional): 找不到值时返回的默认值. Defaults to "[NULL]".
         character (str, optional): 指定的角色名. Defaults to "".
+        **kwargs: 格式化参数
 
     Returns:
         str: 消息字符串
     """
     try:
         result = get_item(*keys, character=character, default=default)
-        if type(result) == list:
-            result = random_tools.rand_str(*result)
-        return str(result)
     except:
         return default
+
+    if type(result) == list:
+        result = random_tools.rand_str(*result)
+    try:
+        return str(result).format(**kwargs)
+    except KeyError as ex:
+        print(f"keyerror: {ex}")
+        return str(result)

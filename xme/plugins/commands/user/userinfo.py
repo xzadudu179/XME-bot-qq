@@ -11,7 +11,7 @@ cmd_name = 'userinfo'
 usage = {
     "name": cmd_name,
     "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
+    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'<at人>',
     "permissions": [],
     "alias": alias

@@ -95,6 +95,8 @@ async def _(session: CommandSession, user: xme_user.User):
     print(game_return)
     if game_return['message']:
         await send_msg(session, game_return['message'])
+    if game_return['state'] in ['EXITED', 'ERROR']:
+        return False
     award = game_return['data'].get('award', 'NO_AWARD')
     limited = game_return['data'].get('limited', False)
     times_left = game_return['data'].get('times_left', False)
@@ -117,6 +119,4 @@ async def _(session: CommandSession, user: xme_user.User):
     print(messages)
     if message:
         await send_msg(session, message)
-    if game_return['state'] in ['EXITED', 'ERROR']:
-        return False
     return True

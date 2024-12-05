@@ -114,15 +114,16 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
     # print(TIMES_LIMIT, xme_user.get_limit_info(user, f"game_{name}")[1])
     settings: dict = args
     try:
-        times_limit = x if (x:=int(settings.get("t", 7))) > 0 else 7
-    except Exception as ex:
-        return return_state(f"{get_message(cmd_name, name, 'times_limit_error', ex=ex)}", "ERROR")
-        # return return_state(f" 猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}", "ERROR")
-    try:
         num_range = (int(settings.get("r", "0~100").split("~")[0]), int(settings.get("r", "0~100").split("~")[1]))
     except Exception as ex:
         return return_state(f"{get_message(cmd_name, name, 'range_error', ex=ex)}", "ERROR")
         # return return_state(f" 数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}", "ERROR")
+    default_times_limit = min(int(math.log2(sum([abs(num) for num in num_range])) + 2), MAX_LIMIT)
+    try:
+        times_limit = x if (x:=int(settings.get("t", default_times_limit))) > 0 else default_times_limit
+    except Exception as ex:
+        return return_state(f"{get_message(cmd_name, name, 'times_limit_error', ex=ex)}", "ERROR")
+        # return return_state(f" 猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}", "ERROR")
 
     if abs(num_range[0]) > MAX_RANGE or abs(num_range[1]) > MAX_RANGE:
         return return_state(f"{get_message(cmd_name, name, 'range_out_of_range', max_range=format(MAX_RANGE, ','))}", "ERROR")

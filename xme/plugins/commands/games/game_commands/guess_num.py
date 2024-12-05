@@ -26,9 +26,9 @@ game_meta = {
     "cost": 2,
     "times_left_message": get_message(cmd_name, name, 'times_left'),
     "limited_message": get_message(cmd_name, name, 'limited'),
-    "award_message": get_message(cmd_name, name, 'award')
+    "award_message": get_message(cmd_name, name, 'award'),
+    "no_award_message": get_message(cmd_name, name, 'no_award'),
 }
-print(game_meta)
 
 class GuessNum(Game):
     def __init__(self, number_range=(0, 100), max_guessing_times=7) -> None:
@@ -92,7 +92,7 @@ def calc_award(basic, game: GuessNum):
     award = int(basic + times_addition + min(2 * theorical_times, theorical_times ** 2))
     if game.guessing_times >= range_len:
         award = 0
-    award = min(award, 32767)
+    award = min(award, 2048)
     return int(max(0, award) / 2)
 
 
@@ -107,7 +107,7 @@ async def limited(func, session: CommandSession, user: xme_user.User, *args, **k
 @xme_user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
 async def play_game(session: CommandSession, user: xme_user.User, args: dict):
     BASIC_AWARD = 10
-    MAX_RANGE = 10_000_000_000
+    MAX_RANGE = 34359738368
     MAX_LIMIT = 35
     start_guessing = False
     get_award_times_left = TIMES_LIMIT - xme_user.get_limit_info(user, f"game_{name}")[1] - 1
@@ -176,7 +176,10 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
         if result == 2:
             await send_msg(session, get_message(cmd_name, name, 'game_over', answer=format(guess.answer_num, ',')))
             # await send_msg(session, f" 你的猜测次数用完啦，正确答案应该是 {guess.answer_num} ovo")
-            return return_state(state="FAILED")
+            return return_state(state="OK", data={
+                    "limited": False,
+                    "times_left": get_award_times_left,
+            })
         message = get_message(cmd_name, name, 'guess_result',
             num=format(num, ','),
             result= get_message(cmd_name, name, 'num_too_big_result') if

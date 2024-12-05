@@ -505,8 +505,9 @@
             "guess_result": "{num} {result}",
             "remaining_times": "你还可以猜 {times} 次数字ovo",
             "limited": "你今天游玩这个游戏的奖励次数用完啦",
-            "times_left": "你还可以得到 {times_left} 次奖励~",
-            "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦"
+            "times_left": "你还有 {times_left} 次机会得到奖励~",
+            "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
+            "no_award": "你没有拿到任何{coin_name}..."
         }
     },
     "漂流瓶": {
@@ -900,5 +901,34 @@
                 "需要指定饼干数量哦"
             ]
         }
+    },
+    "bottodo": {
+        "desc": "查看 bot 待办",
+        "introduction": "查看或修改 bot 的待办事项 / 以后要更新的内容\n修改待办需要 SUPERUSER",
+        "remove_todo_success": [
+            "成功移除了待办事项 \"{todo}\"！",
+            "成功删掉了待办事项 \"{todo}\" 啦！",
+            "成功移除了待办事项 \"{todo}\"~"
+        ],
+        "todo_prefix": [
+            "以下是待办列表~",
+            "以下是九九的待办事项列表~",
+            "以下是 179 的待办列表~"
+        ],
+        "no_todo": [
+            "暂时没有待办事项哦...",
+            "暂时没有要做的事情呢..."
+        ],
+        "modify_todo_failed": [
+            "只有我认识的人才能管理待办哦...",
+            "唔...我不认识你诶...不能管理待办哦",
+            "唔...只有我认识的人才可以管理待办哦..."
+        ],
+        "add_todo_success": [
+            "添加待办 \"{todo}\" 成功啦~",
+            "帮你把待办 \"{todo}\" 写上去啦~",
+            "成功添加待办 \"{todo}\"~"
+        ],
+        "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
     }
 }

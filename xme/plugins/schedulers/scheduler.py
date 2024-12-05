@@ -45,12 +45,12 @@ async def _():
         faces = await bot.api.call_action("fetch_custom_face")
     except:
         has_faces = False
+    # print(faces)
     # 随机发表情
     messages = get_item("schedulers", "idles")
     if has_faces:
-        message = random.choice(messages.append(faces))
-    else:
-        message = random.choice(messages)
+        messages.append(faces)
+    message = random.choice(messages)
     if message in faces:
         message = f"[CQ:image,file={message}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")

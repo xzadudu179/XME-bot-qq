@@ -95,11 +95,11 @@ async def _(session: CommandSession, user: xme_user.User):
     print(game_return)
     if game_return['message']:
         await send_msg(session, game_return['message'])
-    award = game_return['data'].get('award', False)
+    award = game_return['data'].get('award', 'NO_AWARD')
     limited = game_return['data'].get('limited', False)
     times_left = game_return['data'].get('times_left', False)
     messages = []
-    if award != False and not limited:
+    if award and award != "NO_AWARD" and not limited:
         user.add_coins(award)
         messages.append(game_to_play['meta']['award_message'].format(
             award=award,
@@ -107,9 +107,11 @@ async def _(session: CommandSession, user: xme_user.User):
             coin_name=coin_name,
             coin_pronoun=coin_pronoun
         ))
+    elif award == 0:
+        messages.append(game_to_play['meta']['no_award_message'].format(coin_name=coin_name))
     if times_left != False and not limited:
         messages.append(game_to_play['meta']['times_left_message'].format(times_left=times_left))
-    elif limited:
+    elif limited or times_left <= 0:
         messages.append(game_to_play['meta']['limited_message'])
     message = '\n'.join(messages)
     print(messages)

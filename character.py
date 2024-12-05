@@ -66,6 +66,8 @@ def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) 
 
     if type(result) == list:
         result = random_tools.rand_str(*result)
+    if len(kwargs) < 1:
+        return str(result)
     try:
         return str(result).format(**kwargs)
     except KeyError as ex:

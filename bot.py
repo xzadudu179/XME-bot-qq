@@ -14,6 +14,7 @@ def load_plugins_list(*args: list[str, str]):
 
 
 if __name__ == '__main__':
+    print("正在启动...")
     bot_init.saving_log(logger)
     nonebot.init(config)
     load_plugins_list(

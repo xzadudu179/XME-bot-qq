@@ -41,7 +41,8 @@ async def _(session: CommandSession):
         bottle['views'] = 114514
     for error_arg in error_args:
         args.remove(error_arg[0])
-    message += get_message(__plugin_name__, 'cthulhu_error_bottles', ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
+    if len(error_args) > 0:
+        message += get_message(__plugin_name__, 'cthulhu_error_bottles', ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
     prefix = get_message(__plugin_name__, 'cthulhu_fail')
     if args:
         prefix = get_message(__plugin_name__, 'cthulhu_success', ids=', '.join([f'#{arg}' for arg in args]))

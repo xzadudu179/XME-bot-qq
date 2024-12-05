@@ -68,11 +68,8 @@ async def _(session: CommandSession, user: User):
     user.coins -= arg
     result = random.randint(0, int(arg * 2))
     user.add_coins(result)
-    result_content = (get_message(__plugin_name__, cmd_name, 'get_coin_result') if result > 0 else get_message(__plugin_name__, cmd_name, 'no_coin_result',
-        coin_name=coin_name,
-        get_count=result,
-        coin_pronoun=coin_pronoun
-    ))
+    result_content = (get_message(__plugin_name__, cmd_name, 'get_coin_result', coin_name=coin_name, get_count=result, coin_pronoun=coin_pronoun) if result > 0 else
+                      get_message(__plugin_name__, cmd_name, 'no_coin_result', coin_name=coin_name, get_count=result, coin_pronoun=coin_pronoun))
     times_left = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1] - 1
     message = get_message(__plugin_name__, cmd_name, 'result',
         coin_name=coin_name,

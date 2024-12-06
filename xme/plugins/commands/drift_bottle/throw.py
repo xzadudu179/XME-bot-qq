@@ -17,15 +17,15 @@ async def _(session: CommandSession):
     # arg, images = text_tools.get_image_str(raw_arg_msg)
     arg = session.current_arg_text.strip()
     if not arg:
-        await send_msg(session, get_message(__plugin_name__, "nothing_to_throw").format(command_name=f"{config.COMMAND_START[0]}{command_name}"))
+        await send_msg(session, get_message(__plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         # await send_msg(session, f"漂流瓶似乎没有内容呢ovo\n格式：\n{config.COMMAND_START[0]}throw (漂流瓶内容)")
         return
     if len(arg) > MAX_LENGTH:
-        await send_msg(session, get_message(__plugin_name__, "content_too_many").format(max_length=MAX_LENGTH))
+        await send_msg(session, get_message(__plugin_name__, "content_too_many", max_length=MAX_LENGTH))
         # await send_msg(session, f"瓶子的内容太多啦！要 200 字以内哦")
         return
     if arg.count('\n') > MAX_LINES or arg.count('\r') > MAX_LINES:
-        await send_msg(session, get_message(__plugin_name__, "lines_too_many").format(max_lines=MAX_LINES))
+        await send_msg(session, get_message(__plugin_name__, "lines_too_many", max_lines=MAX_LINES))
         # await send_msg(session, f"瓶子的行数太多啦！最多 MAX_LINES 行哦")
         return
     # 保存图片并修改图片地址
@@ -44,7 +44,7 @@ async def _(session: CommandSession):
         # print(bottle)
         if text_tools.difflib_similar(arg, bottle['content'], False) > 0.75:
         # if arg == bottle['content']:
-            await send_msg(session, get_message(__plugin_name__, "content_already_thrown").format(content=bottle['content'], id=k))
+            await send_msg(session, get_message(__plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
             return
     bottles_dict['bottles'][id] = {
@@ -62,5 +62,5 @@ async def _(session: CommandSession):
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
-    await send_msg(session, get_message(__plugin_name__, 'throwed').format(id=id))
+    await send_msg(session, get_message(__plugin_name__, 'throwed', id=id))
     # await send_msg(session, f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")

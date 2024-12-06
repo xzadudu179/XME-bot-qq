@@ -31,7 +31,7 @@ async def _(session: CommandSession):
         }
     # print(settings)
     prev = settings['prevent_recall'].get(group_id, False)
-    message = get_message(__plugin_name__, "stats").format(group_id=group_id, stats=get_message(__plugin_name__, "opened_message") if prev else get_message(__plugin_name__, "closed_message"))
+    message = get_message(__plugin_name__, "stats", group_id=group_id, stats=get_message(__plugin_name__, "opened_message") if prev else get_message(__plugin_name__, "closed_message"))
     # message = f"本群 ({group_id}) 的防撤回功能：{'已开启' if prev else '已关闭'}"
     arg = session.current_arg_text.strip()
     if arg.capitalize() == "开" or arg.capitalize() == "T":

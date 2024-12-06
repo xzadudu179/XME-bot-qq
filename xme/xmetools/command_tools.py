@@ -27,12 +27,21 @@ async def send_cmd(cmd_string, session, check_permission=True):
         check_perm=check_permission)
 
 
-def get_cmd_by_alias(input_string, judge_cmd_start=True):
+def get_cmd_by_alias(input_string, need_cmd_start=True):
+    """尝试通过别名获得指令
+
+    Args:
+        input_string (str): 输入的字符串
+        need_cmd_start (bool, optional): 是否判断必须要包含命令开始字符. Defaults to True.
+
+    Returns:
+        Command | bool: 返回的结果（指令或False）
+    """
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
     elif name[0] not in config.COMMAND_START:
-        if judge_cmd_start:
+        if need_cmd_start:
             return False
     if CommandManager._commands.get((name,), False) == False:
         return CommandManager._aliases.get(name, False)

@@ -9,12 +9,12 @@ from xme.xmetools import random_tools
 from xme.xmetools import time_tools
 from character import get_item, get_message
 import random
+bot = nonebot.get_bot()
 
 async def send_time_message():
-    bot = nonebot.get_bot()
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        something_to_say = get_message("schedulers", "time").format(
+        something_to_say = get_message("schedulers", "time",
             period=time_tools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
@@ -33,7 +33,6 @@ async def send_time_message():
 async def _():
     if not (6 <= datetime.now().hour <= 24): return
     if not random_tools.random_percent(0.03): return
-    bot = nonebot.get_bot()
     groups = await bot.get_group_list()
     # 群组太少就降低概率
     if not random_tools.random_percent(min(100, 50 + len(groups) * 10)): return
@@ -41,9 +40,17 @@ async def _():
     group_id = group['group_id']
     # idles = get_message("schedulers", "idles")
     # idles = json_tools.read_from_path("bot_messages.json")['idles']
-    faces = await bot.api.call_action("fetch_custom_face")
+    has_faces = True
+    try:
+        faces = await bot.api.call_action("fetch_custom_face")
+    except:
+        has_faces = False
+    # print(faces)
     # 随机发表情
-    message = get_item("schedulers", "idles").append(faces)
+    messages = get_item("schedulers", "idles")
+    if has_faces:
+        messages.append(faces)
+    message = random.choice(messages)
     if message in faces:
         message = f"[CQ:image,file={message}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")

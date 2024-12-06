@@ -1,4 +1,6 @@
 import heapq
+from typing import Any
+
 from . import text_tools as sim
 
 
@@ -27,6 +29,7 @@ def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict
     """字符串在字符串列表里与每个元素的相似度
 
     Args:
+        jaccard_sim: 是否使用交集相似度
         strings (list[str]): 字符串列表
         target_str (str): 要比较的字符串
 
@@ -42,7 +45,7 @@ def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict
     return similars
 
 
-def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5) -> list[str]:
+def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5) -> list[tuple[Any, Any]]:
     """返回字符串列表里前k个与目标字符串相似的项
 
     Args:

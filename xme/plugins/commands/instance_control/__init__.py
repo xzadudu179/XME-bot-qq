@@ -1,6 +1,6 @@
 __plugin_name__ = '实例控制'
 from .kill import *
-from .restart import *
+from ...archive.restart import *
 from xme.xmetools.doc_gen import PluginDoc
 from character import get_message
 

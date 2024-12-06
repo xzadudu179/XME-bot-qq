@@ -126,16 +126,20 @@ def get_secs_difference(tm, new_time):
     return seconds_diff
 
 
+def get_curr_hour():
+    # 获取当前时间
+    now = datetime.now()
+    # 提取小时部分
+    hour = now.hour
+    return hour
+
 def get_time_period():
     """获取当前时间段名称
 
     Returns:
         str: 当前时间段名称
     """
-    # 获取当前时间
-    now = datetime.now()
-    # 提取小时部分
-    hour = now.hour
+    hour = get_curr_hour()
 
     # 判断时间段
     if 0 <= hour < 5:

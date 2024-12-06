@@ -14,7 +14,7 @@ cmd_name = 'sign'
 usage = {
     "name": cmd_name,
     "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
+    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'',
     "permissions": [],
     "alias": alias
@@ -28,14 +28,14 @@ async def _(session: CommandSession, user: User):
     # message = get_message(__plugin_name__, cmd_name, 'failed')
     print(user)
     append_coins = random.randint(0, 50)
-    user.coins += append_coins
+    user.add_coins(append_coins)
     if append_coins == 0:
-        message = get_message(__plugin_name__, cmd_name, 'login_no_coins').format(
+        message = get_message(__plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
             login_success=get_message(__plugin_name__, cmd_name, 'login_success')
         )
     else:
-        message = get_message(__plugin_name__, cmd_name, 'success').format(
+        message = get_message(__plugin_name__, cmd_name, 'success',
             login_success=get_message(__plugin_name__, cmd_name, 'login_success'),
             state=get_message(__plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),

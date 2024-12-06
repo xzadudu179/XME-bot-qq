@@ -59,7 +59,7 @@ class User:
             user_dict = {}
         elif user_dict is None:
             return None
-        return load_from_dict(user_dict, id)
+        return load_from_dict(user_dict, id_)
 
     def save(self):
         data_to_save = self.__dict__()
@@ -68,16 +68,17 @@ class User:
         json_tools.save_to_path(config.USER_PATH, users)
 
 
-def try_load(id, default):
+def try_load(id_, default):
     try:
-        return User.load(id)
-    except Exception as ex:
+        return User.load(id_)
+    # except Exception as ex:
         # print(f"try load 出现异常：{traceback.format_exc()}")
+    finally:
         return default
 
 
 def verify_timers(user: User, name: str):
-    if not name in user.counters or type(user.counters[name]) != dict:
+    if name not in user.counters or not isinstance(user.counters[name], dict):
         user.counters[name] = {}
         user.save()
     user.counters[name].setdefault("time", 0)
@@ -169,7 +170,8 @@ def get_limit_info(user, name):
     Returns:
         tuple(int | float, int): (当前记录时间, 当前记录次数)
     """
-    return (user.counters[name]["time"], user.counters[name]["count"])
+    return user.counters[name]["time"], user.counters[name]["count"]
+
 
 
 def get_rank(*rank_item_key, key=None):
@@ -186,13 +188,15 @@ def get_rank(*rank_item_key, key=None):
     for k, v in users.items():
         # print(f"item: {v}")
         value = dict_tools.get_value(*rank_item_key, search_dict=v)
-        if value == None: continue
+        if value is None:
+            continue
         rank[k] = value
     rank_values = list(rank.items())
     # print(rank_values)
     rank_values.sort(reverse=True, key=lambda x: key(x[1]) if key else x[1])
     # print(rank)
     return rank_values
+
 
 
 def limit(limit_name: str,
@@ -262,7 +266,8 @@ def using_user(save_data=False):
     return decorator
 
 
-def load_from_dict(data: dict, id: int) -> User:
-    user = User(id, data.get('coins', 0))
+
+def load_from_dict(data: dict, id_: int) -> User:
+    user = User(id_, data.get('coins', 0))
     user.counters = data.get('counters', {})
     return user

@@ -30,6 +30,7 @@ game_meta = {
     "no_award_message": get_message(cmd_name, name, 'no_award'),
 }
 
+
 class GuessNum(Game):
     def __init__(self, number_range=(0, 100), max_guessing_times=7) -> None:
         super().__init__(number_range=number_range, max_guessing_times=max_guessing_times)

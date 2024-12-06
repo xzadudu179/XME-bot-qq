@@ -1,10 +1,12 @@
 import json
+from typing import Union
+
 
 def read_from_path(path) -> dict:
     with open(path, 'r', encoding='utf-8') as file:
         return json.load(file)
 
 
-def save_to_path(path, data, ensure_ascii=False, indent: int | str | None=None):
+def save_to_path(path, data, ensure_ascii=False, indent: Union[int, str, None] = None):
     with open(path, 'w', encoding='utf-8') as file:
         file.write(json.dumps(data, ensure_ascii=ensure_ascii, indent=indent))

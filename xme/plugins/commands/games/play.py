@@ -59,6 +59,7 @@ def get_game_help(game_name) -> str | bool:
 # {args_str}
 # """.strip()
 
+
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda x: x.is_groupchat, shell_like=True)
 @xme_user.using_user(True)
 async def _(session: CommandSession, user: xme_user.User):

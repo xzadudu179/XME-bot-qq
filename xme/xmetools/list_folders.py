@@ -46,7 +46,6 @@ def walk_directory(directory: pathlib.Path, tree: Tree) -> None:
             tree.add(Text(icon) + text_filename)
 
 
-
 def get_tree(path) -> str:
     """获取文件夹树
 

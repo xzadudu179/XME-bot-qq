@@ -3,6 +3,7 @@ from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
 from character import get_message
 
+
 async def send_cmd(cmd_string, session, check_permission=True):
     name = cmd_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
@@ -25,6 +26,7 @@ async def send_cmd(cmd_string, session, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
+
 def get_cmd_by_alias(input_string, judge_cmd_start=True):
     name = input_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
@@ -37,6 +39,7 @@ def get_cmd_by_alias(input_string, judge_cmd_start=True):
     else:
         print("有这个指令")
         return CommandManager._commands.get((name,), False)
+
 
 async def send_msg(session: CommandSession, message, at=True, **kwargs):
     await session.send(str(message), at_sender=at, **kwargs)

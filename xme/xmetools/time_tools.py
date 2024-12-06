@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 import time
 
+
 class TimeUnit(Enum):
     SECOND = 1
     MINUTE = 60
@@ -10,6 +11,7 @@ class TimeUnit(Enum):
     WEEK = 60 * 60 * 24 * 7
     MONTH = 60 * 60 * 24 * 30
     YEAR = 60 * 60 * 24 * 365
+
 
 def secs_to_ymdh(secs):
     """将秒数转换为年月天小时分钟秒
@@ -45,12 +47,14 @@ def secs_to_ymdh(secs):
     formatted_string += str(int(remaining_secs)) + "秒"
     return formatted_string
 
+
 def curr_days():
     """当前天数(从1970年1月1日算)
     """
     start_date = datetime(1970, 1, 1)
     current_date = datetime.now()
     return (current_date - start_date).days
+
 
 def days_differ(start_date: int):
     """计算今天与指定天数相差
@@ -61,12 +65,14 @@ def days_differ(start_date: int):
     current_date = datetime.now()
     return (current_date - start_date).days
 
-def timenow(offset: int=8, unit: TimeUnit=TimeUnit.HOUR) -> float:
+
+def timenow(offset: int = 8, unit: TimeUnit = TimeUnit.HOUR) -> float:
     """获取当前时间
     """
     return time.time() + offset * unit.value
 
-def int_to_days(date_num: int, format: str="%Y年%m月%d日") -> str:
+
+def int_to_days(date_num: int, format: str = "%Y年%m月%d日") -> str:
     """将从1970年1月1日经过的天数变成日期
 
     Args:
@@ -80,9 +86,9 @@ def int_to_days(date_num: int, format: str="%Y年%m月%d日") -> str:
     target_date = start_date + timedelta(days=date_num)
     return target_date.strftime(format)
 
-def week_str(week_num, is_chinese: bool=True):
-    week: dict = {}
-    if(is_chinese):
+
+def week_str(week_num, is_chinese: bool = True):
+    if is_chinese:
         week = {
             1: "星期一",
             2: "星期二",
@@ -104,19 +110,21 @@ def week_str(week_num, is_chinese: bool=True):
         }
     return week.get(week_num, "Error")
 
-def get_secs_difference(time, new_time):
+
+def get_secs_difference(tm, new_time):
     """获取两个时间相隔的秒数
 
     Args:
-        time (_type_): 旧时间
+        tm (_type_): 旧时间
         new_time (_type_): 新时间
 
     Returns:
         int: 秒数
     """
-    difference = new_time - time
+    difference = new_time - tm
     seconds_diff = difference.total_seconds()
     return seconds_diff
+
 
 def get_time_period():
     """获取当前时间段名称

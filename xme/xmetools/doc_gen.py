@@ -3,14 +3,18 @@ import config
 
 DEFAULT_PERMISSIONS = "在群内使用"
 
-class Doc():
+
+class Doc:
     def __init__(self, name: str, desc: str, introduction: str) -> None:
         self.name = name
         self.desc = desc
         self.introduction = introduction
 
+
 class PluginDoc(Doc):
-    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]], simple_output: bool = False) -> None:
+    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str],
+                 permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]],
+                 simple_output: bool = False) -> None:
         super().__init__(name, desc, introduction)
         self.permissions = permissions
         self.contents = contents
@@ -27,12 +31,12 @@ class PluginDoc(Doc):
             line_head = f'- {content.split(": ")[0]}: '
             try:
                 alias_lines += f"{line_head}{', '.join(self.alias_list[i])}\n"
-            except:
+            except KeyError:  # TODO 241206 稳定性不详，需要测试！
                 alias_lines += f"{line_head}无\n"
             try:
                 # print(self.permissions[i])
                 permissions_lines += f"{line_head}{DEFAULT_PERMISSIONS if len(self.permissions[i]) < 1 else ' & '.join(self.permissions[i])}\n"
-            except:
+            except KeyError:  # TODO 241206 稳定性不详，需要测试！
                 permissions_lines += f"{line_head}无\n"
             contents_lines += f"{content}\n"
         not_simple_output = rf"""
@@ -49,9 +53,11 @@ class PluginDoc(Doc):
 内容：
 {contents_lines}""".strip() + ("\n" + not_simple_output if not self.simple_output else rf"""""")
 
+
 class CommandDoc(Doc):
 
-    def __init__(self, name, desc, introduction, usage, permissions: Iterable[str]=[], alias: Iterable[str]=[]) -> None:
+    def __init__(self, name, desc, introduction, usage, permissions: Iterable[str] = [],
+                 alias: Iterable[str] = []) -> None:
         super().__init__(name, desc, introduction)
         self.usage = usage
         self.alias = alias
@@ -68,6 +74,7 @@ class CommandDoc(Doc):
 别名：{'无' if len(self.alias) < 1 else ', '.join(self.alias)}
 """.strip()
 
+
 class SpecialDoc(Doc):
     def __init__(self, name, desc, introduction) -> None:
         super().__init__(name, desc, introduction)
@@ -78,6 +85,7 @@ class SpecialDoc(Doc):
 简介：{self.desc}
 {self.introduction}
 """.strip()
+
 
 def shell_like_usage(option_name, options: list[dict]):
     content = f"{option_name.upper()}:"

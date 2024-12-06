@@ -9,10 +9,8 @@ import re
 from lxml import etree
 
 
-colors = {}
 with open('yunhei_colors.json', 'r', encoding='utf-8') as file:
     colors = json.load(file)
-
 
 
 def check_cblack(qq_id, return_colorful_text=True):
@@ -26,6 +24,8 @@ def check_cblack(qq_id, return_colorful_text=True):
         str: 云黑查询结果
     """
     yunhei_url = "https://yunhei.furrynet.top/oldindex.php"
+    # TODO 241206 我天 考不考虑用aiohttp POST https://yunhei.furrynet.top/oldindex.php data={'qq': qq_id}
+
     # 启动浏览器
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # 启用无头模式
@@ -154,6 +154,7 @@ def calc_len(text):
             length += 1
     return length
 
+
 if __name__ == "__main__":
     # qq_id = input("请输入查询qq号或群号:")
     qq_id = 1608374672
@@ -171,4 +172,3 @@ if __name__ == "__main__":
         space_count = ceil((max_length - calc_len(line)) / 2)
         line = space_count * " " +  line
         print(line)
-    # input()

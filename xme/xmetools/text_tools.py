@@ -4,6 +4,7 @@ import spacy
 import string
 from difflib import SequenceMatcher
 
+
 def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
     """使用 difflib 判断字符串相似度
 
@@ -19,7 +20,8 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
 
-# 中文占比
+
+# 中文占比  ps:实际上是非ascii字符√
 def chinese_proportion(input_str) -> float:
     tfs = []
     pattern = r'[^\x00-\xff]'
@@ -36,8 +38,10 @@ def chinese_proportion(input_str) -> float:
     true_ratio = true_count / total_count
     return true_ratio
 
-def calc_spacing(texts: list[str], target: str, padding: int=0) -> int:
+
+def calc_spacing(texts: list[str], target: str, padding: int = 0) -> int:
     return calc_len(max(texts, key=lambda x: calc_len(x))) - calc_len(target) + padding
+
 
 def calc_len(text):
     pattern = r'[^\x00-\xff]'
@@ -67,6 +71,7 @@ def get_image_str(raw_message):
     raw_message = re.sub(r'\[CQ:.*?\]', '', raw_message)
     return (raw_message, tuple(images))
 
+
 def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=False):
     """返回只包含中文 英文 数字 下划线 横线的字符串
 
@@ -79,6 +84,8 @@ def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=Fa
     """
     # 使用正则表达式替换不符合的字符（保留换行符）
     return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\n-]', '_' if not replace_to_horzline else '-', s).replace("\n", "")
+
+
 # print(chinese_proportion("你这个 situation 我觉得很 weird"))
 
 
@@ -118,17 +125,22 @@ def replace_chinese_punctuation(text: str) -> str:
         text = re.sub(re.escape(chinese_punc), english_punc, text)
     return text
 
+
 def me_to_you(content: str) -> str:
     return content.replace("你", "<>WO1-<>").replace("我", "你").replace("<>WO1-<>", "我")
+
 
 def doubt_to_excl(content):
     content = replace_chinese_punctuation(content)
     return content.replace("嘛?", "!").replace("吗", "").replace("?", "!")
 
+
 def merge_positive_negative(content):
     result_is = content.replace("不不", "是")
-    result_is = re.sub(r"(.*?)是是", lambda match: prefix + "是是" if (prefix:=match.group(1)) else prefix + "是", result_is)
+    result_is = re.sub(r"(.*?)是是", lambda match: prefix + "是是" if (prefix := match.group(1)) else prefix + "是",
+                       result_is)
     return result_is
+
 
 def try_split_left_right_equals(text, splits, total_split_return=False):
     """以 ABA 的格式分隔字符
@@ -157,6 +169,7 @@ def try_split_left_right_equals(text, splits, total_split_return=False):
         break
     return (result, split_return)
 
+
 def replace_all(*replace_strings: tuple[str, str] | tuple[str], text):
     result = text
     try:
@@ -167,9 +180,11 @@ def replace_all(*replace_strings: tuple[str, str] | tuple[str], text):
             result = result.replace(o, "")
     return result
 
+
 def remove_punctuation(text: str) -> str:
     text = replace_chinese_punctuation(text)
     return text.translate(str.maketrans('', '', string.punctuation))
+
 
 def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
     """计算字符串集合的交集与并集的比例相似度（中文会被转换为拼音）
@@ -192,11 +207,13 @@ def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
     union = len(set1.union(set2))
     return intersection / union
 
-def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0) -> list[tuple[str, int]]:
+
+def most_similarity_str(input_str: str, str_list: list[str], threshold: float = 0) -> list[tuple[str, int]]:
     similarities = []
     for s in str_list:
         similarities.append((s, jaccard_similarity(input_str, s)))
-    return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
+    return [x for x in sorted(similarities, key=lambda x: x[1]) if x[1] > threshold]
+
 
 def is_question_product(question, question_of):
     # 加载中文模型

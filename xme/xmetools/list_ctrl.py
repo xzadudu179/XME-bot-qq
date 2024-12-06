@@ -1,6 +1,7 @@
 import heapq
 from . import text_tools as sim
 
+
 def heap_top_k(nums: list, k: int) -> list[int]:
     """使用最小堆的 top k
 
@@ -21,6 +22,7 @@ def heap_top_k(nums: list, k: int) -> list[int]:
             heapq.heappush(heap, nums[i])
     return heap
 
+
 def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict:
     """字符串在字符串列表里与每个元素的相似度
 
@@ -39,7 +41,8 @@ def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict
             similars[string] = sim.difflib_similar(string, target_str)
     return similars
 
-def top_k_sim(l: list[str], target_str: str, k: int=5, min: float=0.5) -> list[str]:
+
+def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5) -> list[str]:
     """返回字符串列表里前k个与目标字符串相似的项
 
     Args:
@@ -55,6 +58,7 @@ def top_k_sim(l: list[str], target_str: str, k: int=5, min: float=0.5) -> list[s
     sim_topk_items = sorted(str_list_sim(l, target_str).items(), key=lambda item: item[1], reverse=True)[:k]
     sim_topk_items = [item for item in sim_topk_items if item[1] >= min]
     return sim_topk_items
+
 
 def split_list(lst, chunk_size=10):
     # 使用列表切片将列表分割成 chunk_size 大小的子列表

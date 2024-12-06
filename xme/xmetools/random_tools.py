@@ -2,7 +2,8 @@ import random
 from .json_tools import read_from_path
 from functools import wraps
 
-def random_percent(percent : float) -> bool:
+
+def random_percent(percent: float) -> bool:
     """指定百分比概率返回True
 
     Args:
@@ -20,6 +21,7 @@ def random_percent(percent : float) -> bool:
     # print(rd)
     return rd < percent
 
+
 def change_seed(seed=None):
     """修改函数内 random 的种子或让函数结束后种子重置
 
@@ -27,6 +29,7 @@ def change_seed(seed=None):
         func (_type_): 函数
         seed (int | float | str | bytes | bytearray): 种子
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -35,8 +38,11 @@ def change_seed(seed=None):
             result = func(*args, **kwargs)
             random.seed()
             return result
+
         return wrapper
+
     return decorator
+
 
 def rand_str(*strings) -> str:
     """返回参数中的随机一个字符串
@@ -45,6 +51,7 @@ def rand_str(*strings) -> str:
         str: 随机字符串
     """
     return random.choice(list(strings))
+
 
 def character_message(character, message_name) -> str | bool:
     """返回指定角色设定的文本
@@ -63,7 +70,8 @@ def character_message(character, message_name) -> str | bool:
     result = message[character].get(message_name, False)
     return result
 
-def messy_string(string_input, temperature: float=50, resample_times=0):
+
+def messy_string(string_input, temperature: float = 50, resample_times=0):
     """返回一个混乱的字符串
 
     Args:
@@ -110,7 +118,7 @@ def messy_string(string_input, temperature: float=50, resample_times=0):
             result += c
     # 重新采样
     if resample_times > 0:
-        result = messy_string(result, temperature, resample_times-1)
+        result = messy_string(result, temperature, resample_times - 1)
     return result
 
 # print(messy_string('你捡到了一个漂流瓶~\n[#101号漂流瓶，来自 "寻找无处不在的179（？）"]：\n-----------\n你不许玩了！*抢走你的.pick\n-----------\n由 "仍然是一只AOS 喵～" 在2024年10月15日 15:24:12 投出\n这个瓶子被捡到了26次，还没有任何赞ovo\n你可以马上发送 "-like" 以点赞，或发送 "-rep" 以举报。\n'))

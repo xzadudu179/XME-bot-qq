@@ -1,6 +1,7 @@
 import re
 import math
 
+
 def is_prime(n: int) -> bool:
     """检查是否为质数
 

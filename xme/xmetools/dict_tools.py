@@ -1,9 +1,11 @@
 
+
 def get_value(*keys, search_dict: dict, default=None):
     """得到字典键对应的值
 
     Args:
         search_dict (dict): 搜索的字典
+        default (any): 默认返回值
 
     Returns:
         Any: 返回的值
@@ -17,4 +19,3 @@ def get_value(*keys, search_dict: dict, default=None):
     if len(keys) > 1:
         return get_value(*keys[1:], search_dict=result, default=default)
     return result
-

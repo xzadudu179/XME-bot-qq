@@ -24,7 +24,7 @@ GROUPS_WHITELIST = [
 SCHEDULER_GROUP = [
     727949269,
     913581215,
-    164072032,
+    905122019,
 ]
 
 NICKNAME = character.get_item('bot_info', 'nickname', default=['XME', 'xme'])

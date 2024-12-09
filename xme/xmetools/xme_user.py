@@ -17,6 +17,7 @@ class User:
         self.id = user_id
         # self.name = user_name
         self.coins = coins
+        self.xme_favorability = 0
         self.counters = {}
 
     def __str__(self):
@@ -43,7 +44,8 @@ class User:
     def __dict__(self):
         return {
             "coins": self.coins,
-            "counters": self.counters
+            "counters": self.counters,
+            "xme_favorability": self.xme_favorability
         }
 
     def add_coins(self, amount: int) -> bool:
@@ -265,4 +267,5 @@ def using_user(save_data=False):
 def load_from_dict(data: dict, id: int) -> User:
     user = User(id, data.get('coins', 0))
     user.counters = data.get('counters', {})
+    user.xme_favorability = data.get('xme_favorability', 0)
     return user

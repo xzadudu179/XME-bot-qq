@@ -12,17 +12,25 @@ command_name = 'dice'
 async def _(session: CommandSession):
     MAX_FACES = 100_000_000
     MAX_COUNT = 50
+    counts = 1
     arg = session.current_arg_text.strip()
-    if arg == "":
-        return await send_msg(session, get_message(__plugin_name__, "no_args_message", command_name=config.COMMAND_START[0] + command_name))
-        # return await send_msg(session, "使用方法：/dice [骰子面数] <骰子数量>")
     message = get_message(__plugin_name__, "dice_error")
+    args = arg.split(" ")
+    if arg == "":
+        faces = 6
+        # return await send_msg(session, get_message(__plugin_name__, "no_args_message", command_name=config.COMMAND_START[0] + command_name))
+        # return await send_msg(session, "使用方法：/dice [骰子面数] <骰子数量>")
+    else:
+        try:
+            faces = int(args[0])
+            if len(args) > 1:
+                counts = int(args[1])
+        except:
+            await send_msg(session, message=message)
+            return
     # message = "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦"
     points_list = []
-    args = arg.split(" ")
     try:
-        counts = 1
-        faces = int(args[0])
         if len(args) > 1:
             counts = int(args[1])
         if counts > 50:

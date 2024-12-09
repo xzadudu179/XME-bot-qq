@@ -29,22 +29,17 @@ async def _(session: CommandSession):
     choice = ""
     # 只有一项选择
     if len(choices) <= 1:
-        # if (x:=num_choice(choices[0], True)) != False:
-        #     choice = x
-        is_num_choice = num_choice(choices[0], True)
-        has_or_not = has_or_not_choice(choices[0])
-        is_or_not = is_or_not_choice(choices[0])
-        ends_is_or_not = ends_is_or_not_choice(choices[0])
-        # print(is_or_not)
-
-        if is_num_choice:
-            choice = is_num_choice
-        elif has_or_not:
-            choice = has_or_not
-        elif is_or_not:
-            choice = is_or_not
-        elif ends_is_or_not:
-            choice = ends_is_or_not
+        special_choices = [
+            num_choice(choices[0], True),
+            has_or_not_choice(choices[0]),
+            is_or_not_choice(choices[0]),
+            ends_is_or_not_choice(choices[0]),
+            another_or_choice(choices[0]),
+        ]
+        for c in special_choices:
+            if c:
+                choice = c
+                break
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
@@ -67,6 +62,26 @@ def has_or_not_choice(input_str):
         print(ex)
         return False
 
+def another_or_choice(input_str):
+    # 还是
+    result = []
+    asks = input_str.split("还是")
+    if ''.join(asks[1:]) == '':
+        return False
+    temp = ''
+    for i, ask in enumerate(asks):
+        if ask == '':
+            temp += '还是'
+            if i == len(asks) - 1:
+                result[-1] = result[-1] + temp
+            continue
+        result.append(temp + ask)
+        temp = ''
+    if len(result) <= 1:
+        return False
+    return text_tools.remove_punctuation(random.choice(result))
+
+
 def ends_is_or_not_choice(text):
     question_strings = ("否", "吗", "嘛")
     if not text_tools.remove_punctuation(text).endswith(question_strings):
@@ -76,7 +91,7 @@ def ends_is_or_not_choice(text):
     choice = random.randint(0, 1)
     print(words)
     # 寻找动词作为分割点
-    for i, (word, flag) in enumerate(words):
+    for i, (_, flag) in enumerate(words):
         if flag == 'v':
             prefix = "".join([t for t, _ in words[:i]])
             is_or_not = "" if choice else "不"

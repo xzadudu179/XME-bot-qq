@@ -188,6 +188,14 @@ def replace_all(*replace_strings: tuple[str, str] | tuple[str], text):
     return result
 
 def remove_punctuation(text: str) -> str:
+    """移除标点
+
+    Args:
+        text (str): 输入的文本
+
+    Returns:
+        str: 移除标点的文本
+    """
     text = replace_chinese_punctuation(text)
     return text.translate(str.maketrans('', '', string.punctuation))
 

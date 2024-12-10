@@ -5,14 +5,56 @@
         "nickname": [
             "XME",
             "xme"
-        ]
+        ],
+        "feedbacks": {
+            "disgust": [],
+            "sad": [],
+            "negative": [
+                "uwu",
+                "呜...",
+                "呜呜"
+            ],
+            "negative_plus": [
+                "xwx",
+                "呜呜呜..."
+            ],
+            "neutral": [
+                "ovo",
+                "嗷呜",
+                ""
+            ],
+            "bless": [
+                "好诶~",
+                "好耶~",
+                "好哦~",
+                "好哦~ owo！",
+                "owo！"
+            ],
+            "happy": [
+                "嗷呜~",
+                "嗷呜！"
+            ],
+            "excellent": [
+                "好耶！",
+                "好诶！",
+                "好哦！"
+            ],
+            "positive": [
+                "owo",
+                "嗷呜！"
+            ],
+            "positive_punc": [
+                "~"
+            ],
+            "positive_plus": []
+        }
     },
     "config": {
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "coin_name": "金币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}\n{sign_message}",
+        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户\n{sign_message}",
         "sign_message": "最近签到在{last_sign_time}",
         "no_sign": "从未签到过"
     },
@@ -302,7 +344,9 @@
             "get_state": "获得了",
             "login_success": "签到成功~",
             "login_no_coins": "你没获得任何{coin_name}...",
-            "success": "{login_success} 你{state} {coin_count} {coin_name}~"
+            "success": "{login_success} 你{state} {coin_count} {coin_name}~",
+            "first_sign": "你是今天第一个签到的哦~ owo！",
+            "sign_rank": "你是今天第 {count} 个签到的~"
         },
         "lottery": {
             "desc": "抽奖",
@@ -355,5 +399,18 @@
         "add_todo_success": "添加待办 \"{todo}\" 成功啦~",
         "modify_todo_failed": "只有 SUPERUSER 才能管理待办哦...",
         "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
+    },
+    "peek": {
+        "desc": "视奸179",
+        "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
+        "default_monitor": "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦",
+        "successful": "这是 179 的第 {monitor_num} 个屏幕的状态{positive_punc}",
+        "successful_all": [
+            "这是九九全部屏幕的状态 {neutral}",
+            "这是 179 全部屏幕的状态哦 {neutral}",
+            "这是九九全部屏幕的状态哦 {neutral}"
+        ],
+        "not_in_peek_group": "你不在可视奸的群里哦（？",
+        "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
     }
 }

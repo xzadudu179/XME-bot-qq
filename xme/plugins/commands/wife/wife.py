@@ -46,7 +46,7 @@ async def _(session: CommandSession):
                 who=who,
                 avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
                 name=name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']',
-                user_id=wife['user_id'])
+                user_id=str(wife['user_id']))
             # message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
     except Exception as ex:
         message = get_message(w.__plugin_name__, "error", ex=ex)

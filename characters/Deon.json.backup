@@ -6,62 +6,20 @@
             "Deon",
             "deon",
             "漠月"
-        ],
-        "feedbacks": {
-            "disgust": [],
-            "sad": [],
-            "negative": [
-                "uwu",
-                "呜...",
-                "呜呜"
-            ],
-            "negative_plus": [
-                "xwx",
-                "呜呜呜..."
-            ],
-            "neutral": [
-                "ovo",
-                "嗷呜",
-                ""
-            ],
-            "bless": [
-                "好诶~",
-                "好耶~",
-                "好哦~",
-                "好哦~ owo！",
-                "owo！"
-            ],
-            "happy": [
-                "嗷呜~",
-                "嗷呜！"
-            ],
-            "excellent": [
-                "好耶！",
-                "好诶！",
-                "好哦！"
-            ],
-            "positive_punc": [
-                "~"
-            ],
-            "positive": [
-                "owo",
-                "嗷呜！"
-            ],
-            "positive_plus": []
-        }
+        ]
     },
     "config": {
-        "busy": "忙不过来啦 {negative}",
-        "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
+        "busy": "忙不过来啦 呜...",
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {positive}\n{sign_message}",
-        "sign_message": "最近签到是{last_sign_time}{positive_punc}",
+        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name} owo\n{sign_message}",
+        "sign_message": "最近签到是{last_sign_time}~",
         "no_sign": "没有签过到呢..."
     },
     "schedulers": {
         "idles": [
-            "嗷呜~",
+            "owo",
             "嗷呜..有点无聊 owo",
             "嗷呜！",
             "冒泡冒泡~",
@@ -75,69 +33,69 @@
             "汪",
             "汪！",
             "看看179",
-            "看看179 嗷呜",
+            "看看179 owo",
             ".pick"
         ],
-        "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
+        "time": "{period}好呀~\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
     },
     "event_parsers": {
         "message_bursts": [
-            "不要刷屏 {negative}",
-            "{negative}不要刷屏",
-            "不要刷屏{negative}",
+            "不要刷屏 uwu",
+            "呜...不要刷屏",
+            "不要刷屏呜...",
             "不要刷屏哇...",
             "消息发太快啦..."
         ],
         "cmd_bursts": [
             "指令发送太快啦...",
-            "{negative}不要那么快的发指令",
-            "指令不要发太快{negative}"
+            "呜...不要那么快的发指令",
+            "指令不要发太快呜..."
         ],
         "message_prohibited": [
-            "不要发奇怪的词汇{negative}",
-            "这里面的词汇不能发{negative}",
-            "不要发不好的词汇{negative}",
-            "不能发不好的词汇{negative}"
+            "不要发奇怪的词汇呜...",
+            "这里面的词汇不能发呜...",
+            "不要发不好的词汇呜...",
+            "不能发不好的词汇呜..."
         ],
         "welcome": [
-            "欢迎 {at} 进群{positive_punc}",
-            "{at} 欢迎进群{positive_punc}"
+            "欢迎 {at} 进群~",
+            "{at} 欢迎进群~"
         ],
         "welcome_self": [
-            "{happy}我是漠月{positive_punc}",
-            "{happy}我来啦 {positive}",
-            "我来啦 {positive}",
-            "漠月来啦 {positive}",
-            "{happy}漠月来啦 {positive}",
-            "{happy}我是漠月 {positive}"
+            "嗷呜！我是漠月~",
+            "嗷呜！我来啦 owo",
+            "我来啦 owo",
+            "漠月来啦 owo",
+            "嗷呜~ 漠月来啦 owo",
+            "嗷呜！我是漠月 owo"
         ],
         "other_recalled_info": [
-            "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
-            "唔...刚刚 {operator} 撤回了一条{user}的消息{neutral}"
+            "刚刚 {operator} 撤回了一条{user}的消息ovo",
+            "唔...刚刚 {operator} 撤回了一条{user}的消息ovo"
         ],
-        "prevented_recall_info": "↓ 刚刚 {operator} 撤回了以下消息{neutral} ↓\n{recalled_message}"
+        "prevented_recall_info": "↓ 刚刚 {operator} 撤回了以下消息ovo ↓\n{recalled_message}"
     },
     "other": {
         "wife_error": [
-            "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 {neutral}",
-            "唔...你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 {neutral}"
+            "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 ovo",
+            "唔...你在一个可回复的指令后面执行了 wife 指令，会默认显示我的群老婆哦 ovo"
         ]
     },
     "answer": {
         "desc": "翻开答案之书",
         "introduction": "让漠月翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
         "default_error": [
-            "{negative}，书不见了...",
-            "{negative}找不到书了..."
+            "呜呜，书不见了...",
+            "呜...找不到书了..."
         ],
         "550w": [
-            "答案？之书？：\n\"我是 55...???\n{positive}漠月不是 550W 汪！",
+            "答案？之书？：\n\"我是 55...???\n嗷呜！漠月不是 550W 汪！",
             "汪？答案之书说它是 550W 呜！",
             "答案之书说它是 550W...漠月不是 550W 汪！"
         ],
         "cannot_fetch": [
-            "{negative}，书翻不开了...",
-            "翻不开书了，{negative}"
+            "呜呜，书翻不开了...",
+            "翻不开书了，呜呜..."
         ],
         "answer": [
             "汪！答案之书上写着...：",
@@ -149,7 +107,7 @@
     },
     "choice": {
         "desc": "随机决定事情",
-        "introduction": "让漠月帮忙决定事情吧！\n漠月会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0{positive_punc}数字的随机数，choice一个数字范围比如 1{positive_punc}10 会返回 1{positive_punc}10 的随机数",
+        "introduction": "让漠月帮忙决定事情吧！\n漠月会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数",
         "no_args": [
             "你还没有说我要决定的事情哦",
             "漠月还不知道决定什么诶",
@@ -159,8 +117,8 @@
             "汪！我觉得可以选择 \"{choice}\"！",
             "漠月觉得选择 \"{choice}\"！",
             "我觉得选择 \"{choice}\" 汪！",
-            "{positive}我选 \"{choice}\"！",
-            "{positive}我选 \"{choice}\" 汪！",
+            "嗷呜！我选 \"{choice}\"！",
+            "嗷呜！我选 \"{choice}\" 汪！",
             "我选 \"{choice}\" 汪！"
         ]
     },
@@ -180,25 +138,25 @@
         ],
         "prefix": [
             "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n当前功能列表",
-            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n现在有这些功能{positive_punc}"
+            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n现在有这些功能~"
         ],
         "suffix": [
-            "帮助文档在 {docs_link} 哦汪\n使用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
-            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
-            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦"
+            "帮助文档在 {docs_link} 哦汪\n使用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
+            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
+            "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍~\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦"
         ],
         "page_too_small": [
-            "页数不能小于 1 哦 {neutral}",
+            "页数不能小于 1 哦 ovo",
             "页数不能小于 1 诶...",
             "页数太小啦汪...",
             "页数太小啦...",
             "指定的页数太小啦...",
-            "指定的页数不能小于 1 哦 {neutral}"
+            "指定的页数不能小于 1 哦 ovo"
         ],
         "page_too_big": [
-            "页数 {curr_page_num} 太大啦，我就展示最后一页吧 {positive}",
-            "页数 {curr_page_num} 超过最大页数啦，我就展示最后一页吧{positive_punc}",
-            "页数太大啦，我来展示最后一页吧 {positive}"
+            "页数 {curr_page_num} 太大啦，我就展示最后一页吧 owo",
+            "页数 {curr_page_num} 超过最大页数啦，我就展示最后一页吧~",
+            "页数太大啦，我来展示最后一页吧 owo"
         ]
     },
     "bot_leave": {
@@ -207,7 +165,7 @@
         "leave_message": [
             "唔，知道啦，漠月现在就走..",
             "漠月现在就走..",
-            "正在退出群聊{negative}",
+            "正在退出群聊呜...",
             "正在退出群聊 汪...",
             "唔...知道啦，漠月马上退群"
         ]
@@ -224,13 +182,13 @@
         ],
         "invalid_count": [
             "请输入正确的文章数量哦",
-            "漠月不知道文章数量的意思{negative}",
+            "漠月不知道文章数量的意思呜...",
             "文章数量应该是正整数哦"
         ],
         "post_msg": [
             "以下是九九最新的 {count} 个文章哦！\n{posts}\n期待新的文章汪！",
             "以下是九九最新的 {count} 个文章哦！\n{posts}\n好奇什么时候会继续上新呢...",
-            "这些是九九最新的 {count} 个文章哦！\n{posts}\n期待新的文章{positive_punc}"
+            "这些是九九最新的 {count} 个文章哦！\n{posts}\n期待新的文章~"
         ]
     },
     "prevrecall": {
@@ -238,12 +196,12 @@
         "introduction": "防撤回功能相关",
         "stats": [
             "这个群 ({group_id}) 的防撤回功能是{stats}哦",
-            "这个群 ({group_id}) 的防撤回功能是{stats}哦 {positive}",
-            "群 {group_id} 的防撤回功能是{stats}哦 {positive}",
-            "防撤回功能在本群是{stats}哦{positive_punc}"
+            "这个群 ({group_id}) 的防撤回功能是{stats}哦 owo",
+            "群 {group_id} 的防撤回功能是{stats}哦 owo",
+            "防撤回功能在本群是{stats}哦~"
         ],
-        "open": "防撤回功能已开 {positive}",
-        "close": "防撤回功能已关 {positive}",
+        "open": "防撤回功能已开 owo",
+        "close": "防撤回功能已关 owo",
         "opened_message": [
             "开着的",
             "开了的"
@@ -259,7 +217,7 @@
         "not_setu_msg": [
             "漠月找不到涩图呜，但是可以看{image_name}！\n{image}",
             "漠月没有涩图，漠月只有{image_name}哦！\n{image}",
-            "涩图是什么呜，我只能找到{image_name} {positive}！\n{image}",
+            "涩图是什么呜，我只能找到{image_name} owo！\n{image}",
             "涩图是什么呜，漠月只有{image_name}！\n{image}"
         ]
     },
@@ -276,15 +234,15 @@
         "desc": "查询天气",
         "introduction": "查看指定地区的天气",
         "error_param": [
-            "{negative}，处理出错了...请确认被解析的参数是否是你想的那样哦：\n城市名是：{city}\n未来天数是：{future_days}",
-            "{negative}，出现错误...请确认你的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}",
-            "{negative}出错了...请确认被处理的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}"
+            "呜呜，处理出错了...请确认被解析的参数是否是你想的那样哦：\n城市名是：{city}\n未来天数是：{future_days}",
+            "呜呜，出现错误...请确认你的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}",
+            "呜...出错了...请确认被处理的参数是否正确哦：\n城市名是：{city}\n未来天数是：{future_days}"
         ],
         "cancel_message": "取消",
         "enter_city_prompt": [
-            "在下面发送你要查询的地区名吧{positive_punc}",
-            "在下面发送地区名吧{positive_punc}{neutral}",
-            "你想查询哪里的天气哇，在下面发送地区名吧 {positive}"
+            "在下面发送你要查询的地区名吧~",
+            "在下面发送地区名吧~嗷呜",
+            "你想查询哪里的天气哇，在下面发送地区名吧 owo"
         ],
         "enter_city_prompt_cancel": [
             "，或者发送 \"{cancel_message}\" 取消哦",
@@ -294,10 +252,10 @@
         ],
         "search_cancelled": [
             "取消天气查询啦",
-            "取消天气查询啦 {neutral}",
-            "天气查询已取消 {positive}",
+            "取消天气查询啦 嗷呜",
+            "天气查询已取消 owo",
             "天气查询取消啦",
-            "天气查询取消啦 {neutral}"
+            "天气查询取消啦 嗷呜"
         ],
         "future_days": [
             "未来天数",
@@ -311,81 +269,83 @@
             "{future_days}还不能大于 3 或小于 1 哦...",
             "{future_days}还不可以大于 3 或小于 1 哦...",
             "{future_days}只能在 1 和 3 之间哦...",
-            "{future_days}还不可以设置大于 3 或小于 1 哦 {neutral}"
+            "{future_days}还不可以设置大于 3 或小于 1 哦 ovo"
         ],
         "result_prefix": [
-            "我来看看天气{positive_punc} {positive}",
-            "我来看看天气{positive_punc} {positive}",
-            "让我看看天气{positive_punc}",
-            "让我查询一下这里的天气{positive_punc} {positive}",
-            "我看看这里的天气{positive_punc} {positive}",
-            "让我看看天气怎么样啦{positive_punc}",
-            "其实我也很好奇地球的天气呢{positive_punc}",
-            "看看地球的天气怎么样啦{positive_punc}"
+            "我来看看天气~ owo",
+            "我来看看天气~ 嗷呜~",
+            "让我看看天气~",
+            "让我查询一下这里的天气~ owo",
+            "我看看这里的天气~ owo",
+            "让我看看天气怎么样啦~",
+            "其实我也很好奇地球的天气呢~",
+            "看看地球的天气怎么样啦~"
         ],
-        "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}{positive_punc}{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
+        "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
         "result_future": [
             "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
-            "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ {positive}",
-            "之后的 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ {positive}"
+            "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ 嗷呜~",
+            "之后的 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃ 嗷呜~"
         ],
         "data_from": [
-            "数据来自于高德开放平台 {positive}",
-            "数据是高德开放平台的哦 {positive}",
-            "在高德开放平台的查询的数据哦{positive_punc}",
-            "通过高德开放平台的查询的数据哦{positive_punc}",
-            "通过高德开放平台查询的 {positive}"
+            "数据来自于高德开放平台 owo",
+            "数据是高德开放平台的哦 owo",
+            "在高德开放平台的查询的数据哦~",
+            "通过高德开放平台的查询的数据哦~",
+            "通过高德开放平台查询的 owo"
         ],
         "error": [
-            "{negative}查询出错了, 请确认地区名称是否输入正确哦...\n地区名：{city}\n{ex}",
-            "{negative}查询出错了, 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
-            "查询出错了...{negative}, 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
-            "{negative}出错了, 请确认地区名称是否输入正确哦...\n识别到的地区名：{city}\n{ex}"
+            "呜呜...查询出错了, 请确认地区名称是否输入正确哦...\n地区名：{city}\n{ex}",
+            "呜呜...查询出错了, 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
+            "查询出错了...呜..., 请确认地区名称是否符合你的想法哦...\n漠月识别到的地区名：{city}\n{ex}",
+            "呜...出错了, 请确认地区名称是否输入正确哦...\n识别到的地区名：{city}\n{ex}"
         ]
     },
     "今日老婆": {
         "desc": "今日老婆相关指令",
-        "introduction": "查看自己的今日老婆，或者是别人的今日老婆\n注意：这个功能仅供娱乐 {negative}",
-        "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 会同时 at 你今日的老婆{positive_punc}",
+        "introduction": "查看自己的今日老婆，或者是别人的今日老婆\n注意：这个功能仅供娱乐 呜呜",
+        "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 会同时 at 你今日的老婆~",
         "wife_message": [
             "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
             "{who}今天的老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
         ],
         "no_wife": [
-            "{name}今天并没有老婆 {neutral}",
+            "{name}今天并没有老婆 ovo",
             "{name}今天没有老婆...",
-            "{name}今天没有老婆 {neutral}",
+            "{name}今天没有老婆 ovo",
             "{name}今天没有老婆诶..."
         ],
         "error": [
-            "{negative}，无法获取到群员信息：{ex}",
-            "{negative}，获取群员信息的时候出错了...：{ex}",
-            "{negative}拿不到群员的信息...：{ex}",
-            "{negative}，获取不到群员的信息...：{ex}"
+            "呜呜，无法获取到群员信息：{ex}",
+            "呜呜，获取群员信息的时候出错了...：{ex}",
+            "呜...拿不到群员的信息...：{ex}",
+            "呜呜，获取不到群员的信息...：{ex}"
         ]
     },
     "jrrp": {
         "desc": "今日人品相关指令",
-        "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+        "introduction": "查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
         "avg_message": [
             "今日群员人品的平均值是 {avg}， {reaction}",
             "今日大家的平均人品值是 {avg}， {reaction}",
             "今天大家的平均人品值是 {avg}， {reaction}"
         ],
         "reaction>60": [
-            "{positive}",
-            "{positive}！",
-            "{positive}",
+            "嗷呜！",
+            "owo！",
+            "owo",
             "好诶"
         ],
         "reaction>20": [
-            "{neutral}"
+            "ovo",
+            "汪!",
+            "嗷呜"
         ],
         "reaction<=20": [
-            "{negative}",
-            "{negative}",
+            "呜...",
+            "呜呜...",
             "汪...",
-            "{negative_plus}"
+            "xwx"
         ],
         "jrrp_row": "\n{index}. {card} ({id})：今日人品是 {jrrp}",
         "rank_message": [
@@ -393,14 +353,14 @@
             "以下是今日人品最{high_or_low}的前 {count} 位群员排名 {reaction}"
         ],
         "rank_too_long": [
-            "指定的成员数量太多了哦...，范围是 -{max} {positive_punc} {max}",
+            "指定的成员数量太多了哦...，范围是 -{max} ~ {max}",
             "成员排行的长度最大只能有 {max} 行哦",
             "成员排行的长度最长只能有 {max} 行哇",
             "指定成员数量太多啦，最多只能看 {max} 个哦"
         ],
         "rank_error": [
-            "成员数量需要是整数哦 {neutral}",
-            "漠月不知道成员数量是多少{negative}",
+            "成员数量需要是整数哦 ovo",
+            "漠月不知道成员数量是多少呜...",
             "成员数量需要是整数哦..."
         ],
         "jrrp_prefix": [
@@ -413,31 +373,35 @@
             "你今日的人品是"
         ],
         "jrrp<0": [
-            "{result}...？ {negative_plus}",
-            "{result}...？ {negative}",
-            "..{result}..？ {negative}",
-            "...{result}... {negative}",
-            "...{result}... {negative_plus}..."
+            "{result}...？ xwx",
+            "{result}...？ 呜呜...",
+            "..{result}..？ 呜呜...",
+            "...{result}... 呜...",
+            "...{result}... xwx..."
         ],
         "jrrp<10": [
-            "....{result}？{negative}",
-            "{result}...{negative}",
-            "...{result}？{negative}",
-            "...{result}？{negative}"
+            "....{result}？uwu",
+            "{result}...呜...",
+            "...{result}？呜...",
+            "...{result}？呜呜..."
         ],
         "jrrp>100": [
-            "{result}！{bless}",
-            "{result}！{positive}！{excellent}",
-            "{result}！{excellent}{positive}！",
-            "{result}！{excellent}{positive}"
+            "{result}！owo！嗷呜！",
+            "{result}！owo！好耶！",
+            "{result}！好诶！嗷呜！",
+            "{result}！好诶！owo！",
+            "{result}！好耶！owo！",
+            "{result}！好耶！嗷呜！"
         ],
         "jrrp>=90": [
-            "{result}！{positive}！",
-            "{result}！{positive}",
+            "{result}！owo！",
+            "{result}！嗷呜！",
             "{result}！"
         ],
         "jrrp_default": [
-            "{result}，{neutral}"
+            "{result}，ovo",
+            "{result}，嗷呜",
+            "{result}，汪"
         ]
     },
     "实例控制": {
@@ -452,33 +416,33 @@
             "输入 Y 确定结束 bot 进程哦"
         ],
         "kill_cancelled": [
-            "取消结束 bot 进程啦 {neutral}",
-            "取消关闭 bot 啦 {neutral}",
-            "取消结束 bot 进程 {neutral}"
+            "取消结束 bot 进程啦 ovo",
+            "取消关闭 bot 啦 ovo",
+            "取消结束 bot 进程 ovo"
         ],
         "on_kill": [
             "正在结束 bot 进程哦",
-            "正在结束 bot 进程 {neutral}",
+            "正在结束 bot 进程 ovo",
             "正在关闭 bot...",
-            "正在关闭 bot... {neutral}",
+            "正在关闭 bot... ovo",
             "正在结束 bot 进程..."
         ],
         "restarting": [
             "正在重启 bot 哦",
-            "正在重启 bot 中{positive_punc}",
+            "正在重启 bot 中~",
             "正在重启机器人哦",
-            "正在重启机器人中{positive_punc}",
+            "正在重启机器人中~",
             "正在重启 xme-bot 哦"
         ],
         "restart_failed_kill": [
-            "{negative}关闭 bot 时出错了\n{ex}",
-            "{negative}关闭 bot 失败了\n{ex}",
-            "{negative}关闭 bot 时出错了\n{ex}",
-            "{negative}关闭 bot 时出现错误\n{ex}"
+            "呜呜...关闭 bot 时出错了\n{ex}",
+            "呜...关闭 bot 失败了\n{ex}",
+            "呜...关闭 bot 时出错了\n{ex}",
+            "呜呜...关闭 bot 时出现错误\n{ex}"
         ],
         "restart_failed": [
-            "{negative}重启失败了\n{ex}\n{traceback}",
-            "{negative}重启时出问题了\n{ex}\n{traceback}"
+            "呜呜...重启失败了\n{ex}\n{traceback}",
+            "呜呜...重启时出问题了\n{ex}\n{traceback}"
         ]
     },
     "httpcode": {
@@ -490,9 +454,9 @@
             "你没有输入状态码诶..."
         ],
         "code_prompt": [
-            "请发送你想要查询的状态码{positive_punc}",
-            "发送你想要查询的状态码吧{positive_punc}",
-            "请输入你想要查询的状态码 {positive}"
+            "请发送你想要查询的状态码~",
+            "发送你想要查询的状态码吧~",
+            "请输入你想要查询的状态码 owo"
         ],
         "code_not_found": [
             "查询不到 {search} 状态码代表什么意思诶...",
@@ -502,11 +466,11 @@
             "唔，不知道 {search} 状态码代表什么意思诶..."
         ],
         "code_found": [
-            "{positive} 状态码 {search} 的意思是: {stat}\n{image}",
-            "状态码 {search} 的意思是这个 {positive}: {stat}\n{image}",
+            "owo 状态码 {search} 的意思是: {stat}\n{image}",
+            "状态码 {search} 的意思是这个 owo: {stat}\n{image}",
             "状态码 {search} 的意思是: {stat}\n{image}",
-            "{neutral}，状态码 {search} 的意思是: {stat}\n{image}",
-            "{positive} 我找到状态码 {search} 的意思是: {stat}\n{image}"
+            "嗷呜，状态码 {search} 的意思是: {stat}\n{image}",
+            "owo 我找到状态码 {search} 的意思是: {stat}\n{image}"
         ]
     },
     "game": {
@@ -514,41 +478,41 @@
         "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
         "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
         "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
-        "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
+        "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 ovo",
         "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
         "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦...",
         "guess": {
             "desc": "猜数字游戏",
-            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次{positive_punc}",
-            "arg_range": "数字范围 (r=范围开始{positive_punc}范围结束)",
+            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次~",
+            "arg_range": "数字范围 (r=范围开始~范围结束)",
             "arg_times_limit": "猜测次数限制 (t=次数限制)",
-            "guess_start": "游戏开始{positive_punc} 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} {positive_punc} {number_max} 的整数！",
-            "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 {negative}\n{ex}",
-            "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数){positive_punc}范围结束(整数)) 哦 {negative}\n{ex}",
-            "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 {negative}",
-            "range_equals": "数字范围不能是相同的哦 {negative}",
-            "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 {negative}",
+            "guess_start": "游戏开始~ 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} ~ {number_max} 的整数！",
+            "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}",
+            "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}",
+            "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
+            "range_equals": "数字范围不能是相同的哦 uwu",
+            "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
             "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
             "guess_prompt_prefix_default": "{start}\n请",
-            "guess_prompt": "{prefix}输入你要猜的数字吧{positive_punc} 或输入 {quit_input} 退出",
-            "quit_message": "退出游戏啦 {neutral}",
+            "guess_prompt": "{prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
+            "quit_message": "退出游戏啦 ovo",
             "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
-            "cmd_in_game": "你还在游戏中哦，不能执行指令 {negative}",
-            "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} {neutral}",
-            "num_too_big_result": "大啦{positive_punc}",
-            "num_too_small_result": "小啦{positive_punc}",
-            "num_right_result": "正确{positive_punc}",
+            "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
+            "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
+            "num_too_big_result": "大啦~",
+            "num_too_small_result": "小啦~",
+            "num_right_result": "正确~",
             "guess_result": "{num} {result}",
-            "remaining_times": "你还可以猜 {times} 次数字{neutral}",
+            "remaining_times": "你还可以猜 {times} 次数字ovo",
             "limited": "你今天游玩这个游戏的奖励次数用完啦",
-            "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
+            "times_left": "你还有 {times_left} 次机会得到奖励~",
             "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
             "no_award": "你没有拿到任何{coin_name}..."
         }
     },
     "漂流瓶": {
         "desc": "漂流瓶相关指令",
-        "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc}\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
+        "introduction": "扔/捡来自各个群组的漂流瓶~\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 owo",
         "throw_introduction": "扔一个漂流瓶",
         "pickup_introduction": "尝试捡一个漂流瓶",
         "cthulhu_introduction": "毁掉指定的漂流瓶",
@@ -559,7 +523,7 @@
             "大海里很空旷...没有一点瓶子呢"
         ],
         "no_bottle_picked": [
-            "你没有捡到瓶子{neutral}",
+            "你没有捡到瓶子ovo",
             "你没有捡到瓶子...",
             "唔...你没有找到瓶子诶...",
             "唔...你没有捡到瓶子诶...",
@@ -577,13 +541,13 @@
             "刚刚被捡到"
         ],
         "like_message": [
-            "获得了 {count} 个赞 {positive}",
-            "得到了 {count} 个赞 {positive}",
-            "一共得到了 {count} 个赞 {positive}",
-            "获得了 {count} 个赞{positive_punc}"
+            "获得了 {count} 个赞 owo",
+            "得到了 {count} 个赞 owo",
+            "一共得到了 {count} 个赞 owo",
+            "获得了 {count} 个赞~"
         ],
-        "no_like_message": "还没有任何赞{neutral}",
-        "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+        "no_like_message": "还没有任何赞ovo",
+        "bottle_card_content": "你捡到了一个漂流瓶~\n[#{index} 号漂流瓶，来自 \"{from_group}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
         "response_prompt": [
             "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
             "可以马上发送 \"-like\" 点赞，或发送 \"-rep\" 举报哦。",
@@ -592,14 +556,14 @@
         "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
         "bottle_broken": [
             "啊，你不小心把瓶子摔碎了...",
-            "{negative}你不小心把瓶子摔碎了...",
-            "{negative}瓶子碎掉了...",
+            "呜...你不小心把瓶子摔碎了...",
+            "呜...瓶子碎掉了...",
             "啊...瓶子碎掉了...",
             "啊...瓶子破碎了...",
-            "{negative}瓶子被你不小心摔碎了...",
+            "呜...瓶子被你不小心摔碎了...",
             "啊...瓶子被你不小心摔碎了...",
             "啊...瓶子被你一不小心摔碎了...",
-            "{negative}瓶子被你一不小心摔碎了..."
+            "呜...瓶子被你一不小心摔碎了..."
         ],
         "bottle_broken_messy": [
             "啊...这个瓶子好混乱...唔...它碎掉了！",
@@ -611,17 +575,17 @@
         "bottle_broken?": [
             "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
             "啊，你不小心把瓶子摔...诶？这个瓶子自己修复了，然后飞回了海里...汪？",
-            "{negative}瓶子摔碎...诶？这个瓶子修复了，然后飞回了海里..."
+            "呜...瓶子摔碎...诶？这个瓶子修复了，然后飞回了海里..."
         ],
         "liked": [
-            "点赞成功{positive_punc} 瓶子似乎变得更稳定了！",
-            "点赞完成{positive_punc} 瓶子好像变得更稳定啦！",
-            "点赞完成啦{positive_punc} 瓶子似乎变得更稳定了！",
-            "汪！点赞成功{positive_punc} 瓶子似乎变得更稳定了！",
-            "{positive}点赞成功啦{positive_punc} 瓶子似乎变得更稳定了{positive}！",
-            "{positive}点赞成功{positive_punc} 瓶子好像变得更稳定啦！",
-            "点赞成功{positive}瓶子好像变得更稳定啦！",
-            "点赞成功啦{positive_punc} 瓶子似乎变得更稳定了！"
+            "点赞成功~ 瓶子似乎变得更稳定了！",
+            "点赞完成~ 瓶子好像变得更稳定啦！",
+            "点赞完成啦~ 瓶子似乎变得更稳定了！",
+            "汪！点赞成功~ 瓶子似乎变得更稳定了！",
+            "嗷呜！点赞成功啦~ 瓶子似乎变得更稳定了owo！",
+            "嗷呜！点赞成功~ 瓶子好像变得更稳定啦！",
+            "点赞成功嗷呜！瓶子好像变得更稳定啦！",
+            "点赞成功啦~ 瓶子似乎变得更稳定了！"
         ],
         "reported": [
             "举报成功",
@@ -629,7 +593,7 @@
             "唔...举报成功"
         ],
         "nothing_to_throw": [
-            "漂流瓶似乎没有内容呢{neutral}\n格式：\n{command_name} (漂流瓶内容)",
+            "漂流瓶似乎没有内容呢ovo\n格式：\n{command_name} (漂流瓶内容)",
             "漂流瓶里面好像什么都没有诶...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦",
             "漂流瓶里面好像什么都没有...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦"
         ],
@@ -638,21 +602,21 @@
             "瓶子的内容太多啦...要 {max_length} 字以内哦",
             "瓶子塞不下啦...要 {max_length} 字以内哦",
             "唔...瓶子塞不下啦！内容要在 {max_length} 字以内哦",
-            "{negative}..瓶子的内容太多啦...要 {max_length} 字以内哦"
+            "呜呜..瓶子的内容太多啦...要 {max_length} 字以内哦"
         ],
         "lines_too_many": [
             "瓶子的行数太多啦！最多 {max_lines} 行哦",
             "瓶子内容太长啦...最多 {max_lines} 行哦",
             "瓶子塞不下啦！最多写 {max_lines} 行哦",
-            "{negative}瓶子塞不下啦...最多写 {max_lines} 行哦"
+            "呜呜...瓶子塞不下啦...最多写 {max_lines} 行哦"
         ],
         "throwed": [
-            "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
-            "瓶子扔出去啦{positive_punc} 这是第 {id} 号瓶子哦{positive_punc}",
-            "{positive}第 {id} 号瓶子开启了它的旅程{positive_punc}",
-            "{positive} 第 {id} 号瓶子开启了它的旅程{positive_punc}",
-            "大海中的第 {id} 号瓶子开启了它的旅程{positive_punc}",
-            "瓶子扔出去啦{positive_punc} 这是第 {id} 号瓶子哦 {positive}"
+            "瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo",
+            "瓶子扔出去啦~ 这是第 {id} 号瓶子哦~",
+            "嗷呜！第 {id} 号瓶子开启了它的旅程~",
+            "嗷呜~ 第 {id} 号瓶子开启了它的旅程~",
+            "大海中的第 {id} 号瓶子开启了它的旅程~",
+            "瓶子扔出去啦~ 这是第 {id} 号瓶子哦 owo"
         ],
         "content_already_thrown": [
             "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
@@ -672,16 +636,16 @@
         "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
         "dice_error": [
             "唔...投骰子出现错误，请确定骰子面数及数量是不小于 1 的整数哦",
-            "{negative}投骰子出错了，请确定骰子面数和数量是否正确哦",
-            "{negative}投骰子出错了，请确定骰子面数和数量是否是大于 0 的整数哦",
-            "{negative}漠月并不知道这样的骰子是什么样的..."
+            "呜呜...投骰子出错了，请确定骰子面数和数量是否正确哦",
+            "呜...投骰子出错了，请确定骰子面数和数量是否是大于 0 的整数哦",
+            "呜呜...漠月并不知道这样的骰子是什么样的..."
         ],
         "count_too_many": [
             "最多投 {max_count} 个骰子哦",
             "最多只能投 {max_count} 个骰子哦...",
             "最多只能投出 {max_count} 个骰子哦",
-            "{negative}骰子数量太多啦，要在 {max_count} 个以内哦",
-            "{negative}骰子数量太多啦，要在 {max_count} 个之内哦"
+            "呜呜...骰子数量太多啦，要在 {max_count} 个以内哦",
+            "呜...骰子数量太多啦，要在 {max_count} 个之内哦"
         ],
         "faces_too_many": [
             "唔...骰子加起来的面数太多啦！要小于 {max_faces} 哦",
@@ -708,8 +672,8 @@
         ],
         "dice_result": [
             "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！",
-            "你扔出了 {counts} 个 {faces} 面的骰子{positive_punc} {faces_result_prefix}投到了 {faces_formula}！",
-            "{positive}你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+            "你扔出了 {counts} 个 {faces} 面的骰子~ {faces_result_prefix}投到了 {faces_formula}！",
+            "嗷呜！你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
         ]
     },
     "title": {
@@ -728,77 +692,79 @@
             "需要指定头衔名哦"
         ],
         "successful": [
-            "{positive} 头衔设置成功啦{positive_punc}",
+            "嗷呜~ 头衔设置成功啦~",
             "头衔设置成功！",
-            "{positive} 头衔设置完成！",
-            "头衔设置完成{positive_punc}",
-            "头衔设置好啦{positive_punc}",
-            "头衔设置成功{positive_punc}"
+            "嗷呜~ 头衔设置完成！",
+            "头衔设置完成~",
+            "头衔设置好啦~",
+            "头衔设置成功~"
         ],
         "deleted": [
-            "头衔删除成功啦{positive_punc}",
-            "{positive}头衔删除成功啦{positive_punc}",
-            "{positive}头衔删除成功啦！",
-            "头衔删除掉啦{positive_punc}",
-            "已经把头衔去掉啦{positive_punc}",
-            "成功删除头衔{positive_punc}"
+            "头衔删除成功啦~",
+            "嗷呜~头衔删除成功啦~",
+            "嗷呜~头衔删除成功啦！",
+            "头衔删除掉啦~",
+            "已经把头衔去掉啦~",
+            "成功删除头衔~"
         ],
         "failed": [
-            "{negative}，设置失败了...\n错误内容：{ex}",
-            "{negative}头衔设置失败...\n错误内容：{ex}",
-            "{negative}头衔设置失败了...\n错误内容：{ex}",
-            "{negative}，设置不了头衔...\n错误内容：{ex}"
+            "呜呜，设置失败了...\n错误内容：{ex}",
+            "呜呜...头衔设置失败...\n错误内容：{ex}",
+            "呜呜...头衔设置失败了...\n错误内容：{ex}",
+            "呜呜，设置不了头衔...\n错误内容：{ex}"
         ]
     },
     "whoru": {
         "desc": "查看当前角色",
-        "introduction": "查看 xme-bot 当前使用的角色{positive_punc}",
+        "introduction": "查看 xme-bot 当前使用的角色~",
         "whoami": [
-            "{happy}我是{chac_name}{positive_punc}\n被 {author} 拉过来的 {positive}",
-            "我是{chac_name}哦{positive_punc}\n被 {author} 拉过来的 {positive}",
-            "我是{chac_name}{positive_punc}\n被 {author} 带过来的 {positive}",
-            "{positive}我是{chac_name}哦{positive_punc}\n被 {author} 拉过来玩啦{positive_punc}"
+            "嗷呜！我是{chac_name}~\n被 {author} 拉过来的 owo！",
+            "我是{chac_name}哦~\n被 {author} 拉过来的 嗷呜！",
+            "我是{chac_name}~\n被 {author} 带过来的 嗷呜~",
+            "owo！我是{chac_name}哦~\n被 {author} 拉过来玩啦~"
         ]
     },
     "sign": {
         "desc": "签到",
         "introduction": "签到，并且得到一定量的{coin_name}",
         "limited": [
-            "你今天已经签到过了哦 {neutral}",
-            "你今天已经签到过啦 {neutral}",
-            "你今天的签到次数用光啦 {neutral}"
+            "你今天已经签到过了哦~",
+            "你今天已经签到过了哦 ovo",
+            "你今天已经签到过啦 ovo",
+            "你今天的签到次数用光啦~",
+            "你今天已经签到过啦~"
         ],
         "get_state": [
             "获得了",
             "拿到了"
         ],
         "login_success": [
-            "签到成功{positive_punc}",
+            "签到成功~",
             "签到成功！",
-            "签到成功！{positive}，",
-            "签到成功 {positive},",
-            "{positive}签到成功{positive_punc}",
-            "{positive}签到成功{positive_punc}",
-            "签到成功啦{positive_punc}"
+            "签到成功！嗷呜，",
+            "签到成功 owo,",
+            "嗷呜~签到成功~",
+            "嗷呜！签到成功~",
+            "签到成功啦~"
         ],
         "login_no_coins": [
             "{login_success}，但是你没获得任何{coin_name}...",
             "{login_success}，不过你没有获得任何{coin_name}...",
-            "{login_success}，但是你没获得任何{coin_name}...{negative}",
-            "{login_success}，不过{negative}你没获得任何{coin_name}...",
-            "{login_success}，不过{negative}你没获得任何{coin_name}..."
+            "{login_success}，但是你没获得任何{coin_name}...呜呜",
+            "{login_success}，不过呜呜...你没获得任何{coin_name}...",
+            "{login_success}，不过呜...你没获得任何{coin_name}..."
         ],
         "success": [
-            "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你现在一共有 {coin_total} {coin_name}哦",
-            "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
-            "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你现在一共有 {coin_total} {coin_name}哦{positive_punc}",
-            "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你目前总共有 {coin_total} {coin_name}哦"
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦",
+            "{login_success} 你{state} {coin_count} {coin_name}~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你现在一共有 {coin_total} {coin_name}哦~",
+            "{login_success} 你{state} {coin_count} {coin_name}~\n你目前总共有 {coin_total} {coin_name}哦"
         ]
     },
     "用户": {
         "desc": "用户功能相关",
         "introduction": "需要获取用户信息的功能",
-        "help_suffix": "使用 {help_cmd} 来查看详细的帮助哦{positive_punc}",
+        "help_suffix": "使用 {help_cmd} 来查看详细的帮助哦~",
         "userhelp": {
             "desc": "用户功能帮助",
             "introduction": "查看某一用户功能指令的详细帮助",
@@ -808,9 +774,9 @@
             "desc": "签到",
             "introduction": "签到，并且得到一定量的{coin_name}",
             "limited": [
-                "你今天已经签到过了哦{positive_punc}",
-                "明天再签到吧{positive_punc}",
-                "你今天签到过啦{positive_punc}"
+                "你今天已经签到过了哦~",
+                "明天再签到吧~",
+                "你今天签到过啦~"
             ],
             "get_state": [
                 "获得了",
@@ -818,63 +784,64 @@
                 "拿到了"
             ],
             "login_success": [
-                "签到成功{positive_punc}",
-                "签到成功啦{positive_punc}",
-                "签到成功{positive}",
-                "签到成功{positive_punc}{positive}"
+                "签到成功~",
+                "签到成功啦~",
+                "签到成功嗷呜！",
+                "签到成功~嗷呜！"
             ],
             "login_no_coins": [
                 "你没获得任何{coin_name}...",
                 "你没拿到任何{coin_name}...",
                 "你没得到任何{coin_name}诶...",
-                "你没获得任何{coin_name}...{negative}"
+                "你没获得任何{coin_name}...呜呜..."
             ],
-            "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
+            "success": "{login_success} 你{state} {coin_count} {coin_name}~",
             "first_sign": [
-                "你是今天第一个签到的哦{positive_punc} {positive}！",
-                "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc}",
-                "你是今天第一个签到的哦 {positive}！"
+                "你是今天第一个签到的哦~ owo！",
+                "你是今天第一个签到的哦！ 好诶 owo~",
+                "你是今天第一个签到的哦 owo！"
             ],
             "sign_rank": [
-                "你是今天第 {count} 个签到的哦 {neutral}",
-                "你是今天第 {count} 个签到的哦{positive_punc}",
-                "你是今天第 {count} 位签到的{positive_punc}"
+                "你是今天第 {count} 个签到的哦 ovo",
+                "你是今天第 {count} 个签到的哦~",
+                "你是今天第 {count} 位签到的~"
             ]
         },
         "lottery": {
             "desc": "抽奖",
             "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}",
             "limited": [
-                "你今天的抽奖次数用完啦{positive_punc}",
+                "你今天的抽奖次数用完啦~",
                 "诶...你今天的抽奖次数用完啦",
                 "诶...你今天的抽奖次数用完了哦",
                 "诶...你今天不能再抽{coin_name}了哦",
                 "你今天没有抽奖次数啦...",
                 "你今天没有更多抽奖次数啦..."
             ],
-            "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
-            "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
+            "no_arg": "请指定投入{coin_name}的数量哦~",
+            "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
             "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
             "get_coin_result": [
                 "获得了 {get_count} {coin_pronoun}{coin_name}！",
                 "得到了 {get_count} {coin_pronoun}{coin_name}！",
-                "得到了 {get_count} {coin_pronoun}{coin_name}！{positive}",
+                "得到了 {get_count} {coin_pronoun}{coin_name}！owo",
                 "拿到了 {get_count} {coin_pronoun}{coin_name}！"
             ],
             "no_coin_result": [
                 "没有获得任何{coin_name}...",
                 "但是没有获得任何{coin_name}...",
-                "但是没有一{coin_pronoun}{coin_name}出来...{negative}",
-                "但是没有任何{coin_name}出来...{negative}"
+                "但是没有一{coin_pronoun}{coin_name}出来...呜呜",
+                "但是没有任何{coin_name}出来...呜呜"
             ],
             "result": [
-                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
-                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{neutral}",
-                "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
+                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜！",
+                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，ovo",
+                "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}",
+                "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还有 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，嗷呜——"
             ],
             "too_many_coins": [
                 "{count} {coin_pronoun}{coin_name} 太多啦！不能多于 {count_max} 呢...",
-                "{count} {coin_pronoun}{coin_name} 太多啦...不能多于 {count_max} 呢 {neutral}",
+                "{count} {coin_pronoun}{coin_name} 太多啦...不能多于 {count_max} 呢 ovo",
                 "{count} {coin_pronoun}{coin_name} 太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
                 "饼干机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
                 "一次最多只能投入 {count_max} {coin_pronoun}{coin_name}哦..."
@@ -889,36 +856,36 @@
                 "我没有记录过这个人的信息哦...",
                 "我没记录过这个人的信息哦...",
                 "唔...我没有记录过这个人的信息哦"
-            ],
-            "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {neutral}"
+            ]
         },
         "coinrank": {
             "desc": "{coin_name}排行榜",
             "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
-            "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
-            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}",
-            "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦{positive_punc}",
+            "rank_msg_prefix": "以下是我记录的{coin_name}排行哦~",
+            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 owo",
+            "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦~",
             "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
             "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
             "invalid_arg": "不明白指定的排名长度意思呢...",
-            "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}"
+            "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
+            "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 ovo"
         },
         "sendcoin": {
             "desc": "给人{coin_name}",
-            "introduction": "at 一个人并且给他指定数量的{coin_name}{positive_punc}",
+            "introduction": "at 一个人并且给他指定数量的{coin_name}~",
             "no_arg": [
                 "请 at 你要送给的用户哦",
                 "嗷呜，请 at 你要送给的用户哦",
-                "请 at 你要送的用户哦 {positive}",
-                "请 at 你要送的用户哦{positive_punc}"
+                "请 at 你要送的用户哦 owo",
+                "请 at 你要送的用户哦~"
             ],
             "invalid_user": "找不到 at 的用户呢...",
             "send_to_self": "你不能给自己{coin_name}哦",
             "invalid_coin_count": [
                 "{coin_name}数量需要是大于 0 的整数哦",
-                "{coin_name}数量需要是大于 0 的整数哦 {neutral}",
-                "指定的{coin_name}太少啦，要大于 0 哦 {neutral}",
-                "指定的{coin_name}太少啦，要大于 0 哦{positive_punc}"
+                "{coin_name}数量需要是大于 0 的整数哦 ovo",
+                "指定的{coin_name}太少啦，要大于 0 哦 ovo",
+                "指定的{coin_name}太少啦，要大于 0 哦~"
             ],
             "not_enough_coin": [
                 "{coin_name}数量不足诶，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
@@ -927,18 +894,18 @@
                 "诶...你只有 {coin_total} {coin_pronoun}{coin_name}..."
             ],
             "received_coin_react": [
-                "谢谢哇{positive_punc}",
-                "{bless} 谢谢！",
-                "谢谢 {positive}{positive_punc}",
-                "谢谢！{positive}",
-                "谢谢 {positive}！",
-                "嘿嘿 谢谢哇{positive_punc}"
+                "谢谢哇~",
+                "好耶~ 谢谢！",
+                "谢谢 owo~",
+                "谢谢！owo",
+                "谢谢 owo！",
+                "嘿嘿 谢谢哇~"
             ],
             "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
             "no_coin_count": [
                 "请指定饼干数量哦",
                 "唔...请指定饼干数量哦",
-                "请指定饼干数量哦 {neutral}",
+                "请指定饼干数量哦 ovo",
                 "需要指定饼干数量呢...",
                 "唔...需要指定饼干数量哦",
                 "需要指定饼干数量哦"
@@ -951,12 +918,12 @@
         "remove_todo_success": [
             "成功移除了待办事项 \"{todo}\"！",
             "成功删掉了待办事项 \"{todo}\" 啦！",
-            "成功移除了待办事项 \"{todo}\"{positive_punc}"
+            "成功移除了待办事项 \"{todo}\"~"
         ],
         "todo_prefix": [
-            "以下是待办列表{positive_punc}",
-            "以下是九九的待办事项列表{positive_punc}",
-            "以下是 179 的待办列表{positive_punc}"
+            "以下是待办列表~",
+            "以下是九九的待办事项列表~",
+            "以下是 179 的待办列表~"
         ],
         "no_todo": [
             "暂时没有待办事项哦...",
@@ -968,35 +935,10 @@
             "唔...只有我认识的人才可以管理待办哦..."
         ],
         "add_todo_success": [
-            "添加待办 \"{todo}\" 成功啦{positive_punc}",
-            "帮你把待办 \"{todo}\" 写上去啦{positive_punc}",
-            "成功添加待办 \"{todo}\"{positive_punc}"
+            "添加待办 \"{todo}\" 成功啦~",
+            "帮你把待办 \"{todo}\" 写上去啦~",
+            "成功添加待办 \"{todo}\"~"
         ],
-        "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦 {negative}"
-    },
-    "peek": {
-        "desc": "视奸179",
-        "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
-        "default_monitor": [
-            "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦 {neutral}",
-            "解析参数出了点问题，给你看看 179 的默认屏幕的状态吧 {neutral}"
-        ],
-        "successful": [
-            "这是 179 的第 {monitor_num} 个屏幕的状态{positive_punc}",
-            "这是九九的第 {monitor_num} 个屏幕的状态哦{positive_punc}",
-            "这是九九的第 {monitor_num} 个屏幕的状态哦 {neutral}"
-        ],
-        "successful_all": [
-            "这是九九全部屏幕的状态 {neutral}",
-            "这是 179 全部屏幕的状态哦 {neutral}",
-            "这是九九全部屏幕的状态哦 {neutral}"
-        ],
-        "not_in_peek_group": [
-            "你不在可视奸 179 的群里哦 {neutral}"
-        ],
-        "is_private": [
-            "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦...",
-            "九九现在的窗口焦点 \"{title}\" 是不可以看的哦 {neutral}"
-        ]
+        "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
     }
 }

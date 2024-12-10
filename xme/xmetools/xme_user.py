@@ -26,13 +26,14 @@ class User:
             sign_message = get_message("config", "sign_message", last_sign_time=last_sign_time)
         except:
             sign_message = get_message("config", "no_sign")
-
+        _, rank_ratio = get_user_rank(self.id)
         return get_message("config", "user_info_str",
-            id=self.id,
+            id=str(self.id),
             coins_count=self.coins,
             coin_name=coin_name,
             coin_pronoun=coin_pronoun,
-            sign_message=sign_message
+            sign_message=sign_message,
+            rank_ratio=f"{rank_ratio:.2f}"
         )
 
     def spend_coins(self, amount: int) -> bool:
@@ -53,6 +54,10 @@ class User:
             return False
         self.coins += amount
         return True
+
+    @staticmethod
+    def get_users():
+        return json_tools.read_from_path(config.USER_PATH)['users']
 
     @staticmethod
     def load(id: int, create_default_user=True):
@@ -115,6 +120,27 @@ def limit_count_tick(user: User, name: str):
     """
     user.counters[name]["count"] += 1
     # user.save()
+
+def get_user_rank(user):
+    """获取指定用户 id 的金币排名百分比以及数量
+
+    Args:
+        user (int): 用户 id
+
+    Returns:
+        tuple: 金币数量, 排名比例
+    """
+    rank_items = get_rank('coins')
+    sender_coins_count = None
+    sender_index = None
+    for index, item in enumerate(rank_items):
+        if int(item[0]) != user: continue
+        print("匹配到了")
+        sender_coins_count = item[1]
+        sender_index = index
+    if sender_coins_count:
+        rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
+    return sender_coins_count, rank_ratio
 
 
 def validate_limit(user: User, name: str, limit: float | int, count_limit: int = 1,

@@ -85,24 +85,12 @@ async def _(session: CommandSession):
             spacing=" " * text_tools.calc_spacing([f'{i + 1}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
         )
     # 关于发送者的金币数超过了多少人
-    sender_coins_count = None
-    sender_index = None
-    for index, item in enumerate(rank_items):
-        # print(item[0], sender)
-        if int(item[0]) != sender: continue
-        print("匹配到了")
-        sender_coins_count = item[1]
-        sender_index = index
-    # sender_coins_count = rank.get(sender, None)
-    # print(sender_coins_count)
-    if sender_coins_count:
-        # rank_ratio = rank_operation(lambda x: (bisect_left(x, rank_items[sender_index][1])), rank_items)
-        rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
-        message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_suffix',
-            count=sender_coins_count,
-            rank_ratio=f"{rank_ratio:.2f}",
-            coin_pronoun=coin_pronoun,
-            coin_name=coin_name
-        )
+    sender_coins_count, rank_ratio = xme_user.get_user_rank(sender)
+    message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_suffix',
+        count=sender_coins_count,
+        rank_ratio=f"{rank_ratio:.2f}",
+        coin_pronoun=coin_pronoun,
+        coin_name=coin_name
+    )
     await send_msg(session, message)
     return True

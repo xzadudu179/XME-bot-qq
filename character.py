@@ -64,12 +64,36 @@ def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) 
     except:
         return default
 
-    if type(result) == list:
-        result = random_tools.rand_str(*result)
-    if len(kwargs) < 1:
-        return str(result)
+    result = random_tools.str_choice(result)
+    # if len(kwargs) < 1:
+    #     return str(result).format()
+    # 格式化参数文本
+    for k, v in kwargs.items():
+        if type(v) == list:
+            for i, item in enumerate(v):
+                if type(item) == int:
+                    v[i] = f"{item:,}"
+        elif type(v) == int:
+            v = f"{v:,}"
+        kwargs[k] = v
+    feedbacks = get_item("bot_info", "feedbacks")
+    # print(feedbacks)
     try:
-        return str(result).format(**kwargs)
+        return str(result).format(
+            **kwargs,
+            neutral=random_tools.str_choice(feedbacks['neutral']),
+            negative_plus=random_tools.str_choice(feedbacks['negative_plus']),
+            negative=random_tools.str_choice(feedbacks['negative']),
+            positive=random_tools.str_choice(feedbacks['positive']),
+            positive_plus=random_tools.str_choice(feedbacks['positive_plus']),
+            excellent=random_tools.str_choice(feedbacks['excellent']),
+            happy=random_tools.str_choice(feedbacks['happy']),
+            bless=random_tools.str_choice(feedbacks['bless']),
+            disgust=random_tools.str_choice(feedbacks['disgust']),
+            sad=random_tools.str_choice(feedbacks['sad']),
+            positive_punc=random_tools.str_choice(feedbacks['positive_punc']),
+        )
     except KeyError as ex:
         print(f"keyerror: {ex}")
         return str(result)
+

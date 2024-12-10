@@ -26,6 +26,11 @@ SCHEDULER_GROUP = [
     913581215,
     905122019,
 ]
+# 视奸
+PEEK_GROUP = [
+    727949269,
+    913581215
+]
 
 NICKNAME = character.get_item('bot_info', 'nickname', default=['XME', 'xme'])
 VERSION = '0.1.3'

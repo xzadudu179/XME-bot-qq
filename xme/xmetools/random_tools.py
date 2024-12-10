@@ -38,13 +38,17 @@ def change_seed(seed=None):
         return wrapper
     return decorator
 
-def rand_str(*strings) -> str:
-    """返回参数中的随机一个字符串
+def str_choice(strings) -> str:
+    """返回列表中的随机一个字符串，如果参数类型是字符串就直接返回字符串
 
     Returns:
         str: 随机字符串
     """
-    return random.choice(list(strings))
+    if not isinstance(strings, list):
+        return strings
+    if len(strings) < 1:
+        return ''
+    return random.choice(strings)
 
 def character_message(character, message_name) -> str | bool:
     """返回指定角色设定的文本

@@ -36,7 +36,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     params = session.current_arg_text.strip()
     cancel_message = get_message(__plugin_name__, 'cancel_message')
-    message = get_message(__plugin_name__, 'enter_city_prompt') + get_message(__plugin_name__, 'enter_city_prompt_cancel').format(cancel_message=cancel_message)
+    message = get_message(__plugin_name__, 'enter_city_prompt') + get_message(__plugin_name__, 'enter_city_prompt_cancel', cancel_message=cancel_message)
     # message = rt.rand_str("请在下面发送你要查询的地区名~", "在下面发送地区名吧", "你想查询哪里的天气呢") + f"，或发送 \"{cancel_message}\" 取消哦"
     if not params:
         params = (await session.aget(prompt=message)).strip()
@@ -56,12 +56,12 @@ async def _(session: CommandSession):
         try:
             days_num = int(params.split(" ")[1]) + 1
             if days_num > 4 or days_num < 2:
-                message = get_message(__plugin_name__, 'invalid_days').format(future_days=get_message(__plugin_name__, 'future_days'))
+                message = get_message(__plugin_name__, 'invalid_days', future_days=get_message(__plugin_name__, 'future_days'))
                 # message = f"{rt.rand_str('设置的天数', '未来天数', '天数')}还不可以大于 3 或小于 1 哦"
                 await send_msg(session, message)
                 return
         except:
-            message = get_message(__plugin_name__, 'error_param').format(city=city, future_days=params.split(' ')[1])
+            message = get_message(__plugin_name__, 'error_param', city=city, future_days=params.split(' ')[1])
             # message = f"出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
             await send_msg(session, message)
             return
@@ -83,7 +83,7 @@ async def _(session: CommandSession):
         day_wind = [weather_today["daywind"], weather_today["daypower"]]
         night_wind = [weather_today["nightwind"], weather_today["nightpower"]]
         message = f""
-        message += get_message(__plugin_name__, 'result_prefix') + get_message(__plugin_name__, 'result_content').format(
+        message += get_message(__plugin_name__, 'result_prefix') + get_message(__plugin_name__, 'result_content',
             city_name=city_name,
             date=datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日"),
             weekday=dt.week_str(week),
@@ -112,7 +112,7 @@ async def _(session: CommandSession):
             # print(["雨" in item[0] or "雨" in item[1] for item in weather_days])
             raining_days = len([item for item in weather_days if "雨" in item[0] or "雨" in item[1]])
             future_days = days_num - 1
-            message += get_message(__plugin_name__, 'result_future').format(
+            message += get_message(__plugin_name__, 'result_future',
                 future_days=future_days,
                 raining_days=f'{("都有" if raining_days == future_days and future_days <= 1 else "")}{("有 " + str(raining_days) + " 天有" if future_days > 1 and raining_days < future_days else "都有" if raining_days == future_days else "都没有")}',
                 max_temp=max_temp,
@@ -122,6 +122,6 @@ async def _(session: CommandSession):
         message += f"\n{get_message(__plugin_name__, 'data_from')}"
         # message += f"\n{rt.rand_str('数据来自于高德开放平台~', '数据是高德开放平台的哦~', '通过高德开放平台查询的~')}"
     except Exception as ex:
-        message = get_message(__plugin_name__, 'error').format(city=city, ex=ex)
+        message = get_message(__plugin_name__, 'error', city=city, ex=ex)
         # message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
     await send_msg(session, message)

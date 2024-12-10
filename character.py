@@ -47,21 +47,53 @@ def get_item(*keys: str, character: str="", default="[NULL]", search_dict: dict 
         result = default
     return result
 
-def get_message(*keys: str, default: str="[NULL]", character: str="") -> str:
+def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) -> str:
     """获取 bot 角色字典消息
 
     Args:
-        *key (str): 消息键
+        *keys (str): 消息键
         default (str, optional): 找不到值时返回的默认值. Defaults to "[NULL]".
         character (str, optional): 指定的角色名. Defaults to "".
+        **kwargs: 格式化参数
 
     Returns:
         str: 消息字符串
     """
     try:
         result = get_item(*keys, character=character, default=default)
-        if type(result) == list:
-            result = random_tools.rand_str(*result)
-        return str(result)
     except:
         return default
+
+    result = random_tools.str_choice(result)
+    # if len(kwargs) < 1:
+    #     return str(result).format()
+    # 格式化参数文本
+    for k, v in kwargs.items():
+        if type(v) == list:
+            for i, item in enumerate(v):
+                if type(item) == int:
+                    v[i] = f"{item:,}"
+        elif type(v) == int:
+            v = f"{v:,}"
+        kwargs[k] = v
+    feedbacks = get_item("bot_info", "feedbacks")
+    # print(feedbacks)
+    try:
+        return str(result).format(
+            **kwargs,
+            neutral=random_tools.str_choice(feedbacks['neutral']),
+            negative_plus=random_tools.str_choice(feedbacks['negative_plus']),
+            negative=random_tools.str_choice(feedbacks['negative']),
+            positive=random_tools.str_choice(feedbacks['positive']),
+            positive_plus=random_tools.str_choice(feedbacks['positive_plus']),
+            excellent=random_tools.str_choice(feedbacks['excellent']),
+            happy=random_tools.str_choice(feedbacks['happy']),
+            bless=random_tools.str_choice(feedbacks['bless']),
+            disgust=random_tools.str_choice(feedbacks['disgust']),
+            sad=random_tools.str_choice(feedbacks['sad']),
+            positive_punc=random_tools.str_choice(feedbacks['positive_punc']),
+        )
+    except KeyError as ex:
+        print(f"keyerror: {ex}")
+        return str(result)
+

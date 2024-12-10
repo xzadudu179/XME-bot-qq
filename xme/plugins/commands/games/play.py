@@ -3,6 +3,8 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
+from xme.xmetools.xme_user import coin_name, coin_pronoun
+from xme.xmetools import xme_user
 import xme.xmetools.text_tools as t
 from xme.xmetools.command_tools import send_msg
 from . import game_commands as games
@@ -37,7 +39,7 @@ game_list_str = "\n".join([f"- {k}\t{v['meta']['desc']}" for k, v in games.games
 docs = str(CommandDoc(
     name=cmd_name,
     desc=desc,
-    introduction=get_message(cmd_name, 'introduction').format(games=game_list_str),
+    introduction=get_message(cmd_name, 'introduction', games=game_list_str),
     # introduction=f'游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{game_list_str}',
     usage=f'(小游戏名) [OPTIONS]\n{arg_usage}',
     permissions=[],
@@ -49,7 +51,7 @@ def get_game_help(game_name) -> str | bool:
     if not result:
         return False
     args_str = "\n".join(f"{k}\t {v}" for k, v in result['meta']['args'].items())
-    return get_message(cmd_name, 'game_help').format(name=result['meta']['name'], introduction=result['meta']['introduction'], args=args_str).strip()
+    return get_message(cmd_name, 'game_help', name=result['meta']['name'], introduction=result['meta']['introduction'], args=args_str).strip()
 #     return f"""
 # 游戏名称：{result['meta']['name']}
 # 介绍：{result['meta']['introduction']}
@@ -58,7 +60,8 @@ def get_game_help(game_name) -> str | bool:
 # """.strip()
 
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda x: x.is_groupchat, shell_like=True)
-async def _(session: CommandSession):
+@xme_user.using_user(True)
+async def _(session: CommandSession, user: xme_user.User):
     parser = ArgumentParser(session=session, usage=docs)
     parser.add_argument('-a', '--args', nargs='+')
     parser.add_argument('-i', '--info', action='store_true')
@@ -67,7 +70,10 @@ async def _(session: CommandSession):
     text = ' '.join(args.text).strip()
     game_args = {}
     if args.args:
-        game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
+        try:
+            game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
+        except:
+            return await send_msg(session, get_message(cmd_name, 'invalid_args'))
     print(game_args)
     if args.info:
         info = get_game_help(text)
@@ -76,12 +82,41 @@ async def _(session: CommandSession):
         return await send_msg(session, info)
 
     game_to_play = games.games.get(text, False)
+    print(text)
     if not game_to_play:
-        await send_msg(session, get_message(cmd_name, 'game_not_found').format(game_text=text))
+        await send_msg(session, get_message(cmd_name, 'game_not_found', text=text))
         return
     # 玩游戏
+    cost = game_to_play['meta'].get('cost', 0)
+    if not user.spend_coins(cost):
+        return await send_msg(session, get_message(cmd_name, 'not_enough_coins', cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
     # 游戏以后会返回东西
-    game_return = await game_to_play['func'](session, game_args)
+    game_return = await game_to_play['func'](session, user, game_args)
+    print(game_return)
     if game_return['message']:
         await send_msg(session, game_return['message'])
-    print("游戏执行结束")
+    if game_return['state'] in ['EXITED', 'ERROR']:
+        return False
+    award = game_return['data'].get('award', 'NO_AWARD')
+    limited = game_return['data'].get('limited', False)
+    times_left = game_return['data'].get('times_left', False)
+    messages = []
+    if award and award != "NO_AWARD" and not limited:
+        user.add_coins(award)
+        messages.append(game_to_play['meta']['award_message'].format(
+            award=award,
+            coins_left=user.coins,
+            coin_name=coin_name,
+            coin_pronoun=coin_pronoun
+        ))
+    elif award == 0:
+        messages.append(game_to_play['meta']['no_award_message'].format(coin_name=coin_name))
+    if times_left != False and not limited:
+        messages.append(game_to_play['meta']['times_left_message'].format(times_left=times_left))
+    elif limited or times_left <= 0:
+        messages.append(game_to_play['meta']['limited_message'])
+    message = '\n'.join(messages)
+    print(messages)
+    if message:
+        await send_msg(session, message)
+    return True

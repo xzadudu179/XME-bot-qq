@@ -1,6 +1,8 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.command_tools import send_msg
+import math
+from xme.xmetools import time_tools
 import random
 from ....xmetools import xme_user as u
 from xme.xmetools.xme_user import User, coin_name, coin_pronoun
@@ -14,7 +16,7 @@ cmd_name = 'sign'
 usage = {
     "name": cmd_name,
     "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction').format(coin_name=coin_name),
+    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'',
     "permissions": [],
     "alias": alias
@@ -28,19 +30,30 @@ async def _(session: CommandSession, user: User):
     # message = get_message(__plugin_name__, cmd_name, 'failed')
     print(user)
     append_coins = random.randint(0, 50)
-    user.coins += append_coins
+    user.add_coins(append_coins)
+    users = User.get_users()
+    signed_users_count = 0
+    for u in users.values():
+        counters = u.get('counters', {})
+        if counters.get(cmd_name, {}).get('time', 0) == math.floor(time_tools.timenow() / (60 * 60 * 24)):
+            signed_users_count += 1
+    if signed_users_count == 0:
+        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign')
+    else:
+        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     if append_coins == 0:
-        message = get_message(__plugin_name__, cmd_name, 'login_no_coins').format(
+        message = get_message(__plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
             login_success=get_message(__plugin_name__, cmd_name, 'login_success')
         )
     else:
-        message = get_message(__plugin_name__, cmd_name, 'success').format(
+        message = get_message(__plugin_name__, cmd_name, 'success',
             login_success=get_message(__plugin_name__, cmd_name, 'login_success'),
             state=get_message(__plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),
             coin_name=coin_pronoun + coin_name,
             coin_total=user.coins
         )
+    message += "\n" + sign_message
     await send_msg(session, message)
     return True

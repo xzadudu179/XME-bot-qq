@@ -5,14 +5,56 @@
         "nickname": [
             "XME",
             "xme"
-        ]
+        ],
+        "feedbacks": {
+            "disgust": [],
+            "sad": [],
+            "negative": [
+                "uwu",
+                "呜...",
+                "呜呜"
+            ],
+            "negative_plus": [
+                "xwx",
+                "呜呜呜..."
+            ],
+            "neutral": [
+                "ovo",
+                "嗷呜",
+                ""
+            ],
+            "bless": [
+                "好诶~",
+                "好耶~",
+                "好哦~",
+                "好哦~ owo！",
+                "owo！"
+            ],
+            "happy": [
+                "嗷呜~",
+                "嗷呜！"
+            ],
+            "excellent": [
+                "好耶！",
+                "好诶！",
+                "好哦！"
+            ],
+            "positive": [
+                "owo",
+                "嗷呜！"
+            ],
+            "positive_punc": [
+                "~"
+            ],
+            "positive_plus": []
+        }
     },
     "config": {
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "coin_name": "金币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}\n{sign_message}",
+        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户\n{sign_message}",
         "sign_message": "最近签到在{last_sign_time}",
         "no_sign": "从未签到过"
     },
@@ -195,9 +237,11 @@
         "option_help_desc": "查看帮助",
         "option_args_desc": "指定小游戏的参数",
         "option_info_desc": "查看你输入的小游戏的帮助而不是游玩",
+        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
+        "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦",
         "guess": {
             "desc": "猜数字游戏",
-            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小",
+            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次~",
             "arg_range": "数字范围 (r=范围开始~范围结束)",
             "arg_times_limit": "猜测次数限制 (t=次数限制)",
             "guess_start": "游戏开始~ 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} ~ {number_max} 的整数！",
@@ -206,16 +250,22 @@
             "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
             "range_equals": "数字范围不能是相同的哦 uwu",
             "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
+            "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
             "guess_prompt_prefix_default": "{start}\n请",
             "guess_prompt": "{prefix}输入你要猜的数字吧~ 或输入 {quit_input} 退出",
             "quit_message": "退出游戏啦 ovo",
+            "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
             "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
             "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} ovo",
             "num_too_big_result": "大啦~",
             "num_too_small_result": "小啦~",
             "num_right_result": "正确~",
             "guess_result": "{num} {result}",
-            "remaining_times": "你还可以猜 {times} 次数字ovo"
+            "remaining_times": "你还可以猜 {times} 次数字ovo",
+            "limited": "你今天游玩这个游戏的奖励次数用完啦",
+            "times_left": "你还有 {times_left} 次机会得到奖励~",
+            "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
+            "no_award": "你没有拿到任何{coin_name}..."
         }
     },
     "漂流瓶": {
@@ -223,6 +273,7 @@
         "introduction": "扔/捡来自各个群组的漂流瓶~\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 owo",
         "throw_introduction": "扔一个漂流瓶",
         "pickup_introduction": "尝试捡一个漂流瓶",
+        "cthulhu_introduction": "毁掉指定的漂流瓶",
         "no_bottle": "海里一个瓶子里都没有...",
         "no_bottle_picked": "你没有捡到瓶子ovo",
         "view_message": "被捡到了 {times} 次",
@@ -293,11 +344,13 @@
             "get_state": "获得了",
             "login_success": "签到成功~",
             "login_no_coins": "你没获得任何{coin_name}...",
-            "success": "{login_success} 你{state} {coin_count} {coin_name}~"
+            "success": "{login_success} 你{state} {coin_count} {coin_name}~",
+            "first_sign": "你是今天第一个签到的哦~ owo！",
+            "sign_rank": "你是今天第 {count} 个签到的~"
         },
         "lottery": {
             "desc": "抽奖",
-            "introduction": "花费指定量的{coin_name}，抽取最多 1.79 倍量的{coin_name}\n{coin_name}最多设置为 {count_max}。",
+            "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}\n{coin_name}最多设置为 {count_max}。",
             "limited": "你今天的抽奖次数用完啦~",
             "no_arg": "请指定投入{coin_name}的数量哦~",
             "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 ovo",
@@ -314,15 +367,50 @@
         },
         "coinrank": {
             "desc": "{coin_name}排行榜",
-            "introduction": "查看 bot 记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和",
+            "introduction": "查看 bot 记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
             "rank_msg_prefix": "以下是我记录的{coin_name}排行哦~",
             "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 owo",
             "rank_msg_sum": "大家一共拥有 {avg} {coin_pronoun}{coin_name}哦~",
             "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
             "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
             "invalid_arg": "不明白指定的排名长度意思呢...",
-            "ranking_row": "{rank}. {nickname}: 拥有{coins_count} {coin_pronoun}{coin_name}",
+            "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
             "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 ovo"
+        },
+        "sendcoin": {
+            "desc": "给人{coin_name}",
+            "introduction": "at 一个人并且给他指定数量的{coin_name}~",
+            "no_arg": "请 at 你要转账的用户哦",
+            "invalid_user": "找不到 at 的用户呢...",
+            "invalid_coin_count": "{coin_name}数量需要是大于 0 的整数哦",
+            "send_to_self": "你不能给自己{coin_name}哦",
+            "not_enough_coin": "{coin_name}数量不足，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
+            "received_coin_react": "谢谢哇~",
+            "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
+            "no_coin_count": "请指定饼干数量哦"
         }
+    },
+    "bottodo": {
+        "desc": "查看 bot 待办",
+        "introduction": "查看或修改 bot 的待办事项 / 以后要更新的内容\n修改待办需要 SUPERUSER",
+        "todo_prefix": "以下是待办列表~",
+        "remove_todo_success": "成功移除了待办事项 {todo}！",
+        "no_todo": "暂时没有待办事项哦...",
+        "add_todo_success": "添加待办 \"{todo}\" 成功啦~",
+        "modify_todo_failed": "只有 SUPERUSER 才能管理待办哦...",
+        "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
+    },
+    "peek": {
+        "desc": "视奸179",
+        "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
+        "default_monitor": "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦",
+        "successful": "这是 179 的第 {monitor_num} 个屏幕的状态{positive_punc}",
+        "successful_all": [
+            "这是九九全部屏幕的状态 {neutral}",
+            "这是 179 全部屏幕的状态哦 {neutral}",
+            "这是九九全部屏幕的状态哦 {neutral}"
+        ],
+        "not_in_peek_group": "你不在可视奸的群里哦（？",
+        "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
     }
 }

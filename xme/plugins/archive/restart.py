@@ -21,9 +21,9 @@ async def _(session: CommandSession):
             # os.kill(oldpid, signal.SIGTERM)
             os._exit(0)
         except Exception as ex:
-            await send_msg(session, get_message(ic.__plugin_name__, 'restart_failed_kill').format(ex=ex))
+            await send_msg(session, get_message(ic.__plugin_name__, 'restart_failed_kill', ex=ex))
             # await send_msg(session, f"无法退出原 xmebot 进程 xwx\n错误原因: {ex}")
             return
     except Exception as ex:
-        await send_msg(session, get_message(ic.__plugin_name__, 'restart_failed').format(ex=ex, traceback=ex.with_traceback()))
+        await send_msg(session, get_message(ic.__plugin_name__, 'restart_failed', ex=ex, traceback=ex.with_traceback()))
         # await send_msg(session, f"重启失败 xwx\n错误原因: {ex}\ntraceback:\n{ex.with_traceback()}")

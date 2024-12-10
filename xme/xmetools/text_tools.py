@@ -19,6 +19,26 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
 
+def remove_prefix(text: str, prefix: tuple | str) -> str:
+    """判断字符串前缀并去除前缀
+
+    Args:
+        text (str): 目标字符串
+        prefix (tuple | str): 前缀字符串
+
+    Returns:
+        str: 结果
+    """
+    if isinstance(prefix, str):
+        prefix = (prefix,)
+    prefix = tuple(sorted(prefix, key=len, reverse=True))
+    for p in prefix:
+        if text.startswith(p):
+            return text[len(p):]
+    return text
+
+print(remove_prefix("abc", ('a', 'ab')))
+
 # 中文占比
 def chinese_proportion(input_str) -> float:
     tfs = []
@@ -168,6 +188,14 @@ def replace_all(*replace_strings: tuple[str, str] | tuple[str], text):
     return result
 
 def remove_punctuation(text: str) -> str:
+    """移除标点
+
+    Args:
+        text (str): 输入的文本
+
+    Returns:
+        str: 移除标点的文本
+    """
     text = replace_chinese_punctuation(text)
     return text.translate(str.maketrans('', '', string.punctuation))
 

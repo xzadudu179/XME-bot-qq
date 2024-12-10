@@ -32,10 +32,10 @@ async def _(session: CommandSession):
         search = params.strip()
         stat = h.httpstats(search)
         if not stat:
-            message = get_message(__plugin_name__, 'code_not_found').format(search=search)
+            message = get_message(__plugin_name__, 'code_not_found', search=search)
             # message = f"查询不到 {search} 状态码代表什么意思诶"
         else:
-            message = get_message(__plugin_name__, 'code_found').format(search=search, stat=stat, image=f"[CQ:image,file=https://http.cat/{search}]")
+            message = get_message(__plugin_name__, 'code_found', search=search, stat=stat, image=f"[CQ:image,file=https://http.cat/{search}]")
             # message = f"状态码 {search} 的意思是: {stat}\n[CQ:image,file=https://http.cat/{search}]"
 
     await send_msg(session, message)

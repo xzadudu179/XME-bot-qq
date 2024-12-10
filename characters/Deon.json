@@ -831,9 +831,9 @@
             ],
             "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
             "first_sign": [
-                "你是今天第一个签到的哦{positive_punc} {positive}！",
-                "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc}",
-                "你是今天第一个签到的哦 {positive}！"
+                "你是今天第一个签到的哦{positive_punc} {positive}！给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
+                "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc} 奖励你 {first_award} {coin_pronoun}{coin_name}{positive_punc}",
+                "你是今天第一个签到的哦 {positive}！给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
             ],
             "sign_rank": [
                 "你是今天第 {count} 个签到的哦 {neutral}",
@@ -998,5 +998,31 @@
             "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦...",
             "九九现在的窗口焦点 \"{title}\" 是不可以看的哦 {neutral}"
         ]
+    },
+    "calc": {
+        "desc": "计算器",
+        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的函数列表",
+        "no_arg": "请输入参数哦 {neutral}",
+        "func_intro": "以下是当前拥有的自定函数列表{positive_punc} {positive}",
+        "func_nothing": [
+            "什么也没有呢...",
+            "什么也没有呢 {neutral}",
+            "是空的呢..."
+        ],
+        "syntaxerror": [
+            "输入格式出错啦，请确认表达式正确哦...\n{ex}",
+            "输入格式出错了...请确认表达式正确哦 {negative}\n{ex}"
+        ],
+        "error": [
+            "出现了未知错误...请确认表达式正确哦...\n{ex}",
+            "出现了未知错误...请确认表达式正确哦 {negative}\n{ex}"
+        ],
+        "sympifyerror": [
+            "计算出错啦，请确认格式正确哦...\n{ex}",
+            "{negative} 计算出错了，请确认格式正确哦...\n{ex}",
+            "计算出错啦，请确认格式正确哦 {negative} \n{ex}"
+        ],
+        "func_builtin_intro": "以下是自带函数列表{positive_punc}",
+        "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦\n小数结果为 \"{float_result}\"{positive_punc}"
     }
 }

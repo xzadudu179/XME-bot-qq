@@ -345,7 +345,7 @@
             "login_success": "签到成功~",
             "login_no_coins": "你没获得任何{coin_name}...",
             "success": "{login_success} 你{state} {coin_count} {coin_name}~",
-            "first_sign": "你是今天第一个签到的哦~ owo！",
+            "first_sign": "你是今天第一个签到的哦~ owo！给你 {first_award} {coin_pronoun}{coin_name}作为奖励~",
             "sign_rank": "你是今天第 {count} 个签到的~"
         },
         "lottery": {
@@ -412,5 +412,17 @@
         ],
         "not_in_peek_group": "你不在可视奸的群里哦（？",
         "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
+    },
+    "calc": {
+        "desc": "计算器",
+        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的函数列表",
+        "no_arg": "请输入参数哦",
+        "sympifyerror": "计算出错啦，请确认格式正确哦...\n{ex}",
+        "syntaxerror": "输入格式出错啦，请确认表达式正确哦...\n{ex}",
+        "error": "出现了未知错误...请确认表达式正确哦...\n{ex}",
+        "func_intro": "以下是当前拥有的自定函数列表{positive_punc}",
+        "func_nothing": "什么也没有呢...",
+        "func_builtin_intro": "以下是自带函数列表{positive_punc}",
+        "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦\n小数结果为 \"{float_result}\"{positive_punc}"
     }
 }

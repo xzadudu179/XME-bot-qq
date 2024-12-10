@@ -26,6 +26,7 @@ usage = {
 @u.using_user(save_data=True)
 @u.limit(cmd_name, 1, get_message(__plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
+    FIRST_AWARD = 10
     message = ""
     # message = get_message(__plugin_name__, cmd_name, 'failed')
     print(user)
@@ -37,10 +38,6 @@ async def _(session: CommandSession, user: User):
         counters = u.get('counters', {})
         if counters.get(cmd_name, {}).get('time', 0) == math.floor(time_tools.timenow() / (60 * 60 * 24)):
             signed_users_count += 1
-    if signed_users_count == 0:
-        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign')
-    else:
-        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     if append_coins == 0:
         message = get_message(__plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
@@ -54,6 +51,11 @@ async def _(session: CommandSession, user: User):
             coin_name=coin_pronoun + coin_name,
             coin_total=user.coins
         )
+    if signed_users_count == 0:
+        user.add_coins(FIRST_AWARD)
+        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD)
+    else:
+        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message
     await send_msg(session, message)
     return True

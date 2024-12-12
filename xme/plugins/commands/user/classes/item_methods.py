@@ -8,18 +8,24 @@ import random
 what_to_talk = [
     "0你住在哪里呢？",
     "0你喜欢做些什么？",
-    "0你现在想做些什么呀？",
+    "0为什么我能和你通信？",
     "0你对我是什么看法？",
+    f"0你才是真正的{get_message('bot_info', 'name')}？那之前和我对话的{get_message('bot_info', 'name')}是谁？",
     "1你住的地方环境怎么样？",
-    "1你喜不喜欢住在这呢？",
-    "1你是独居，还是有其他朋友呢？",
+    "1你现在想做些什么呢？",
     "1平时是怎么生活的？",
-    "2为什么我能和你通信？",
+    "1那里有没有什么好吃的？",
+    "1你是独居，还是有其他朋友呢？",
+    "2你喜不喜欢住在这呢？",
     "2我们在同一个世界嘛？",
-    "2那里有没有什么好吃的？",
     "2我能真正意义上的见到你嘛？",
-    "3你对我们所在的世界会不会好奇呢？",
+    "2你能不能主动联系到我呢？",
+    "2你对这个世界是什么看法？",
     "3我们究竟相距多远？",
+    "3我和你的距离跨越时空嘛？",
+    "3我们的时间线是否一致？",
+    "3你对我们所在的世界会不会好奇呢？",
+    "3和我交谈你感觉怎么样呢？",
 ]
 
 high_favorability_talk = [
@@ -36,7 +42,7 @@ async def talk_to_bot(_, session: CommandSession, user):
             user.talked_to_bot = []
         if len(user.talked_to_bot) > 5:
             talks += high_favorability_talk
-    what_to_talk_list = sorted(list((set(talks) - set(user.talked_to_bot)) | (set(user.talked_to_bot) - set(talks))), key=lambda x: int(x[0]))
+    what_to_talk_list = list((set(talks) - set(user.talked_to_bot)) | (set(user.talked_to_bot) - set(talks)))
     if len(what_to_talk_list) < 1:
         await send_msg(session, "[看起来没有什么好聊的了...]")
         return {
@@ -48,14 +54,14 @@ async def talk_to_bot(_, session: CommandSession, user):
     if len(what_to_talk_list) < 3:
         what_can_talk = what_to_talk_list
     else:
-        if len(user.talked_to_bot) > int(len(what_to_talk_list) * 0.4):
-            what_can_talk = what_to_talk_list
-        elif len(user.talked_to_bot) > int(len(what_to_talk_list) * 0.2):
-            what_can_talk = what_to_talk_list[:-int(len(what_to_talk_list) * 0.3)]
-        elif len(user.talked_to_bot) > max(1, int(len(what_to_talk_list) * 0.05)):
-            what_can_talk = what_to_talk_list[:-int(len(what_to_talk_list) * 0.6)]
+        if len(user.talked_to_bot) > 5:
+            what_can_talk = [i for i in what_to_talk_list if int(i[0]) <= 4]
+        elif len(user.talked_to_bot) > 3:
+            what_can_talk = [i for i in what_to_talk_list if int(i[0]) <= 2]
+        elif len(user.talked_to_bot) > 1:
+            what_can_talk = [i for i in what_to_talk_list if int(i[0]) <= 1]
         else:
-            what_can_talk = what_to_talk_list[:-min(len(what_to_talk_list) - 4, int(len(what_to_talk_list) * 0.8))]
+            what_can_talk = [i for i in what_to_talk_list if int(i[0]) <= 0]
     prompts_count = min(3, len(what_can_talk))
     print(f"what can talk: {what_can_talk}")
     talk_prompt = random.sample(what_can_talk, prompts_count)

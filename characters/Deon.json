@@ -137,18 +137,23 @@
             },
             "你喜欢做些什么？": {
                 "high_plus": [
-                    "{positive_plus} 喜欢出去玩！如果经常有人陪我出去玩就更好啦~\n如果你想的话，可以让我跟着你出去玩哇~"
+                    "{positive_plus} 喜欢出去玩！如果经常有人陪我出去玩就更好啦~\n如果你想的话，可以让我跟着你出去玩哇~",
+                    "{positive_plus} 喜欢去探索沙漠~！如果能经常有人陪我出去玩就更好啦 {positive}\n顺便，如果你想的话，可以让我跟着你出去玩哇~ 不过前提是我们要见到一起呢..."
                 ],
                 "high": [],
                 "slightly_high": [],
-                "ok": [],
+                "ok": [
+                    "喜欢出去探险，寻找新的事物之类的哦 {positive}",
+                    "喜欢跑到外面玩，寻找各种有趣的事物 {positive}",
+                    "喜欢出去探索沙漠，收集各种小物件之类的~ {positive}"
+                ],
                 "mid": [],
                 "just": [],
                 "slightly_low": [],
                 "low": [],
                 "low_plus": []
             },
-            "你现在想做些什么呀？": {
+            "你现在想做些什么呢？": {
                 "high_plus": [],
                 "high": [],
                 "slightly_high": [],
@@ -270,6 +275,72 @@
                 "low_plus": []
             },
             "我们究竟相距多远？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你能不能主动联系到我呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们的时间线是否一致？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我和你的距离跨越时空嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "和我交谈你感觉怎么样呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你对这个世界是什么看法？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你才是真正的漠月？那之前和我对话的漠月是谁？": {
                 "high_plus": [],
                 "high": [],
                 "slightly_high": [],

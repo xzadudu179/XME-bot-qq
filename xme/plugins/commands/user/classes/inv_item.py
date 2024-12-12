@@ -27,15 +27,15 @@ class InvItem:
 
     def __dict__(self):
         return {
-            "recorded_id": self.recorded_item.id if self.recorded_item is not None else -1,
+            "id": self.recorded_item.id if self.recorded_item is not None else -1,
             "count": self.count
         }
 
     @staticmethod
     def get_invitem(d: dict):
-        if d['recorded_id'] == -1 and d['count'] != 0:
+        if d['id'] == -1 and d['count'] != 0:
             raise ValueError("空物品栏不能指定物品数量")
-        item = Item.get_item(d['recorded_id'])
+        item = Item.get_item(d['id'])
         return InvItem(item, d['count'])
 
     def try_add_item(self, id, count=1) -> bool:

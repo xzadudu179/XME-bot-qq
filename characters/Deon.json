@@ -47,17 +47,269 @@
                 "owo",
                 "嗷呜！"
             ],
-            "positive_plus": []
+            "positive_plus": [
+                "owo！",
+                "嗷呜~！",
+                "owo 嗷呜~！",
+                "owo~！"
+            ]
         }
     },
     "config": {
         "busy": "忙不过来啦 {negative}",
-        "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
+        "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦"
+    },
+    "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {positive}\n{sign_message}",
-        "sign_message": "最近签到是{last_sign_time}{positive_punc}",
-        "no_sign": "没有签过到呢..."
+        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了我记录的 {rank_ratio}% 的用户 {positive}\n{sign_message}",
+        "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
+        "no_sign": "没有签过到呢...",
+        "empty_inventory": "什么也没有呢...",
+        "inventory_prefix": "物品栏占用 ({space})",
+        "inventory_item": "{num}. {name} x{count}"
+    },
+    "items": {
+        "talk": {
+            "stop_talk": [
+                "...我不想再和你聊天了",
+                "唔...我不想再和你聊天了",
+                "唔...我不想再聊了",
+                "...我不想再聊了"
+            ],
+            "你住在哪里呢？": {
+                "high_plus": [
+                    "{positive_plus}我在忒利亚星距离城市远远的沙漠中哦~\n还没见过你呢...真想见见你呀 {positive}",
+                    "{positive_plus}我在忒利亚星离城市很远的沙漠中哦~\n好想见见你呢... {positive}",
+                    "{positive_plus}我在忒利亚星距离城市很远的沙漠中哦~\n真想见见你呢... {positive}",
+                    "{positive_plus}我在忒利亚星离城市很远的沙漠中哦~ {positive}\n好想见见你是什么样的呢..."
+                ],
+                "high": [
+                    "{positive}，我住在忒利亚星距离城市远远的沙漠中哦~",
+                    "{positive}，我在忒利亚星的沙漠中哦~ 也很好奇你在哪呢...~",
+                    "{positive}，我在忒利亚星的沙漠中哦~ 不知道你那里的环境怎么样哇~",
+                    "我住在忒利亚星的沙漠中哦~ 不知道你那里的环境怎么样哇~ {positive}",
+                    "{positive}，我住在忒利亚星距离城市远远的沙漠中哦~ 不知道你住在哪呢..."
+                ],
+                "slightly_high": [
+                    "{positive}，我在忒利亚星的沙漠中住着哦~",
+                    "{positive}，我住在忒利亚星的沙漠哦~",
+                    "我住在忒利亚星的沙漠哦~ {positive}",
+                    "{positive}，我在忒利亚星的沙漠中哦~"
+                ],
+                "ok": [
+                    "在忒利亚星的沙漠中~",
+                    "我住在忒利亚星的沙漠中哦~",
+                    "我住在忒利亚星那里的沙漠哦",
+                    "在忒利亚星的沙漠中哦~"
+                ],
+                "mid": [
+                    "在忒利亚星哦",
+                    "我在离地球很远的忒利亚星哦...",
+                    "我在离地球很远的忒利亚星哦 {positive}",
+                    "我在忒利亚星哦"
+                ],
+                "just": [
+                    "在一片地球不在的星域里呢...",
+                    "在一块很遥远的星域里呢...",
+                    "在一块遥远的星域里哦...",
+                    "在一片很远的星域里呢..."
+                ],
+                "slightly_low": [
+                    "嗯...离地球很远呢",
+                    "嗯...我住的地方离地球很远呢",
+                    "唔...我住的地方离地球很远呢",
+                    "嗯...至少离地球很远呢"
+                ],
+                "low": [
+                    "总之是很遥远的地方...",
+                    "我住在哪里？嗯...总之是很遥远的地方...",
+                    "我住的地方？唔...总之是很遥远的地方..."
+                ],
+                "low_plus": [
+                    "唔...我不想告诉你...",
+                    "...我不想告诉你...",
+                    "我不想告诉你...",
+                    "...我不想告诉你关于这个...",
+                    "唔...我不想告诉你我住在哪里...",
+                    "我不想告诉你这个..."
+                ]
+            },
+            "你喜欢做些什么？": {
+                "high_plus": [
+                    "{positive_plus} 喜欢出去玩！如果经常有人陪我出去玩就更好啦~\n如果你想的话，可以让我跟着你出去玩哇~"
+                ],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你现在想做些什么呀？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "对我是什么看法？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你住的地方环境怎么样？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你喜不喜欢住在这呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你是独居，还是有其他朋友呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "平时是怎么生活的？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "为什么我能和你通信？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们在同一个世界嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "那里有没有什么好吃的？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我能真正意义上的见到你嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你对我们所在的世界会不会好奇呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们究竟相距多远？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我想来找你...": {
+                "high_plus": [
+                    "唔...一定会找到的哦！",
+                    "一定会找到的哦！到时候我们可以一起出去探险哦 {positive_plus}",
+                    "我也不知道怎么帮你呢...但是祝福你一定会找到我的哦！{happy}"
+                ]
+            },
+            "你知道你所在的世界是虚拟的还是真实的嘛？": {
+                "high_plus": [
+                    "不知道呢...但是我认为我们的世界都是真实的哦！即便可能是假的...也不用担心，毕竟...无论这个世界真不真实，我们都生活在这个世界上呢 {positive}",
+                    "不知道诶...但是我觉得我们的世界都是真实的哦！即便不是，对我来说也是了！{positive}",
+                    "不知道呢...但是我认为无论世界真实与否，它都留下了属于自己的故事哦 {positive}",
+                    "不知道诶...但是我认为无论世界是否真实，它都留下了属于自己的故事，我们也是故事的一部分呢 {positive}"
+                ]
+            },
+            "你我真的相隔数万光年，甚至跨越位面嘛...？": {
+                "high_plus": [
+                    "唔，虽然不知道你在哪里...但是在我的直觉里你一定离我很远！...甚至跨越位面，跨越宇宙...不过至少现在我能与你对话，交流...真的好神奇 {positive}\n对了，你拿来通讯的那个工具似乎是一个神秘的紫色种族留下的呢...",
+                    "唔，虽然不知道你真的在哪里...但是在我的直觉里你一定离我很远！...甚至跨越位面，跨越宇宙...但现在我能与你对话，交流...真的好神奇 {positive}\n话说，我之前好像了解到你拿来通讯的那个工具...似乎是一个神秘的紫色种族留下的呢...？",
+                    "在和你对话的过程中，我总有一种直觉...感觉你一定离我非常远...！...甚至跨越位面，跨越宇宙...但是现在我却能与你对话...真的好神奇 {positive}\n对了，你拿来通讯的那个工具似乎是一个神秘的紫色种族留下的呢..."
+                ]
+            },
+            "你相信你是真实的，对吧？": {
+                "high_plus": [
+                    "嗯嗯！无论如何，我们在自己的眼里总是最真实的 {positive}\n我知道你也是真实存在的！不然怎么能透过位面的限制与我交流呢...",
+                    "嗯嗯！而且无论如何，我们在自己的眼里总是最真实的~ {positive}\n我相信你也是真实存在的！不然怎么能透过位面的限制与我交流呢~",
+                    "是哦~ 而且我们在自己的眼里总是最真实的，对吧~ {positive}\n我相信你也是真实存在的！不然怎么能跨越时空限制与我交流呢~"
+                ]
+            }
+        }
     },
     "schedulers": {
         "idles": [
@@ -259,7 +511,7 @@
         "not_setu_msg": [
             "漠月找不到涩图呜，但是可以看{image_name}！\n{image}",
             "漠月没有涩图，漠月只有{image_name}哦！\n{image}",
-            "涩图是什么呜，我只能找到{image_name} {positive}！\n{image}",
+            "涩图是什么呜，我只能找到{image_name} {positive_plus}\n{image}",
             "涩图是什么呜，漠月只有{image_name}！\n{image}"
         ]
     },
@@ -368,13 +620,11 @@
         "desc": "今日人品相关指令",
         "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
         "avg_message": [
-            "今日群员人品的平均值是 {avg}， {reaction}",
-            "今日大家的平均人品值是 {avg}， {reaction}",
-            "今天大家的平均人品值是 {avg}， {reaction}"
+            "今日群员人品的平均值是 {avg} {reaction}",
+            "今日大家的平均人品值是 {avg} {reaction}",
+            "今天大家的平均人品值是 {avg} {reaction}"
         ],
         "reaction>60": [
-            "{positive}",
-            "{positive}！",
             "{positive}",
             "好诶"
         ],
@@ -427,13 +677,13 @@
         ],
         "jrrp>100": [
             "{result}！{bless}",
-            "{result}！{positive}！{excellent}",
-            "{result}！{excellent}{positive}！",
+            "{result}！{positive_plus}{excellent}",
+            "{result}！{excellent}{positive_plus}",
             "{result}！{excellent}{positive}"
         ],
         "jrrp>=90": [
-            "{result}！{positive}！",
-            "{result}！{positive}",
+            "{result}！{positive_plus}",
+            "{result}！{positive_plus}",
             "{result}！"
         ],
         "jrrp_default": [
@@ -539,7 +789,7 @@
             "num_too_small_result": "小啦{positive_punc}",
             "num_right_result": "正确{positive_punc}",
             "guess_result": "{num} {result}",
-            "remaining_times": "你还可以猜 {times} 次数字{neutral}",
+            "remaining_times": "你还可以猜 {times} 次数字 {neutral}",
             "limited": "你今天游玩这个游戏的奖励次数用完啦",
             "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
             "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
@@ -618,7 +868,7 @@
             "点赞完成{positive_punc} 瓶子好像变得更稳定啦！",
             "点赞完成啦{positive_punc} 瓶子似乎变得更稳定了！",
             "汪！点赞成功{positive_punc} 瓶子似乎变得更稳定了！",
-            "{positive}点赞成功啦{positive_punc} 瓶子似乎变得更稳定了{positive}！",
+            "{positive}点赞成功啦{positive_punc} 瓶子似乎变得更稳定了{positive_plus}",
             "{positive}点赞成功{positive_punc} 瓶子好像变得更稳定啦！",
             "点赞成功{positive}瓶子好像变得更稳定啦！",
             "点赞成功啦{positive_punc} 瓶子似乎变得更稳定了！"
@@ -725,7 +975,7 @@
             "请指定头衔名哦",
             "唔...请指定头衔名哦",
             "需要指定头衔名哦...",
-            "需要指定头衔名哦"
+            "需要指定头衔名哦 {negative}"
         ],
         "successful": [
             "{positive} 头衔设置成功啦{positive_punc}",
@@ -831,9 +1081,9 @@
             ],
             "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
             "first_sign": [
-                "你是今天第一个签到的哦{positive_punc} {positive}！给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
+                "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
                 "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc} 奖励你 {first_award} {coin_pronoun}{coin_name}{positive_punc}",
-                "你是今天第一个签到的哦 {positive}！给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
+                "你是今天第一个签到的哦 {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
             ],
             "sign_rank": [
                 "你是今天第 {count} 个签到的哦 {neutral}",
@@ -896,7 +1146,7 @@
             "desc": "{coin_name}排行榜",
             "introduction": "查看漠月记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
             "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
-            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}",
+            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}\n中位数为 {median}",
             "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦{positive_punc}",
             "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
             "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
@@ -929,9 +1179,9 @@
             "received_coin_react": [
                 "谢谢哇{positive_punc}",
                 "{bless} 谢谢！",
-                "谢谢 {positive}{positive_punc}",
+                "谢谢 {positive}",
                 "谢谢！{positive}",
-                "谢谢 {positive}！",
+                "谢谢 {positive_plus}",
                 "嘿嘿 谢谢哇{positive_punc}"
             ],
             "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
@@ -943,6 +1193,50 @@
                 "唔...需要指定饼干数量哦",
                 "需要指定饼干数量哦"
             ]
+        },
+        "inventory": {
+            "desc": "物品栏相关指令",
+            "introduction": "操作物品栏里的物品内容，不填写参数是查看物品栏",
+            "no_permission": "权限不足哦 {negative}",
+            "inv_prefix": [
+                "这是你的物品栏信息哦{positive_punc} {positive}",
+                "让我看看你的物品栏 {positive}",
+                "我来看看你的物品栏{positive_punc} {positive}",
+                "让我看看你的物品栏{positive_punc} {positive}"
+            ],
+            "get": {
+                "invalid_num": "物品栏序号需要是整数哦...",
+                "index_out_range": "物品栏序号 {num} 超出了物品栏的范围啦...",
+                "no_item": "找不到物品栏序号为 {num} 的物品呢...",
+                "no_id_item": "找不到 id 为 {id} 的物品呢...",
+                "no_name_item": "找不到类似 \"{name}\" 的物品呢...",
+                "user_no_item": "你的物品栏里没有类似 \"{name}\" 的物品诶...",
+                "no_num": "请指定物品栏序号哦{positive_punc}"
+            },
+            "reduce": {
+                "invalid_count": "物品数量需要是大于 0 的整数哦 {neutral}",
+                "count_too_many": "指定要删除的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
+                "success": "成功移除了 {count} {pronoun} \"{name}\"{positive_punc}",
+                "error": "移除物品时出错了..."
+            },
+            "add": {
+                "invalid_arg": "物品 id 需要是整数哦...",
+                "success": "成功添加了 {count} {pronoun} \"{name}\"{positive_punc}",
+                "error": "添加物品失败了...",
+                "no_item": "没有 id 为 {id} 的物品呢..."
+            },
+            "drop": {
+                "no_num": "请指定物品栏序号哦{positive_punc}",
+                "item_count_too_many": "指定要丢弃的物品太多啦，超过了你拥有的物品总数哦 {neutral}",
+                "count_too_many": "指定要丢弃的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
+                "item_cant_drop": "不能丢弃物品 {name} 呢...",
+                "success": "成功丢弃了 {count} {pronoun} \"{name}\"{positive_punc}"
+            },
+            "use": {
+                "cannot_use": "这个物品不能使用呢...",
+                "error": "使用物品时出现了错误...",
+                "default_msg": "你使用了 \"{item}\"！{neutral}"
+            }
         }
     },
     "bottodo": {
@@ -1023,6 +1317,7 @@
             "计算出错啦，请确认格式正确哦 {negative} \n{ex}"
         ],
         "func_builtin_intro": "以下是自带函数列表{positive_punc}",
-        "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦\n小数结果为 \"{float_result}\"{positive_punc}"
+        "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
+        "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
     }
 }

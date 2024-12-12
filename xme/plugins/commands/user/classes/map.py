@@ -1,6 +1,4 @@
-from .database import Xme_database
 from .faction import Faction
-
 class GalaxyMap:
     def __init__(self, database, maxwidth=1000, maxheight=1000) -> None:
         self.database = database
@@ -8,7 +6,7 @@ class GalaxyMap:
         self.starfields = {
         }
 
-    def create_starfield_block(self, position: tuple[int, int], maxwidth: int=500, maxheight: int=500):
+    def create_starfield_block(self, position: tuple[int, int], maxwidth: int = 500, maxheight: int = 500):
         """创建星域地图块
 
         Args:
@@ -27,7 +25,7 @@ class GalaxyMap:
 class StarfieldMap:
     """星域地图
     """
-    def __init__(self, map_position: tuple[int, int], galaxymap: GalaxyMap, faction: Faction, maxwidth: int=500, maxheight: int=500) -> None:
+    def __init__(self, map_position: tuple[int, int], galaxymap: GalaxyMap, faction: Faction, maxwidth: int = 500, maxheight: int = 500) -> None:
         """创建星域地图
 
         Args:

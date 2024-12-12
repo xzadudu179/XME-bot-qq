@@ -1,4 +1,4 @@
-# from . import max
+from . import dich
 
 builtins = {
     "pi": "圆周率",
@@ -39,4 +39,5 @@ builtins = {
 }
 
 funcs = {
+    dich.func_name: dich.func_info
 }

@@ -45,14 +45,14 @@ def parse_polynomial(formula):
         formula (str): 算式字符串
     """
     formula = replace_chinese_punctuation(formula).strip()
-    formula = formula.replace("×", '*').replace("^", "**")
+    formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**")
     # print(f"formula: {formula}")
     monomials = [item.strip() for item in formula.split("+")]
     results = []
     for monomial in monomials:
         results.append(parse_monomial(monomial))
     result_formula = '+'.join(results)
-    print(f"poly result: {result_formula}")
+    # print(f"poly result: {result_formula}")
     return formula.replace(" ", ''), sympify(result_formula)
 
 
@@ -66,7 +66,7 @@ def parse_func(formula):
         str: 函数结果
     """
     funcs = find_funcs(formula)
-    print(f"funcs: {funcs}")
+    # print(f"funcs: {funcs}")
     for f in funcs:
         func_name = f.split("(")[0]
         if func_name not in func.funcs.keys(): continue
@@ -83,5 +83,3 @@ def parse_func(formula):
 def parse_monomial(monomial):
     monomial = parse_func(monomial)
     return monomial
-
-print(f"total result: {parse_polynomial('5 *2 * max（max(3, max(5, 10))， 2）^2 + log(16, 2)')[1]}")

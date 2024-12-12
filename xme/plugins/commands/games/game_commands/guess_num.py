@@ -2,8 +2,8 @@ from nonebot import CommandSession
 from xme.plugins.commands.games.play import cmd_name
 from .game import Game
 from xme.xmetools.command_tools import get_cmd_by_alias
-from xme.xmetools import xme_user
-from xme.xmetools.xme_user import coin_name, coin_pronoun
+from xme.plugins.commands.user.classes import xme_user
+from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
 from character import get_message
 import random
 import math
@@ -24,10 +24,10 @@ game_meta = {
         # "t": "猜测次数限制 (t=次数限制)"
     },
     "cost": 2,
-    "times_left_message": get_message(cmd_name, name, 'times_left'),
+    "times_left_message": get_message(cmd_name, name, 'times_left', times_left='{times_left}'),
     "limited_message": get_message(cmd_name, name, 'limited'),
-    "award_message": get_message(cmd_name, name, 'award'),
-    "no_award_message": get_message(cmd_name, name, 'no_award'),
+    "award_message": get_message(cmd_name, name, 'award', award="{award}", coins_left='{coins_left}', coin_name='{coin_name}', coin_pronoun='{coin_pronoun}'),
+    "no_award_message": get_message(cmd_name, name, 'no_award', coin_name='{coin_name}'),
 }
 
 class GuessNum(Game):

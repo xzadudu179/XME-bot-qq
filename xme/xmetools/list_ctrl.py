@@ -45,8 +45,8 @@ def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict
     return similars
 
 
-def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5) -> list[tuple[Any, Any]]:
-    """返回字符串列表里前k个与目标字符串相似的项
+def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5, key=lambda x: x) -> list[tuple[Any, Any]]:
+    """返回列表里前k个与目标字符串相似的项
 
     Args:
         l (list[str]): 字符串列表
@@ -58,7 +58,8 @@ def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5) -> li
         list[str]: 前k个字符串
     """
     # 相似查找
-    sim_topk_items = sorted(str_list_sim(l, target_str).items(), key=lambda item: item[1], reverse=True)[:k]
+    print(f"被解析的列表：{list(map(key, l))}")
+    sim_topk_items = sorted(str_list_sim(list(map(key, l)), target_str).items(), key=lambda item: item[1], reverse=True)[:k]
     sim_topk_items = [item for item in sim_topk_items if item[1] >= min]
     return sim_topk_items
 

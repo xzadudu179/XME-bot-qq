@@ -1,8 +1,8 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.command_tools import send_msg
-from ....xmetools import xme_user as u
-from xme.xmetools.xme_user import User, coin_name, coin_pronoun
+from .classes import xme_user as u
+from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
 
 
@@ -20,7 +20,7 @@ usage = {
 @u.using_user(save_data=True)
 async def _(session: CommandSession, user: User):
     message = ''
-    arg_text = session.current_arg.strip()
+    arg_text = session.current_arg.strip() if session.current_arg else ""
     args = arg_text.split(" ")
     coin_count = 0
     at_id = 0

@@ -66,7 +66,7 @@ def timenow(offset: int=8, unit: TimeUnit=TimeUnit.HOUR) -> float:
     """
     return time.time() + offset * unit.value
 
-def int_to_days(date_num: int, format: str="%Y年%m月%d日") -> str:
+def int_to_date(date_num: int, format: str="%Y年%m月%d日") -> str:
     """将从1970年1月1日经过的天数变成日期
 
     Args:

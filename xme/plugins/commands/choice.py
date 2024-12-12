@@ -14,7 +14,7 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message(__plugin_name__, "desc"),
     introduction=get_message(__plugin_name__, "introduction"),
     # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数',
-    usage=f'(事情列表(空格分隔))',
+    usage=f'(事情列表(空格分隔)或是任意选择语句)',
     permissions=[],
     alias=alias
 ))

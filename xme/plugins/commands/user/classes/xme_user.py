@@ -7,34 +7,52 @@ import inspect
 import math
 from character import get_message
 from xme.xmetools.command_tools import send_msg
+from .inventory import Inventory
+from ..tools import galaxy_date_tools
 
-coin_name = get_message("config", "coin_name")
-coin_pronoun = get_message("config", "coin_pronoun")
+coin_name = get_message("user", "coin_name")
+coin_pronoun = get_message("user", "coin_pronoun")
 
 
 class User:
-    def __init__(self, user_id: int, coins: int = 0):
+    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list=[]):
         self.id = user_id
-        # self.name = user_name
+        self.inventory = inventory
         self.coins = coins
         self.xme_favorability = 0
+        self.talked_to_bot = talked_to_bot
         self.counters = {}
 
     def __str__(self):
         try:
-            last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
-            sign_message = get_message("config", "sign_message", last_sign_time=last_sign_time)
+            # last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
+            last_sign_time = galaxy_date_tools.get_galaxy_date(int(self.counters['sign']["time"]))
+            sign_message = get_message("user", "sign_message", last_sign_time="星历" + last_sign_time)
         except:
-            sign_message = get_message("config", "no_sign")
+            sign_message = get_message("user", "no_sign")
         _, rank_ratio = get_user_rank(self.id)
-        return get_message("config", "user_info_str",
+        return get_message("user", "user_info_str",
             id=str(self.id),
             coins_count=self.coins,
             coin_name=coin_name,
             coin_pronoun=coin_pronoun,
             sign_message=sign_message,
-            rank_ratio=f"{rank_ratio:.2f}"
+            rank_ratio=f"{rank_ratio:.2f}",
+            space=self.inventory.get_space_left()
         )
+
+    def add_favorability(self, count):
+        """增加好感度
+
+        Args:
+            count (int): 好感度值，可为负数
+        """
+        if self.xme_favorability + count > 100:
+            self.xme_favorability = 100
+        elif self.xme_favorability + count < -100:
+            self.xme_favorability = -100
+        else:
+            self.xme_favorability += count
 
     def spend_coins(self, amount: int) -> bool:
         if amount > self.coins:
@@ -46,7 +64,9 @@ class User:
         return {
             "coins": self.coins,
             "counters": self.counters,
-            "xme_favorability": self.xme_favorability
+            "xme_favorability": self.xme_favorability,
+            "inventory": self.inventory.__list__(),
+            "talked_to_bot": self.talked_to_bot
         }
 
     def add_coins(self, amount: int) -> bool:
@@ -138,7 +158,7 @@ def get_user_rank(user):
         print("匹配到了")
         sender_coins_count = item[1]
         sender_index = index
-    if sender_coins_count:
+    if sender_coins_count is not None:
         rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
     return sender_coins_count, rank_ratio
 
@@ -207,7 +227,7 @@ def get_rank(*rank_item_key, key=None):
         key (Callable[_T, SupportsRichComparison], optional): 排名方法. Defaults to None.
 
     Returns:
-        dict: 用户: 键对应值
+        list[tuple]: 用户: 键对应值
     """
     rank = {}
     users: dict = json_tools.read_from_path(config.USER_PATH)['users']
@@ -272,12 +292,15 @@ def limit(limit_name: str,
     return decorator
 
 
-def using_user(save_data=False):
+def using_user(save_data=False, id=0):
     def decorator(func):
         @wraps(func)
         async def wrapper(session, *args, **kwargs):
-            print(session.event.user_id)
-            user = try_load(session.event.user_id, User(session.event.user_id))
+            user_id = id
+            if not id:
+                user_id = session.event.user_id
+            print(user_id)
+            user = try_load(user_id, User(user_id))
             result = await func(session, user, *args, **kwargs)
             print(f"result: {result}")
             if save_data and result != False:
@@ -291,7 +314,11 @@ def using_user(save_data=False):
 
 
 def load_from_dict(data: dict, id: int) -> User:
-    user = User(id, data.get('coins', 0))
+    inventory_data = data.get('inventory', None)
+    inventory = Inventory()
+    if inventory_data:
+        inventory = Inventory.get_inventory(inventory_data)
+    user = User(id, data.get('coins', 0), inventory, data.get('talked_to_bot', []))
     user.counters = data.get('counters', {})
     user.xme_favorability = data.get('xme_favorability', 0)
     return user

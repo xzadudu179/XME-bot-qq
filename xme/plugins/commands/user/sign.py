@@ -4,12 +4,9 @@ from xme.xmetools.command_tools import send_msg
 import math
 from xme.xmetools import time_tools
 import random
-from ....xmetools import xme_user as u
-from xme.xmetools.xme_user import User, coin_name, coin_pronoun
+from .classes import xme_user as u
+from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
-
-# coin_name = get_message("config", "coin_name")
-# coin_pronoun =  get_message("config", "coin_pronoun")
 
 alias = ['签到', 'check', 'checkin', 'register', 's']
 cmd_name = 'sign'
@@ -53,7 +50,7 @@ async def _(session: CommandSession, user: User):
         )
     if signed_users_count == 0:
         user.add_coins(FIRST_AWARD)
-        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD)
+        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
     else:
         sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message

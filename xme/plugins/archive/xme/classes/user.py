@@ -173,5 +173,5 @@ class User(DbReadable):
 {bio}----------
 目前{coin}
 物品栏占用: [{self.inventory.get_space()}/{self.inventory.length}]
-上次签到时间: {time_tools.int_to_days(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
+上次签到时间: {time_tools.int_to_date(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
 """.strip()

@@ -105,18 +105,6 @@ class Inventory:
         if not self.del_item(item, 1): return (False, "物品数量不足")
         return (True, action())
 
-    # def drop_item(self, index: int, count: int) -> tuple[bool, int]:
-    #     """尝试丢弃物品
-
-    #     Args:
-    #         index (int): 物品栏索引
-    #         count (int): 数量
-
-    #     Returns:
-    #         bool: 是否丢弃成功
-    #     """
-    #     return self.del_item(self.blocks[index], count)
-
     def del_item(self, item: Item, count: int) -> tuple[bool, int]:
         """尝试删除物品
 

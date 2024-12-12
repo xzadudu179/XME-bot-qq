@@ -26,7 +26,7 @@ async def _(session: CommandSession):
     if arg == 'funcs':
         message = get_message(__plugin_name__, 'func_intro') + "\n"
         for k, v in funcs.items():
-            message += f'{k}: {v["info"]}\n'
+            message += f'{k}{v["body"]}: {v["info"] if v["info"] else "-"}\n'
         if len(funcs.items()) < 1:
             message += get_message(__plugin_name__, 'func_nothing') + '\n'
         message += get_message(__plugin_name__, 'func_builtin_intro') + "\n"
@@ -35,7 +35,13 @@ async def _(session: CommandSession):
         return await send_msg(session, '\n' + message)
     try:
         formula, result = parse_polynomial(arg)
-        message = get_message(__plugin_name__, 'success', result=result, formula=formula, float_result=str(float(result.evalf())))
+        message = get_message(__plugin_name__, 'success', result=result, formula=formula)
+        try:
+            float_result = str(float(result.evalf()))
+        except:
+            float_result = None
+        if float_result:
+            message += '\n' + get_message(__plugin_name__, 'float_result', float_result=float_result)
     except SyntaxError as ex:
         return await send_msg(session, get_message(__plugin_name__, 'syntaxerror', ex=ex))
     except SympifyError as ex:

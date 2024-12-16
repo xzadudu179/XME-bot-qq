@@ -53,7 +53,7 @@ def parse_polynomial(formula):
         results.append(parse_monomial(monomial))
     result_formula = '+'.join(results)
     # print(f"poly result: {result_formula}")
-    return formula.replace(" ", ''), sympify(result_formula)
+    return formula.replace(" ", ''), str(sympify(result_formula)).replace("**", "^")
 
 
 def parse_func(formula):

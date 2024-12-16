@@ -133,6 +133,7 @@ def replace_chinese_punctuation(text: str) -> str:
         "～": "~",
         "—": "-",
         "…": "...",
+        "＾": "^",
     }
     for chinese_punc, english_punc in punctuation_map.items():
         text = re.sub(re.escape(chinese_punc), english_punc, text)

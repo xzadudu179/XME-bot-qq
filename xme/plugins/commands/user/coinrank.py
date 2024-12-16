@@ -79,7 +79,7 @@ async def _(session: CommandSession):
         nickname = u_names[id]
         message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_row',
             rank=i + 1,
-            nickname=nickname,
+            nickname=str(nickname),
             coins_count=v,
             coin_pronoun=coin_pronoun,
             coin_name=coin_name,

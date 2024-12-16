@@ -9,6 +9,7 @@ import config
 # import asyncio
 @message_preprocessor
 async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+    message = event.raw_message.strip()
     prohibited_list = json_tools.read_from_path('./prohibited.json')['whitelist_prohibited']
     is_prohibited = False
     if event.user_id == event.self_id:
@@ -20,8 +21,8 @@ async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: P
         return
     for prohibited in prohibited_list:
         if type(prohibited) == list:
-            if event.raw_message.strip() not in prohibited: continue
-        elif prohibited not in event.raw_message.strip(): continue
+            if message not in prohibited: continue
+        elif prohibited not in message: continue
         print(f"{event.raw_message} 是/有不该出现的词汇: {prohibited}")
         # asyncio.sleep(0.5)
         await bot.api.delete_msg(message_id=event.message_id)

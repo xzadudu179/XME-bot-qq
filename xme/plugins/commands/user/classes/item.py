@@ -246,14 +246,14 @@ item_table = {
         pronoun="个"
     ),
     10: Item(
-            id=10,
-            name="通讯器",
-            desc="一个奇怪的通讯器...上面有些许紫色纹路",
-            rarity=Rarity.MYSTIC,
-            tags=[Tag.SPECIAL],
-            maxcount=1,
-            price=0,
-            pronoun="个",
-            use=item_methods.talk_to_bot
+        id=10,
+        name="通讯器",
+        desc="一个奇怪的通讯器...上面有些许紫色纹路",
+        rarity=Rarity.MYSTIC,
+        tags=[Tag.SPECIAL],
+        maxcount=1,
+        price=0,
+        pronoun="个",
+        use=item_methods.talk_to_bot
     ),
 }

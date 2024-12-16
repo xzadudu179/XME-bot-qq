@@ -1,4 +1,5 @@
 import config
+from xme.xmetools import color_manage as c
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
 from character import get_message
@@ -48,4 +49,32 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
         return CommandManager._commands.get((name,), False)
 
 async def send_msg(session: CommandSession, message, at=True, **kwargs):
-    await session.send(str(message), at_sender=at, **kwargs)
+    message_result = message
+    message_result = await msg_preprocesser(session, message)
+    if not message_result:
+        print(f"bot 要发送的消息 {message} 已被阻止")
+        return
+    await session.send(str(message_result), at_sender=at, **kwargs)
+
+async def msg_preprocesser(session, message):
+    funcs = {
+        no_8694
+    }
+    for func in funcs:
+        result = await func(message, session)
+        if result and type(result) == str:
+            message = result
+    return message
+
+async def no_8694(text, session: CommandSession, *_):
+    replaced = False
+    if "8964" in text:
+        replaced = True
+        text = text.replace("8964", "(8965-1)")
+    elif "89" in text and "64" in text:
+        replaced = True
+        # print(f"bot 输出的 \"{text}\" 有违禁词")
+        text = text.replace("64", "(65-1)")
+    if replaced:
+        c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"bot 输出的 \"{text}\" 有违禁词\n原发送者：{session.event.user_id} 在群 {session.event.group_id}")
+    return text

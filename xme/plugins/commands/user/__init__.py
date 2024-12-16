@@ -1,6 +1,5 @@
 __plugin_name__ = '用户'
-from . import inventory
-from . import coinrank, lottery, sign, userinfo, sendcoin
+from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory
 from nonebot import on_command, CommandSession
 from xme.xmetools.command_tools import send_msg
 import config
@@ -21,7 +20,7 @@ usage = {
 }
 commands = module_tools.get_module_funcs('cmd_name', 'usage', __name__)
 commands[cmd_name] = usage
-# print(commands)
+print([command for command in commands.keys()])
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
     desc=get_message(__plugin_name__, 'desc'),

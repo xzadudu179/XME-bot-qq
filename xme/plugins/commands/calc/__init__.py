@@ -35,10 +35,12 @@ async def _(session: CommandSession):
         return await send_msg(session, '\n' + message)
     try:
         formula, result = parse_polynomial(arg)
-        message = get_message(__plugin_name__, 'success', result=result, formula=formula)
+        message = get_message(__plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
         try:
             float_result = str(float(result.evalf()))
-        except:
+        except Exception as ex:
+            print(ex)
+            print(result)
             float_result = None
         if float_result:
             message += '\n' + get_message(__plugin_name__, 'float_result', float_result=float_result)

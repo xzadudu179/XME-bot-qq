@@ -97,48 +97,15 @@ class User:
         users['users'][str(self.id)] = data_to_save
         json_tools.save_to_path(config.USER_PATH, users)
 
-    async def draw_galaxy_map(self, galaxy_map: map.GalaxyMap, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735'):
-        # 图片大小
-        img_zoom = 2
+    async def draw_user_info(self, map_img, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735'):
         font_size = 12
-        map_width, map_height = galaxy_map.max_size
-
-        zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
-        append = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
+        text_draw = ImageDraw.Draw(map_img)
         user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
-
-        # 计算图像宽高
-        width, height = int(zoom_width * 2 * zoom_fac + padding * 2) * img_zoom, int(zoom_height * 2 * zoom_fac + padding * 2) * img_zoom
-        print(width, height)
-        # 坐标点列表，(x, y)
-
-        points = [(int(point[0] * zoom_fac + padding + append[0]) * img_zoom, int(point[1] * zoom_fac + padding + append[1]) * img_zoom) for point in galaxy_map.starfields.keys()]
-
-        # 创建画布
-        img = Image.new('RGB', (width, height), background_color)
-        draw = ImageDraw.Draw(img)
-
-        # 背景
-        # 绘制随机线条
-        random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
-        # 绘制网格
-        write_grid(draw, int(35 * zoom_fac * img_zoom), width, height, grid_color, int(1 * zoom_fac * img_zoom))
-
-        for i, (point, starfield) in enumerate(galaxy_map.starfields.items()):
-            side = 4
-            color = "#FFEE55" if starfield.faction is None else starfield.faction.color
-            name = "" if starfield.faction is None else starfield.faction.name
-            # mark_point(draw, points[i], point, side, color, int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac), f'{name}', int(font_size * ui_zoom_fac))
-            draw_point(draw, zoom_fac * img_zoom, point, (width, height), color)
-
-        # 绘制圆加十字
-        # mark_point(draw, points[0],galaxy_map.starfields.keys()[0], 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac))
-
         text = f'[测试星图终端]\n[用户] {user_name}\n坐标轴中心: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
-        draw_text_on_image(draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
+        draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
         # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
         # 保存图片
-        img.save('data/images/temp/chart.png')
+        map_img.save('data/images/temp/chart.png')
 
         # 显示图片
         # img.show()

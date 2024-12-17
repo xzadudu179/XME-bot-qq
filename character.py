@@ -91,6 +91,7 @@ def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) 
             bless=random_tools.str_choice(feedbacks['bless']),
             disgust=random_tools.str_choice(feedbacks['disgust']),
             sad=random_tools.str_choice(feedbacks['sad']),
+            shout=random_tools.str_choice(feedbacks['shout']),
             positive_punc=random_tools.str_choice(feedbacks['positive_punc']),
         )
     except KeyError as ex:

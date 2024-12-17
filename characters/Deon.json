@@ -22,7 +22,11 @@
             "neutral": [
                 "ovo",
                 "嗷呜",
-                ""
+                "嗷呜——"
+            ],
+            "shout": [
+                "嗷呜！",
+                "汪！"
             ],
             "bless": [
                 "好诶~",
@@ -490,7 +494,7 @@
             "{negative}找不到书了..."
         ],
         "550w": [
-            "答案？之书？：\n\"我是 55...???\n{positive}漠月不是 550W 汪！",
+            "答案？之书？：\n\"我是 55...???\n{shout}漠月不是 550W 汪！",
             "汪？答案之书说它是 550W 呜！",
             "答案之书说它是 550W...漠月不是 550W 汪！"
         ],
@@ -794,7 +798,7 @@
             "{result}！"
         ],
         "jrrp_default": [
-            "{result}，{neutral}"
+            "{result} {neutral}"
         ]
     },
     "实例控制": {
@@ -1226,7 +1230,7 @@
             ],
             "result": [
                 "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
-                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{neutral}",
+                "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
                 "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
             ],
             "too_many_coins": [

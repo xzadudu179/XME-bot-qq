@@ -8,7 +8,7 @@ SUPERUSERS = {1795886524}
 COMMAND_START = ['/', '!', '！', '.', '。']
 ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'
-PORT = 17980
+PORT = 18980
 DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default_validation_failure_expression')
 # DEFAULT_VALIDATION_FAILURE_EXPRESSION = '发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦'
 SESSION_EXPIRE_TIMEOUT = timedelta(minutes=3)

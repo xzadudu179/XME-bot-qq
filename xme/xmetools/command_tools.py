@@ -51,8 +51,8 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
 async def send_msg(session: CommandSession, message, at=True, **kwargs):
     message_result = message
     message_result = await msg_preprocesser(session, message)
-    if not message_result:
-        print(f"bot 要发送的消息 {message} 已被阻止")
+    if not message_result and message_result != "":
+        print(f"bot 要发送的消息 {message} 已被阻止/没东西")
         return
     await session.send(str(message_result), at_sender=at, **kwargs)
 

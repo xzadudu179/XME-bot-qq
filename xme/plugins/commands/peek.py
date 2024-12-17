@@ -54,7 +54,11 @@ async def _(session: CommandSession):
         except TypeError:
             monitor_num = 1
             arg_state = False
-    path, state = take_screenshot.take_screenshot(monitor_num)
+    try:
+        path, state = take_screenshot.take_screenshot(monitor_num)
+    except:
+        print("无法截图")
+        await send_msg(session, get_message(__plugin_name__, 'error'))
     # path = "file:///" + path.split(":")[0] + ":\\" + path.split(":")[1]
     path = f'http://server.xzadudu179.top:17980/screenshot'
     if state and arg_state and monitor_num != 0:

@@ -20,12 +20,12 @@
             ],
             "neutral": [
                 "ovo",
-                "嗷呜",
+                "喵呜",
                 ""
             ],
             "shout": [
-                "嗷呜！",
-                "汪！"
+                "喵呜！",
+                "喵！"
             ],
             "bless": [
                 "好诶~",
@@ -35,8 +35,8 @@
                 "owo！"
             ],
             "happy": [
-                "嗷呜~",
-                "嗷呜！"
+                "喵呜~",
+                "喵呜！"
             ],
             "excellent": [
                 "好耶！",
@@ -45,20 +45,21 @@
             ],
             "positive": [
                 "owo",
-                "嗷呜！"
+                "喵呜！"
             ],
             "positive_punc": [
                 "~"
             ],
             "positive_plus": [
                 "owo！",
-                "owo！嗷呜！"
+                "owo！喵呜！"
             ]
         }
     },
     "config": {
         "busy": "我还有指令未处理 uwu",
-        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦"
+        "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
+        "pid_prime": "我这次运行的 PID {pid} 是质数诶~"
     },
     "user": {
         "coin_name": "金币",
@@ -79,14 +80,14 @@
             "有点无聊ovo",
             "看看群友在干嘛（？",
             "8",
-            "嗷呜——",
+            "喵呜——",
             "冒泡",
             "ovo",
             "喵",
             "猜猜我是谁",
             "/a b30",
             "/a bind 171142422",
-            "汪",
+            "喵",
             "看看179",
             ".pick",
             "我是 550W",
@@ -466,6 +467,12 @@
         ],
         "not_in_peek_group": "你不在可视奸的群里哦（？",
         "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
+    },
+    "ping": {
+        "desc": "检测消息发送延迟",
+        "introduction": "发送后会返回当前的消息延迟",
+        "ping_message": "{shout}",
+        "ping": "{shout}我在 {ping} 秒后听到了回音..."
     },
     "calc": {
         "desc": "计算器",

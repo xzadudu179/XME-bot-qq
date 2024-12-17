@@ -61,7 +61,8 @@
     },
     "config": {
         "busy": "忙不过来啦 {negative}",
-        "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦"
+        "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
+        "pid_prime": "我这次运行的 PID {pid} 是质数诶~"
     },
     "user": {
         "coin_name": "星币",
@@ -1382,6 +1383,7 @@
     "peek": {
         "desc": "视奸179",
         "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
+        "error": "截图失败了...可能是这个系统并不支持截图呢...",
         "default_monitor": [
             "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦 {neutral}",
             "解析参数出了点问题，给你看看 179 的默认屏幕的状态吧 {neutral}"
@@ -1402,6 +1404,15 @@
         "is_private": [
             "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦...",
             "九九现在的窗口焦点 \"{title}\" 是不可以看的哦 {neutral}"
+        ]
+    },
+    "ping": {
+        "desc": "检测消息发送延迟",
+        "introduction": "发送后会返回当前的消息延迟",
+        "ping_message": "{shout}",
+        "ping": [
+            "我在 {ping} 秒后听到了回音...",
+            "我在 {ping} 秒后听到了自己的声音..."
         ]
     },
     "calc": {

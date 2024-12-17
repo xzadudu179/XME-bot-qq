@@ -3,7 +3,10 @@ from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools import take_screenshot
 from xme.xmetools import json_tools
 from xme.xmetools import color_manage as c
-import pygetwindow as gw
+try:
+    import pygetwindow as gw
+except:
+    pass
 import config
 from character import get_message
 from xme.xmetools.command_tools import send_msg
@@ -24,17 +27,21 @@ async def _(session: CommandSession):
     if session.event.group_id not in config.PEEK_GROUP:
         return await send_msg(session, get_message(__plugin_name__, 'not_in_peek_group'))
     private_window_names = json_tools.read_from_path('./private_window_names.json')['private']
+    try:
+        current_window = gw.getActiveWindow()
+    except:
+        current_window = None
     is_private = False
-    current_window = gw.getActiveWindow()
-    for name in private_window_names:
-        print(name, isinstance(name, list))
-        if isinstance(name, list):
-            if current_window.title not in name: continue
-            is_private = True
-            break
-        if name in current_window.title:
-            is_private = True
-            break
+    if current_window:
+        for name in private_window_names:
+            print(name, isinstance(name, list))
+            if isinstance(name, list):
+                if current_window.title not in name: continue
+                is_private = True
+                break
+            if name in current_window.title:
+                is_private = True
+                break
     if is_private:
         return await send_msg(session, get_message(__plugin_name__, 'is_private', title=current_window.title))
     print(c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"{'=' * 20}\n{'=' * 20}\n{'=' * 20}\n===👁你被视奸👁了===\n{'=' * 20}\n{'=' * 20}\n{'=' * 20}"))

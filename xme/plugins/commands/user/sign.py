@@ -20,7 +20,7 @@ usage = {
 }
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
-@u.using_user(save_data=True)
+@u.using_user(save_data=False)
 @u.limit(cmd_name, 1, get_message(__plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
     FIRST_AWARD = 10
@@ -54,5 +54,8 @@ async def _(session: CommandSession, user: User):
     else:
         sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message
+    # 防止发送消息时间过长导致出现多个第一名签到的情况
+    user.save()
+    print("保存用户数据")
     await send_msg(session, message)
     return True

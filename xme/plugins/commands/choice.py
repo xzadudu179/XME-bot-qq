@@ -34,7 +34,9 @@ async def _(session: CommandSession):
             has_or_not_choice(choices[0]),
             is_or_not_choice(choices[0]),
             ends_is_or_not_choice(choices[0]),
-            another_or_choice(choices[0]),
+            another_or_choice(choices[0], "还是"),
+            another_or_choice(choices[0], "或者"),
+            another_or_choice(choices[0], "或"),
         ]
         for c in special_choices:
             if c:
@@ -62,10 +64,10 @@ def has_or_not_choice(input_str):
         print(ex)
         return False
 
-def another_or_choice(input_str):
+def another_or_choice(input_str, another_text="还是"):
     # 还是
     result = []
-    asks = input_str.split("还是")
+    asks = input_str.split(another_text)
     if ''.join(asks[1:]) == '':
         return False
     temp = ''

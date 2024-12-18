@@ -454,8 +454,8 @@
         ],
         "cmd_bursts": [
             "指令发送太快啦...",
-            "{negative}不要那么快的发指令",
-            "指令不要发太快{negative}"
+            "{negative} 不要那么快的发指令",
+            "指令不要发太快 {negative}"
         ],
         "message_prohibited": [
             "不要发奇怪的词汇{negative}",
@@ -1235,9 +1235,9 @@
                 "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
             ],
             "too_many_coins": [
-                "{count} {coin_pronoun}{coin_name} 太多啦！不能多于 {count_max} 呢...",
-                "{count} {coin_pronoun}{coin_name} 太多啦...不能多于 {count_max} 呢 {neutral}",
-                "{count} {coin_pronoun}{coin_name} 太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
+                "{count} {coin_pronoun}{coin_name}太多啦！不能多于 {count_max} 呢...",
+                "{count} {coin_pronoun}{coin_name}太多啦...不能多于 {count_max} 呢 {neutral}",
+                "{count} {coin_pronoun}{coin_name}太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
                 "饼干机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
                 "一次最多只能投入 {count_max} {coin_pronoun}{coin_name}哦..."
             ]

@@ -31,6 +31,9 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         is_cmd = command_tools.get_cmd_by_alias(message.split(" ")[0])
     else:
         is_cmd = False
+    # 不处理空消息了
+    if not message:
+        return
     # 如果是指令只保留指令名部分
     if is_cmd:
         message = message.split(" ")[0]

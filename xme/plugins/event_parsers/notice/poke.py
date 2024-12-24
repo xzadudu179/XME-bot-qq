@@ -1,5 +1,6 @@
 from nonebot import on_notice, RequestSession
-import config
+import aiocqhttp
+from nonebot import get_bot
 from ....xmetools import color_manage as c
 import asyncio
 import random
@@ -10,7 +11,19 @@ async def _(session: RequestSession):
     if session.event.user_id == session.self_id: return
     print(session.event.user_id, session.event.sub_type)
     print(session.event.group_id)
-    print(c.gradient_text("#dda3f8","#66afff" ,text=f"有新的非自己的 notify: {session.event}"))
+    if session.event.sub_type == 'poke':
+        bot = get_bot()
+        try:
+            operator = (await bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id))
+            operator = operator['card'] if operator['card'] else operator['nickname']
+            target = (await bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.event['target_id']))
+            target = target['card'] if target['card'] else target['nickname']
+        except aiocqhttp.exceptions.ActionFailed:
+            operator = (await bot.api.get_stranger_info(user_id=session.event.user_id))
+            operator = operator['nickname']
+            target = (await bot.api.get_stranger_info(user_id=session.event.self_id))
+            target = target['nickname']
+        print(c.gradient_text("#dda3f8","#66afff" ,text=f"[{((await bot.api.get_group_info(group_id=session.event.group_id))['group_name']) if session.event.group_id else '私聊'}] {operator} {session.event['action']} {target} {session.event['suffix']}"))
     if session.event.sub_type == 'poke' and session.event['target_id'] == session.self_id:
         print("戳回去")
         # 随机等待一段时间

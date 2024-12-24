@@ -14,7 +14,7 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message(__plugin_name__, "desc"),
     introduction=get_message(__plugin_name__, "introduction"),
     # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数',
-    usage=f'(事情列表(空格分隔))',
+    usage=f'(事情列表(空格分隔)或是任意选择语句)',
     permissions=[],
     alias=alias
 ))
@@ -34,7 +34,10 @@ async def _(session: CommandSession):
             has_or_not_choice(choices[0]),
             is_or_not_choice(choices[0]),
             ends_is_or_not_choice(choices[0]),
-            another_or_choice(choices[0]),
+            another_or_choice(choices[0], "还是"),
+            another_or_choice(choices[0], "或者"),
+            another_or_choice(choices[0], "或"),
+            is_or_not_split_choice(choices[0])
         ]
         for c in special_choices:
             if c:
@@ -62,10 +65,10 @@ def has_or_not_choice(input_str):
         print(ex)
         return False
 
-def another_or_choice(input_str):
+def another_or_choice(input_str, another_text="还是"):
     # 还是
     result = []
-    asks = input_str.split("还是")
+    asks = input_str.split(another_text)
     if ''.join(asks[1:]) == '':
         return False
     temp = ''
@@ -81,6 +84,12 @@ def another_or_choice(input_str):
         return False
     return text_tools.remove_punctuation(random.choice(result))
 
+def is_or_not_split_choice(text):
+    splits = [text.split("不")[0], "不".join(text.split("不")[1:])]
+    if splits[0] == splits[1]:
+        splits[0] = "不" + splits[0]
+        return random.choice(splits)
+    return False
 
 def ends_is_or_not_choice(text):
     question_strings = ("否", "吗", "嘛")

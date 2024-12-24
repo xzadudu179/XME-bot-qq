@@ -1,6 +1,6 @@
 import re
 from pypinyin import lazy_pinyin
-import spacy
+# import spacy
 import string
 from difflib import SequenceMatcher
 
@@ -133,6 +133,7 @@ def replace_chinese_punctuation(text: str) -> str:
         "～": "~",
         "—": "-",
         "…": "...",
+        "＾": "^",
     }
     for chinese_punc, english_punc in punctuation_map.items():
         text = re.sub(re.escape(chinese_punc), english_punc, text)
@@ -226,15 +227,15 @@ def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0)
         similarities.append((s, jaccard_similarity(input_str, s)))
     return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
 
-def is_question_product(question, question_of):
-    # 加载中文模型
-    nlp = spacy.load("zh_core_web_sm")
+# def is_question_product(question, question_of):
+#     # 加载中文模型
+#     nlp = spacy.load("zh_core_web_sm")
 
-    # 处理句子
-    doc = nlp(question)
+#     # 处理句子
+#     doc = nlp(question)
 
-    # 识别实体
-    for ent in doc.ents:
-        if ent.text == question_of:
-            return True
-    return False
+#     # 识别实体
+#     for ent in doc.ents:
+#         if ent.text == question_of:
+#             return True
+#     return False

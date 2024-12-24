@@ -2,11 +2,11 @@ from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools.command_tools import send_msg
-from bisect import bisect_left
-from xme.xmetools import xme_user
+from xme.plugins.commands.user.classes import xme_user
 from xme.xmetools import text_tools
-from xme.xmetools.xme_user import User, coin_name, coin_pronoun
+from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
+import statistics
 
 
 alias = ['rank', f'{coin_name}排行', 'ranking']
@@ -41,7 +41,8 @@ async def _(session: CommandSession):
         message = get_message(__plugin_name__, cmd_name, 'rank_msg_avg',
             coin_name=coin_name,
             coin_pronoun=coin_pronoun,
-            avg=int(rank_avg)
+            avg=int(rank_avg),
+            median=int(rank_operation(lambda x: statistics.median(x), rank_items))
         )
         await send_msg(session, message)
         return True
@@ -78,7 +79,7 @@ async def _(session: CommandSession):
         nickname = u_names[id]
         message += '\n' + get_message(__plugin_name__, cmd_name, 'ranking_row',
             rank=i + 1,
-            nickname=nickname,
+            nickname=str(nickname),
             coins_count=v,
             coin_pronoun=coin_pronoun,
             coin_name=coin_name,

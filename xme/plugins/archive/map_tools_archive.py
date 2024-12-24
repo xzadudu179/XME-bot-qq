@@ -140,10 +140,11 @@ def write_crosshair(draw, point: tuple[int, int], radius: int, lineout: int, col
 
 def draw_text_on_image(draw: ImageDraw, text, position, font_size, color, spacing=4):
     # 创建字体对象
-    try:
-        font = ImageFont.truetype("fonts/Cubic.ttf", font_size)  # 使用字体
-    except IOError:
-        font = ImageFont.load_default()  # 加载默认字体
+    # try:
+        # font = ImageFont.truetype("fonts/Cubic.ttf", font_size)  # 使用字体
+    # except IOError:
+        # font = ImageFont.load_default()  # 加载默认字体
+    font = ImageFont.load_default()  # 加载默认字体
     # 在指定位置绘制文字
     draw.text(position, text, font=font, fill=color, spacing=spacing)
 
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     draw_text_on_image(draw, text, (int(15 * ui_zoom_factor), int(height - 40 * ui_zoom_factor - font_size * (text.count('\n') + 1) * ui_zoom_factor)), int(font_size * ui_zoom_factor), 'white', spacing=10)
     # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
     # 保存图片
-    img.save('data/images/temp/chart.png')
+    # img.save('data/images/temp/chart.png')
 
     # 显示图片
     img.show()

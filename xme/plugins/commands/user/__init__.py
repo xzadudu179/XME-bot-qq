@@ -1,11 +1,13 @@
 __plugin_name__ = '用户'
-from . import coinrank, lottery, sign, userinfo, sendcoin
+from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory
 from nonebot import on_command, CommandSession
 from xme.xmetools.command_tools import send_msg
 import config
 from xme.xmetools.command_tools import get_cmd_by_alias
 from character import get_message
 from xme.xmetools.doc_gen import PluginDoc, CommandDoc
+from xme.xmetools import module_tools
+
 cmd_name = "userhelp"
 alias = ['uhelp', '用户帮助', 'uh']
 usage = {
@@ -16,15 +18,9 @@ usage = {
     "permissions": [],
     "alias": alias
 }
-
-commands = {
-    cmd_name: usage,
-    coinrank.cmd_name: coinrank.usage,
-    lottery.cmd_name: lottery.usage,
-    sign.cmd_name: sign.usage,
-    userinfo.cmd_name: userinfo.usage,
-    sendcoin.cmd_name: sendcoin.usage
-}
+commands = module_tools.get_module_funcs('cmd_name', 'usage', __name__)
+commands[cmd_name] = usage
+print([command for command in commands.keys()])
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
     desc=get_message(__plugin_name__, 'desc'),

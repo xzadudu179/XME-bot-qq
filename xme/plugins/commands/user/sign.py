@@ -4,12 +4,9 @@ from xme.xmetools.command_tools import send_msg
 import math
 from xme.xmetools import time_tools
 import random
-from ....xmetools import xme_user as u
-from xme.xmetools.xme_user import User, coin_name, coin_pronoun
+from .classes import xme_user as u
+from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
-
-# coin_name = get_message("config", "coin_name")
-# coin_pronoun =  get_message("config", "coin_pronoun")
 
 alias = ['签到', 'check', 'checkin', 'register', 's']
 cmd_name = 'sign'
@@ -23,9 +20,10 @@ usage = {
 }
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
-@u.using_user(save_data=True)
+@u.using_user(save_data=False)
 @u.limit(cmd_name, 1, get_message(__plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
+    FIRST_AWARD = 10
     message = ""
     # message = get_message(__plugin_name__, cmd_name, 'failed')
     print(user)
@@ -37,10 +35,6 @@ async def _(session: CommandSession, user: User):
         counters = u.get('counters', {})
         if counters.get(cmd_name, {}).get('time', 0) == math.floor(time_tools.timenow() / (60 * 60 * 24)):
             signed_users_count += 1
-    if signed_users_count == 0:
-        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign')
-    else:
-        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     if append_coins == 0:
         message = get_message(__plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
@@ -54,6 +48,14 @@ async def _(session: CommandSession, user: User):
             coin_name=coin_pronoun + coin_name,
             coin_total=user.coins
         )
+    if signed_users_count == 0:
+        user.add_coins(FIRST_AWARD)
+        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
+    else:
+        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message
+    # 防止发送消息时间过长导致出现多个第一名签到的情况
+    user.save()
+    print("保存用户数据")
     await send_msg(session, message)
     return True

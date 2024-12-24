@@ -3,8 +3,8 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
-from xme.xmetools.xme_user import coin_name, coin_pronoun
-from xme.xmetools import xme_user
+from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
+from xme.plugins.commands.user.classes import xme_user
 import xme.xmetools.text_tools as t
 from xme.xmetools.command_tools import send_msg
 from . import game_commands as games

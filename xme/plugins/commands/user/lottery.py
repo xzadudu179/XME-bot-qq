@@ -3,13 +3,10 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
 from xme.xmetools.command_tools import send_msg
 import random
-from ....xmetools import xme_user as u
-from xme.xmetools.xme_user import User, coin_name, coin_pronoun
+from .classes import xme_user as u
+from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
 import traceback
-
-# coin_name = get_message("config", "coin_name")
-# coin_pronoun =  get_message("config", "coin_pronoun")
 
 alias = ['抽奖', 'lot']
 TIMES_LIMIT = 5

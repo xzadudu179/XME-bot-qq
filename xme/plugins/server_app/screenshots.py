@@ -1,6 +1,5 @@
 import nonebot
 import os
-import pygetwindow as gw
 import traceback
 from nonebot import log
 

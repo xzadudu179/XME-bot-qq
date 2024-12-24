@@ -37,13 +37,16 @@ async def jrrp(session: CommandSession):
         if args == 'avg':
             avg = int(sum([member['jrrp'] for member in members]) / len(members))
             await send_msg(session,
-                get_message(__plugin_name__, 'avg_message')
-                .format(avg=avg, reaction=
-                                    get_message(__plugin_name__, 'reaction>60') if
-                                    avg > 60 else
-                                    get_message(__plugin_name__, 'reaction>20') if
-                                    avg > 20 else
-                                    get_message(__plugin_name__, 'reaction<=20')))
+                get_message(
+                    __plugin_name__, 'avg_message', avg=avg,
+                    reaction=
+                    get_message(__plugin_name__, 'reaction>60') if
+                    avg > 60 else
+                    get_message(__plugin_name__, 'reaction>20') if
+                    avg > 20 else
+                    get_message(__plugin_name__, 'reaction<=20')
+                )
+            )
             # await send_msg(session, f"今日群员人品的平均值是 {avg} {'owo' if avg > 60 else 'ovo' if avg > 20 else 'uwu'}")
             return
         try:
@@ -59,11 +62,14 @@ async def jrrp(session: CommandSession):
         elif count == 0:
             count = 5
             # return
-        message = get_message(__plugin_name__, 'rank_message', high_or_low='高' if count > 0 else '低',
-                                                                      count=abs(count),
-                                                                      reaction=get_message(__plugin_name__, 'reaction>60') if
-                                                                      count > 0 else
-                                                                      get_message(__plugin_name__, 'reaction<=20'))
+        message = get_message(
+            __plugin_name__,
+            'rank_message',
+            high_or_low='高' if count > 0 else '低',
+            count=abs(count),
+            reaction=get_message(__plugin_name__, 'reaction>60') if
+            count > 0 else
+            get_message(__plugin_name__, 'reaction<=20'))
         # message = f"这是今天人品最{'高' if count > 0 else '低'}的前 {abs(count)} 位群员排名 {get_message(__plugin_name__, 'jrrp>60') if count > 0 else get_message(__plugin_name__, 'jrrp<=20')}"
         if count > 0:
             enum_list = members[:count]
@@ -71,7 +77,7 @@ async def jrrp(session: CommandSession):
             enum_list = members[count:]
             enum_list.reverse()
         for i, member in enumerate(enum_list):
-            message += get_message(__plugin_name__, 'jrrp_row', index=i + 1, card=member['card'], id=member['id'], jrrp=member['jrrp'])
+            message += get_message(__plugin_name__, 'jrrp_row', index=i + 1, card=member['card'], id=str(member['id']), jrrp=member['jrrp'])
             # message += f"\n{i + 1}. {member['card']} ({member['id']})：今日人品值为 {member['jrrp']}"
         await send_msg(session, message)
         return

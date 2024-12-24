@@ -4,7 +4,6 @@ from nonebot.log import logger
 from logging.handlers import TimedRotatingFileHandler
 import logging
 from xme.xmetools import color_manage as c
-from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import config
 

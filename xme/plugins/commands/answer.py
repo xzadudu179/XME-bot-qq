@@ -39,7 +39,7 @@ async def _(session: CommandSession):
     args = session.current_arg_text.strip()
     print(args.upper())
 
-    if args and text_tools.is_question_product(args.upper(), '550W'):
+    if args and '550W' in args.upper():
         print("有人在询问 550W")
         # random.seed(curr_days())
         percent = get_current_days_550w_percent()

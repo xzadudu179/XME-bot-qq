@@ -1,10 +1,13 @@
 import config
 from xme.xmetools import color_manage as c
+from xme.xmetools import dict_tools
+from nonebot import NoneBot
+import aiocqhttp
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
 from character import get_message
 
-async def send_cmd(cmd_string, session, check_permission=True):
+async def event_send_cmd(cmd_string, bot, event, check_permission=True):
     name = cmd_string.split(" ")[0]
     if name[0] in config.COMMAND_START:
         name = name[1:]
@@ -16,15 +19,23 @@ async def send_cmd(cmd_string, session, check_permission=True):
     # print(CommandManager._find_command(self=CommandManager, name=name))
     args = " ".join((cmd_string.split(" ")[1:])) if len(cmd_string.split(" ")) > 1 else ""
     if name == "wife" and '[CQ:at,qq=' not in args:
-        await send_msg(session, get_message('other', 'wife_error'))
+        await event_send_msg(bot, event, get_message('other', 'wife_error'))
         # await send_msg(session, "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
     print(f"parse command: {name} | {args}")
     await call_command(
-        bot=session.bot,
-        event=session.event,
+        bot=bot,
+        event=event,
         name=name,
         current_arg=args,
         check_perm=check_permission)
+
+async def send_cmd(cmd_string, session, check_permission=True):
+    return await event_send_cmd(cmd_string, session.bot, session.event, check_permission)
+
+def get_alias_by_cmd(cmd_name: str):
+    cmds = {k.name[0]: v for k, v in dict_tools.reverse_dict(CommandManager._aliases).items()}
+    # print(cmds)
+    return cmds.get(cmd_name, False)
 
 def get_cmd_by_alias(input_string, need_cmd_start=True):
     """尝试通过别名获得指令
@@ -55,6 +66,9 @@ async def send_msg(session: CommandSession, message, at=True, **kwargs):
         print(f"bot 要发送的消息 {message} 已被阻止/没东西")
         return
     await session.send(str(message_result), at_sender=at, **kwargs)
+
+async def event_send_msg(bot: NoneBot, event: aiocqhttp.Event, message, at=True, **kwargs):
+    await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
 
 async def msg_preprocesser(session, message):
     funcs = {

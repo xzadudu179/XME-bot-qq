@@ -155,7 +155,7 @@ def draw_point(draw, scale_factor, point, image_size, fill_color="yellow"):
     y2 = y1 + cell_height
     draw.rectangle([x1, y1, x2, y2], fill=fill_color)
 
-def write_crosshair(draw, point: tuple[int, int], radius: int, lineout: int, color, width: int=2):
+def write_crosshair(draw: ImageDraw, point: tuple[int, int], radius: int, lineout: int, color, width: int=2):
     """绘制准心
 
     Args:
@@ -194,7 +194,7 @@ def draw_galaxy_map():
     # 缩放倍率
     zoom_factor = 3
     # ui 缩放倍率
-    ui_zoom_factor = 1
+    ui_zoom_factor = 2
     map_width, map_height = 250, 250
     zoom_width, zoom_height = map_width // zoom_factor // 2, map_height // zoom_factor // 2
     append = (((-center[0] + zoom_width) * zoom_factor), (-center[1] + zoom_height) * zoom_factor)
@@ -243,7 +243,6 @@ def draw_galaxy_map():
         colors[4]: "无所属",
         colors[5]: "联盟",
     }
-
     for i, point in enumerate(regular_points):
         if i == 0: continue
         side = random.randint(3, 5)
@@ -257,29 +256,13 @@ def draw_galaxy_map():
     draw_text_on_image(draw, text, (int(15 * ui_zoom_factor), int(height - 40 * ui_zoom_factor - font_size * (text.count('\n') + 1) * ui_zoom_factor)), int(font_size * ui_zoom_factor), 'white', spacing=10)
     # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
     # 保存图片
-    img.save('data/images/temp/chart.png')
+    # img.save('data/images/temp/chart.png')
 
     # 显示图片
     img.show()
 
 if __name__ == "__main__":
-    ...
-        # 创建一个空白图像
-    width, height = 200, 200
-    image = Image.new("RGB", (width, height), "white")
-
-    # 创建一个绘图对象
-    draw = ImageDraw.Draw(image)
-
-    # 定义方块位置和颜色
-    x1, y1, x2, y2 = 50, 50, 150, 150  # 左上角 (50, 50)，右下角 (150, 150)
-    fill_color = "blue"  # 填充颜色
-
-    # 绘制实心方块
-    draw.rectangle([x1, y1, x2, y2], fill=fill_color)
-
-    # 保存或显示图像
-    image.show()  # 显示图像
+    draw_galaxy_map()
     # # 图表大小
     # # 星图绘制中心
     # center = (125, 125)

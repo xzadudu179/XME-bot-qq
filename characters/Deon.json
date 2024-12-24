@@ -60,7 +60,7 @@
         }
     },
     "config": {
-        "busy": "忙不过来啦 {negative}",
+        "busy": "我还在处理指令哦... {negative}",
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~"
     },
@@ -445,6 +445,9 @@
         "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
     },
     "event_parsers": {
+        "no_command": [
+            "{negative} 漠月并不知道指令 \"{command}\" 是什么意思诶...\n可以用 \"{help_cmd}\" 看看指令帮助哦"
+        ],
         "message_bursts": [
             "不要刷屏 {negative}",
             "{negative}不要刷屏",
@@ -877,7 +880,7 @@
         "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
         "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
         "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
-        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
+        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦\n可以试试用 \"/s\" 来签到哦",
         "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦...",
         "guess": {
             "desc": "猜数字游戏",
@@ -1415,6 +1418,14 @@
             "我在 {ping} 秒后听到了自己的声音..."
         ]
     },
+    "alias": {
+        "desc": "获得指令别名",
+        "introduction": "使用参数获得指定指令的别名列表，可以使用别名调用这个指令",
+        "result_prefix": "指令 \"{command}\" 有这些别名哦 {positive}：",
+        "no_arg": "请在参数里输入指令名或别名哦 {neutral}",
+        "no_alias": "{negative} 找不到指令 \"{command}\" 的别名诶",
+        "alias_line": "{i}. {alias}"
+    },
     "calc": {
         "desc": "计算器",
         "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的函数列表",
@@ -1441,5 +1452,15 @@
         "func_builtin_intro": "以下是自带函数列表{positive_punc}",
         "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
         "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
+    },
+    "translate": {
+        "desc": "翻译消息",
+        "introduction": "翻译回复的消息，或你自己的消息，可以指定获取指定消息前面的所有消息数量",
+        "invalid_count": "数量参数需要是整数哦 {negative}",
+        "count_too_low": "要获取的消息数量不能小于 1 哦 {negative}",
+        "count_too_many": "要获取的消息数量太多啦，最多 {max_count} 条哦 {neutral}",
+        "processing": "正在翻译到 \"{language}\" 中~ 请等待 {min} 到 {max} 秒哦",
+        "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
+        "no_message": "唔...没有任何消息呢"
     }
 }

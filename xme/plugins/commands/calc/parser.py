@@ -71,11 +71,11 @@ def parse_func(formula):
         func_name = f.split("(")[0]
         if func_name not in func.funcs.keys(): continue
         func_body = '('.join(f.split("(")[1:])[:-1]
-        # print(f"func body: {func_body}")
+        print(f"func body: {func_body}")
         _, args = parse_polynomial(func_body)
-        # print(f"args: {args}")
+        print(f"args: {args}")
         result = func.funcs[func_name]['func'](*args)
-        # print(f"func \"{f}\" result: {result}")
+        print(f"func \"{f}\" result: {result}")
         formula = formula.replace(f, str(result))
     return formula
 

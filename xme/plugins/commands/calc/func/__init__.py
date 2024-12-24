@@ -39,5 +39,5 @@ builtins = {
 }
 
 funcs = {
-    dich.func_name: dich.func_info
+    dich.func_name: dich.func_info,
 }

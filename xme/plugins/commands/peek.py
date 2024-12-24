@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
-from xme.xmetools import take_screenshot
+from xme.xmetools import image_tools
 from xme.xmetools import json_tools
 from xme.xmetools import color_manage as c
 try:
@@ -55,7 +55,7 @@ async def _(session: CommandSession):
             monitor_num = 1
             arg_state = False
     try:
-        path, state = take_screenshot.take_screenshot(monitor_num)
+        path, state = image_tools.take_screenshot(monitor_num)
     except:
         print("无法截图")
         await send_msg(session, get_message(__plugin_name__, 'error'))

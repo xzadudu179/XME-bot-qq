@@ -1,11 +1,12 @@
 from xme.xmetools import json_tools
 from xme.xmetools import time_tools
 from xme.xmetools import dict_tools
+from xme.xmetools import image_tools
 from functools import wraps
 import config
 from nonebot import get_bot
 from ..tools.map_tools import *
-from . import map
+from . import xme_map
 import inspect
 import math
 from character import get_message
@@ -97,18 +98,21 @@ class User:
         users['users'][str(self.id)] = data_to_save
         json_tools.save_to_path(config.USER_PATH, users)
 
-    async def draw_user_info(self, map_img, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735'):
+    #                              ↓ 临时参数
+    async def draw_user_map(self, galaxy_map: xme_map.GalaxyMap, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, background_color="black", line_width=1, grid_color='#102735'):
+        map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
         font_size = 12
+        width, height = map_img.size
         text_draw = ImageDraw.Draw(map_img)
         user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
         text = f'[测试星图终端]\n[用户] {user_name}\n坐标轴中心: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
         draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
         # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
         # 保存图片
-        map_img.save('data/images/temp/chart.png')
+        map_img.save('data/images/temp/chartinfo.png')
 
         # 显示图片
-        # img.show()
+        # map_img.show()
 
 
 def try_load(id, default):

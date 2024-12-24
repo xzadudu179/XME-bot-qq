@@ -37,6 +37,7 @@ async def _(session: CommandSession):
             another_or_choice(choices[0], "还是"),
             another_or_choice(choices[0], "或者"),
             another_or_choice(choices[0], "或"),
+            is_or_not_split_choice(choices[0])
         ]
         for c in special_choices:
             if c:
@@ -83,6 +84,12 @@ def another_or_choice(input_str, another_text="还是"):
         return False
     return text_tools.remove_punctuation(random.choice(result))
 
+def is_or_not_split_choice(text):
+    splits = [text.split("不")[0], "不".join(text.split("不")[1:])]
+    if splits[0] == splits[1]:
+        splits[0] = "不" + splits[0]
+        return random.choice(splits)
+    return False
 
 def ends_is_or_not_choice(text):
     question_strings = ("否", "吗", "嘛")

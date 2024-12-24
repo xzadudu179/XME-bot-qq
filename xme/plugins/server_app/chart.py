@@ -16,3 +16,16 @@ async def route_map():
         print(ex)
         print(traceback.format_exc())
         return "ERROR"
+
+@bot.server_app.route('/usermap')
+async def route_user_map():
+    # await bot.send_private_msg(user_id=1795886524, message='你的主页被访问了')
+    log.logger.info("bot 用户星图被访问了")
+    try:
+        with open('./data/images/temp/chartinfo.png', 'rb') as image:
+            # return base64.b64encode(image.read()).decode('utf-8')
+            return image.read()
+    except Exception as ex:
+        print(ex)
+        print(traceback.format_exc())
+        return "ERROR"

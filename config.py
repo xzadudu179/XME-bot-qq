@@ -14,6 +14,7 @@ DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default
 SESSION_EXPIRE_TIMEOUT = timedelta(minutes=3)
 SESSION_RUN_TIMEOUT = timedelta(seconds=0)
 SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
+# SESSION_RUNNING_EXPRESSION = ""
 DEFAULT_COMMAND_PERMISSION = lambda s: s.is_groupchat
 
 # 用户自定义 config

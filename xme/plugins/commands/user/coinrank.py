@@ -1,7 +1,7 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_gen import CommandDoc
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from xme.plugins.commands.user.classes import xme_user
 from xme.xmetools import text_tools
 from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
@@ -44,7 +44,7 @@ async def _(session: CommandSession):
             avg=int(rank_avg),
             median=int(rank_operation(lambda x: statistics.median(x), rank_items))
         )
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return True
     elif arg and arg == 'sum':
         # 总和消息
@@ -54,19 +54,19 @@ async def _(session: CommandSession):
             coin_pronoun=coin_pronoun,
             sum=rank_sum
         )
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return True
     elif arg:
         try:
             rank_count = int(arg)
             if rank_count <= 0:
-                await send_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_small'))
+                await send_cmd_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_small'))
                 return False
             elif rank_count > MAX_RANK_COUNT:
-                await send_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_large', count_max=MAX_RANK_COUNT))
+                await send_cmd_msg(session, get_message(__plugin_name__, cmd_name, 'count_too_large', count_max=MAX_RANK_COUNT))
                 return False
         except ValueError:
-            await send_msg(session, get_message(__plugin_name__, cmd_name, 'invalid_arg'))
+            await send_cmd_msg(session, get_message(__plugin_name__, cmd_name, 'invalid_arg'))
             return False
     # rank_items = rank.items()[:10]
     print(rank_items)
@@ -93,5 +93,5 @@ async def _(session: CommandSession):
         coin_pronoun=coin_pronoun,
         coin_name=coin_name
     )
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)
     return True

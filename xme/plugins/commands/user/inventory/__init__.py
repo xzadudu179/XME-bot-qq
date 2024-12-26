@@ -1,7 +1,7 @@
 cmd_name = 'inventory'
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from ..classes import xme_user as u
 from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
@@ -31,8 +31,8 @@ async def _(session: CommandSession, user: User):
     for k, v in funcs.items():
         if args[0] != k: continue
         if not v['permissions'](user.id):
-            await send_msg(session, get_message(__plugin_name__, cmd_name, 'no_permission'))
+            await send_cmd_msg(session, get_message(__plugin_name__, cmd_name, 'no_permission'))
             return False
         return await v['func'](session, user, " ".join(args[1:]))
-    await send_msg(session, get_message(__plugin_name__, cmd_name, 'inv_prefix') + '\n' + str(user.inventory))
+    await send_cmd_msg(session, get_message(__plugin_name__, cmd_name, 'inv_prefix') + '\n' + str(user.inventory))
     return True

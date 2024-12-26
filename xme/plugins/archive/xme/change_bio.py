@@ -13,10 +13,10 @@ async def _(session: CommandSession, user: User):
     """更改用户介绍"""
     arg = session.current_arg_text.strip()
     if not arg:
-        await send_msg(session, "请输入用户介绍哦")
+        await send_cmd_msg(session, "请输入用户介绍哦")
     message = ""
     if user.change_bio(arg):
         message = f"修改个人介绍成功啦~"
     else:
         message = f"修改个人介绍失败，呜呜，请确定个人介绍的长度在 {user.MAX_BIO_LENGTH} 以内，且换行符少于 15 个哦 uwu"
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

@@ -12,4 +12,4 @@ user_info_alias = ["info", "用户信息"]
 async def _(session: CommandSession, user: User):
     """展示用户信息"""
     info = str(user)
-    await send_msg(session, info)
+    await send_cmd_msg(session, info)

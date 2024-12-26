@@ -4,7 +4,7 @@ from nonebot.argparse import ArgumentParser
 import traceback
 from json import JSONDecodeError
 import keys
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 import xme.xmetools.text_tools as t
 from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 import json
@@ -69,11 +69,11 @@ async def _(session: CommandSession):
         print(content)
         content = json.loads(content)['text']
         if content.strip() == "|NONE|":
-            await send_msg(session, f"无法翻译哦，因为你先前指定了一个未知的语言 \"{lan}\"，或是ChatGLM并不知道你要翻译的内容的语言是什么 xwx")
+            await send_cmd_msg(session, f"无法翻译哦，因为你先前指定了一个未知的语言 \"{lan}\"，或是ChatGLM并不知道你要翻译的内容的语言是什么 xwx")
             return
-        await send_msg(session, f"以下是 GLM-4 输出结果：\n{content}")
+        await send_cmd_msg(session, f"以下是 GLM-4 输出结果：\n{content}")
     except JSONDecodeError as ex:
-        await send_msg(session, f"json 解析出错，原 AI 返回内容为：\n{content}")
+        await send_cmd_msg(session, f"json 解析出错，原 AI 返回内容为：\n{content}")
     except Exception as ex:
         print(f"执行出错：{ex}\n{traceback.format_exc()}")
-        await send_msg(session, f"呜呜呜，执行出错了，以下是错误信息：{ex}")
+        await send_cmd_msg(session, f"呜呜呜，执行出错了，以下是错误信息：{ex}")

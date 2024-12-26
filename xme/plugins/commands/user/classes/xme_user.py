@@ -10,7 +10,7 @@ from . import xme_map
 import inspect
 import math
 from character import get_message
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from .inventory import Inventory
 from ..tools import galaxy_date_tools
 
@@ -291,7 +291,7 @@ def limit(limit_name: str,
             if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                 if not limit_func:
-                    return await send_msg(session, limit_message)
+                    return await send_cmd_msg(session, limit_message)
                 # 有自定义函数传入情况
                 elif inspect.iscoroutinefunction(limit_func):
                     return await limit_func(func, session, user, *args, **kwargs)

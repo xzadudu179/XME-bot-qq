@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 import config
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 
 alias = ["e"]
 __plugin_name__ = 'echo'
@@ -16,4 +16,4 @@ __plugin_usage__ = rf"""
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def echo(session: CommandSession):
-    await send_msg(session, session.current_arg_text.strip())
+    await send_cmd_msg(session, session.current_arg_text.strip())

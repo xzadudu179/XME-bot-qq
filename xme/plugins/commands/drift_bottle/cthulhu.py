@@ -1,7 +1,7 @@
 from xme.xmetools.time_tools import *
 from xme.xmetools import json_tools
 from character import get_message
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from nonebot import on_command, CommandSession
 
@@ -13,7 +13,7 @@ async def _(session: CommandSession):
     arg_text = session.current_arg_text.strip()
     args = arg_text.split(" ")
     if not arg_text:
-        await send_msg(session, get_message(__plugin_name__, 'cthulhu_no_arg'))
+        await send_cmd_msg(session, get_message(__plugin_name__, 'cthulhu_no_arg'))
         return
     bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
     bottles = bottles_dict['bottles']
@@ -48,4 +48,4 @@ async def _(session: CommandSession):
         prefix = get_message(__plugin_name__, 'cthulhu_success', ids=', '.join([f'#{arg}' for arg in args]))
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
     message = prefix + '\n' + message
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

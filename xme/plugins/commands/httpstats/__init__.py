@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from . import httpstats as h
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from character import get_message
 from xme.xmetools.doc_gen import CommandDoc
 
@@ -38,4 +38,4 @@ async def _(session: CommandSession):
             message = get_message(__plugin_name__, 'code_found', search=search, stat=stat, image=f"[CQ:image,file=https://http.cat/{search}]")
             # message = f"状态码 {search} 的意思是: {stat}\n[CQ:image,file=https://http.cat/{search}]"
 
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

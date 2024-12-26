@@ -1,13 +1,13 @@
 from xme.plugins.commands.user import __plugin_name__
 from xme.plugins.commands.user.inventory import cmd_name
 from . import inv_get
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 
 async def check(session, user, arg):
     inv_item = await inv_get.get_inv_item_by_index(session, user, arg)
     if not inv_item:
         return False
-    await send_msg(session, '\n' + inv_item.recorded_item.info())
+    await send_cmd_msg(session, '\n' + inv_item.recorded_item.info())
     return False
 
 

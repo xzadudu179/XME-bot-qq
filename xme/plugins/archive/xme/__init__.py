@@ -113,4 +113,4 @@ async def _(session: CommandSession):
         for prop in command_properties:
             message += f"{COMMAND_START[0]}{prop['name']}\t{prop['desc']}\n"
         message += f"使用 \"{COMMAND_START[0]}xmehelp 指令名或别名\" 来查看某个指令详细的帮助哦"
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

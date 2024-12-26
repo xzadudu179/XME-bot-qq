@@ -1,4 +1,4 @@
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from xme.xmetools import random_tools
 from character import get_message
 from asyncio import sleep
@@ -44,7 +44,7 @@ async def talk_to_bot(_, session: CommandSession, user):
             talks += high_favorability_talk
     what_to_talk_list = list((set(talks) - set(user.talked_to_bot)) | (set(user.talked_to_bot) - set(talks)))
     if len(what_to_talk_list) < 1:
-        await send_msg(session, "[看起来没有什么好聊的了...]")
+        await send_cmd_msg(session, "[看起来没有什么好聊的了...]")
         return {
             "state": False,
             "silent": True,
@@ -74,7 +74,7 @@ async def talk_to_bot(_, session: CommandSession, user):
         print(f"result: {result}")
         result = await session.aget(prompt=prompt if prompt else None)
         if result == "quit":
-            await send_msg(session, "[正在取消通讯...]")
+            await send_cmd_msg(session, "[正在取消通讯...]")
             return {
                 "state": False,
                 "silent": True,
@@ -119,17 +119,17 @@ async def talk_to_bot(_, session: CommandSession, user):
     message = get_message("items", "talk", talk_prompt[result_int][1:], favorability)
     user.talked_to_bot.append(talk_prompt[result_int])
     if message == "[NULL]" or not message:
-        await send_msg(session, "[看起来他回答不出这个问题...]")
+        await send_cmd_msg(session, "[看起来他回答不出这个问题...]")
         return {
             "state": False,
             "silent": True,
         }
     else:
         user.add_favorability(10 - abs(user.xme_favorability // 10) * (-1 if user.xme_favorability < 0 else 1))
-    await send_msg(session, f"[{get_message('bot_info', 'name')}正在准备对你的回应...请耐心等待]")
+    await send_cmd_msg(session, f"[{get_message('bot_info', 'name')}正在准备对你的回应...请耐心等待]")
     print(f"总字数：{len(message)}")
     await sleep(random.randint(int(len(message) * 0.6), int(len(message) * 0.8)))
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)
     return {
         "state": True,
         "silent": True,

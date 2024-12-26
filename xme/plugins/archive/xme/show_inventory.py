@@ -25,4 +25,4 @@ async def _(session: CommandSession, user: User):
         message += "唔，好像什么也没有...\n"
     # else:
         # message += "使用 xme.drop [物品栏编号] <数量> 来扔掉物品哦~"
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

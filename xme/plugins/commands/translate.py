@@ -4,7 +4,9 @@ from nonebot.plugin import PluginManager
 import aiocqhttp
 from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
 from xme.xmetools.json_tools import read_from_path
-from xme.xmetools.command_tools import get_cmd_by_alias, event_send_msg
+from xme.xmetools.command_tools import get_cmd_by_alias
+from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools.message_tools import change_group_message_content, send_forward_msg, get_pure_text_message
 from character import get_message
 import xme.xmetools.text_tools as t
@@ -86,7 +88,7 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
     if count > 2:
         await event_send_msg(bot, event, get_message(__plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
 
-    received_messages = (await bot.api.call_action("get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
+    received_messages = (await bot_call_action(bot, "get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
     if not reply:
         received_messages = received_messages[:-1]
 

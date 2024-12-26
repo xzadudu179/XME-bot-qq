@@ -5,6 +5,7 @@ import json
 from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
 from nonebot import log
+from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools import random_tools
 from xme.xmetools import time_tools
 from character import get_item, get_message
@@ -42,7 +43,7 @@ async def _():
     # idles = json_tools.read_from_path("bot_messages.json")['idles']
     has_faces = True
     try:
-        faces = await bot.api.call_action("fetch_custom_face")
+        faces = await bot_call_action(bot, "fetch_custom_face")
     except:
         has_faces = False
     # print(faces)

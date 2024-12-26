@@ -1,4 +1,5 @@
 from nonebot import MessageSegment, Message, NoneBot
+from xme.xmetools.bot_control import bot_call_action
 from aiocqhttp import Event
 
 def change_group_message_content(message_dict, new_content, user_id=None, nickname=None) -> MessageSegment:
@@ -28,7 +29,7 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         event (Event): 消息事件
         messages (list[MessageSegment]): 消息列表
     """
-    res_id = await bot.api.call_action("send_forward_msg", messages=Message(messages))
+    res_id = await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id)
     return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
 
 def get_pure_text_message(message: dict) -> str:
@@ -47,3 +48,6 @@ def get_pure_text_message(message: dict) -> str:
             msgs.append(f"&#91;{msg['type']}&#93;")
         msgs.append(msg['data'].get('text', ""))
     return "".join(msgs)
+
+async def event_send_msg(bot: NoneBot, event: Event, message, at=True, **kwargs):
+    await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)

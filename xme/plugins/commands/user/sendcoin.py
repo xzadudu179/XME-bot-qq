@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from .classes import xme_user as u
 from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
@@ -29,12 +29,12 @@ async def _(session: CommandSession, user: User):
         at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
     else:
         message = get_message(__plugin_name__, cmd_name, 'no_arg')
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     # 是否 at 自己
     if at_id == session.event.user_id:
         message = get_message(__plugin_name__, cmd_name, 'send_to_self', coin_name=coin_name)
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     # 是否设置了金币数量
     if len(args) >= 2:
@@ -44,11 +44,11 @@ async def _(session: CommandSession, user: User):
             coin_count = 0
     else:
         message = get_message(__plugin_name__, cmd_name, 'no_coin_count')
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     if coin_count <= 0:
         message = get_message(__plugin_name__, cmd_name, 'invalid_coin_count', coin_name=coin_name)
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     # 验证用户是否存在
     is_real_user = False
@@ -62,14 +62,14 @@ async def _(session: CommandSession, user: User):
         send_to_user: u.User = u.User.load(at_id, True)
     else:
         message = get_message(__plugin_name__, cmd_name, 'invalid_user')
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     curr_coins = user.coins
     user.coins -= coin_count
     # 是否有足够金币
     if user.coins < 0:
         message = get_message(__plugin_name__, cmd_name, 'not_enough_coin', coin_name=coin_name, coin_total=curr_coins, coin_pronoun=coin_pronoun)
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     send_to_user.add_coins(coin_count)
     send_to_user.save()
@@ -80,5 +80,5 @@ async def _(session: CommandSession, user: User):
         coin_pronoun=coin_pronoun,
         coin_left=user.coins,
         received_coin_react=get_message(__plugin_name__, cmd_name, 'received_coin_react') if at_bot_self else '')
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)
     return True

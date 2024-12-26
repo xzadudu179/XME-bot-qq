@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from .classes import xme_user as u
 from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
 from character import get_message
@@ -29,9 +29,9 @@ async def _(session: CommandSession, user: User):
         at_id = session.event.user_id
     if not user:
         message = get_message(__plugin_name__, cmd_name, 'no_user')
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
     message = f'\n{target_user}\n' + str(user)
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)
     return True

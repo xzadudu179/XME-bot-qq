@@ -1,6 +1,6 @@
 # -- coding: utf-8 --**
 import json
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from xme.xmetools.doc_gen import CommandDoc
 from nonebot import on_command, CommandSession
 from character import get_message
@@ -36,13 +36,13 @@ async def _(session: CommandSession):
     arg = session.current_arg_text.strip()
     if arg.capitalize() == "开" or arg.capitalize() == "T":
         settings['prevent_recall'][group_id] = True
-        await send_msg(session, get_message(__plugin_name__, "open"))
+        await send_cmd_msg(session, get_message(__plugin_name__, "open"))
         # await send_msg(session, "防撤回功能已开owo")
     elif arg.capitalize() == "关" or arg.capitalize() == "F":
         settings['prevent_recall'][group_id] = False
-        await send_msg(session, get_message(__plugin_name__, "close"))
+        await send_cmd_msg(session, get_message(__plugin_name__, "close"))
         # await send_msg(session, "防撤回功能已关ovo")
     else:
-        await send_msg(session, message)
+        await send_cmd_msg(session, message)
     with open ("./data/_botsettings.json", 'w', encoding='utf-8') as jsonfile:
         jsonfile.write(json.dumps(settings, indent=4))

@@ -9,7 +9,7 @@ except:
     pass
 import config
 from character import get_message
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 
 alias = ['视奸', '视奸179', '看看179', 'peekbot']
 __plugin_name__ = 'peek'
@@ -25,7 +25,7 @@ __plugin_usage__ = str(CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     if session.event.group_id not in config.PEEK_GROUP:
-        return await send_msg(session, get_message(__plugin_name__, 'not_in_peek_group'))
+        return await send_cmd_msg(session, get_message(__plugin_name__, 'not_in_peek_group'))
     private_window_names = json_tools.read_from_path('./private_window_names.json')['private']
     try:
         current_window = gw.getActiveWindow()
@@ -43,7 +43,7 @@ async def _(session: CommandSession):
                 is_private = True
                 break
     if is_private:
-        return await send_msg(session, get_message(__plugin_name__, 'is_private', title=current_window.title))
+        return await send_cmd_msg(session, get_message(__plugin_name__, 'is_private', title=current_window.title))
     print(c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"{'=' * 20}\n{'=' * 20}\n{'=' * 20}\n===👁你被视奸👁了===\n{'=' * 20}\n{'=' * 20}\n{'=' * 20}"))
     arg = session.current_arg_text.strip()
     monitor_num = 1
@@ -58,7 +58,7 @@ async def _(session: CommandSession):
         path, state = image_tools.take_screenshot(monitor_num)
     except:
         print("无法截图")
-        await send_msg(session, get_message(__plugin_name__, 'error'))
+        await send_cmd_msg(session, get_message(__plugin_name__, 'error'))
     # path = "file:///" + path.split(":")[0] + ":\\" + path.split(":")[1]
     path = f'http://server.xzadudu179.top:17980/screenshot'
     if state and arg_state and monitor_num != 0:
@@ -69,4 +69,4 @@ async def _(session: CommandSession):
         message = get_message(__plugin_name__, 'default_monitor')
     image_msg = f"[CQ:image,file={path}]"
     print(image_msg)
-    await send_msg(session, message + '\n' + image_msg)
+    await send_cmd_msg(session, message + '\n' + image_msg)

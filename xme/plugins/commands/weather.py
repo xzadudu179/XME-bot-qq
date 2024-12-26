@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 from ...xmetools import random_tools as rt
 from ...xmetools import request_tools as req
 from ...xmetools import time_tools as dt
@@ -41,7 +41,7 @@ async def _(session: CommandSession):
     if not params:
         params = (await session.aget(prompt=message)).strip()
         if params == cancel_message:
-            await send_msg(session, get_message(__plugin_name__, 'search_cancelled'))
+            await send_cmd_msg(session, get_message(__plugin_name__, 'search_cancelled'))
             # await send_msg(session, "取消天气查询啦")
             return
         while not params:
@@ -58,12 +58,12 @@ async def _(session: CommandSession):
             if days_num > 4 or days_num < 2:
                 message = get_message(__plugin_name__, 'invalid_days', future_days=get_message(__plugin_name__, 'future_days'))
                 # message = f"{rt.rand_str('设置的天数', '未来天数', '天数')}还不可以大于 3 或小于 1 哦"
-                await send_msg(session, message)
+                await send_cmd_msg(session, message)
                 return
         except:
             message = get_message(__plugin_name__, 'error_param', city=city, future_days=params.split(' ')[1])
             # message = f"出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
-            await send_msg(session, message)
+            await send_cmd_msg(session, message)
             return
     try:
         weathers = await req.get_weather(city)
@@ -124,4 +124,4 @@ async def _(session: CommandSession):
     except Exception as ex:
         message = get_message(__plugin_name__, 'error', city=city, ex=ex)
         # message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
-    await send_msg(session, message)
+    await send_cmd_msg(session, message)

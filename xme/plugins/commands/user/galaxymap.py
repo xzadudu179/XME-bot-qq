@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_msg
+from xme.xmetools.command_tools import send_cmd_msg
 import config
 from .classes import xme_user as u
 from .classes import xme_map
@@ -27,5 +27,5 @@ async def _(session: CommandSession, user: User):
     path = f'http://server.xzadudu179.top:17980/usermap'
     # path = f'127.0.0.1:{config.PORT}/usermap'
     print(galaxy_map.__dict__())
-    await send_msg(session, f"[CQ:image,file={path}]")
+    await send_cmd_msg(session, f"[CQ:image,file={path}]")
 

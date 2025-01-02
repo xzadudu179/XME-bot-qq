@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools import request_tools
 from xme.xmetools import random_tools
 from xme.xmetools import text_tools

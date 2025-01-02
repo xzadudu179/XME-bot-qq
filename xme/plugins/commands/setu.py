@@ -1,7 +1,7 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools import request_tools
 from character import get_message
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd_msg
 import json
 

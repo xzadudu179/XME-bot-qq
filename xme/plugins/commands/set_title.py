@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd_msg
 from character import get_message
 

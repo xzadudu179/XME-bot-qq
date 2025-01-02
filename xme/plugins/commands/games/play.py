@@ -1,6 +1,6 @@
 cmd_name = 'game'
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
+from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
 from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun

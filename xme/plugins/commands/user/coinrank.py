@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd_msg
 from xme.plugins.commands.user.classes import xme_user
 from xme.xmetools import text_tools

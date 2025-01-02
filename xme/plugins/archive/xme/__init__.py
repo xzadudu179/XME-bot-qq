@@ -1,6 +1,6 @@
 
 from .xme_config import *
-from xme.xmetools.doc_gen import SpecialDoc
+from xme.xmetools.doc_tools import SpecialDoc
 from nonebot import on_command, CommandSession
 from config import *
 from .register import *

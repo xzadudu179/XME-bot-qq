@@ -7,7 +7,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.time_tools import curr_days
 # from xme.plugins.commands.jrrp.luck_algorithm import get_luck
 from xme.xmetools import random_tools
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from character import get_message
 
 alias = ["今日人品" , "luck"]

@@ -8,6 +8,7 @@ from nonebot import log
 from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools import random_tools
 from xme.xmetools import time_tools
+from xme.xmetools import message_tools
 from character import get_item, get_message
 import random
 bot = nonebot.get_bot()
@@ -26,9 +27,16 @@ async def send_time_message():
             await bot.send_group_msg(group_id=group,
                                 message=f'{something_to_say}')
         except CQHttpError:
-            log.logger.error(f"定时器在 {group} 发消息失败")
+            log.logger.error(f"定时器在 {group} 发消息失败") 
             pass
 
+@nonebot.scheduler.scheduled_job(
+    'cron',
+    year="*",
+)
+async def _():
+    print("新年报时")
+    await message_tools.send_to_all_group(bot, get_message("schedulers", "new_year"))
 
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():

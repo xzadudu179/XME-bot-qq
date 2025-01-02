@@ -95,7 +95,8 @@
             ".jrrp",
             "b50"
         ],
-        "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》"
+        "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {
         "is_it_command": {

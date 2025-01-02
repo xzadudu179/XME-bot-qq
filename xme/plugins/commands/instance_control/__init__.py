@@ -1,7 +1,7 @@
 __plugin_name__ = '实例控制'
 from .kill import *
 from ...archive.restart import *
-from xme.xmetools.doc_gen import PluginDoc
+from xme.xmetools.doc_tools import PluginDoc
 from character import get_message
 
 commands = ['inst_kill', 'inst_restart']

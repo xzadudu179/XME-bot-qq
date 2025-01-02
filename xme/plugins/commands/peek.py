@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools import image_tools
 from xme.xmetools import json_tools
 from xme.xmetools import color_manage as c

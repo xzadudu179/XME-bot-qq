@@ -6,7 +6,7 @@ from json import JSONDecodeError
 import keys
 from xme.xmetools.command_tools import send_cmd_msg
 import xme.xmetools.text_tools as t
-from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
+from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 import json
 
 alias = ['翻译', 'trans']

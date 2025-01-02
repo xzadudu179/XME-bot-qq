@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from . import httpstats as h
 from xme.xmetools.command_tools import send_cmd_msg
 from character import get_message
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 
 alias = ['http', 'http状态码']
 __plugin_name__ = 'httpcode'

@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession, NoneBot, MessageSegment, message
 from nonebot.command import call_command
 from nonebot.plugin import PluginManager
 import aiocqhttp
-from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
+from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools.command_tools import get_cmd_by_alias
 from xme.xmetools.message_tools import event_send_msg

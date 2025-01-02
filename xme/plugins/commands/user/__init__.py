@@ -5,7 +5,7 @@ from xme.xmetools.command_tools import send_cmd_msg
 import config
 from xme.xmetools.command_tools import get_cmd_by_alias
 from character import get_message
-from xme.xmetools.doc_gen import PluginDoc, CommandDoc
+from xme.xmetools.doc_tools import PluginDoc, CommandDoc
 from xme.xmetools import module_tools
 
 cmd_name = "userhelp"

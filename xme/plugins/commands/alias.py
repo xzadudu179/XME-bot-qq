@@ -1,4 +1,4 @@
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import get_alias_by_cmd, get_cmd_by_alias
 from xme.xmetools.command_tools import send_cmd_msg
 from nonebot import on_command, CommandSession

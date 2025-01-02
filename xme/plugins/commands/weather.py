@@ -3,7 +3,7 @@ from xme.xmetools.command_tools import send_cmd_msg
 from ...xmetools import random_tools as rt
 from ...xmetools import request_tools as req
 from ...xmetools import time_tools as dt
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from datetime import datetime
 from character import get_message
 

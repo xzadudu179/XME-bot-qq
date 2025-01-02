@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from character import get_message
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial

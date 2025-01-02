@@ -1,6 +1,6 @@
 import nonebot
 import config
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
 from xme.xmetools.list_ctrl import split_list
 from xme.xmetools.command_tools import send_cmd_msg
@@ -33,7 +33,7 @@ async def arg_help(arg, plugins, session):
     print(ask_for_help)
     if ask_for_help:
         for pl in plugins:
-            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].split(" ")[0] for i in pl.usage.split("内容：")[1].split("所有指令用法：")[0].split("\n")[:] if i]:
+            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
                 ask_for_help = pl.name.lower()
             if pl.name.lower() != ask_for_help: continue
             return await send_cmd_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)

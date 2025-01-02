@@ -1,6 +1,6 @@
 from xme.xmetools.rss_tools import *
 from xme.xmetools.command_tools import send_cmd_msg
-from xme.xmetools.doc_gen import CommandDoc
+from xme.xmetools.doc_tools import CommandDoc
 from nonebot import on_command, CommandSession
 from character import get_message
 

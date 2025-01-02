@@ -51,3 +51,14 @@ def get_pure_text_message(message: dict) -> str:
 
 async def event_send_msg(bot: NoneBot, event: Event, message, at=True, **kwargs):
     await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
+
+async def send_to_all_group(bot: NoneBot, message):
+    """在 bot 所在所有群发消息
+
+    Args:
+        bot (NoneBot): bot
+        message (str): 消息内容
+    """
+    groups = await bot.get_group_list()
+    for group in groups:
+        await bot.send_group_msg(group_id=group['group_id'], message=message)

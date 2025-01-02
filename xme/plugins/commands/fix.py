@@ -3,7 +3,7 @@ from nonebot.command import call_command
 from nonebot.plugin import PluginManager
 import aiocqhttp
 import config
-from xme.xmetools.doc_gen import CommandDoc, shell_like_usage
+from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools import command_tools
 from xme.xmetools.message_tools import change_group_message_content, send_forward_msg, get_pure_text_message

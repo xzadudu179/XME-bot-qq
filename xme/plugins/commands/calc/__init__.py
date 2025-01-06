@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 from character import get_message
 import traceback
+from xme.xmetools.function_tools import run_with_timeout
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
@@ -35,7 +36,7 @@ async def _(session: CommandSession):
             message += f'{k}: {v if v else "-"}\n'
         return await send_cmd_msg(session, '\n' + message)
     try:
-        formula, result = parse_polynomial(arg)
+        formula, result = run_with_timeout(parse_polynomial, 5, "计算超时", arg)
         message = get_message(__plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
         try:
             float_result = str(float(result.evalf()))

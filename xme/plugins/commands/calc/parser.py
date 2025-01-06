@@ -2,7 +2,7 @@ import re
 from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name
 from . import func
 # import func
-from sympy import sympify
+from sympy import sympify, Integer
 
 def get_func(input_str):
     pattern = r"[a-zA-Z_][a-zA-Z0-9_]*\(.*"
@@ -58,7 +58,13 @@ def parse_polynomial(formula, vars=None):
         results.append(parse_monomial(monomial))
     result_formula = '+'.join(results)
     # print(f"poly result: {result_formula}")
+
     return original_formula.replace(" ", ''), sympify(result_formula)
+
+def check_integer_size(expr, max_digits=1000):
+    for atom in expr.atoms(Integer):
+        if len(str(atom)) > max_digits:
+            raise ValueError(f"{expr} 算式整数过大")
 
 def parse_vars(formula: str, vars=None):
     """处理变量

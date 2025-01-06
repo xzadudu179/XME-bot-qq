@@ -87,12 +87,12 @@ def return_state(message: str="", state: str="OK", data: dict={}) -> str:
 def calc_award(basic, game: GuessNum):
     range_len = sum([abs(num) for num in game.number_range]) + 1
     theorical_times = math.log2(range_len)
-    times_addition = 2 ** abs(theorical_times - game.guessing_times)
+    times_addition = 2 ** abs(theorical_times - game.guessing_times) // 20
     times_addition = -times_addition if theorical_times - game.guessing_times < 0 else times_addition
     award = int(basic + times_addition + min(2 * theorical_times, theorical_times ** 2))
     if game.guessing_times >= range_len:
         award = 0
-    award = min(award, 2048)
+    award = min(award, 512)
     return int(max(0, award) / 2)
 
 

@@ -19,6 +19,18 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
 
+def valid_var_name(name: str):
+    """验证变量名是否符合规范
+
+    Args:
+        name (str): 变量名
+
+    Returns:
+        bool: 结果
+    """
+    pattern = r"^[a-zA-Z_][a-zA-Z0-9_]*$"
+    return bool(re.match(pattern, name))
+
 def remove_prefix(text: str, prefix: tuple | str) -> str:
     """判断字符串前缀并去除前缀
 

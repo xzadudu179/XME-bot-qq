@@ -1,4 +1,5 @@
 from . import dich
+from . import if_func
 
 builtins = {
     "pi": "圆周率",
@@ -40,4 +41,5 @@ builtins = {
 
 funcs = {
     dich.func_name: dich.func_info,
+    if_func.func_name: if_func.func_info
 }

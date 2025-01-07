@@ -1429,7 +1429,7 @@
     },
     "calc": {
         "desc": "计算器",
-        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。",
+        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的自定函数列表\n参数若填写 \"builtins\" 则是查看计算器拥有的内置函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。\n计算器可绘制函数，只需要在需要绘制函数的语句开头输入 \":\" 然后输入函数。 例如 \":sin(x)\"",
         "no_arg": "请输入参数哦 {neutral}",
         "func_intro": "以下是当前拥有的自定函数列表{positive_punc} {positive}",
         "func_nothing": [
@@ -1452,6 +1452,8 @@
         ],
         "func_builtin_intro": "以下是自带函数列表{positive_punc}",
         "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
+        "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
+        "drawing": "正在绘制图像{positive_punc} {positive}，请稍等哦",
         "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
     },
     "translate": {

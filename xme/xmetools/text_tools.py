@@ -1,6 +1,7 @@
 import re
 from pypinyin import lazy_pinyin
 # import spacy
+import base64
 import string
 from difflib import SequenceMatcher
 
@@ -18,6 +19,34 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         a = ''.join(lazy_pinyin(a))
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
+
+def base64_encode(text):
+    """将文本使用 base64 进行编码
+
+    Args:
+        text (str): 文本内容
+
+    Returns:
+        str: 编码文本
+    """
+    text_bytes = text.encode('utf-8')
+    base64_encoded = base64.b64encode(text_bytes)
+    base64_string = base64_encoded.decode('utf-8')
+    return base64_string
+
+def limit_str_len(s: str, max_len: int):
+    """限制字符串长度
+
+    Args:
+        s (str): 字符串
+        max_len (int): 最大长度
+
+    Returns:
+        str: 限制后的字符串
+    """
+    if len(s) > max_len:
+        s = s[:max_len] + "..."
+    return s
 
 def valid_var_name(name: str):
     """验证变量名是否符合规范

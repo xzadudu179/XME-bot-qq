@@ -488,7 +488,7 @@
     },
     "calc": {
         "desc": "计算器",
-        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的函数列表",
+        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的自定函数列表\n参数若填写 \"builtins\" 则是查看计算器拥有的内置函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。",
         "no_arg": "请输入参数哦",
         "sympifyerror": "计算出错啦，请确认格式正确哦...\n{ex}",
         "syntaxerror": "输入格式出错啦，请确认表达式正确哦...\n{ex}",
@@ -497,6 +497,8 @@
         "func_nothing": "什么也没有呢...",
         "func_builtin_intro": "以下是自带函数列表{positive_punc}",
         "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
+        "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
+        "drawing": "正在绘制图像{positive_punc} {positive}，请稍等哦",
         "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
     },
     "translate": {

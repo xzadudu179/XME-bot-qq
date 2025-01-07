@@ -1,7 +1,9 @@
 import re
 from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name
+from xme.xmetools.function_tools import draw_exprs
 from . import func
 # import func
+import sympy as sp
 from sympy import sympify, Integer
 
 def get_func(input_str):
@@ -22,6 +24,7 @@ def find_funcs(expression):
 def extract_function(expression):
     result = ''
     func_get = get_func(expression)
+    # print(f"func get: {func_get}")
     if len(func_get) < 1:
         return result
     expression = func_get[0]
@@ -46,18 +49,26 @@ def parse_polynomial(formula, vars=None):
         vars (dict | None): 变量字典. Defaults to None
     """
     formula = replace_chinese_punctuation(formula).strip()
-    formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**")
+    formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r")
     original_formula = formula
     formula = parse_vars(formula, vars)
-    # print(f"formula: {formula}")
-    if "=" in formula:
-        formula = "0"
-    monomials = [item.strip() for item in formula.split("+")]
-    results = []
-    for monomial in monomials:
-        results.append(parse_monomial(monomial))
-    result_formula = '+'.join(results)
-    # print(f"poly result: {result_formula}")
+    # print(formula)
+    result_formulas = formula.split("\r")
+    need_to_draw = False
+    draws = []
+    for f in result_formulas:
+        if f.startswith(":"):
+            draws.append(parse_func(f[1:]))
+            need_to_draw = True
+    # print("ntd", need_to_draw, draws)
+    if need_to_draw:
+        filename = draw_exprs(*draws)
+        return original_formula.replace(" ", ''), filename
+
+    result_formula = parse_func(result_formulas[-1])
+    # print(result_formulas, result_formula)
+    if not result_formula:
+        result_formula = "0"
 
     return original_formula.replace(" ", ''), sympify(result_formula)
 
@@ -76,36 +87,51 @@ def parse_vars(formula: str, vars=None):
     Returns:
         str: 处理完的表达式
     """
+    original_formula = formula
     all_vars = {}
     if vars:
         all_vars = vars
     all_vars = all_vars | get_vars(formula, all_vars)
-    # print("formula: ", formula)
-    # print("vars: ", all_vars)
+    # # print("formula: ", formula)
+    # # print("vars: ", all_vars)
     for key in all_vars.keys():
-        # print("key: ", key, "formula: ", formula, "keyin: ", key in formula)
+        # # print("key: ", key, "formula: ", formula, "keyin: ", key in formula)
         if key in formula: break
         return formula.split("\r")[-1]
     for name, value in all_vars.items():
         formula = formula.replace(name, value)
-    return formula.split("\r")[-1]
-
+    return '\r'.join([formula.split("\r")[i].strip() for i, _ in enumerate(original_formula.split("\r")) if not is_var_line(original_formula, original_formula.split("\r")[i].strip())])
 
 def get_vars(formula: str, all_vars: dict | None = None) -> dict:
     if not all_vars:
         all_vars = {}
+    # print("formula", formula)
     for line in formula.split("\r"):
-        if not "=" in line: continue
-        name = line.split("=")[0].strip()
-        value = line.split("=")[1].strip()
-        func_names = [func.split("(")[0] for func in get_func(formula)]
-        if name in func_names:
-            raise ValueError("变量名不能和函数重名")
-        if not valid_var_name(name):
-            raise ValueError("变量名不符合规范（只由数字，字母，下划线组成且不能是数字开头）")
-        value = str(parse_polynomial(value, all_vars)[1])
+        # print("line is", line)
+        var_info = is_var_line(formula, line)
+        if not var_info:
+            continue
+        name, value = var_info
         all_vars[name] = value
     return all_vars
+
+def is_var_line(formula, line) -> bool | tuple:
+    if not "=" in line: return False
+    # print("line:", line)
+    name = line.split("=")[0].strip()
+    value = "=".join(line.split("=")[1:]).strip()
+    # 排除 == >= <=
+    if value.startswith("=") or name.endswith((">", "<")):
+        return False
+    func_names = [func.split("(")[0] for func in get_func(formula)]
+    # print("var name is", name)
+    if not valid_var_name(name):
+        raise ValueError("变量名不符合规范（只由数字，字母，下划线组成且不能是数字开头）")
+    if name in func_names:
+        raise ValueError("变量名不能和函数重名")
+    if name in ["x"]:
+        raise ValueError("变量名不能是 x")
+    return (name, value)
 
 def parse_func(formula):
     """处理函数
@@ -120,17 +146,18 @@ def parse_func(formula):
     # print(f"funcs: {funcs}")
     for f in funcs:
         func_name = f.split("(")[0]
+        # print(f"func name: {func_name}")
         if func_name not in func.funcs.keys(): continue
         func_body = '('.join(f.split("(")[1:])[:-1]
-        print(f"func body: {func_body}")
+        # print(f"func body: {func_body}")
         _, args = parse_polynomial(func_body)
-        print(f"args: {args}")
+        # print(f"args: {args}")
         result = func.funcs[func_name]['func'](*args)
-        print(f"func \"{f}\" result: {result}")
+        # print(f"func \"{f}\" result: {result}")
         formula = formula.replace(f, str(result))
     return formula
 
 
-def parse_monomial(monomial):
-    monomial = parse_func(monomial)
-    return monomial
+# def parse_monomial(monomial):
+#     monomial = parse_func(monomial)
+#     return monomial

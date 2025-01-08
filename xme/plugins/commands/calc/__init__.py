@@ -42,8 +42,8 @@ async def _(session: CommandSession):
         return await send_cmd_msg(session, '\n' + message)
     try:
         TIMEOUT_SECS = 10
-        formula, result = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
-        if type(result) == str:
+        formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
+        if is_image:
             await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
             message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{result}]", formula=formula)
             await send_cmd_msg(session, message)

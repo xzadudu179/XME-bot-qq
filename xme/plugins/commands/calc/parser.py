@@ -64,7 +64,7 @@ def parse_polynomial(formula, vars=None):
     print("ntd", need_to_draw, draws)
     if need_to_draw:
         filename = draw_exprs(*draws)
-        return original_formula.replace(" ", ''), filename
+        return original_formula.replace(" ", ''), filename, True
 
     result_formula = parse_func(result_formulas[-1])
     print(result_formulas, result_formula)
@@ -78,7 +78,7 @@ def parse_polynomial(formula, vars=None):
         else:
             raise ex
 
-    return original_formula.replace(" ", ''), result
+    return original_formula.replace(" ", ''), result, False
 
 def check_integer_size(expr, max_digits=1000):
     for atom in expr.atoms(Integer):

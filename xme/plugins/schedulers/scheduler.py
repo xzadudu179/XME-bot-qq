@@ -2,6 +2,8 @@ import nonebot
 import config
 import requests
 import json
+import os
+from nonebot import log
 from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
 from nonebot import log
@@ -27,7 +29,7 @@ async def send_time_message():
             await bot.send_group_msg(group_id=group,
                                 message=f'{something_to_say}')
         except CQHttpError:
-            log.logger.error(f"定时器在 {group} 发消息失败") 
+            log.logger.error(f"定时器在 {group} 发消息失败")
             pass
 
 @nonebot.scheduler.scheduled_job(
@@ -92,3 +94,14 @@ async def _():
 async def _():
     print("send")
     await send_time_message()
+
+@nonebot.scheduler.scheduled_job('cron', hour='*')
+async def del_temp_images():
+    log.logger.info("正在删除缓存文件")
+    folder_path = "./data/images/temp"
+    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    for f in files:
+        log.logger.info(f"正在删除 \"{f}\"...")
+        os.remove(folder_path + '/' + f)
+
+# TODO 分文件编写计时器

@@ -2,6 +2,7 @@ import nonebot
 import os
 import traceback
 from nonebot import log
+import asyncio
 
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 
@@ -16,6 +17,8 @@ async def route_img(filename: str):
         with open(folder_path + '/' + filename, 'rb') as image:
             # return base64.b64encode(image.read()).decode('utf-8')
             ib = image.read()
+        # 等待十秒再删除
+        await asyncio.sleep(10)
         print("正在删除文件")
         os.remove(folder_path + '/' + filename)
         return ib

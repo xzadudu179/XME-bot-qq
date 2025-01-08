@@ -489,13 +489,13 @@
     "calc": {
         "desc": "计算器",
         "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的自定函数列表\n参数若填写 \"builtins\" 则是查看计算器拥有的内置函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。",
-        "no_arg": "请输入参数哦",
+        "no_arg": "请在输入时指定参数哦",
         "sympifyerror": "计算出错啦，请确认格式正确哦...\n{ex}",
         "syntaxerror": "输入格式出错啦，请确认表达式正确哦...\n{ex}",
         "error": "出现了未知错误...请确认表达式正确哦...\n{ex}",
         "func_intro": "以下是当前拥有的自定函数列表{positive_punc}",
         "func_nothing": "什么也没有呢...",
-        "func_builtin_intro": "以下是自带函数列表{positive_punc}",
+        "func_builtin_intro": "以下是大部分自带内容及函数列表{positive_punc}",
         "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
         "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
         "drawing": "正在绘制图像{positive_punc} {positive}，请稍等哦",
@@ -510,5 +510,9 @@
         "processing": "正在翻译到 \"{language}\" 中~ 请等待 {min} 到 {max} 秒哦",
         "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
         "no_message": "唔...没有任何消息呢"
+    },
+    "showcolor": {
+        "desc": "显示颜色",
+        "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
     }
 }

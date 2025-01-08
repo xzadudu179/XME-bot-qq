@@ -41,7 +41,8 @@ async def _(session: CommandSession):
             message += f'{k}: {v if v else "-"}\n'
         return await send_cmd_msg(session, '\n' + message)
     try:
-        formula, result = run_with_timeout(parse_polynomial, 5, "计算超时", arg)
+        TIMEOUT_SECS = 10
+        formula, result = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
         if type(result) == str:
             await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
             message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{result}]", formula=formula)
@@ -51,7 +52,7 @@ async def _(session: CommandSession):
             message = get_message(__plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
 
         try:
-            float_result = str(float(result.evalf()))
+            float_result = str(float(result.doit()))
         except Exception as ex:
             print(ex)
             print(result)

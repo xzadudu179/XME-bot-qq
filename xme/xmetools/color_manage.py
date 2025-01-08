@@ -38,6 +38,24 @@ def rgb_to_hex(rgb_color):
     """Convert RGB color to hex."""
     return '#{:02x}{:02x}{:02x}'.format(*rgb_color)
 
+def invent_color(color: str | tuple) -> str | tuple:
+    """反转颜色
+
+    Args:
+        color (str | tuple): 颜色（十六进制或 RGB）
+
+    Returns:
+        str | tuple: 返回的颜色（与输入的颜色类型相同）
+    """
+    to_hex = False
+    if type(color) == str:
+        color = hex_to_rgb(color)
+        to_hex = True
+    color = [255 - c for c in color]
+    if to_hex:
+        color = rgb_to_hex(color)
+    return color
+
 def hex_to_lab(hex_color):
     """Convert hex color to LAB using colorspacious."""
     rgb_color = np.array(hex_to_rgb(hex_color)) / 255.0
@@ -137,3 +155,4 @@ def split_string(s, group_count):
 if __name__ == "__main__":
     gra_text = gradient_text("#FF5555", "#FFFF55", "#55FF55", "#55FFFF", "#5555FF", "#FF55FF", text="测试一下渐变字符串的效果嗷呜, 测试")
     print(gra_text)
+    print(invent_color("#1f1e33"))

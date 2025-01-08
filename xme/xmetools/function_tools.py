@@ -114,7 +114,8 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp"):
     plt.grid(True,  color=grid_color, linestyle='--', linewidth=1)
 
     # 添加图例
-    plt.legend(fontsize=12, facecolor=bg_color, edgecolor=sec_color, labelcolor=font_color)
+    labels = [limit_str_len(item.get_label(), 30) for item in plt.gca().get_lines()]
+    plt.legend(labels=labels,fontsize=12, facecolor=bg_color, edgecolor=sec_color, labelcolor=font_color)
     title = base64_encode(title)
     name = f"func_image_{title}.png"
     plt.savefig(path_folder + "/" + name, dpi=200, bbox_inches="tight")

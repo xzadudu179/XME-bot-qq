@@ -1,0 +1,57 @@
+from nonebot import message_preprocessor, NoneBot
+from nonebot.plugin import PluginManager
+import aiocqhttp
+from xme.xmetools.doc_tools import SpecialDoc
+from ...xmetools import color_manage as c
+from character import get_message
+from xme.xmetools.command_tools import event_send_msg
+from xme.xmetools.text_tools import replace_chinese_punctuation
+from PIL import Image, ImageDraw, ImageFont
+
+# alias = ['系统状态', 'stats']
+__plugin_name__ = 'showcolor'
+__plugin_usage__ = str(SpecialDoc(
+    name=__plugin_name__,
+    desc=get_message(__plugin_name__, 'desc'),
+    introduction=get_message(__plugin_name__, 'introduction'),
+))
+
+@message_preprocessor
+async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
+    raw_msg = replace_chinese_punctuation(event.raw_message.strip())
+    print(raw_msg)
+    color_num_str = raw_msg.split("#")[-1]
+    if not raw_msg.startswith("#") or len(color_num_str) not in [3, 6]:
+        return
+    elif len(color_num_str) == 3:
+        color_num_str = "".join([c + c for c in color_num_str])
+    print(color_num_str)
+    try:
+        name = gen_color_image(color_num_str)
+        return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+    except:
+        return
+
+def gen_color_image(color_num, size=(300, 200)):
+    width, height = size
+    color = f"#{color_num}"
+    image = Image.new("RGB", (width, height), color)
+    draw = ImageDraw.Draw(image)#1
+    font_size = 48
+    font = ImageFont.truetype("./fonts/Cubic_11.ttf", font_size)
+
+    text_bbox = draw.textbbox((0, 0), color, font=font)  # 返回 (x_min, y_min, x_max, y_max)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    text_x = (width - text_width) // 2
+    text_y = (height - text_height) // 2 - (font_size // 8)
+
+    # 文字颜色
+    text_color = c.invent_color(color)
+
+    # 绘制文字
+    draw.text((text_x, text_y), color, fill=text_color, font=font)
+    name = f"color_{color_num}.png"
+    path = f"./data/images/temp/{name}"
+    image.save(path)
+    return name

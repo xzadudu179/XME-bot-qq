@@ -142,6 +142,29 @@ def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=Fa
     return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\n-]', '_' if not replace_to_horzline else '-', s).replace("\n", "")
 # print(chinese_proportion("你这个 situation 我觉得很 weird"))
 
+def fullwidth_to_halfwidth(text):
+    """将字符串中的全角字符替换为半角字符。（注意：中文标点【】之类的不算可替换的全角字符）
+
+    Args:
+        text (str): 输入字符串
+
+    Returns:
+        str: 返回的内容
+    """
+    result = []
+    for char in text:
+        # 判断是否是全角字符（全角字符的 Unicode 编码范围：65281~65374）
+        code_point = ord(char)
+        if 65281 <= code_point <= 65374:
+            # 将全角字符转换为半角字符
+            result.append(chr(code_point - 0xFEE0))
+        elif code_point == 12288:
+            # 处理全角空格（全角空格的 Unicode 编码是 12288，对应半角空格是 32）
+            result.append(chr(32))
+        else:
+            # 非全角字符保持不变
+            result.append(char)
+    return ''.join(result)
 
 def replace_chinese_punctuation(text: str) -> str:
     """替换中文标点到英文

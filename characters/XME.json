@@ -511,7 +511,7 @@
         "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
         "no_message": "唔...没有任何消息呢"
     },
-    "showcolor": {
+    "色号显示": {
         "desc": "显示颜色",
         "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
     }

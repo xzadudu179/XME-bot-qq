@@ -1,5 +1,5 @@
 import re
-from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name
+from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
 from xme.xmetools.function_tools import draw_exprs
 from . import func
 # import func
@@ -48,7 +48,7 @@ def parse_polynomial(formula, vars=None):
         formula (str): 算式字符串
         vars (dict | None): 变量字典. Defaults to None
     """
-    formula = replace_chinese_punctuation(formula).strip()
+    formula = fullwidth_to_halfwidth(replace_chinese_punctuation(formula)).strip()
     formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r").replace("\n", '\r')
     original_formula = formula
     # formula = parse_vars(formula, vars)

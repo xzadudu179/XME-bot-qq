@@ -5,11 +5,11 @@ from xme.xmetools.doc_tools import SpecialDoc
 from ...xmetools import color_manage as c
 from character import get_message
 from xme.xmetools.command_tools import event_send_msg
-from xme.xmetools.text_tools import replace_chinese_punctuation
+from xme.xmetools.text_tools import fullwidth_to_halfwidth
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']
-__plugin_name__ = 'showcolor'
+__plugin_name__ = '色号显示'
 __plugin_usage__ = str(SpecialDoc(
     name=__plugin_name__,
     desc=get_message(__plugin_name__, 'desc'),
@@ -18,7 +18,7 @@ __plugin_usage__ = str(SpecialDoc(
 
 @message_preprocessor
 async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
-    raw_msg = replace_chinese_punctuation(event.raw_message.strip())
+    raw_msg = fullwidth_to_halfwidth(event.raw_message.strip()).upper()
     print(raw_msg)
     color_num_str = raw_msg.split("#")[-1]
     if not raw_msg.startswith("#") or len(color_num_str) not in [3, 6]:

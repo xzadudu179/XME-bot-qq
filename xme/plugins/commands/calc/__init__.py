@@ -41,10 +41,12 @@ async def _(session: CommandSession):
             message += f'{k}: {v if v else "-"}\n'
         return await send_cmd_msg(session, '\n' + message)
     try:
-        TIMEOUT_SECS = 10
-        formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
+        TIMEOUT_SECS = 20
+        formula, result, is_image, use_temp = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
         if is_image:
-            await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
+            if not use_temp:
+                # 使用缓存的话不说正在绘制
+                await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
             message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{result}]", formula=formula)
             await send_cmd_msg(session, message)
             return

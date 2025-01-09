@@ -1,6 +1,6 @@
 import time
 import os
-from xme.xmetools import folder_tools
+from xme.xmetools import file_tools
 from PIL import Image
 import mss
 
@@ -33,7 +33,7 @@ def screenshot(num=1):
 
 def take_screenshot(screen_num=1):
     os.makedirs("./screenshots", exist_ok=True)
-    folder_tools.delete_files_in_folder('./screenshots')
+    file_tools.delete_files_in_folder('./screenshots')
     image, state = screenshot(screen_num)
     name = f'./screenshots/screenshot{screen_num}{time.strftime(r"%Y%m%d-%H-%M-%S")}.png'
     image.save(name)

@@ -40,7 +40,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         message = message[1:] if message[0] in config.COMMAND_START else message
     if time.time() - last_messages['refresh_time'] > (SEC_AVG_MSGS * MSG_COUNT_THRESHOLD * 2) and last_messages['refresh_time'] > 0:
         # print(last_messages)
-        print(f"清除以上缓存")
+        print(f"正在清除以上消息的缓存...")
         last_messages = {
             "refresh_time": time.time()
         }

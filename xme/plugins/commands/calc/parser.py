@@ -1,6 +1,6 @@
 import re
 from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
-from xme.xmetools.function_tools import draw_exprs
+from xme.xmetools.function_tools import draw_exprs, draw_3d_exprs
 from . import func
 # import func
 import sympy as sp
@@ -57,14 +57,25 @@ def parse_polynomial(formula, vars=None):
     result_formulas = formula.split("\r")
     need_to_draw = False
     draws = []
+    draws_3d = []
     for f in result_formulas:
-        if f.startswith(":"):
+        if f.startswith("::"):
+            # 绘制 3D 图像
+            draws_3d.append(parse_func(f[2:]))
+            need_to_draw = True
+        elif f.startswith(":"):
             draws.append(parse_func(f[1:]))
             need_to_draw = True
     print("ntd", need_to_draw, draws)
+    if len(draws) != 0 and len(draws_3d) != 0:
+        raise ValueError("不能同时绘制 3D 图像和 2D 图像")
     if need_to_draw:
-        filename = draw_exprs(*draws)
-        return original_formula.replace(" ", ''), filename, True
+        if len(draws) > 0:
+            filename, use_temp = draw_exprs(*draws)
+        elif len(draws_3d) > 0:
+            # print("draws3d:", draws_3d)
+            filename, use_temp = draw_3d_exprs(*draws_3d)
+        return original_formula.replace(" ", ''), filename, True, use_temp
 
     result_formula = parse_func(result_formulas[-1])
     print(result_formulas, result_formula)
@@ -78,7 +89,7 @@ def parse_polynomial(formula, vars=None):
         else:
             raise ex
 
-    return original_formula.replace(" ", ''), result, False
+    return original_formula.replace(" ", ''), result, False, False
 
 def check_integer_size(expr, max_digits=1000):
     for atom in expr.atoms(Integer):
@@ -128,8 +139,8 @@ def get_vars(formula: str, all_vars: dict | None = None) -> dict:
 
     return all_vars
 
-def is_var_line(formula, line) -> bool | tuple:
-    if not "=" in line: return False
+def is_var_line(formula, line: str) -> bool | tuple:
+    if not "=" in line or line.startswith(":"): return False
     print("line:", line)
     name = line.split("=")[0].strip()
     value = "=".join(line.split("=")[1:]).strip()
@@ -142,8 +153,8 @@ def is_var_line(formula, line) -> bool | tuple:
         raise ValueError("变量名不符合规范（只由数字，字母，下划线组成且不能是数字开头）")
     if name in func_names:
         raise ValueError("变量名不能和函数重名")
-    if name in ["x"]:
-        raise ValueError("变量名不能是 x")
+    # if name in ["x", "y"]:
+    #     raise ValueError("变量名不能是 x 或 y")
     return (name, value)
 
 def parse_func(formula):
@@ -177,3 +188,5 @@ def parse_func(formula):
 # def parse_monomial(monomial):
 #     monomial = parse_func(monomial)
 #     return monomial
+if __name__ == '__main__':
+    print("ceshi")

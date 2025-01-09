@@ -6,6 +6,7 @@ from ...xmetools import color_manage as c
 from character import get_message
 from xme.xmetools.command_tools import event_send_msg
 from xme.xmetools.text_tools import fullwidth_to_halfwidth
+from xme.xmetools.file_tools import has_file
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']
@@ -33,6 +34,11 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
         return
 
 def gen_color_image(color_num, size=(300, 200)):
+    name = f"color_{color_num}.png"
+    path = f"./data/images/temp/{name}"
+    if has_file(path):
+        print("使用缓存")
+        return name
     width, height = size
     color = f"#{color_num}"
     image = Image.new("RGB", (width, height), color)
@@ -51,7 +57,5 @@ def gen_color_image(color_num, size=(300, 200)):
 
     # 绘制文字
     draw.text((text_x, text_y), color, fill=text_color, font=font)
-    name = f"color_{color_num}.png"
-    path = f"./data/images/temp/{name}"
     image.save(path)
     return name

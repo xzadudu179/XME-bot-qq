@@ -52,7 +52,7 @@ def parse_polynomial(formula):
     # formula = parse_vars(formula, vars)
     print(formula)
     all_vars = get_vars(formula)
-    result_formulas = formula.split("\r")
+    result_formulas = [f.strip() for f in formula.split("\r")]
     need_to_draw = False
     draws = []
     draws_3d = []

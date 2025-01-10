@@ -1469,5 +1469,13 @@
     "色号显示": {
         "desc": "显示颜色",
         "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
+    },
+    "notice": {
+        "desc": "群发消息",
+        "introduction": "在群内发这个指令并且填写消息，漠月会给群内所有成员发消息。",
+        "parsing": "正在给 {count} 个群友发送消息{positive_punc}",
+        "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
+        "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
+        "muted": "静音成功啦 {neutral}"
     }
 }

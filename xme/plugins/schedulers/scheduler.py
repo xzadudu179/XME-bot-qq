@@ -60,8 +60,9 @@ async def _():
     # 随机发表情
     messages = get_item("schedulers", "idles")
     if has_faces:
-        messages.append(faces)
+        messages += faces
     message = random.choice(messages)
+    print(has_faces, messages)
     if message in faces:
         message = f"[CQ:image,file={message}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")

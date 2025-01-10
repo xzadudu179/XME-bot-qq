@@ -80,7 +80,8 @@ def thread_run_with_timeout(func, timeout_seconds=2, *args, **kwargs):
 
 def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):
     expr = sp.sympify(expr_str)
-    free_symbols = list(expr.free_symbols)
+    free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
+    print("free symbols", free_symbols)
     if len(free_symbols) == 1:
         x = free_symbols[0]
         f_num = sp.lambdify(x, expr, "numpy")
@@ -111,7 +112,8 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     # expr = sp.sympify(expr_str)
     # fig = plt.figure()
     expr = sp.sympify(expr_str)
-    free_symbols = list(expr.free_symbols)
+    free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
+    print(free_symbols)
     if len(free_symbols) == 1:
         free_symbols = free_symbols, None
     x, y = free_symbols

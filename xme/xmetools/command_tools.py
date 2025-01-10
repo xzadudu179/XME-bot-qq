@@ -61,6 +61,17 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
         print("有这个指令")
         return CommandManager._commands.get((name,), False)
 
+def get_args(arg_text: str):
+    """得到参数列表
+
+    Args:
+        arg_text (str): 参数字符串
+
+    Returns:
+        tuple[str]: 参数
+    """
+    return tuple([a for a in arg_text.strip().split(" ") if a])
+
 async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
     message_result = message
     message_result = await msg_preprocesser(session, message)
@@ -87,10 +98,6 @@ async def no_8694(text, session: CommandSession, *_):
     if "8964" in text:
         replaced = True
         text = text.replace("8964", "(8965-1)")
-    # elif "89" in text and "64" in text:
-    #     replaced = True
-    #     # print(f"bot 输出的 \"{text}\" 有违禁词")
-    #     text = text.replace("64", "(65-1)")
     if replaced:
         c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"bot 输出的 \"{text}\" 有违禁词\n原发送者：{session.event.user_id} 在群 {session.event.group_id}")
     return text

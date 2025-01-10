@@ -6,7 +6,7 @@ from character import get_message
 from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
 from xme.plugins.commands.user.classes import xme_user
 import xme.xmetools.text_tools as t
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from . import game_commands as games
 
 # introduction = "各种小游戏"
@@ -73,28 +73,28 @@ async def _(session: CommandSession, user: xme_user.User):
         try:
             game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
         except:
-            return await send_cmd_msg(session, get_message(cmd_name, 'invalid_args'))
+            return await send_session_msg(session, get_message(cmd_name, 'invalid_args'))
     print(game_args)
     if args.info:
         info = get_game_help(text)
         if not info:
-            return await send_cmd_msg(session, get_message(cmd_name, 'help_not_found'))
-        return await send_cmd_msg(session, info)
+            return await send_session_msg(session, get_message(cmd_name, 'help_not_found'))
+        return await send_session_msg(session, info)
 
     game_to_play = games.games.get(text, False)
     print(text)
     if not game_to_play:
-        await send_cmd_msg(session, get_message(cmd_name, 'game_not_found', text=text))
+        await send_session_msg(session, get_message(cmd_name, 'game_not_found', text=text))
         return
     # 玩游戏
     cost = game_to_play['meta'].get('cost', 0)
     if not user.spend_coins(cost):
-        return await send_cmd_msg(session, get_message(cmd_name, 'not_enough_coins', cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
+        return await send_session_msg(session, get_message(cmd_name, 'not_enough_coins', cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
     # 游戏以后会返回东西
     game_return = await game_to_play['func'](session, user, game_args)
     print(game_return)
     if game_return['message']:
-        await send_cmd_msg(session, game_return['message'])
+        await send_session_msg(session, game_return['message'])
     if game_return['state'] in ['EXITED', 'ERROR']:
         return False
     award = game_return['data'].get('award', 'NO_AWARD')
@@ -118,5 +118,5 @@ async def _(session: CommandSession, user: xme_user.User):
     message = '\n'.join(messages)
     print(messages)
     if message:
-        await send_cmd_msg(session, message)
+        await send_session_msg(session, message)
     return True

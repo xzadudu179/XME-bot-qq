@@ -3,7 +3,7 @@ import config
 from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
 from xme.xmetools.list_ctrl import split_list
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from nonebot import on_command, CommandSession
 from character import get_message
 from xme.xmetools.text_tools import most_similarity_str
@@ -36,7 +36,7 @@ async def arg_help(arg, plugins, session):
             if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
                 ask_for_help = pl.name.lower()
             if pl.name.lower() != ask_for_help: continue
-            return await send_cmd_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)
+            return await send_session_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)
     return False
@@ -68,7 +68,7 @@ async def _(session: CommandSession):
             total_pages += "\n\t" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
-        await send_cmd_msg(session, get_message(__plugin_name__, 'no_cmds', prefix=prefix))
+        await send_session_msg(session, get_message(__plugin_name__, 'no_cmds', prefix=prefix))
         # await send_msg(session, f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
         return
 
@@ -83,7 +83,7 @@ async def _(session: CommandSession):
     if not curr_page_num:
         return
     content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-    await send_cmd_msg(session, prefix + content + '\n' + suffix)
+    await send_session_msg(session, prefix + content + '\n' + suffix)
     if len(pages) <= 1:
         return
     # 翻页
@@ -127,16 +127,16 @@ async def _(session: CommandSession):
         #     await send_msg(session, reply_message)
         #     curr_page_num = len(pages)
         content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-        await send_cmd_msg(session, prefix + content + '\n' + suffix)
+        await send_session_msg(session, prefix + content + '\n' + suffix)
 
 
 async def verify_page(session, page_num: str, pages) -> bool | int:
     if page_num < 1:
         reply_message = get_message(__plugin_name__, 'page_too_small')
-        await send_cmd_msg(session, reply_message)
+        await send_session_msg(session, reply_message)
         return False
     elif page_num > len(pages):
         reply_message = get_message(__plugin_name__, 'page_too_big', curr_page_num=page_num)
-        await send_cmd_msg(session, reply_message)
+        await send_session_msg(session, reply_message)
         return len(pages)
     return page_num

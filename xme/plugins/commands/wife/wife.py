@@ -3,7 +3,7 @@ import traceback
 import xme.plugins.commands.wife as w
 from character import get_message
 from .wife_tools import *
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
 @on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
@@ -52,5 +52,5 @@ async def _(session: CommandSession):
         message = get_message(w.__plugin_name__, "error", ex=ex)
         # message = f"呜呜，无法获取到群员信息：{ex}"
         print(traceback.format_exc())
-    await send_cmd_msg(session, message)
+    await send_session_msg(session, message)
 

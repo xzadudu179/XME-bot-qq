@@ -4,7 +4,7 @@ from . import inv_get
 from ..classes import xme_user as u
 from ..classes.inv_item import InvItem
 from ..classes.item import Item
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from character import get_message
 
 name = "reduce"
@@ -68,7 +68,7 @@ async def reduce_item_by_id(
 
     if count_str and not count_str.isdigit() and not count_str == 'all':
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("invalid_count", message_key, name))
+            await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
             # await send_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_count"))
         return default
     elif count_str == 'all':
@@ -78,23 +78,23 @@ async def reduce_item_by_id(
 
     if count <= 0:
         if not silent:
-            await send_cmd_msg(session, try_get_msg("invalid_count", message_key, name))
+            await send_session_msg(session, try_get_msg("invalid_count", message_key, name))
         return default
     if count > user.inventory.count_item(item_get):
         if not silent:
-            await send_cmd_msg(session, try_get_msg("item_count_too_many", message_key, name))
+            await send_session_msg(session, try_get_msg("item_count_too_many", message_key, name))
         return default
 
     if reduce_method(user.inventory, item_get, count):
     # if user.inventory.reduce_item(item.id, count):
         if message_key:
             if not silent:
-                await send_cmd_msg(session,  try_get_msg("success", message_key, name, count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
+                await send_session_msg(session,  try_get_msg("success", message_key, name, count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
                 # await send_msg(session,  get_message(__plugin_name__, cmd_name, message_key, "success", count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
         return True
     else:
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("error", message_key, name, count=count, name=item_name, pronoun=item_pronoun))
+            await send_session_msg(session,  try_get_msg("error", message_key, name, count=count, name=item_name, pronoun=item_pronoun))
             # await send_msg(session,  get_message(__plugin_name__, cmd_name, name, "error", count=count, name=item_name, pronoun=item_pronoun))
     return default
 
@@ -178,7 +178,7 @@ async def reduce_item_by_index(
 
     if count_str and not count_str.isdigit() and not count_str == "all":
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("invalid_count", message_key, name))
+            await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
         return default
 
     if count_str == "all":
@@ -188,20 +188,20 @@ async def reduce_item_by_index(
 
     if count > inv_item.count:
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("count_too_many", message_key, name))
+            await send_session_msg(session,  try_get_msg("count_too_many", message_key, name))
         return default
 
     if count <= 0:
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("invalid_count", message_key, name))
+            await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
         return default
     result = reduce_method(inv_item, count)
     # result = inv_item.try_reduce_item(count=count)
     if result:
         if message_key and not silent:
-            await send_cmd_msg(session,  try_get_msg("success", message_key, name, count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
+            await send_session_msg(session,  try_get_msg("success", message_key, name, count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
         return result
     else:
         if not silent:
-            await send_cmd_msg(session,  try_get_msg("error", message_key, name, count=count, name=item_name))
+            await send_session_msg(session,  try_get_msg("error", message_key, name, count=count, name=item_name))
     return default

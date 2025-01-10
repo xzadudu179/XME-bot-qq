@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 import math
 from xme.xmetools import time_tools
 import random
@@ -57,5 +57,5 @@ async def _(session: CommandSession, user: User):
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()
     print("保存用户数据")
-    await send_cmd_msg(session, message)
+    await send_session_msg(session, message)
     return True

@@ -6,6 +6,7 @@ from xme.xmetools.message_tools import event_send_msg
 import aiocqhttp
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
+from nonebot.session import BaseSession
 from character import get_message
 
 async def event_send_cmd(cmd_string, bot, event, check_permission=True):
@@ -60,7 +61,7 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
         print("有这个指令")
         return CommandManager._commands.get((name,), False)
 
-async def send_cmd_msg(session: CommandSession, message, at=True, **kwargs):
+async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
     message_result = message
     message_result = await msg_preprocesser(session, message)
     if not message_result and message_result != "":

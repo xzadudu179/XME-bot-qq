@@ -6,7 +6,7 @@ from character import get_message
 from xme.xmetools import random_tools
 import random
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 import config
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
@@ -21,12 +21,12 @@ async def _(session: CommandSession):
     print("捡瓶子中")
     # 没捡到瓶子
     if len(bottles) < 1:
-        await send_cmd_msg(session, get_message(__plugin_name__, "no_bottle"))
+        await send_session_msg(session, get_message(__plugin_name__, "no_bottle"))
         # await send_msg(session, "海里一个瓶子里都没有...")
         return
     pickedup = random_tools.random_percent(90)
     if not pickedup:
-        await send_cmd_msg(session, get_message(__plugin_name__, "no_bottle_picked"))
+        await send_session_msg(session, get_message(__plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
         return
 
@@ -94,7 +94,7 @@ async def _(session: CommandSession):
     # 保存防止消息没发出来
     print("保存中")
     json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-    await send_cmd_msg(session, bottle_card)
+    await send_session_msg(session, bottle_card)
     content = ""
     if broken:
         content = get_message(__plugin_name__, "bottle_broken")
@@ -113,7 +113,7 @@ async def _(session: CommandSession):
             content = get_message(__plugin_name__, "bottle_broken?")
             # content = "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里..."
             # json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-        await send_cmd_msg(session, content)
+        await send_session_msg(session, content)
         return
     elif str(index) != "-179":
         for _ in range(3):
@@ -137,14 +137,14 @@ async def _(session: CommandSession):
                 print("保存文件中")
                 # print(bottle)
                 json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
-                await send_cmd_msg(session, content)
+                await send_session_msg(session, content)
                 return
             elif reply == '-rep':
                 content = get_message(__plugin_name__, "reported")
                 # content = f"{at} 举报成功"
                 for superuser in config.SUPERUSERS:
                     await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nid: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
-                await send_cmd_msg(session, content)
+                await send_session_msg(session, content)
                 return
             elif get_cmd_by_alias(reply) != False:
                 print("执行指令")

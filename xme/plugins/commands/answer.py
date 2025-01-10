@@ -5,7 +5,7 @@ from xme.xmetools import random_tools
 from xme.xmetools import text_tools
 from xme.xmetools.time_tools import curr_days
 import random
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from character import get_message
 import json
 
@@ -47,7 +47,7 @@ async def _(session: CommandSession):
         print(f"今天是 550w 的概率是 {percent}%")
         if random_tools.random_percent(percent):
             print("没错，我是 550W")
-            await send_cmd_msg(session, f"\n" + get_message(__plugin_name__, "550w"))
+            await send_session_msg(session, f"\n" + get_message(__plugin_name__, "550w"))
             return
         else:
             print("550W 还没来")
@@ -62,4 +62,4 @@ async def _(session: CommandSession):
     except Exception as ex:
         print(ex)
     finally:
-        await send_cmd_msg(session, message)
+        await send_session_msg(session, message)

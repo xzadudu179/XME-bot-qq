@@ -1,7 +1,7 @@
 __plugin_name__ = '用户'
 from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 import config
 from xme.xmetools.command_tools import get_cmd_by_alias
 from character import get_message
@@ -39,13 +39,13 @@ async def _(session: CommandSession):
     if arg:
         arg = x.name[0] if (x := get_cmd_by_alias(arg, False)) else arg
     else:
-        await send_cmd_msg(session, message)
+        await send_session_msg(session, message)
         return False
     if arg not in commands.keys():
-        await send_cmd_msg(session, get_message(__plugin_name__, cmd_name,'no_cmd', cmd=arg))
+        await send_session_msg(session, get_message(__plugin_name__, cmd_name,'no_cmd', cmd=arg))
         return False
     message = str(CommandDoc(
         **commands[arg]
     ))
-    await send_cmd_msg(session, message, at=False)
+    await send_session_msg(session, message, at=False)
     return True

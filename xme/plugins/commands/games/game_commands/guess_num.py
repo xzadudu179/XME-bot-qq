@@ -7,7 +7,7 @@ from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
 from character import get_message
 import random
 import math
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 
 TIMES_LIMIT = 5
 name = 'guess'
@@ -152,7 +152,7 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f" {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()
         if user_input.lower().strip() in quit_inputs:
-            await send_cmd_msg(session, get_message(cmd_name, name, 'quit_message') if start_guessing else get_message(cmd_name, name, 'quit_message_not_start', coin_name=coin_name))
+            await send_session_msg(session, get_message(cmd_name, name, 'quit_message') if start_guessing else get_message(cmd_name, name, 'quit_message_not_start', coin_name=coin_name))
             # await send_msg(session, f" 退出游戏啦 ovo")
             if start_guessing:
                 return return_state(state="OK", data={
@@ -169,13 +169,13 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
             print("忽略")
             ask_to_guess = False
             if get_cmd_by_alias(user_input) != False:
-                await send_cmd_msg(session, get_message(cmd_name, name, 'cmd_in_game'))
+                await send_session_msg(session, get_message(cmd_name, name, 'cmd_in_game'))
                 # await send_msg(session, f" 你还在游戏中哦，不能执行指令 uwu")
             continue
         result = guess.parse_game_step(num)
         start_guessing = True
         if result == 2:
-            await send_cmd_msg(session, get_message(cmd_name, name, 'game_over', answer=format(guess.answer_num, ',')))
+            await send_session_msg(session, get_message(cmd_name, name, 'game_over', answer=format(guess.answer_num, ',')))
             # await send_msg(session, f" 你的猜测次数用完啦，正确答案应该是 {guess.answer_num} ovo")
             return return_state(state="OK", data={
                     "limited": False,
@@ -191,7 +191,7 @@ async def play_game(session: CommandSession, user: xme_user.User, args: dict):
         )
         # message = f"{num} {'大啦' if result == 1 else '小啦' if result == -1 else '正确~'}"
         if result == 0:
-            await send_cmd_msg(session, message)
+            await send_session_msg(session, message)
             break
         message += f"\n" + get_message(cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
         # message += f"\n你还可以猜 {guess.max_guessing_times - guess.guessing_times} 次数字ovo"

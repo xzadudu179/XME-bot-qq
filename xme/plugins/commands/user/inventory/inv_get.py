@@ -4,7 +4,7 @@ from typing import Any
 from ..classes import xme_user as u
 from ..classes.inv_item import InvItem
 from ..classes.item import Item
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from character import get_message
 
 name = "get"
@@ -23,24 +23,24 @@ async def get_inv_item_by_index(session, user: u.User, index_str: str, default=F
         InvItem | Any: 获取结果
     """
     if not index_str and not silent:
-        await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_num"))
+        await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_num"))
     if index_str.isdigit():
         index = int(index_str) - 1
     else:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_num"))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_num"))
         return default
 
     if index >= len(user.inventory.inv_items) or index < 0:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "index_out_range", num=index + 1))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "index_out_range", num=index + 1))
         return default
 
     inv_item = user.inventory.find_item(index)
 
     if inv_item.recorded_item is None:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_item", num=index + 1))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_item", num=index + 1))
         return default
     return inv_item
 
@@ -65,7 +65,7 @@ async def get_item_by_name(session, item_name: str, default=False, silent=False,
     item = Item.get_item_by_name(item_name, fuzzy, threshold, item_list)
     if item is None:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_name_item", name=item_name) if user is None else get_message(__plugin_name__, cmd_name, name, "user_no_item", name=item_name))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_name_item", name=item_name) if user is None else get_message(__plugin_name__, cmd_name, name, "user_no_item", name=item_name))
         return default
     return item
 
@@ -85,12 +85,12 @@ async def get_item_by_id(session, id_str: str, default=False, silent=False) -> I
         id = int(id_str)
     else:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_id"))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_id"))
         return default
 
     item = Item.get_item(id)
     if item is None:
         if not silent:
-            await send_cmd_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_id_item", id=str(id)))
+            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, name, "no_id_item", id=str(id)))
         return default
     return item

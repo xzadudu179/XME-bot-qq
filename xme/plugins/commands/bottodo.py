@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 import config
 from character import get_message
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from xme.xmetools import text_tools
 
 alias = ['bot待办', 'show_bottodo']
@@ -26,17 +26,17 @@ async def _(session: CommandSession):
             arg = text_tools.remove_prefix(arg, REMOVES)
             index = int(arg)
         except:
-            await send_cmd_msg(session, get_message(__plugin_name__,'remove_todo_failed', arg=arg))
+            await send_session_msg(session, get_message(__plugin_name__,'remove_todo_failed', arg=arg))
             return
         removed = remove_todo(index)
-        await send_cmd_msg(session, get_message(__plugin_name__,'remove_todo_success', todo=removed))
+        await send_session_msg(session, get_message(__plugin_name__,'remove_todo_success', todo=removed))
         return
     elif arg and session.event.user_id in config.SUPERUSERS:
         add_todo(arg)
-        await send_cmd_msg(session, get_message(__plugin_name__, 'add_todo_success', todo=arg))
+        await send_session_msg(session, get_message(__plugin_name__, 'add_todo_success', todo=arg))
         return
     elif arg:
-        await send_cmd_msg(session, get_message(__plugin_name__, 'modify_todo_failed'))
+        await send_session_msg(session, get_message(__plugin_name__, 'modify_todo_failed'))
         return
     lines = []
     try:
@@ -48,7 +48,7 @@ async def _(session: CommandSession):
     if len(lines) < 1:
         message += get_message(__plugin_name__, 'no_todo')
     message += '\n'.join([f'{i + 1}. {line}' for i, line in enumerate(lines)])
-    await send_cmd_msg(session, message)
+    await send_session_msg(session, message)
 
 def add_todo(todo_str):
     with open("TODO.txt", "a", encoding='utf-8') as file:

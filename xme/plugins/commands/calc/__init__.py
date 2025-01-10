@@ -6,7 +6,7 @@ from xme.xmetools.function_tools import run_with_timeout
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from xme.xmetools.function_tools import draw_exprs, draw_3d_exprs
 
 alias = ['计算', 'cc']
@@ -25,7 +25,7 @@ async def _(session: CommandSession):
     message = ""
     arg = session.current_arg_text.strip()
     if not arg:
-        return await send_cmd_msg(session, get_message(__plugin_name__, 'no_arg'))
+        return await send_session_msg(session, get_message(__plugin_name__, 'no_arg'))
     if arg == 'funcs':
         message = get_message(__plugin_name__, 'func_intro') + "\n"
         for k, v in funcs.items():
@@ -35,17 +35,17 @@ async def _(session: CommandSession):
         # message += get_message(__plugin_name__, 'func_builtin_intro') + "\n"
         # for k, v in func.builtins.items():
         #     message += f'{k}: {v if v else "-"}\n'
-        return await send_cmd_msg(session, '\n' + message)
+        return await send_session_msg(session, '\n' + message)
     if arg == 'builtins':
         message += get_message(__plugin_name__, 'func_builtin_intro') + "\n"
         for k, v in func.builtins.items():
             message += f'{k}: {v if v else "-"}\n'
-        return await send_cmd_msg(session, '\n' + message)
+        return await send_session_msg(session, '\n' + message)
     try:
         TIMEOUT_SECS = 20
         formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS / 2, f"计算超时 (>{TIMEOUT_SECS / 2}s)", arg)
         if is_image > 0:
-            await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
+            await send_session_msg(session, get_message(__plugin_name__, 'drawing'))
             print(is_image)
             if is_image == 1:
                 filename, _ = run_with_timeout(draw_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
@@ -55,7 +55,7 @@ async def _(session: CommandSession):
                 # filename, _ = draw_3d_exprs(*result)
                 # 使用缓存的话不说正在绘制
             message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{filename}]", formula=formula)
-            await send_cmd_msg(session, message)
+            await send_session_msg(session, message)
             return
         else:
             message = get_message(__plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
@@ -70,11 +70,11 @@ async def _(session: CommandSession):
             message += '\n' + get_message(__plugin_name__, 'float_result', float_result=float_result)
     except SyntaxError as ex:
         # return await send_cmd_msg(session, get_message(__plugin_name__, 'syntaxerror', ex=traceback.format_exc()))
-        return await send_cmd_msg(session, get_message(__plugin_name__, 'syntaxerror', ex=ex))
+        return await send_session_msg(session, get_message(__plugin_name__, 'syntaxerror', ex=ex))
     except SympifyError as ex:
         # return await send_cmd_msg(session, get_message(__plugin_name__, 'sympifyerror', ex=traceback.format_exc()))
-        return await send_cmd_msg(session, get_message(__plugin_name__, 'sympifyerror', ex=ex))
+        return await send_session_msg(session, get_message(__plugin_name__, 'sympifyerror', ex=ex))
     except Exception as ex:
         # return await send_cmd_msg(session, get_message(__plugin_name__, 'error', ex=traceback.format_exc()))
-        return await send_cmd_msg(session, get_message(__plugin_name__, 'error', ex=ex))
-    await send_cmd_msg(session, message)
+        return await send_session_msg(session, get_message(__plugin_name__, 'error', ex=ex))
+    await send_session_msg(session, message)

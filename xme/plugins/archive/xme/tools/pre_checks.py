@@ -1,7 +1,7 @@
 from functools import wraps
 from ..classes.user import User
 import traceback
-from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.command_tools import send_session_msg
 from ..classes.database import Xme_database
 
 def pre_check(pre_func=None, end_func=None):
@@ -24,7 +24,7 @@ def pre_check(pre_func=None, end_func=None):
                 result = await func(session, xme_user, *args, **kwargs)
             except Exception as ex:
                 print(f"出现错误：\n{traceback.format_exc()}")
-                await send_cmd_msg(session, f"呜呜，执行指令出现错误:\n{ex}")
+                await send_session_msg(session, f"呜呜，执行指令出现错误:\n{ex}")
             # print(user)
             if end_func:
                 print("执行尾函数")
@@ -58,7 +58,7 @@ async def check_register(session):
         xme_user = User(database, user_id, nickname)
         xme_user.save()
         print("注册完成。")
-        await send_cmd_msg(session, "执行时我帮你注册了一个新账号哦 owo")
+        await send_session_msg(session, "执行时我帮你注册了一个新账号哦 owo")
     else:
         xme_user = user
     print(f"检查完成，已注册")

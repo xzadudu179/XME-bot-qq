@@ -21,4 +21,4 @@ async def _(session: CommandSession, user: User):
         message = f"签到成功~ {reg_message}\n你当前{coins_message}{suffix}"
     else:
         message = f"你今天已经签到过了哦 ovo"
-    await send_cmd_msg(session, message)
+    await send_session_msg(session, message)

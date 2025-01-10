@@ -26,8 +26,11 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
         return
     elif len(color_num_str) == 3:
         color_num_str = "".join([c + c for c in color_num_str])
-    name = gen_color_image(color_num_str)
-    return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+    try:
+        name = gen_color_image(color_num_str)
+        return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+    except ValueError:
+        return
 
 def gen_color_image(color_num, size=(300, 200)):
     name = f"color_{color_num}.png"

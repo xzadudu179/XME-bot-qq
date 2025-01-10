@@ -3,7 +3,7 @@ import multiprocessing
 from functools import wraps
 import sympy as sp
 from xme.xmetools.color_manage import hex_to_rgb, gradient_hex_color
-from xme.xmetools.text_tools import limit_str_len, base64_encode
+from xme.xmetools.text_tools import limit_str_len, hash_text
 from xme.xmetools.file_tools import has_file
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
@@ -78,7 +78,7 @@ def thread_run_with_timeout(func, timeout_seconds=2, *args, **kwargs):
             future.cancel()  # 超时后取消任务
             raise TimeoutError("函数执行超时")
 
-def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 1000), range_y=None, labels=[]):
+def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):
     expr = sp.sympify(expr_str)
     free_symbols = list(expr.free_symbols)
     if len(free_symbols) == 1:
@@ -106,7 +106,7 @@ def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 1000), ra
     labels.append(expr_str)
     return labels
 
-def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 500), range_y=None, labels=[]):
+def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 100), range_y=None, labels=[]):
     print("绘制3D")
     # expr = sp.sympify(expr_str)
     # fig = plt.figure()
@@ -136,7 +136,7 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 50
         # ax.text(-72 + 1.5 * len(labels) * 1.5, 44 - 2 * 2 * 1.5, z=0, s="WARNING: INVALID", color=color, fontsize=8)
     z = np.nan_to_num(z, nan=0.0)
 
-    ax.plot_surface(X, Y, z, cmap="plasma", edgecolor=color, alpha=0.7, linewidth=0.5)
+    ax.plot_surface(X, Y, z, cmap="winter", edgecolor=color, alpha=0.7, linewidth=0.5)
     labels.append(expr_str)
     return labels
 
@@ -150,7 +150,14 @@ def parse_exprs_label(title, font_size, font_color, bg_color, grid_color, labels
     plt.title(title, fontsize=font_size, color=font_color)
     plt.xlabel("x", fontsize=font_size, color=font_color)
     plt.ylabel("y", fontsize=font_size, color=font_color)
-    plt.axis("equal")
+    # plt.axis("equal")
+    # 获取 x 轴范围
+    x_min, x_max = plt.xlim()
+
+    # 以 x 轴范围为基准，设置 y 轴范围
+    y_center = 0  # y 轴范围中心点（可以根据实际需要调整）
+    y_range = (x_max - x_min) / 2  # 确保 x 和 y 的比例一致
+    plt.ylim(y_center - y_range, y_center + y_range)
     ax.set_facecolor(bg_color)
     for spine in ax.spines.values():
         spine.set_color(grid_color)
@@ -198,8 +205,7 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     global bg_color
     print("exprstrs:", expr_strs)
     title = f"{limit_str_len(','.join([es for es in expr_strs]), 30)} 的结果"
-    title_name = base64_encode(title)
-    name = f"{pre}_{title_name}.png"
+    name = hash_text(f"{pre}_{title}") + ".png"
     path = path_folder + "/" + name
     if has_file(path):
         print("使用缓存")
@@ -222,5 +228,5 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     labels = [limit_str_len(label, 30) for label in labels]
     parse_func(title, font_size, font_color, bg_color, grid_color, labels, sec_color, label_ax)
 
-    plt.savefig(path, dpi=400, bbox_inches="tight")
+    plt.savefig(path, dpi=200, bbox_inches="tight")
     return name, False

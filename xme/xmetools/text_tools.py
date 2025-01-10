@@ -3,6 +3,7 @@ from pypinyin import lazy_pinyin
 # import spacy
 import base64
 import string
+import hashlib
 from difflib import SequenceMatcher
 
 def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
@@ -141,6 +142,21 @@ def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=Fa
     # 使用正则表达式替换不符合的字符（保留换行符）
     return re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9_\n-]', '_' if not replace_to_horzline else '-', s).replace("\n", "")
 # print(chinese_proportion("你这个 situation 我觉得很 weird"))
+
+def hash_text(text):
+    """使用 SHA-256 将字符串转为 16 进制 HASH
+
+    Args:
+        text (str): 输入的字符串
+
+    Returns:
+        str: 输出的字符串
+    """
+    # 使用 SHA-256 哈希算法
+    hash_object = hashlib.sha256(text.encode('utf-8'))
+    # 将哈希值转换为十六进制字符串
+    hex_result = hash_object.hexdigest()
+    return hex_result.upper()
 
 def fullwidth_to_halfwidth(text):
     """将字符串中的全角字符替换为半角字符。（注意：中文标点【】之类的不算可替换的全角字符）

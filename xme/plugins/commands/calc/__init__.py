@@ -7,6 +7,7 @@ from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
 from xme.xmetools.command_tools import send_cmd_msg
+from xme.xmetools.function_tools import draw_exprs, draw_3d_exprs
 
 alias = ['计算', 'cc']
 __plugin_name__ = 'calc'
@@ -42,12 +43,18 @@ async def _(session: CommandSession):
         return await send_cmd_msg(session, '\n' + message)
     try:
         TIMEOUT_SECS = 20
-        formula, result, is_image, use_temp = run_with_timeout(parse_polynomial, TIMEOUT_SECS, f"计算超时 (>{TIMEOUT_SECS}s)", arg)
-        if is_image:
-            if not use_temp:
+        formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS / 2, f"计算超时 (>{TIMEOUT_SECS / 2}s)", arg)
+        if is_image > 0:
+            await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
+            print(is_image)
+            if is_image == 1:
+                filename, _ = run_with_timeout(draw_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
+                # filename, _ = draw_exprs(*result)
+            elif is_image == 2:
+                filename, _ = run_with_timeout(draw_3d_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
+                # filename, _ = draw_3d_exprs(*result)
                 # 使用缓存的话不说正在绘制
-                await send_cmd_msg(session, get_message(__plugin_name__, 'drawing'))
-            message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{result}]", formula=formula)
+            message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{filename}]", formula=formula)
             await send_cmd_msg(session, message)
             return
         else:

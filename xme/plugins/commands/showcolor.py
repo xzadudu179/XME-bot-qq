@@ -20,18 +20,14 @@ __plugin_usage__ = str(SpecialDoc(
 @message_preprocessor
 async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     raw_msg = fullwidth_to_halfwidth(event.raw_message.strip()).upper()
-    print(raw_msg)
+    # print(raw_msg)
     color_num_str = raw_msg.split("#")[-1]
     if not raw_msg.startswith("#") or len(color_num_str) not in [3, 6]:
         return
     elif len(color_num_str) == 3:
         color_num_str = "".join([c + c for c in color_num_str])
-    print(color_num_str)
-    try:
-        name = gen_color_image(color_num_str)
-        return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
-    except:
-        return
+    name = gen_color_image(color_num_str)
+    return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
 
 def gen_color_image(color_num, size=(300, 200)):
     name = f"color_{color_num}.png"
@@ -51,9 +47,14 @@ def gen_color_image(color_num, size=(300, 200)):
     text_height = text_bbox[3] - text_bbox[1]
     text_x = (width - text_width) // 2
     text_y = (height - text_height) // 2 - (font_size // 8)
-
+    # print("aaa")
     # 文字颜色
     text_color = c.invent_color(color)
+    # print("bbb")
+    if c.get_color_differences(text_color, color) < 30:
+        # print("ccc")
+        text_color = "#000000" if c.get_color_luminance(color) > 128 else "#FFFFFF"
+    print("con")
 
     # 绘制文字
     draw.text((text_x, text_y), color, fill=text_color, font=font)

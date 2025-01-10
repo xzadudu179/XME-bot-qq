@@ -38,6 +38,50 @@ def rgb_to_hex(rgb_color):
     """Convert RGB color to hex."""
     return '#{:02x}{:02x}{:02x}'.format(*rgb_color)
 
+def get_color_differences(color1: str | tuple, color2: str | tuple):
+    """得到两个颜色的向量差距
+
+    Args:
+        color1 (str | tuple): 颜色1
+        color2 (str | tuple): 颜色2
+
+    Returns:
+        floating[Any]: 颜色差距
+    """
+    # print("111")
+    color1, color2 = to_rgb_and_verify(color1, color2)
+    c1 = np.array(color1)
+    c2 = np.array(color2)
+    distance = np.linalg.norm(c1 - c2)
+    # print("222")
+    return distance
+
+def to_rgb_and_verify(*colors: str | tuple) -> tuple:
+    result_colors = []
+    for color in colors:
+        if type(color) == str:
+            color = hex_to_rgb(color)
+        if type(color) == tuple and len(color) != 3:
+            raise ValueError("颜色 RGB 值元组长度不等于 3")
+        result_colors.append(color)
+    return tuple(result_colors)
+
+def get_color_luminance(color: str | tuple) -> float:
+    """得到颜色亮度
+
+    Args:
+        color (str | tuple): 颜色
+
+    Returns:
+        float: 亮度值（最高为 255）
+    """
+    # print("xwx")
+    color = to_rgb_and_verify(color)[0]
+    # print(color)
+    luminance = 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]
+    # print("uwu")
+    return luminance
+
 def invent_color(color: str | tuple) -> str | tuple:
     """反转颜色
 

@@ -1,10 +1,7 @@
 import re
 from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
-from xme.xmetools.function_tools import draw_exprs, draw_3d_exprs
 from . import func
-# import func
-import sympy as sp
-from sympy import sympify, Integer, simplify
+from sympy import sympify, Integer
 
 def get_func(input_str):
     pattern = r"[a-zA-Z_][a-zA-Z0-9_]*\(.*"
@@ -41,13 +38,14 @@ def extract_function(expression):
             return result
     return result
 
-def parse_polynomial(formula, vars=None):
+def parse_polynomial(formula):
     """处理多项式
 
     Args:
         formula (str): 算式字符串
         vars (dict | None): 变量字典. Defaults to None
     """
+    print("parsing")
     formula = fullwidth_to_halfwidth(replace_chinese_punctuation(formula)).strip()
     formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r").replace("\n", '\r')
     original_formula = formula
@@ -71,11 +69,12 @@ def parse_polynomial(formula, vars=None):
         raise ValueError("不能同时绘制 3D 图像和 2D 图像")
     if need_to_draw:
         if len(draws) > 0:
-            filename, use_temp = draw_exprs(*draws)
+            # filename, use_temp = draw_exprs(*draws)
+            return original_formula.replace(" ", ''), draws, 1
         elif len(draws_3d) > 0:
             # print("draws3d:", draws_3d)
-            filename, use_temp = draw_3d_exprs(*draws_3d)
-        return original_formula.replace(" ", ''), filename, True, use_temp
+            # filename, use_temp = draw_3d_exprs(*draws_3d)
+            return original_formula.replace(" ", ''), draws_3d, 2
 
     result_formula = parse_func(result_formulas[-1])
     print(result_formulas, result_formula)
@@ -89,7 +88,7 @@ def parse_polynomial(formula, vars=None):
         else:
             raise ex
 
-    return original_formula.replace(" ", ''), result, False, False
+    return original_formula.replace(" ", ''), result, 0
 
 def check_integer_size(expr, max_digits=1000):
     for atom in expr.atoms(Integer):
@@ -183,10 +182,3 @@ def parse_func(formula):
         print(f"func \"{f}\" result: {result}")
         formula = formula.replace(f, str(result))
     return formula
-
-
-# def parse_monomial(monomial):
-#     monomial = parse_func(monomial)
-#     return monomial
-if __name__ == '__main__':
-    print("ceshi")

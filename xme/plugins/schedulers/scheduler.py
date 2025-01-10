@@ -95,7 +95,7 @@ async def _():
     print("send")
     await send_time_message()
 
-@nonebot.scheduler.scheduled_job('cron', hour='*')
+@nonebot.scheduler.scheduled_job('cron', day='*')
 async def del_temp_images():
     log.logger.info("正在删除缓存文件")
     folder_path = "./data/images/temp"

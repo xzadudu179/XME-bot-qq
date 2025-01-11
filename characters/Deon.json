@@ -62,7 +62,9 @@
     "config": {
         "busy": "我还在处理指令哦... {negative}",
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
-        "pid_prime": "我这次运行的 PID {pid} 是质数诶~"
+        "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
+        "anno_message": "[九九的公告] {anno}",
+        "no_permission": "权限不足哦 {negative}"
     },
     "user": {
         "coin_name": "星币",
@@ -442,7 +444,7 @@
             "看看179 嗷呜",
             ".pick"
         ],
-        "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》",
         "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {
@@ -925,7 +927,7 @@
             "大海里很空旷...没有一点瓶子呢"
         ],
         "no_bottle_picked": [
-            "你没有捡到瓶子{neutral}",
+            "你没有捡到瓶子 {neutral}",
             "你没有捡到瓶子...",
             "唔...你没有找到瓶子诶...",
             "唔...你没有捡到瓶子诶...",
@@ -948,7 +950,7 @@
             "一共得到了 {count} 个赞 {positive}",
             "获得了 {count} 个赞{positive_punc}"
         ],
-        "no_like_message": "还没有任何赞{neutral}",
+        "no_like_message": "还没有任何赞 {neutral}",
         "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
         "response_prompt": [
             "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
@@ -958,14 +960,14 @@
         "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
         "bottle_broken": [
             "啊，你不小心把瓶子摔碎了...",
-            "{negative}你不小心把瓶子摔碎了...",
-            "{negative}瓶子碎掉了...",
+            "{negative} 你不小心把瓶子摔碎了...",
+            "{negative} 瓶子碎掉了...",
             "啊...瓶子碎掉了...",
             "啊...瓶子破碎了...",
-            "{negative}瓶子被你不小心摔碎了...",
+            "{negative} 瓶子被你不小心摔碎了...",
             "啊...瓶子被你不小心摔碎了...",
             "啊...瓶子被你一不小心摔碎了...",
-            "{negative}瓶子被你一不小心摔碎了..."
+            "{negative} 瓶子被你一不小心摔碎了..."
         ],
         "bottle_broken_messy": [
             "啊...这个瓶子好混乱...唔...它碎掉了！",
@@ -977,16 +979,16 @@
         "bottle_broken?": [
             "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
             "啊，你不小心把瓶子摔...诶？这个瓶子自己修复了，然后飞回了海里...汪？",
-            "{negative}瓶子摔碎...诶？这个瓶子修复了，然后飞回了海里..."
+            "{negative} 瓶子摔碎...诶？这个瓶子修复了，然后飞回了海里..."
         ],
         "liked": [
             "点赞成功{positive_punc} 瓶子似乎变得更稳定了！",
             "点赞完成{positive_punc} 瓶子好像变得更稳定啦！",
             "点赞完成啦{positive_punc} 瓶子似乎变得更稳定了！",
             "汪！点赞成功{positive_punc} 瓶子似乎变得更稳定了！",
-            "{positive}点赞成功啦{positive_punc} 瓶子似乎变得更稳定了{positive_plus}",
-            "{positive}点赞成功{positive_punc} 瓶子好像变得更稳定啦！",
-            "点赞成功{positive}瓶子好像变得更稳定啦！",
+            "{positive} 点赞成功啦{positive_punc} 瓶子似乎变得更稳定了{positive_plus}",
+            "{positive} 点赞成功{positive_punc} 瓶子好像变得更稳定啦！",
+            "点赞成功 {positive} 瓶子好像变得更稳定啦！",
             "点赞成功啦{positive_punc} 瓶子似乎变得更稳定了！"
         ],
         "reported": [
@@ -995,7 +997,7 @@
             "唔...举报成功"
         ],
         "nothing_to_throw": [
-            "漂流瓶似乎没有内容呢{neutral}\n格式：\n{command_name} (漂流瓶内容)",
+            "漂流瓶似乎没有内容呢 {neutral}\n格式：\n{command_name} (漂流瓶内容)",
             "漂流瓶里面好像什么都没有诶...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦",
             "漂流瓶里面好像什么都没有...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦"
         ],
@@ -1010,12 +1012,11 @@
             "瓶子的行数太多啦！最多 {max_lines} 行哦",
             "瓶子内容太长啦...最多 {max_lines} 行哦",
             "瓶子塞不下啦！最多写 {max_lines} 行哦",
-            "{negative}瓶子塞不下啦...最多写 {max_lines} 行哦"
+            "{negative} 瓶子塞不下啦...最多写 {max_lines} 行哦"
         ],
         "throwed": [
             "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
             "瓶子扔出去啦{positive_punc} 这是第 {id} 号瓶子哦{positive_punc}",
-            "{positive}第 {id} 号瓶子开启了它的旅程{positive_punc}",
             "{positive} 第 {id} 号瓶子开启了它的旅程{positive_punc}",
             "大海中的第 {id} 号瓶子开启了它的旅程{positive_punc}",
             "瓶子扔出去啦{positive_punc} 这是第 {id} 号瓶子哦 {positive}"
@@ -1477,5 +1478,10 @@
         "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
         "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
         "muted": "静音成功啦 {neutral}"
+    },
+    "announce": {
+        "desc": "修改公告",
+        "introduction": "发布公告，会在报时时出现",
+        "success": "公告 \"{anno}\" 发布成功~ {positive}"
     }
 }

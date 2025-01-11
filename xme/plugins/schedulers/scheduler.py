@@ -9,6 +9,7 @@ from datetime import datetime
 from nonebot import log
 from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools import random_tools
+from xme.xmetools.json_tools import read_from_path
 from xme.xmetools import time_tools
 from xme.xmetools import message_tools
 from character import get_item, get_message
@@ -18,11 +19,13 @@ bot = nonebot.get_bot()
 async def send_time_message():
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
+        anno_message = get_message("config", "anno_message", anno=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "无")) + "\n"
         something_to_say = get_message("schedulers", "time",
             period=time_tools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
-            from_where=say['from']
+            from_where=say['from'],
+            anno=anno_message
         )
         # something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{'无名' if not (x:=say['from_who']) else x} 《{say['from']}》"
         try:

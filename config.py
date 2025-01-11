@@ -21,8 +21,7 @@ DEFAULT_COMMAND_PERMISSION = lambda s: s.is_groupchat
 # 用户自定义 config
 GROUPS_WHITELIST = [
     727949269,
-    927322136,
-    669877782
+    927322136
 ]
 # 报时
 SCHEDULER_GROUP = [
@@ -37,7 +36,8 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '0.1.3'
+VERSION = '0.1.5'
 
 USER_PATH = "./data/users.json"
+BOT_SETTINGS_PATH = "./data/_botsettings.json"
 DEBUG = False

@@ -59,7 +59,9 @@
     "config": {
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
-        "pid_prime": "我这次运行的 PID {pid} 是质数诶~"
+        "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
+        "anno_message": "[九九的公告] {anno}",
+        "no_permission": "权限不足哦 {negative}"
     },
     "user": {
         "coin_name": "金币",
@@ -95,7 +97,7 @@
             ".jrrp",
             "b50"
         ],
-        "time": "{period}好呀{positive_punc}\n\n\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》",
         "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {
@@ -522,5 +524,10 @@
         "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
         "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
         "muted": "静音成功啦 {neutral}"
+    },
+    "announce": {
+        "desc": "修改公告",
+        "introduction": "发布公告，会在报时时出现",
+        "success": "公告 \"{anno}\" 发布成功~ {positive}"
     }
 }

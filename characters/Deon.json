@@ -801,8 +801,7 @@
         ],
         "jrrp>=90": [
             "{result}！{positive_plus}",
-            "{result}！{positive_plus}",
-            "{result}！"
+            "{result}{positive_punc} {positive_plus}"
         ],
         "jrrp_default": [
             "{result} {neutral}"

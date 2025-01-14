@@ -126,17 +126,15 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     y_vals = np.linspace(*range_y) if y is not None else np.zeros_like(x_vals)
     X, Y = np.meshgrid(x_vals, y_vals)
     z = f_num(X, Y) if y is not None else f_num(X)
-
+    print("xyz", X, Y, z)
     # 检查无效值并处理
     contains_invalid = np.any(np.isnan(z)) or np.any(np.isinf(z))
     if contains_invalid:
         print("有无效值")
-        # ax.text(-40 + 1.5 * len(labels) * 1.5, 30 - 2 * len(labels) * 1.5, z=0, s="警告：函数有无效值", color=color, fontsize=8)
-        # ax.text(0.05, 0.95, s='警告：函数有无效值', z=0, transform=ax.transAxes, fontsize=8, color=color, verticalalignment='top', horizontalalignment='left')
         expr_str = "(有无效值) " + expr_str
 
         # ax.text(-72 + 1.5 * len(labels) * 1.5, 44 - 2 * 2 * 1.5, z=0, s="WARNING: INVALID", color=color, fontsize=8)
-    z = np.nan_to_num(z, nan=0.0)
+    z = np.nan_to_num(z, nan=0)
 
     ax.plot_surface(X, Y, z, cmap="winter", edgecolor=color, alpha=0.7, linewidth=0.5)
     labels.append(expr_str)

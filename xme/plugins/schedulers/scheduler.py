@@ -2,8 +2,6 @@ import nonebot
 import config
 import requests
 import json
-import os
-from nonebot import log
 from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
 from nonebot import log
@@ -11,6 +9,7 @@ from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools import random_tools
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools import time_tools
+from xme.xmetools import file_tools
 from xme.xmetools import message_tools
 from character import get_item, get_message
 import random
@@ -101,11 +100,5 @@ async def _():
 
 @nonebot.scheduler.scheduled_job('cron', day='*')
 async def del_temp_images():
-    log.logger.info("正在删除缓存文件")
-    folder_path = "./data/images/temp"
-    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-    for f in files:
-        log.logger.info(f"正在删除 \"{f}\"...")
-        os.remove(folder_path + '/' + f)
-
+    file_tools.clear_temp()
 # TODO 分文件编写计时器

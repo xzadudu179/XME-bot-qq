@@ -1481,6 +1481,7 @@
     "announce": {
         "desc": "修改公告",
         "introduction": "发布公告，会在报时时出现",
-        "success": "公告 \"{anno}\" 发布成功~ {positive}"
+        "success": "公告 \"{anno}\" 发布成功~ {positive}",
+        "clear": "成功清除公告{positive_punc}"
     }
 }

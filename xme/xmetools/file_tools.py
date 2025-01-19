@@ -26,12 +26,15 @@ def has_file(path) -> bool:
         return True
     return False
 
-def clear_temp():
+def clear_temp(folder="./data/images/temp"):
     """
     清除缓存"""
     log.logger.info("正在删除缓存文件")
-    folder_path = "./data/images/temp"
-    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
     for f in files:
         log.logger.info(f"正在删除 \"{f}\"...")
-        os.remove(folder_path + '/' + f)
+        os.remove(folder + '/' + f)
+
+def clear_temps(folders=["./data/images/temp", "./data/temp"]):
+    for f in folders:
+        clear_temp(f)

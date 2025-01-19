@@ -170,3 +170,5 @@ linescount.py
 TODO.txt
 
 screenshots
+xme/xmetools/connection.py
+xme/plugins/schedulers/server_crash_report.py

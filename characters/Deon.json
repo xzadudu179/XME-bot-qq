@@ -64,7 +64,8 @@
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
         "anno_message": "[九九的公告] {anno}",
-        "no_permission": "权限不足哦 {negative}"
+        "no_permission": "权限不足哦 {negative}",
+        "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下..."
     },
     "user": {
         "coin_name": "星币",

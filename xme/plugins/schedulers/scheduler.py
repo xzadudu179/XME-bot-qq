@@ -102,5 +102,5 @@ async def _():
 
 @nonebot.scheduler.scheduled_job('cron', day='*')
 async def del_temp_images():
-    file_tools.clear_temp()
+    file_tools.clear_temps()
 # TODO 分文件编写计时器

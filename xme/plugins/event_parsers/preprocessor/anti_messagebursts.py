@@ -40,7 +40,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         message = message[1:] if message[0] in config.COMMAND_START else message
     if time.time() - last_messages['refresh_time'] > (SEC_AVG_MSGS * MSG_COUNT_THRESHOLD * 2) and last_messages['refresh_time'] > 0:
         # print(last_messages)
-        print(f"正在清除以上消息的缓存...")
+        # print(f"正在清除以上消息的缓存...")
         last_messages = {
             "refresh_time": time.time()
         }
@@ -61,7 +61,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         rate = 2 if is_cmd else 1
         # 如果在 x 秒内发的消息超过这么多则算刷屏
         time_period = time.time() - last_messages[key][message]["start_time"]
-        print(f'在 {time_period} 秒发了 {last_messages[key][message]["count"]} 条消息 {message}，{"是" if is_cmd else "不是"}指令，平均条消息间隔 {time_period / last_messages[key][message]["count"]} 秒\n刷屏限制为每秒 {SEC_AVG_MSGS / rate} 条消息')
+        print(f'在 {time_period:.2f} 秒发了 {last_messages[key][message]["count"]} 条消息 {message}，{"是" if is_cmd else "不是"}指令，平均条消息间隔 {(time_period / last_messages[key][message]["count"]):.2f} 秒\n刷屏限制为一条间隔 {SEC_AVG_MSGS / rate} 秒')
         if time_period > (SEC_AVG_MSGS * rate * last_messages[key][message]['count']): return
         if last_messages[key][message]['count'] < MSG_COUNT_THRESHOLD * 4:
             last_messages['refresh_time'] = time.time()

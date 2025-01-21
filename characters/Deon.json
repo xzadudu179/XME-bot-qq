@@ -465,10 +465,10 @@
             "指令不要发太快 {negative}"
         ],
         "message_prohibited": [
-            "不要发奇怪的词汇{negative}",
-            "这里面的词汇不能发{negative}",
-            "不要发不好的词汇{negative}",
-            "不能发不好的词汇{negative}"
+            "不要发奇怪的词汇 {negative}",
+            "这里面的词汇不能发 {negative}",
+            "不要发不好的词汇 {negative}",
+            "不能发不好的词汇 {negative}"
         ],
         "welcome": [
             "欢迎 {at} 进群{positive_punc}",

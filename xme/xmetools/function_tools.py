@@ -7,12 +7,14 @@ from xme.xmetools.text_tools import limit_str_len, hash_text
 from xme.xmetools.file_tools import has_file
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
+import signal
 import numpy as np
 
 bg_color = (4 / 255, 23 / 255, 32 / 255)
 prop = font_manager.FontProperties(fname=rf'./fonts/Cubic_11.ttf')
 plt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
+
 
 def thread_set_timeout(seconds=10, timeout_message="函数执行超时", callback=None):
     """设置超时装饰器（非大量计算）
@@ -36,6 +38,39 @@ def thread_set_timeout(seconds=10, timeout_message="函数执行超时", callbac
         return wrapper
     return decorator
 
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException("函数执行超时")
+
+def linux_set_timeout(seconds=10, timeout_message="函数执行超时", callback=None):
+    """设置 linux 超时装饰器
+
+    Args:
+        seconds (int, optional): 超时秒数. Defaults to 10.
+        timeout_message (str, optional): 若未填写回调函数时超时的报错消息. Defaults to "函数执行超时".
+        callback (function, optional): 回调函数，参数是被装饰的函数的参数. Defaults to None.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(seconds)
+                result = func(*args, **kwargs)
+            except TimeoutException:
+                if callback:
+                    result = callback(*args, **kwargs)
+                else:
+                    raise TimeoutException(timeout_message)
+            finally:
+                signal.alarm(0)
+            return result
+        return wrapper
+    return decorator
+
+
 def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", *args, **kwargs):
     """设置函数执行超时
 
@@ -51,6 +86,11 @@ def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", 
         Any: 函数结果
     """
     # 使用 multiprocessing.Pool 来执行长时间计算
+    try:
+        multiprocessing.set_start_method('spawn')
+    except RuntimeError:
+        pass
+    print("running....")
     with multiprocessing.Pool(1) as pool:
         result = pool.apply_async(func, args=args, kwds=kwargs)
         try:
@@ -58,14 +98,6 @@ def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", 
         except multiprocessing.TimeoutError:
             pool.terminate()  # 超时后终止进程池
             raise TimeoutError(error_message)
-    process = multiprocessing.Process(target=worker)
-    process.start()
-    process.join(timeout=timeout_seconds)  # 设置超时
-
-    if process.is_alive():
-        process.terminate()  # 超时后终止进程
-        raise TimeoutError(error_message)
-
     return result_queue.get()
 
 def thread_run_with_timeout(func, timeout_seconds=2, *args, **kwargs):
@@ -140,7 +172,6 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     labels.append(expr_str)
     return labels
 
-
 def draw_3d_exprs(*expr_strs, path_folder="./data/images/temp"):
     print("3d:exprs", expr_strs)
     ax = FIG.add_subplot(111, projection='3d')
@@ -209,7 +240,7 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     path = path_folder + "/" + name
     if has_file(path):
         print("使用缓存")
-        return name, True
+        return path, True
 
     font_size = 16
     font_color = (200 / 255, 248 / 255, 251 / 255)
@@ -229,4 +260,4 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     parse_func(title, font_size, font_color, bg_color, grid_color, labels, sec_color, label_ax)
 
     plt.savefig(path, dpi=200, bbox_inches="tight")
-    return name, False
+    return path, False

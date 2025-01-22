@@ -103,4 +103,10 @@ async def _():
 @nonebot.scheduler.scheduled_job('cron', day='*')
 async def del_temp_images():
     file_tools.clear_temps()
+
+@nonebot.scheduler.scheduled_job('cron', day='*')
+async def send_like():
+    for f in await bot.get_friend_list():
+        print(f"给 \"{f['nickname']}\" 点赞中")
+        await bot_call_action(bot, "send_like", user_id=f['user_id'], times=10)
 # TODO 分文件编写计时器

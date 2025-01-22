@@ -1,8 +1,10 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools import image_tools
+from aiocqhttp import MessageSegment
 from xme.xmetools import json_tools
 from xme.xmetools import color_manage as c
+import traceback
 try:
     import pygetwindow as gw
 except:
@@ -57,16 +59,18 @@ async def _(session: CommandSession):
     try:
         path, state = image_tools.take_screenshot(monitor_num)
     except:
+        print(traceback.format_exc())
         print("无法截图")
-        await send_session_msg(session, get_message(__plugin_name__, 'error'))
+        return await send_session_msg(session, get_message(__plugin_name__, 'error'))
     # path = "file:///" + path.split(":")[0] + ":\\" + path.split(":")[1]
-    path = f'http://server.xzadudu179.top:17980/screenshot'
-    if state and arg_state and monitor_num != 0:
+    # path = f'http://server.xzadudu179.top:17980/screenshot'
+    if arg_state and monitor_num != 0:
         message = get_message(__plugin_name__, 'successful', monitor_num=monitor_num)
     elif state and arg_state and monitor_num == 0:
         message = get_message(__plugin_name__, 'successful_all', monitor_num=monitor_num)
     else:
         message = get_message(__plugin_name__, 'default_monitor')
-    image_msg = f"[CQ:image,file={path}]"
-    print(image_msg)
+    # image_msg = f"[CQ:image,file={path}]"
+    image_msg = image_tools.image_msg(path)
+    # print(image_msg)
     await send_session_msg(session, message + '\n' + image_msg)

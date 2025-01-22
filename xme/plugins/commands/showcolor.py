@@ -7,6 +7,7 @@ from character import get_message
 from xme.xmetools.command_tools import event_send_msg
 from xme.xmetools.text_tools import fullwidth_to_halfwidth
 from xme.xmetools.file_tools import has_file
+from xme.xmetools.image_tools import image_msg
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']
@@ -27,8 +28,9 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     elif len(color_num_str) == 3:
         color_num_str = "".join([c + c for c in color_num_str])
     try:
-        name = gen_color_image(color_num_str)
-        return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+        path = gen_color_image(color_num_str)
+        # return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+        return await event_send_msg(bot, event, image_msg(path), False)
     except ValueError:
         return
 
@@ -37,7 +39,7 @@ def gen_color_image(color_num, size=(300, 200)):
     path = f"./data/images/temp/{name}"
     if has_file(path):
         print("使用缓存")
-        return name
+        return path
     width, height = size
     color = f"#{color_num}"
     image = Image.new("RGB", (width, height), color)
@@ -57,9 +59,9 @@ def gen_color_image(color_num, size=(300, 200)):
     if c.get_color_differences(text_color, color) < 30:
         # print("ccc")
         text_color = "#000000" if c.get_color_luminance(color) > 128 else "#FFFFFF"
-    print("con")
+    # print("con")
 
     # 绘制文字
     draw.text((text_x, text_y), color, fill=text_color, font=font)
     image.save(path)
-    return name
+    return path

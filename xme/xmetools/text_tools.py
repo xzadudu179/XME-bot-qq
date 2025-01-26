@@ -79,7 +79,23 @@ def remove_prefix(text: str, prefix: tuple | str) -> str:
             return text[len(p):]
     return text
 
-print(remove_prefix("abc", ('a', 'ab')))
+def remove_suffix(text: str, suffix: tuple | str) -> str:
+    """判断字符串后缀并去除前缀
+
+    Args:
+        text (str): 目标字符串
+        prefix (tuple | str): 后缀字符串
+
+    Returns:
+        str: 结果
+    """
+    if isinstance(suffix, str):
+        suffix = (suffix,)
+    suffix = tuple(sorted(suffix, key=len, reverse=True))
+    for p in suffix:
+        if text.endswith(p):
+            return text[:-len(p)]
+    return text
 
 # 中文占比
 def chinese_proportion(input_str) -> float:

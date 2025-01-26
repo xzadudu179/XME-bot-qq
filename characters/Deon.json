@@ -486,6 +486,27 @@
             "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
             "唔...刚刚 {operator} 撤回了一条{user}的消息{neutral}"
         ],
+        "is_prime": {
+            "is_prime": [
+                "{num} {append}是质数哦",
+                "{num} {append}是质数哦 {positive}",
+                "{num} {append}是质数哦{positive_punc}",
+                "{num} {append}是质数哦{positive_punc} {positive}",
+                "{num} {append}是质数{positive_punc}"
+            ],
+            "not_prime": [
+                "{num} {append}不是质数哦",
+                "{num} {append}不是质数诶",
+                "{num} {append}不是质数诶 {neutral}",
+                "{num} {append}不是质数哦 {neutral}"
+            ],
+            "too_long": [
+                "这么大的数字我也不知道是不是质数呢...{neutral}",
+                "这么大的数字我也不知道是不是质数呢...{negative}",
+                "数字太长啦...我也不知道是不是质数呢...{negative}",
+                "这么大的数字...我也不知道是不是质数哦...{negative}"
+            ]
+        },
         "prevented_recall_info": "↓ 刚刚 {operator} 撤回了以下消息{neutral} ↓\n{recalled_message}"
     },
     "other": {
@@ -1484,5 +1505,16 @@
         "introduction": "发布公告，会在报时时出现",
         "success": "公告 \"{anno}\" 发布成功~ {positive}",
         "clear": "成功清除公告{positive_punc}"
+    },
+    "divs": {
+        "desc": "质数检测",
+        "introduction": "会输出指定数字能被大于 1 的数相乘得到的最多 20 个算式",
+        "prefix": "以下是关于{num}可被大于 1 的数相乘所得到的算式{positive_punc}",
+        "invalid_num": "指定的数字需要是整数哦",
+        "no_arg": "需要指定参数哦",
+        "nothing": [
+            "没有任何东西呢...说明这个数是质数 {positive}",
+            "没有任何东西诶...看来这个数是质数{positive_punc}"
+        ]
     }
 }

@@ -25,6 +25,15 @@ def is_prime(n: int) -> bool:
             return False
     return True
 
+def divs(n):
+    ds = []
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            ds.append(f"{i} * {n // i} = {n}")
+        if len(ds) >= 20:
+            ds.append("...")
+            return ds
+    return ds
 
 def extract_numbers(s):
     """提取数字

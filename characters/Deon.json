@@ -445,7 +445,7 @@
             "看看179 嗷呜",
             ".pick"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》",
         "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {

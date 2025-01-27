@@ -18,7 +18,7 @@ bot = nonebot.get_bot()
 async def send_time_message():
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        anno_message = get_message("config", "anno_message", anno="[九九的公告]" + x  + "\n" if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "")) else "")
+        anno_message = get_message("config", "anno_message", anno=("[九九的公告]" + x + "\n") if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "")) else "")
         if not anno_message:
             anno_message = ''
         something_to_say = get_message("schedulers", "time",

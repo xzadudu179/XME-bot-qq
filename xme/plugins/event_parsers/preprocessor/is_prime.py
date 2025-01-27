@@ -23,13 +23,20 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
     msgs = [m.replace("prime", d).replace("punc", p) for d in prime for p in punc for m in msgs_default]
     # print(no_punc_msg, msgs, no_punc_msg.endswith(tuple(msgs)), remove_suffix(no_punc_msg, tuple(msgs)))
     if no_punc_msg.endswith(tuple(msgs)) and (x:=remove_suffix(no_punc_msg, tuple(msgs))).isdigit():
-        if len(x) > 1000:
+        if len(x) > 500:
             try:
                 del last_process[id]
             except:
                 pass
             return await event_send_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
-        is_prime = num_tools.is_prime(int(x))
+        try:
+            is_prime = num_tools.is_prime(int(x))
+        except OverflowError:
+            try:
+                del last_process[id]
+            except:
+                pass
+            return await event_send_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
     else:
         try:
             del last_process[id]

@@ -20,8 +20,8 @@ async def event_send_cmd(cmd_string, bot, event, check_permission=True):
         name = alias_cmd.name
     # print(CommandManager._find_command(self=CommandManager, name=name))
     args = " ".join((cmd_string.split(" ")[1:])) if len(cmd_string.split(" ")) > 1 else ""
-    if name == "wife" and '[CQ:at,qq=' not in args:
-        await event_send_msg(bot, event, get_message('other', 'wife_error'))
+    # if name == "wife" and '[CQ:at,qq=' not in args:
+        # await event_send_msg(bot, event, get_message('other', 'wife_error'))
         # await send_msg(session, "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
     print(f"parse command: {name} | {args}")
     await call_command(
@@ -58,7 +58,7 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
     if CommandManager._commands.get((name,), False) == False:
         return CommandManager._aliases.get(name, False)
     else:
-        print("有这个指令")
+        # print("有这个指令")
         return CommandManager._commands.get((name,), False)
 
 def get_args(arg_text: str):

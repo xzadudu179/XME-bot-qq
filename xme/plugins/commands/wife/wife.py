@@ -16,10 +16,10 @@ async def _(session: CommandSession):
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
-    # 如果是对 xme 说
-    elif session.ctx['to_me']:
-        at_id = session.self_id
-        at_name = "我"
+    # # 如果是对 xme 说
+    # elif session.ctx['to_me']:
+    #     at_id = session.self_id
+    #     at_name = "我"
     else:
         # await send_msg(session, "请 at 你要看的人哦")
         at_name = "你"

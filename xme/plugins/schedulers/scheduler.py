@@ -18,7 +18,8 @@ bot = nonebot.get_bot()
 async def send_time_message():
     for group in config.SCHEDULER_GROUP:
         say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        anno_message = get_message("config", "anno_message", anno=("[九九的公告]" + x + "\n") if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "")) else "")
+        anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
+        anno_message = get_message("config", "anno_message", anno=("[九九的公告]" + anno + "\n") if anno != "" else "")
         if not anno_message:
             anno_message = ''
         something_to_say = get_message("schedulers", "time",
@@ -28,7 +29,6 @@ async def send_time_message():
             from_where=say['from'],
             anno=anno_message
         )
-        # something_to_say = f"{date_tools.get_time_period()}好呀~\n\n\"{say['hitokoto']}\"\n——{'无名' if not (x:=say['from_who']) else x} 《{say['from']}》"
         try:
             await bot.send_group_msg(group_id=group,
                                 message=f'{something_to_say}')

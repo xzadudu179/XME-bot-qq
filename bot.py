@@ -22,6 +22,7 @@ if __name__ == '__main__':
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'event_parsers'), 'xme.plugins.event_parsers'],
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'server_app'), 'xme.plugins.server_app'],
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'schedulers'), 'xme.plugins.schedulers'],
+        [path.join(path.dirname(__file__), 'xme', 'plugins', 'maimaidx', 'commands'), 'xme.plugins.maimaidx.commands'],
         # [path.join(path.dirname(__file__), 'xme', 'plugins', 'manual'), 'xme.plugins.manual'],
     )
 

@@ -4,6 +4,7 @@ import xme.plugins.commands.wife as w
 from character import get_message
 from .wife_tools import *
 from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.image_tools import image_msg, get_qq_avatar
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
 @on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
@@ -44,7 +45,8 @@ async def _(session: CommandSession):
             who = f"{at_name}"
             message = get_message(w.__plugin_name__, "wife_message",
                 who=who,
-                avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
+                # avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
+                avatar=image_msg(get_qq_avatar(wife['user_id'])),
                 name=name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']',
                 user_id=str(wife['user_id']))
             # message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"

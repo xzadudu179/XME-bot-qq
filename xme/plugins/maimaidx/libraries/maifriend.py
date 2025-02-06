@@ -9,7 +9,7 @@ def gen_maifriend(qq, size=640):
 
     # 计算中心位置
     avatar_x = (frame.width - avatar.width) // 2
-    avatar_y = (frame.height - avatar.height) // 2 + int(size * 0.04)
+    avatar_y = (frame.height - avatar.height) // 2 + int(size * 0.03)
 
     # 粘贴图片
     new_image.paste(avatar, (avatar_x, avatar_y))

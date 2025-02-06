@@ -87,31 +87,33 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
 
     if count > 2:
         await event_send_msg(bot, event, get_message(__plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
+    try:
+        received_messages = (await bot_call_action(bot, "get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
+        if not reply:
+            received_messages = received_messages[:-1]
 
-    received_messages = (await bot_call_action(bot, "get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
-    if not reply:
-        received_messages = received_messages[:-1]
-
-    new_messages: list[MessageSegment] = []
-    for msg in received_messages:
-        # print(msg)
-        msg_dict = msg
-        msg = get_pure_text_message(msg_dict)
-        lan = "中文"
-        if not lan_arg:
-            if t.chinese_proportion(msg) >= 0.3:
-                lan = "英文"
-        else:
-            lan = lan_arg
-        new_messages.append(change_group_message_content(msg_dict, await translate(msg, lan)))
-        # new_messages.append(change_group_message_content(msg, "test"))
-    print(lan)
-    # print(f"messages: {new_messages}")
-    if len(new_messages) > 1:
-        return await send_forward_msg(bot, event, new_messages)
-    elif len(new_messages) == 1:
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
-    return await event_send_msg(bot, event, get_message(__plugin_name__, 'no_message'))
+        new_messages: list[MessageSegment] = []
+        for msg in received_messages:
+            # print(msg)
+            msg_dict = msg
+            msg = get_pure_text_message(msg_dict)
+            lan = "中文"
+            if not lan_arg:
+                if t.chinese_proportion(msg) >= 0.3:
+                    lan = "英文"
+            else:
+                lan = lan_arg
+            new_messages.append(change_group_message_content(msg_dict, await translate(msg, lan)))
+            # new_messages.append(change_group_message_content(msg, "test"))
+        print(lan)
+        # print(f"messages: {new_messages}")
+        if len(new_messages) > 1:
+            return await send_forward_msg(bot, event, new_messages)
+        elif len(new_messages) == 1:
+            return await event_send_msg(bot, event, get_message(__plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
+        return await event_send_msg(bot, event, get_message(__plugin_name__, 'no_message'))
+    except:
+        return await event_send_msg(bot, event, get_message(__plugin_name__, 'error'))
 
 async def translate(text, language):
     client = ZhipuAI(api_key=GLM_API_KEY)

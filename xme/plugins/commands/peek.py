@@ -13,7 +13,7 @@ import config
 from character import get_message
 from xme.xmetools.command_tools import send_session_msg
 
-alias = ['视奸', '视奸179', '看看179', 'peekbot']
+alias = ['视奸', '视奸179', 'peekbot']
 __plugin_name__ = 'peek'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

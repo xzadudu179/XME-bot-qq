@@ -8,6 +8,7 @@ from io import BytesIO
 from PIL import Image
 import pyautogui
 import mss
+from pathlib import Path
 import requests
 
 def read_image(path):
@@ -68,10 +69,15 @@ def take_screenshot(screen_num=1):
 
 def image_to_base64(img: Image.Image) -> str:
     output_buffer = BytesIO()
-    img.save(output_buffer, "PNG")
+    print("正在将图片转为base64")
+    if img.mode == "RGBA":
+        img.save(output_buffer, format="PNG", optimize=True)
+    else:
+        img.save(output_buffer, format="JPEG", quality=85)
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
-    return 'base64://' + base64_str
+    print("result len", len(base64_str))
+    return base64_str
 
 
 def image_msg(path_or_image):
@@ -86,10 +92,12 @@ def image_msg(path_or_image):
     is_image = False
     if not isinstance(path_or_image, str):
         is_image = True
-    # print(is_image)
+    print(is_image)
     image = path_or_image if is_image else Image.open(path_or_image)
-    # print(image_to_base64(image))
-    return MessageSegment.image(image_to_base64(image))
+    print(image)
+    b64 = image_to_base64(image)
+    print("b64 success")
+    return MessageSegment.image('base64://' + b64, cache=True)
 
 if __name__ == "__main__":
     os.makedirs("./screenshots", exist_ok=True)

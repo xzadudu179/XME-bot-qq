@@ -46,8 +46,8 @@ async def _(session: CommandSession):
             who = f"{at_name}"
             message = get_message(w.__plugin_name__, "wife_message",
                 who=who,
-                # avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
-                avatar=image_msg(get_qq_avatar(wife['user_id'])),
+                avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
+                # avatar=image_msg(get_qq_avatar(wife['user_id'])),
                 name=name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']',
                 user_id=str(wife['user_id']))
             # message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"

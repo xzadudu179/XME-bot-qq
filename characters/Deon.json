@@ -1486,7 +1486,8 @@
         "count_too_many": "要获取的消息数量太多啦，最多 {max_count} 条哦 {neutral}",
         "processing": "正在翻译到 \"{language}\" 中~ 请等待 {min} 到 {max} 秒哦",
         "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
-        "no_message": "唔...没有任何消息呢"
+        "no_message": "唔...没有任何消息呢",
+        "error": "呜呜...翻译时出错了，可以重试或将翻译消息条数减少并重试哦"
     },
     "色号显示": {
         "desc": "显示颜色",
@@ -1530,5 +1531,10 @@
             "{negative} 生成图片出现错误，可以问问 179...",
             "{negative} 生成图片出问题了，可能是 qq 无效哦..."
         ]
+    },
+    "peek179": {
+        "desc": "看看 179",
+        "introduction": "返回一张 179 出毛的返图",
+        "result": "{image}\n图片名称：{name}\n创建时间：{creation_time}\n修改时间：{modification_time}"
     }
 }

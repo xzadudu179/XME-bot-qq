@@ -2,7 +2,11 @@ from nonebot import on_command, CommandSession
 from xme.xmetools import request_tools
 from character import get_message
 from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.random_tools import random_percent
+import random
+import os
 from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.image_tools import image_msg
 import json
 
 alias = ["涩图", "setu", "色图" ]
@@ -18,7 +22,7 @@ __plugin_usage__= str(CommandDoc(
     permissions=[],
     alias=alias
 ))
-
+PATH_179 = rf"./data/179"
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def setu(session: CommandSession):
     # api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
@@ -35,7 +39,13 @@ async def setu(session: CommandSession):
     #     [CQ:image,file={result.url}]""".strip())
     # else:
     #     await send_msg(session, "无法获取图片信息.")
-    await send_session_msg(session, get_message(__plugin_name__, 'not_setu_msg', image_name='彩虹蟑螂', image='[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]'))
+    image_name = "彩虹蟑螂"
+    is_179 = random_percent(50)
+    if is_179:
+        print("是 179，看看")
+        image_name = "九九"
+    image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]" if not is_179 else image_msg(PATH_179 + "/" + random.choice(os.listdir(PATH_179)))
+    await send_session_msg(session, get_message(__plugin_name__, 'not_setu_msg', image_name=image_name, image=image))
     # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 

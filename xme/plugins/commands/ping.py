@@ -4,7 +4,7 @@ from xme.xmetools.doc_tools import CommandDoc
 from character import get_message
 from xme.xmetools.command_tools import send_session_msg
 
-alias = ['echotime', '测声速', '延迟']
+alias = ['echotime', '延迟', '测延迟']
 __plugin_name__ = 'ping'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

@@ -3,6 +3,7 @@ import traceback
 import xme.plugins.commands.wife as w
 from character import get_message
 from .wife_tools import *
+import character
 from xme.xmetools.command_tools import send_session_msg
 from xme.xmetools.image_tools import image_msg, get_qq_avatar
 
@@ -17,10 +18,10 @@ async def _(session: CommandSession):
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
-    # # 如果是对 xme 说
-    # elif session.ctx['to_me']:
-    #     at_id = session.self_id
-    #     at_name = "我"
+    # 如果是对 xme 说
+    elif arg.lower() == character.CHARACTER.lower():
+        at_id = session.self_id
+        at_name = "我"
     else:
         # await send_msg(session, "请 at 你要看的人哦")
         at_name = "你"

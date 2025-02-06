@@ -20,7 +20,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     anno = session.current_arg_text.strip()
     if not anno:
-        return await send_session_msg(session, get_message("config", "anno_message", anno=x if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "无")) else "无公告"))
+        return await send_session_msg(session, "[九九的公告] " + get_message("config", "anno_message", anno=x if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "无")) else "无公告"))
 
     if session.event.user_id not in config.SUPERUSERS:
         return await send_session_msg(session, get_message("config", 'no_permission'))

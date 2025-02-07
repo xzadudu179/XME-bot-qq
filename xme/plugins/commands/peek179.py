@@ -42,4 +42,4 @@ async def _(session: CommandSession):
     creation_time = datetime.fromtimestamp(file_path.stat().st_ctime)
     modification_time = datetime.fromtimestamp(file_path.stat().st_mtime)
     print(path)
-    return await send_session_msg(session, get_message(__plugin_name__, 'result', image=image_msg(path), name=name, creation_time=creation_time, modification_time=modification_time))
+    return await send_session_msg(session, get_message(__plugin_name__, 'result', image=await image_msg(path, 1200), name=name, creation_time=creation_time, modification_time=modification_time))

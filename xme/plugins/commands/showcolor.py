@@ -30,7 +30,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     try:
         path = gen_color_image(color_num_str)
         # return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
-        return await event_send_msg(bot, event, image_msg(path), False)
+        return await event_send_msg(bot, event, await image_msg(path), False)
     except ValueError:
         return
 

@@ -16,6 +16,6 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     if not raw_msg.startswith(config.COMMAND_START[0]) or not raw_msg[1:] or not raw_msg.replace(raw_msg[0], ""):
         return
 
-    if not command_tools.get_cmd_by_alias(raw_msg.split(" ")[0]):
-        # await bot.send(event, get_message("event_parsers", "no_command", command=raw_msg[1:].split(" ")[0], help_cmd=config.COMMAND_START[0] + "help"))
-        await event_send_msg(bot, event, get_message("event_parsers", "no_command", command=raw_msg[1:].split(" ")[0], help_cmd=config.COMMAND_START[0] + "help"))
+    # if not command_tools.get_cmd_by_alias(raw_msg.split(" ")[0]):
+    #     # await bot.send(event, get_message("event_parsers", "no_command", command=raw_msg[1:].split(" ")[0], help_cmd=config.COMMAND_START[0] + "help"))
+    #     await event_send_msg(bot, event, get_message("event_parsers", "no_command", command=raw_msg[1:].split(" ")[0], help_cmd=config.COMMAND_START[0] + "help"))

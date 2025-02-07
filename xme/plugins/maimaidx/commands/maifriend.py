@@ -28,4 +28,4 @@ async def _(session: CommandSession):
     except:
         traceback.print_exc()
         return await send_session_msg(session, get_message(__plugin_name__, 'error'))
-    return await send_session_msg(session, image_msg(image))
+    return await send_session_msg(session, await image_msg(image))

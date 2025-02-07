@@ -83,10 +83,12 @@ async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
 # async def event_send_msg(bot: NoneBot, event: aiocqhttp.Event, message, at=True, **kwargs):
 #     await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
 
-async def msg_preprocesser(session, message):
+async def msg_preprocesser(session, message, send_time=-1):
     funcs = {
         no_8694
     }
+    if send_time >= 0:
+        message += "\n" + get_message("config", "message_time", secs=send_time)
     for func in funcs:
         result = await func(message, session)
         if result and type(result) == str:

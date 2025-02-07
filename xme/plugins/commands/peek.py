@@ -71,6 +71,6 @@ async def _(session: CommandSession):
     else:
         message = get_message(__plugin_name__, 'default_monitor')
     # image_msg = f"[CQ:image,file={path}]"
-    image_msg = image_tools.image_msg(path)
+    image_msg = await image_tools.image_msg(path)
     # print(image_msg)
     await send_session_msg(session, message + '\n' + image_msg)

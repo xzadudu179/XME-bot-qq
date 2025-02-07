@@ -12,6 +12,7 @@ async def _(session: NoticeSession):
     # 发送欢迎消息
     # 如果是自己换一种欢迎方法
     if session.event.user_id == session.self_id:
+        print("欢迎自己")
         return await send_session_msg(session, get_message("event_parsers", "welcome_self"), at=False)
     # 指定秒内加群的人会被一起计算
     group = session.event.group_id

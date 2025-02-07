@@ -56,7 +56,7 @@ async def _(session: CommandSession):
             # message = get_message(__plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{path}]", formula=formula)
             print("正在发送完成消息...")
             # message = get_message(__plugin_name__, 'success_image', image=str(image_msg(path)), formula=formula)
-            message = image_msg(path)
+            message = await image_msg(path)
             # print(message)
             await send_session_msg(session, message)
             print("发送完成")

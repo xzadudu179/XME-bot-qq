@@ -550,9 +550,10 @@
     "divs": {
         "desc": "质数检测",
         "introduction": "会输出指定数字能被大于 1 的数相乘得到的最多 20 个算式",
-        "prefix": "以下是关于{num}可被大于 1 的数相乘所得到的算式{positive_punc}",
+        "prefix": "以下是关于 {num} 的绝对值可被大于 1 的数相乘所得到的算式{positive_punc}",
         "invalid_num": "指定的数字需要是整数哦",
         "no_arg": "需要指定参数哦",
+        "less_than_2": "这个数的绝对值小于 2，不会有算式的哦，也不是质数 ovo",
         "too_long": [
             "数字太大啦...",
             "输入的数字太大啦...{neutral}",

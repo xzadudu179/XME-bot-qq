@@ -30,7 +30,7 @@ __plugin_usage__ = str(PluginDoc(
     permissions=[prop['permissions'] for prop in commands.values()],
     alias_list=[prop['alias'] for prop in commands.values()],
     simple_output=True
-)) + "\n" + get_message(__plugin_name__, 'help_suffix', help_cmd=f"{config.COMMAND_START[0]}{cmd_name} {usage['usage']}")
+)) + "\n########\n" + get_message(__plugin_name__, 'help_suffix', help_cmd=f"{config.COMMAND_START[0]}{cmd_name} {usage['usage']}")
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):

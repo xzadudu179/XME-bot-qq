@@ -97,7 +97,7 @@
             ".jrrp",
             "b50"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}",
         "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {
@@ -183,7 +183,8 @@
     "status": {
         "desc": "查看系统状态",
         "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
-        "fetch_failed": "当前运行设备暂不支持展示系统状态——"
+        "fetch_failed": "当前运行设备暂不支持展示系统状态——",
+        "no_version_info": "暂时无法获取版本信息..."
     },
     "weather": {
         "desc": "查询天气",

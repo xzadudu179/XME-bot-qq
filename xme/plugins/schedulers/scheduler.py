@@ -17,9 +17,23 @@ bot = nonebot.get_bot()
 
 async def send_time_message():
     for group in config.SCHEDULER_GROUP:
-        say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
+        try:
+            say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
+        except json.JSONDecodeError:
+            say = {
+                "hitokoto": get_message("schedulers", "hitokoto_error"),
+                "from_who": get_message("bot_info", "name"),
+                "from": "XME_bot"
+            }
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
-        anno_message = get_message("config", "anno_message", anno=("[九九的公告]" + anno + "\n") if anno != "" else "")
+        latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")
+        print(latest)
+        latest_prefix = "[新更新内容]\n"
+        if len(latest) <= 0:
+            latest = ""
+        elif isinstance(latest, list):
+            latest = latest_prefix + "\n".join([f"{i}. {content}" for i, content in enumerate(latest)])
+        anno_message = get_message("config", "anno_message", anno=("[九九的公告] " + anno + "\n") if anno != "" else "")
         if not anno_message:
             anno_message = ''
         something_to_say = get_message("schedulers", "time",
@@ -27,7 +41,8 @@ async def send_time_message():
             hitokoto=say['hitokoto'],
             by=say['from_who'] if say['from_who'] else '无名',
             from_where=say['from'],
-            anno=anno_message
+            anno=anno_message,
+            update=latest
         )
         try:
             await bot.send_group_msg(group_id=group,
@@ -82,22 +97,27 @@ async def _():
 
 @nonebot.scheduler.scheduled_job('cron', hour='12')
 async def _():
-    print("send")
+    print("报时")
     await send_time_message()
+
+# @nonebot.scheduler.scheduled_job('cron', minute='*')
+# async def _():
+#     print("报时")
+#     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='8')
 async def _():
-    print("send")
+    print("报时")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='20')
 async def _():
-    print("send")
+    print("报时")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='0')
 async def _():
-    print("send")
+    print("报时")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', day='*')

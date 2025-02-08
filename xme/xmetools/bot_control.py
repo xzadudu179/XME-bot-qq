@@ -36,5 +36,5 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, *error_a
     except Exception as ex:
         print(f"bot 调用接口出现错误： {ex}")
         if not error_action:
-            return
+            raise ex
         return error_action(bot, *error_action_args)

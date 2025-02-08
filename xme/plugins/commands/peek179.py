@@ -15,16 +15,16 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message(__plugin_name__, 'desc'),
     introduction=get_message(__plugin_name__, 'introduction'),
     usage=f'',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
-PEEK_PATH = rf"./data/179"
+PEEK_PATH = rf"./data/images/179"
 images = os.listdir(PEEK_PATH)
 random.shuffle(images)
 index = 0
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     global images
     global index

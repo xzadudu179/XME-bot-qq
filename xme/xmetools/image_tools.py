@@ -66,10 +66,11 @@ def take_screenshot(screen_num=1):
     name = os.path.abspath(name)
     return name, state
 
-def image_to_base64(img: Image.Image) -> str:
+def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
     output_buffer = BytesIO()
     print("正在将图片转为base64")
-    if img.mode == "RGBA":
+    if img.mode == "RGBA" or not to_jpeg:
+        print("save to png")
         img.save(output_buffer, format="PNG", optimize=True)
     else:
         img.save(output_buffer, format="JPEG", quality=75)
@@ -86,7 +87,7 @@ def limit_size(image: Image.Image, max_value):
     image_resized = image.resize((new_width, new_height))
     return image_resized
 
-async def image_msg(path_or_image, max_value=0):
+async def image_msg(path_or_image, max_value=0, to_jpeg=True):
     """获得可以直接发送的图片消息
 
     Args:
@@ -103,8 +104,8 @@ async def image_msg(path_or_image, max_value=0):
     if max_value > 0:
         print("重新缩放")
         image = limit_size(image, max_value)
-    print(image)
-    b64 = image_to_base64(image)
+    # print(image)
+    b64 = image_to_base64(image, to_jpeg)
     print("b64 success")
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:

@@ -26,13 +26,13 @@ __plugin_usage__ = str(CommandDoc(
     introduction=get_message(__plugin_name__, 'introduction'),
     # introduction='查看指定地区的天气',
     usage=f'<地区名> <未来天气预测天数(1~3)>',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
 
 # 天气预报查看
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     params = session.current_arg_text.strip()
     cancel_message = get_message(__plugin_name__, 'cancel_message')

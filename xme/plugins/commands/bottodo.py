@@ -13,11 +13,11 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message(__plugin_name__, 'desc'),
     introduction=get_message(__plugin_name__, 'introduction'),
     usage=f'<待办名>',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     message = get_message(__plugin_name__, 'todo_prefix') + '\n'
     arg = session.current_arg_text.strip()

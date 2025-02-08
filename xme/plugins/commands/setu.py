@@ -19,11 +19,11 @@ __plugin_usage__= str(CommandDoc(
     introduction=get_message(__plugin_name__, 'introduction'),
     # introduction='返回一张涩图？',
     usage=f'',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
-PATH_179 = rf"./data/179"
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+PATH_179 = rf"./data/images/179"
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def setu(session: CommandSession):
     # api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
     # result = await fetch_image_data(api_url)
@@ -44,7 +44,7 @@ async def setu(session: CommandSession):
     if is_179:
         print("是 179，看看")
         image_name = "九九"
-    image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]" if not is_179 else await image_msg(PATH_179 + "/" + random.choice(os.listdir(PATH_179)), 1200)
+    image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]" if not is_179 else await image_msg(PATH_179 + "/" + random.choice(os.listdir(PATH_179)), 1200, False)
     await send_session_msg(session, get_message(__plugin_name__, 'not_setu_msg', image_name=image_name, image=image))
     # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 

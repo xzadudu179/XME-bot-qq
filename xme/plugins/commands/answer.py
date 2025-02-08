@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
     # introduction='随机翻开答案之书的一页，并且返回内容\n"心中默念你的问题，将会得到你的答案。"',
     introduction=get_message(__plugin_name__, "introduction"),
     usage=f'',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
@@ -32,7 +32,7 @@ def get_current_days_550w_percent():
     percent = (random.random() * 17.4) + 0.5
     return percent
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     message = get_message(__plugin_name__, "default_error")
     # message = "呜呜，书突然找不到了"

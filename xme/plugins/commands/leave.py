@@ -12,7 +12,7 @@ __plugin_usage__ = str(CommandDoc(
     introduction=get_message(__plugin_name__, 'introduction'),
     # introduction='使机器人退出群聊',
     usage=f'',
-    permissions=["是群主 或 是 SUPERUSER"],
+    permissions=["是群主 或 是 SUPERUSER & 在群聊内 & 需要@或提及 bot"],
     alias=alias
 ))
 

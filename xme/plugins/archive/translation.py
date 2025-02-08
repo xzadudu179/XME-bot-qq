@@ -33,7 +33,7 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-@on_command('translate', aliases=alias, only_to_me=False, shell_like=True)
+@on_command('translate', aliases=alias, only_to_me=False, shell_like=True, permission=lambda x: x.is_groupchat)
 async def _(session: CommandSession):
     parser = ArgumentParser(session=session, usage=__plugin_usage__)
     parser.add_argument('-l', '--language')

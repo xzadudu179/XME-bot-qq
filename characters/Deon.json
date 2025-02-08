@@ -443,10 +443,10 @@
             "汪",
             "汪！",
             "看看179",
-            "看看179 嗷呜",
-            ".pick"
+            "看看179 嗷呜"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》",
+        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}",
+        "hitokoto_error": "xwx 获取消息发生错误",
         "new_year": "新年好哇~！{positive_plus}"
     },
     "event_parsers": {
@@ -476,12 +476,12 @@
             "{at} 欢迎进群{positive_punc}"
         ],
         "welcome_self": [
-            "{happy}我是漠月{positive_punc}",
-            "{happy}我来啦 {positive}",
-            "我来啦 {positive}",
-            "漠月来啦 {positive}",
-            "{happy}漠月来啦 {positive}",
-            "{happy}我是漠月 {positive}"
+            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
+            "{happy}我来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
+            "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}",
+            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
+            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}",
+            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}"
         ],
         "other_recalled_info": [
             "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
@@ -572,8 +572,8 @@
             "{prefix}\n指令列表里面好像什么都没有..."
         ],
         "prefix": [
-            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n当前功能列表",
-            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n现在有这些功能{positive_punc}"
+            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~\n查看当前功能列表",
+            "[XME-Bot {version}]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~\n现在有这些功能{positive_punc}"
         ],
         "suffix": [
             "帮助文档在 {docs_link} 哦汪\n使用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
@@ -663,7 +663,8 @@
             "这个运行设备好像不可以展示系统状态诶...",
             "这个运行设备好像无法展示系统状态诶...",
             "当前的运行设备好像无法展示系统状态诶..."
-        ]
+        ],
+        "no_version_info": "暂时无法获取版本信息..."
     },
     "weather": {
         "desc": "查询天气",
@@ -1522,7 +1523,8 @@
         ],
         "nothing": [
             "没有任何东西呢...说明这个数是质数 {positive}",
-            "没有任何东西诶...看来这个数是质数{positive_punc}"
+            "没有任何东西诶...看来这个数是质数{positive_punc}",
+            "没有任何东西哦...这个数应该是质数{positive_punc}"
         ]
     },
     "maifriend": {

@@ -2,6 +2,7 @@
 from xme.xmetools import json_tools
 from xme.xmetools import random_tools
 from xme.xmetools import dict_tools
+import config
 import os
 # 其实这就是 i18n
 CHARACTER = 'Deon'
@@ -93,6 +94,7 @@ def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) 
             sad=random_tools.str_choice(feedbacks['sad']),
             shout=random_tools.str_choice(feedbacks['shout']),
             positive_punc=random_tools.str_choice(feedbacks['positive_punc']),
+            cmd_sep=config.COMMAND_START[0]
         )
     except KeyError as ex:
         print(f"keyerror: {ex}")

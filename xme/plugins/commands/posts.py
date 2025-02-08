@@ -14,11 +14,11 @@ __plugin_usage__ = str(CommandDoc(
     introduction=get_message(__plugin_name__, 'introduction'),
     # introduction='通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个',
     usage=f'<文章数>',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     max_count = 10
     arg = session.current_arg_text.strip()

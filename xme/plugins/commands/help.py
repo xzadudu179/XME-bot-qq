@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
     introduction=get_message(__plugin_name__, 'introduction'),
     # introduction='显示帮助，或某个指令的帮助，功能名若填写数字则是翻到数字所指的页数',
     usage=f'<功能名>',
-    permissions=[],
+    permissions=["无"],
     alias=alias
 ))
 
@@ -36,12 +36,13 @@ async def arg_help(arg, plugins, session):
             if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
                 ask_for_help = pl.name.lower()
             if pl.name.lower() != ask_for_help: continue
-            return await send_session_msg(session, pl.usage if pl.usage else get_message(__plugin_name__, 'no_usage'), at=True)
+            print(pl.usage)
+            return await send_session_msg(session, pl.usage if pl.usage.split("/////OUTER/////")[0] else get_message(__plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)
     return False
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     arg = session.current_arg_text.strip().lower()
@@ -77,7 +78,7 @@ async def _(session: CommandSession):
     prefix = get_message(__plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
-    suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
+    suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
     # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
     curr_page_num = await verify_page(session, curr_page_num, pages)
     if not curr_page_num:
@@ -90,7 +91,7 @@ async def _(session: CommandSession):
     while True:
         # 每次刷新前缀和后缀
         prefix = get_message(__plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
-        suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help", cmd_sep=config.COMMAND_START[0])
+        suffix = get_message(__plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
         reply: str = (await session.aget()).strip()
         reply = reply.replace("》", ">").replace("《", "<")
         more_page = 0

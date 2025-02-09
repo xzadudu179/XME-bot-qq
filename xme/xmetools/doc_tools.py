@@ -10,13 +10,14 @@ class Doc():
         self.introduction = introduction
 
 class PluginDoc(Doc):
-    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]], simple_output: bool = False) -> None:
+    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]], simple_output: bool = False, other_info="") -> None:
         super().__init__(name, desc, introduction)
         self.permissions = permissions
         self.contents = contents
         self.usages = usages
         self.alias_list = alias_list
         self.simple_output = simple_output
+        self.other_info = other_info
 
     def __str__(self) -> str:
         alias_lines = ""
@@ -47,7 +48,7 @@ class PluginDoc(Doc):
 简介：{self.desc}
 作用：{self.introduction}
 ##内容##：
-{contents_lines}""".strip() + ("\n" + not_simple_output if not self.simple_output else "/////OUTER/////" + not_simple_output)
+{contents_lines}""".strip() + ("\n" + not_simple_output + "\n" + self.other_info if not self.simple_output else "\n" + self.other_info + "/////OUTER/////" + not_simple_output)
 
 class CommandDoc(Doc):
 

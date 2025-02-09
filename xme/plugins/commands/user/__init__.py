@@ -34,7 +34,7 @@ __plugin_usage__ = str(PluginDoc(
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
-    message = __plugin_usage__
+    message = __plugin_usage__.split("/////OUTER/////")[0]
     arg = session.current_arg.strip()
     if arg:
         arg = x.name[0] if (x := get_cmd_by_alias(arg, False)) else arg

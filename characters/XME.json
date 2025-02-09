@@ -368,7 +368,7 @@
     },
     "用户": {
         "desc": "用户功能相关",
-        "introduction": "需要获取用户信息的功能",
+        "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
         "help_suffix": "使用 {help_cmd} 来查看详细的帮助",
         "userhelp": {
             "desc": "用户功能帮助",

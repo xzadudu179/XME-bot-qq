@@ -47,19 +47,23 @@ def gen_doc_md():
     print("正在生成文档文件")
     usages = []
     for pl in plugins:
-        usage = pl.usage.replace("/////OUTER/////", "")
-        pl_type = usage.split("]")[0].split("[")[1]
-        if pl_type == "指令":
-            # print(pl.name, "是指令")
-            md_usage = parse_command_doc(usage)
-        elif pl_type == "插件":
-            # print(pl.name, "是插件")
-            # print(pl.usage)
-            md_usage = parse_plugin_doc(usage)
-        else:
-            # print(pl.name, "是特殊插件，不处理")
-            ...
-        usages.append(md_usage)
+        try:
+            usage = pl.usage.replace("/////OUTER/////", "")
+            pl_type = usage.split("]")[0].split("[")[1]
+            if pl_type == "指令":
+                # print(pl.name, "是指令")
+                md_usage = parse_command_doc(usage)
+            elif pl_type == "插件":
+                # print(pl.name, "是插件")
+                # print(pl.usage)
+                md_usage = parse_plugin_doc(usage)
+            else:
+                # print(pl.name, "是特殊插件，不处理")
+                ...
+            usages.append(md_usage)
+        except Exception as ex:
+            print("处理", pl.name, "插件出错:", ex)
+            continue
     with open("docs.md", 'w', encoding='utf-8') as file:
         file.write("\n\n".join(usages))
 

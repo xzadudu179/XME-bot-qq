@@ -36,7 +36,9 @@ async def arg_help(arg, plugins, session):
             if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
                 ask_for_help = pl.name.lower()
             if pl.name.lower() != ask_for_help: continue
-            print(pl.usage)
+            if pl.name.lower() == "用户":
+                print("发送用户帮助")
+                return await send_cmd("/uh", session)
             return await send_session_msg(session, pl.usage if pl.usage.split("/////OUTER/////")[0] else get_message(__plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)

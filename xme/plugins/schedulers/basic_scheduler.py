@@ -9,7 +9,6 @@ from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools import random_tools
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools import time_tools
-from xme.xmetools import file_tools
 from xme.xmetools import message_tools
 from character import get_item, get_message
 import random
@@ -100,10 +99,6 @@ async def _():
     print("报时")
     await send_time_message()
 
-# @nonebot.scheduler.scheduled_job('cron', minute='*')
-# async def _():
-#     print("报时")
-#     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='8')
 async def _():
@@ -119,14 +114,3 @@ async def _():
 async def _():
     print("报时")
     await send_time_message()
-
-@nonebot.scheduler.scheduled_job('cron', day='*')
-async def del_temp_images():
-    file_tools.clear_temps()
-
-@nonebot.scheduler.scheduled_job('cron', day='*')
-async def send_like():
-    for f in await bot.get_friend_list():
-        print(f"给 \"{f['nickname']}\" 点赞中")
-        await bot_call_action(bot, "send_like", user_id=f['user_id'], times=10)
-# TODO 分文件编写计时器

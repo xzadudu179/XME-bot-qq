@@ -1265,7 +1265,7 @@
                 "{count} {coin_pronoun}{coin_name}太多啦！不能多于 {count_max} 呢...",
                 "{count} {coin_pronoun}{coin_name}太多啦...不能多于 {count_max} 呢 {neutral}",
                 "{count} {coin_pronoun}{coin_name}太多啦！一次最多只能投 {count_max} {coin_pronoun}呢...",
-                "饼干机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
+                "抽奖机一次最多只能接受 {count_max} {coin_pronoun}{coin_name}哦...",
                 "一次最多只能投入 {count_max} {coin_pronoun}{coin_name}哦..."
             ]
         },

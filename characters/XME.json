@@ -97,8 +97,13 @@
             ".jrrp",
             "b50"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}",
-        "new_year": "新年好哇~！{positive_plus}"
+        "new_year": "新年好哇~！{positive_plus}",
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}",
+        "tips": [
+            "xme 会随机发消息",
+            "如果想在别的群开启 xme 的报时功能，可以私聊 xme 或者九镹哦",
+            "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的"
+        ]
     },
     "event_parsers": {
         "is_it_command": {

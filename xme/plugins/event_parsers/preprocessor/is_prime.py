@@ -2,7 +2,7 @@ from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools.message_tools import event_send_msg
-from xme.xmetools.text_tools import remove_punctuation, remove_suffix
+from xme.xmetools.text_tools import remove_punctuation, remove_suffix, text_combinations
 from xme.xmetools import num_tools
 from nonebot import message_preprocessor
 from character import get_message
@@ -19,8 +19,9 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
     no_punc_msg = remove_punctuation(raw_msg)
     prime = ("质数", "素数")
     punc = ("呢", "呀", "哦", "哇", "诶", "耶", "唔", "啊", "阿")
-    msgs_default = ("是不是prime", "是不是primepunc", "是否是prime", "是prime吗", "是prime嘛")
-    msgs = [m.replace("prime", d).replace("punc", p) for d in prime for p in punc for m in msgs_default]
+    # msgs_default = ("是不是prime", "是不是primepunc", "是否是prime", "是prime吗", "是prime嘛")
+    # msgs = [m.replace("prime", d).replace("punc", p) for d in prime for p in punc for m in msgs_default]
+    msgs = text_combinations(("是不是{prime}", "是不是{prime}{punc}", "是否是{prime}", "是{prime}吗", "是{prime}嘛"), punc=punc, prime=prime)
     # print(no_punc_msg, msgs, no_punc_msg.endswith(tuple(msgs)), remove_suffix(no_punc_msg, tuple(msgs)))
     if no_punc_msg.endswith(tuple(msgs)) and (x:=remove_suffix(no_punc_msg, tuple(msgs))).isdigit():
         if len(x) > 500:

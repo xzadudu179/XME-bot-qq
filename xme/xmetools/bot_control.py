@@ -20,6 +20,9 @@ async def get_group_member_name(group_id, user_id, card=False):
         result = result['nickname']
     return result
 
+async def get_stranger_name(user_id):
+    return (await get_bot().api.get_stranger_info(user_id=user_id))['nickname']
+
 async def bot_call_action(bot: NoneBot, action: str, error_action=None, *error_action_args, **kwargs):
     """bot 调用方法
 

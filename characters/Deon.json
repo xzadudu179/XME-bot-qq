@@ -445,9 +445,14 @@
             "看看179",
             "看看179 嗷呜"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}",
+        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
-        "new_year": "新年好哇~！{positive_plus}"
+        "new_year": "新年好哇~！{positive_plus}",
+        "tips": [
+            "漠月会随机发消息",
+            "如果想在别的群开启漠月的报时功能，可以私聊漠月或者九镹哦",
+            "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的"
+        ]
     },
     "event_parsers": {
         "no_command": [

@@ -1,6 +1,6 @@
 import re
 from pypinyin import lazy_pinyin
-# import spacy
+import itertools
 import base64
 import string
 import hashlib
@@ -298,6 +298,7 @@ def remove_punctuation(text: str) -> str:
     text = replace_chinese_punctuation(text)
     return text.translate(str.maketrans('', '', string.punctuation))
 
+
 def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
     """计算字符串集合的交集与并集的比例相似度（中文会被转换为拼音）
 
@@ -318,6 +319,34 @@ def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
     intersection = len(set1.intersection(set2))
     union = len(set1.union(set2))
     return intersection / union
+
+def text_combinations(text: tuple[str] | str, **kwargs: tuple[str] | str):
+    """字符串排列组合
+
+    Args:
+        text (tuple[str] | str): 主要字符串 （需要可被 format）
+        **kwargs (tuple[str] | str): format 字符串
+
+    Returns:
+        list: 获得的排列组合
+    """
+    result_strs = []
+    items = []
+    for k, v in kwargs.items():
+        if isinstance(v, str):
+            v = v,
+        items.append((k, v))
+    results = list(itertools.product(*tuple([i[1] for i in items])))
+    for result in results:
+        result_dict = {}
+        for i in range(len(kwargs)):
+           result_dict[items[i][0]] = result[i]
+        if isinstance(text, str):
+            result_strs.append(text.format(**result_dict))
+            continue
+        for t in text:
+            result_strs.append(t.format(**result_dict))
+    return result_strs
 
 def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0) -> list[tuple[str, int]]:
     similarities = []

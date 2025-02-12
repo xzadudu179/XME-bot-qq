@@ -26,12 +26,11 @@ async def send_time_message():
             }
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
         latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")
-        print(latest)
-        latest_prefix = "[新更新内容]\n"
+        latest_prefix = "最近更新：\n"
         if len(latest) <= 0:
             latest = ""
         elif isinstance(latest, list):
-            latest = latest_prefix + "\n".join([f"{i}. {content}" for i, content in enumerate(latest)])
+            latest = latest_prefix + "\n".join([f"{i + 1}. {content}" for i, content in enumerate(latest)])
         anno_message = get_message("config", "anno_message", anno=("[九九的公告] " + anno + "\n") if anno != "" else "")
         if not anno_message:
             anno_message = ''
@@ -41,7 +40,8 @@ async def send_time_message():
             by=say['from_who'] if say['from_who'] else '无名',
             from_where=say['from'],
             anno=anno_message,
-            update=latest
+            update=latest,
+            tips=get_message("schedulers", "tips")
         )
         try:
             await bot.send_group_msg(group_id=group,
@@ -99,6 +99,10 @@ async def _():
     print("报时")
     await send_time_message()
 
+# @nonebot.scheduler.scheduled_job('cron', minute='*')
+# async def _():
+#     print("测试报时")
+#     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='8')
 async def _():

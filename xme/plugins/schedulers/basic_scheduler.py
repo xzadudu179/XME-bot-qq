@@ -41,7 +41,7 @@ async def send_time_message():
             from_where=say['from'],
             anno=anno_message,
             update=latest,
-            tips=get_message("schedulers", "tips")
+            tips=get_message("bot_info", "tips")
         )
         try:
             await bot.send_group_msg(group_id=group,

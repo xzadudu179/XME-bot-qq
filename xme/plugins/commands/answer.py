@@ -52,7 +52,7 @@ async def _(session: CommandSession):
         else:
             print("550W 还没来")
     try:
-        ans_json = json.loads(await request_tools.fetch_data('https://api.andeer.top/API/answer.php'))
+        ans_json = await request_tools.fetch_data('https://api.andeer.top/API/answer.php')
         if ans_json['code'] != 200:
             message = get_message("plugins", __plugin_name__, "cannot_fetch")
             # message = "呜呜，书翻不开了..."

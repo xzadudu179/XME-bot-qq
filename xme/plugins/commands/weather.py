@@ -1,127 +1,147 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
-from ...xmetools import random_tools as rt
-from ...xmetools import request_tools as req
-from ...xmetools import time_tools as dt
-from xme.xmetools.doc_tools import CommandDoc
-from datetime import datetime
+from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
+from nonebot.argparse import ArgumentParser
 from character import get_message
+from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.time_tools import TimeUnit, iso_format_time
+from xme.xmetools.request_tools import fetch_data
+from xme.plugins.commands.user.classes import xme_user as u
+import traceback
+from xme.xmetools.location_tools import search_location
+from keys import WEATHER_API_KEY
+import textwrap
 
-alias = ['天气', 'wea', '查看天气']
+
+alias = ['当前天气', '天气', '查看天气', 'wea']
 __plugin_name__ = 'weather'
-# __plugin_usage__ = rf"""
-# 指令 {__plugin_name__}
-# 简介：查询天气
-# 作用：查看指定地区的天气
-# 用法：
-# - {config.COMMAND_START[0]}{__plugin_name__} <地区名> <未来天气预测天数(1~3)>
-# 权限/可用范围：无
-# 别名：{', '.join(alias)}
-# """.strip()
-
+arg_usage = shell_like_usage("OPTIONS", [
+    {
+        "name": "help",
+        "abbr": "h",
+        "desc": get_message("plugins", __plugin_name__, 'arg_help_desc'),
+    },
+    {
+        "name": "warn",
+        "abbr": "w",
+        "desc": get_message("plugins", __plugin_name__, 'arg_warns_desc'),
+    }
+])
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
-    # desc='查询天气',
+    # desc='查看系统状态',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    # introduction='查看指定地区的天气',
-    usage=f'<地区名> <未来天气预测天数(1~3)>',
+    # introduction='查看运行该 XME-Bot 实例的设备的系统状态',
+    usage=f'<地点名> [OPTIONS]\n{arg_usage}',
     permissions=["无"],
     alias=alias
 ))
+headers = {
+    "X-QW-Api-Key": WEATHER_API_KEY
+}
 
-
-# 天气预报查看
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
-async def _(session: CommandSession):
-    params = session.current_arg_text.strip()
-    cancel_message = get_message("plugins", __plugin_name__, 'cancel_message')
-    message = get_message("plugins", __plugin_name__, 'enter_city_prompt') + get_message("plugins", __plugin_name__, 'enter_city_prompt_cancel', cancel_message=cancel_message)
-    # message = rt.rand_str("请在下面发送你要查询的地区名~", "在下面发送地区名吧", "你想查询哪里的天气呢") + f"，或发送 \"{cancel_message}\" 取消哦"
-    if not params:
-        params = (await session.aget(prompt=message)).strip()
-        if params == cancel_message:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'search_cancelled'))
-            # await send_msg(session, "取消天气查询啦")
-            return
-        while not params:
-            params = (await session.aget(prompt=get_message("plugins", __plugin_name__, 're_enter_city_prompt'))).strip()
-            # params = (await session.aget(prompt="请重新输入地区名ovo")).strip()
-
-    city_input = params.split(" ")[0]
-    city = city_input
-    # print(city)
-    days_num = 1
-    if len(params.split(" ")) > 1:
-        try:
-            days_num = int(params.split(" ")[1]) + 1
-            if days_num > 4 or days_num < 2:
-                message = get_message("plugins", __plugin_name__, 'invalid_days', future_days=get_message("plugins", __plugin_name__, 'future_days'))
-                # message = f"{rt.rand_str('设置的天数', '未来天数', '天数')}还不可以大于 3 或小于 1 哦"
-                await send_session_msg(session, message)
-                return
-        except:
-            message = get_message("plugins", __plugin_name__, 'error_param', city=city, future_days=params.split(' ')[1])
-            # message = f"出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
-            await send_session_msg(session, message)
-            return
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
+@u.using_user(save_data=False)
+@u.limit(__plugin_name__, 15, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.MINUTE, count_limit=5)
+async def _(session: CommandSession, user: u.User):
+    # print(session.current_arg_text)
+    parser = ArgumentParser(session=session, usage=arg_usage)
+    parser.add_argument('-w', '--warn', action='store_true', default=False)
+    parser.add_argument('text', nargs='+')
+    print(session.argv)
+    args = parser.parse_args(session.argv)
+    print(args)
+    location_text = ' '.join(args.text).strip()
+    print(location_text)
+    if not location_text:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
+        return False
     try:
-        weathers = await req.get_weather(city)
-        weathers = weathers["forecasts"][0]
-        city_name = weathers["city"]
-        report_time = weathers["reporttime"]
-        weather_today = weathers["casts"][0]
-        date = weather_today["date"]
-        week = int(weather_today["week"])
-        day = weather_today["dayweather"]
-        night = weather_today["nightweather"]
-        day_night_weather = day + "转" + night if day != night else day
-        day_temp = weather_today["daytemp"]
-        night_temp = weather_today["nighttemp"]
-        temp_max = max(int(day_temp), int(night_temp))
-        temp_min = min(int(day_temp), int(night_temp))
-        day_wind = [weather_today["daywind"], weather_today["daypower"]]
-        night_wind = [weather_today["nightwind"], weather_today["nightpower"]]
-        message = f""
-        message += get_message("plugins", __plugin_name__, 'result_prefix') + get_message("plugins", __plugin_name__, 'result_content',
-            city_name=city_name,
-            date=datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日"),
-            weekday=dt.week_str(week),
-            weather=day_night_weather,
-            temp_min=temp_min,
-            temp_max=temp_max,
-            day_wind_min=day_wind[0],
-            day_wind_max=day_wind[1],
-            night_wind_min=night_wind[0],
-            night_wind_max=night_wind[1],
-            report_time=report_time
-        )
-        # message += f'{rt.rand_str("我来看看天气~ owo", "让我看看天气~", "让我查询一下这里的天气~", "我看看这里的天气~ owo", "让我看看天气怎么样啦~")}\n======※今日天气: {city_name}※======\n{datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日")} {dt.week_str(week)}\n天气：{day_night_weather}\n温度: {temp_min}~{temp_max}℃\n日间: {day_wind[0]}风 {day_wind[1]} 级\t夜间: {night_wind[0]}风 {night_wind[1]} 级\n查询时间: {report_time}'
-        if len(params.split(" ")) > 1:
-            message += "\n========================\n"
-            max_temp = 0
-            min_temp = 999
-            weather_days = []
-            for i in range(days_num - 1):
-                weather_day = weathers["casts"][i + 1]
-                max_temp = max(max(int(weather_day["daytemp"]), int(weather_day["nighttemp"])), max_temp)
-                min_temp = min(min(int(weather_day["daytemp"]), int(weather_day["nighttemp"])), min_temp)
-                day = weather_day["dayweather"]
-                night = weather_day["nightweather"]
-                weather_days.append([day, night])
-            # print(["雨" in item[0] or "雨" in item[1] for item in weather_days])
-            raining_days = len([item for item in weather_days if "雨" in item[0] or "雨" in item[1]])
-            future_days = days_num - 1
-            message += get_message("plugins", __plugin_name__, 'result_future',
-                future_days=future_days,
-                raining_days=f'{("都有" if raining_days == future_days and future_days <= 1 else "")}{("有 " + str(raining_days) + " 天有" if future_days > 1 and raining_days < future_days else "都有" if raining_days == future_days else "都没有")}',
-                max_temp=max_temp,
-                min_temp=min_temp
-            )
-            # message += f'未来 {future_days} 天{("" if future_days <= 1 else "")}{("有" if rainning_days == future_days and future_days <= 1 else "")}{("有 " + str(rainning_days) + " 天有" if future_days > 1 and rainning_days < future_days else "都有" if rainning_days == future_days else "没有")}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃'
-        message += f"\n{get_message('plugins', __plugin_name__, 'data_from')}"
-        # message += f"\n{rt.rand_str('数据来自于高德开放平台~', '数据是高德开放平台的哦~', '通过高德开放平台查询的~')}"
+        locations = (await search_location(location_text))["location"]
+        # location_info = max(locations, key=lambda x: int(x["rank"]))
+        location_info = locations[0]
+        location_id = location_info["id"]
+        warnings = output_warning(await get_warnings(location_id))
+        warns_output = "======※预警信息※======\n"
+        if args.warn:
+            output = "\n" + warns_output + (warnings[1] if warnings[1] else "当前无预警")
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
+            return True
+        weather = ouptut_weather(await get_weather(location_id))
+        warns_output += warnings[0]
+        output = f"\n======※现在天气：{location_info['adm1']} {location_info['adm2']} {location_info['name']}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
+        return True
     except Exception as ex:
-        message = get_message("plugins", __plugin_name__, 'error', city=city, ex=ex)
-        # message = f"查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
-    await send_session_msg(session, message)
+        traceback.print_exc()
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=ex))
+        return False
+
+def ouptut_weather(weather):
+    data = weather["now"]
+    #  数据更新时间
+    obs_time = iso_format_time(data["obsTime"], '%Y年%m月%d日 %H:%M')
+    temp = data["temp"]
+    feels_temp = data["feelsLike"]
+    weather_stats = data["text"]
+    wind_dir = data["windDir"]
+    wind_scale = data["windScale"]
+    humidity = data["humidity"]
+    # 过去 1h 降水量 (mm)
+    precip = data["precip"]
+    # 气压 (hPa)
+    pressure = data["pressure"]
+    return textwrap.dedent(f"""
+        - 天气：{weather_stats}，{wind_dir} {wind_scale} 级
+        - 温度：{temp}℃，体感 {feels_temp}℃
+        - 相对湿度 {humidity}%
+        - 过去 1 小时降水量 {precip} mm
+        - 气压 {pressure} hPa
+        - 数据更新时间：{obs_time}""")
+
+def output_warning(warning):
+    datas = warning["warning"]
+    lines = []
+    details = []
+    for data in datas:
+        colors = {
+            "Blue": "蓝色",
+            "White": "白色",
+            "Green": "绿色",
+            "Yellow": "黄色",
+            "Orange": "橙色",
+            "Red": "红色",
+            "Black": "黑色",
+            "None": ""
+        }
+        color_emojis = {
+            "Blue": "🟦",
+            "White": "⬜",
+            "Green": "🟩",
+            "Yellow": "🟨",
+            "Orange": "🟧",
+            "Red": "🟥",
+            "Black": "⬛",
+            "None": "-"
+        }
+        # print(data)
+        severity = x if (x:=data.get("severityColor", "")) else None
+        color_emoji = color_emojis.get(severity, "-")
+        # print(colors)
+        line = f'{color_emoji} {data["typeName"]}{colors.get(severity, "")}预警'
+        lines.append(line)
+        detail = f'{color_emoji} {data["title"]}\n{data["text"]}'
+        details.append(detail)
+    return "\n".join(lines), "\n------------------\n".join(details)
+
+async def get_weather(location: str):
+    city_info = await search_location(location)
+    city_id = city_info["location"][0]["id"]
+    weather = await fetch_data(f'https://devapi.qweather.com/v7/weather/now?location={city_id}', headers=headers)
+    return weather
+
+async def get_warnings(location: str):
+    city_info = await search_location(location)
+    city_id = city_info["location"][0]["id"]
+    warnings = await fetch_data(f'https://devapi.qweather.com/v7/warning/now?location={city_id}', headers=headers)
+    return warnings

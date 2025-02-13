@@ -57,8 +57,7 @@ class ImageData:
         self.author = author
         self.tags = tags
 async def fetch_image_data(url):
-    response = await request_tools.fetch_data(url)
-    data = json.loads(response)
+    data = await request_tools.fetch_data(url)
     print(data)
 
     if data.get('error'):

@@ -54,7 +54,12 @@
                 "owo！",
                 "owo！喵呜！"
             ]
-        }
+        },
+        "tips": [
+            "xme 会随机发消息",
+            "如果想在别的群开启 xme 的报时功能，可以私聊 xme 或者九镹哦",
+            "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的"
+        ]
     },
     "config": {
         "busy": "我还有指令未处理 uwu",
@@ -98,12 +103,7 @@
             "b50"
         ],
         "new_year": "新年好哇~！{positive_plus}",
-        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}",
-        "tips": [
-            "xme 会随机发消息",
-            "如果想在别的群开启 xme 的报时功能，可以私聊 xme 或者九镹哦",
-            "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的"
-        ]
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}"
     },
     "event_parsers": {
         "is_it_command": {
@@ -194,37 +194,24 @@
         },
         "weather": {
             "desc": "查询天气",
-            "introduction": "查看指定地区的天气",
-            "error_param": "出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{future_days}",
-            "cancel_message": "取消",
-            "enter_city_prompt": [
-                "请在下面发送你要查询的地区名{positive_punc}",
-                "在下面发送地区名吧",
-                "你想查询哪里的天气呢{positive_punc}在下面发送地区名吧 {positive} "
+            "introduction": "查看指定地区的天气，每 15 分钟限制五次",
+            "limited": "短时间查询太多啦，请等待 15 分钟哦 {neutral}",
+            "arg_help_desc": "输出帮助，等同于 \"/help weather\"",
+            "arg_warns_desc": "单独使用这个参数以查看预警详细信息",
+            "output": [
+                "{output}\n==========\n通过和风天气 API 查询的哦{positive_punc}",
+                "{output}\n==========\n通过和风天气 API 查询的哦 {positive}",
+                "{output}\n==========\n数据来自于和风天气 API{positive_punc} {positive}"
             ],
-            "enter_city_prompt_cancel": "，或发送 \"{cancel_message}\" 取消哦",
-            "search_cancelled": "取消天气查询啦",
-            "future_days": [
-                "设置的天数",
-                "未来天数",
-                "天数"
+            "error": [
+                "{negative}，查询天气出现未知错误...\n{ex}",
+                "{negative}，查询天气出现了未知错误...\n{ex}"
             ],
-            "invalid_days": "{future_days}还不可以大于 3 或小于 1 哦",
-            "result_prefix": [
-                "我来看看天气{positive_punc} {positive}",
-                "让我看看天气{positive_punc}",
-                "让我查询一下这里的天气{positive_punc}",
-                "我看看这里的天气{positive_punc} {positive}",
-                "让我看看天气怎么样啦{positive_punc}"
-            ],
-            "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}{positive_punc}{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
-            "result_future": "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
-            "data_from": [
-                "数据来自于高德开放平台{positive_punc}",
-                "数据是高德开放平台的哦{positive_punc}",
-                "通过高德开放平台查询的{positive_punc}"
-            ],
-            "error": "查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
+            "no_location": [
+                "你没有在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>",
+                "要在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>",
+                "你需要在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>"
+            ]
         },
         "今日老婆": {
             "desc": "今日老婆相关指令",

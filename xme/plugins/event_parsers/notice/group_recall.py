@@ -28,14 +28,14 @@ async def _(session: NoticeSession):
     try:
         user_qq_data = await fetch_data(f"https://apis.kit9.cn/api/qq_material/api.php?qq={session.event.operator_id}")
         # print(c.gradient_text("#dda3f8","#66afff" ,text=user_qq_data))
-        user_qq_level = json.loads(user_qq_data)['data']['level']
+        user_qq_level = user_qq_data['data']['level']
     except Exception as ex:
         print(ex)
         user_qq_level = "无法获取"
     try:
         sender_qq_data = await fetch_data(f"https://apis.kit9.cn/api/qq_material/api.php?qq={sender['user_id']}")
         # print(c.gradient_text("#dda3f8","#66afff" ,text=sender_qq_data))
-        sender_qq_level = json.loads(sender_qq_data)['data']['level']
+        sender_qq_level = sender_qq_data['data']['level']
     except Exception as ex:
         print(ex)
         sender_qq_level = "无法获取"

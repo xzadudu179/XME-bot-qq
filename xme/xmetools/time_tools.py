@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+import pytz
 import time
 
 class TimeUnit(Enum):
@@ -103,6 +104,22 @@ def week_str(week_num, is_chinese: bool=True):
             7: "Sunday",
         }
     return week.get(week_num, "Error")
+
+def iso_format_time(time_str, format):
+    """将 ISO 时间转换为指定格式的 GMT+8 时间
+
+    Args:
+        time_str (_type_): ISO 时间
+        format (_type_): 转换为的时间
+    """
+    # 解析为datetime对象
+    dt = datetime.fromisoformat(time_str)
+
+    # 设置时区
+    tz = pytz.timezone('Asia/Shanghai')
+    dt_gmt8 = dt.astimezone(tz)
+    formatted_time = dt_gmt8.strftime(format)
+    return formatted_time
 
 def get_secs_difference(time, new_time):
     """获取两个时间相隔的秒数

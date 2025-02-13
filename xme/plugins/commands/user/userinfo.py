@@ -10,8 +10,8 @@ alias = ['个人信息', '个人资料', 'uinfo', 'info']
 cmd_name = 'userinfo'
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'<at人>',
     "permissions": [],
     "alias": alias
@@ -28,7 +28,7 @@ async def _(session: CommandSession, user: User):
     else:
         at_id = session.event.user_id
     if not user:
-        message = get_message(__plugin_name__, cmd_name, 'no_user')
+        message = get_message("plugins", __plugin_name__, cmd_name, 'no_user')
         await send_session_msg(session, message)
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']

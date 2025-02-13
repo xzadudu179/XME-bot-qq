@@ -20,9 +20,9 @@ def try_get_msg(name, key, default, **kwargs):
     Returns:
         str: 获取到的消息
     """
-    result = get_message(__plugin_name__, cmd_name, key, name, **kwargs)
+    result = get_message("plugins", __plugin_name__, cmd_name, key, name, **kwargs)
     if result == '[NULL]':
-        return get_message(__plugin_name__, cmd_name, default, name, **kwargs)
+        return get_message("plugins", __plugin_name__, cmd_name, default, name, **kwargs)
     return result
 
 async def reduce_item_by_id(
@@ -69,7 +69,7 @@ async def reduce_item_by_id(
     if count_str and not count_str.isdigit() and not count_str == 'all':
         if not silent:
             await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
-            # await send_msg(session,  get_message(__plugin_name__, cmd_name, name, "invalid_count"))
+            # await send_msg(session,  get_message("plugins", __plugin_name__, cmd_name, name, "invalid_count"))
         return default
     elif count_str == 'all':
         count = user.inventory.count_item(item_get)
@@ -90,12 +90,12 @@ async def reduce_item_by_id(
         if message_key:
             if not silent:
                 await send_session_msg(session,  try_get_msg("success", message_key, name, count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
-                # await send_msg(session,  get_message(__plugin_name__, cmd_name, message_key, "success", count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
+                # await send_msg(session,  get_message("plugins", __plugin_name__, cmd_name, message_key, "success", count=count, name=item_name, pronoun=item_pronoun, **message_kwargs))
         return True
     else:
         if not silent:
             await send_session_msg(session,  try_get_msg("error", message_key, name, count=count, name=item_name, pronoun=item_pronoun))
-            # await send_msg(session,  get_message(__plugin_name__, cmd_name, name, "error", count=count, name=item_name, pronoun=item_pronoun))
+            # await send_msg(session,  get_message("plugins", __plugin_name__, cmd_name, name, "error", count=count, name=item_name, pronoun=item_pronoun))
     return default
 
 async def reduce_item_by_name(

@@ -31,8 +31,8 @@ alias = ['trans']
 __plugin_name__ = 'translate'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<要翻译成的语言> <消息数量>',
     permissions=[],
     alias=alias
@@ -77,16 +77,16 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
     if not count_arg:
         count = 1
     elif not count_arg.isdigit():
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'invalid_count'))
+        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'invalid_count'))
     elif int(count_arg) < 1:
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'count_too_low'))
+        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_low'))
     elif int(count_arg) > MAX_MESSAGES_COUNT:
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'count_too_many', max_count=MAX_MESSAGES_COUNT))
+        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_many', max_count=MAX_MESSAGES_COUNT))
     else:
         count = int(count_arg)
 
     if count > 2:
-        await event_send_msg(bot, event, get_message(__plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
+        await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
     try:
         received_messages = (await bot_call_action(bot, "get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
         if not reply:
@@ -110,10 +110,10 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
         if len(new_messages) > 1:
             return await send_forward_msg(bot, event, new_messages)
         elif len(new_messages) == 1:
-            return await event_send_msg(bot, event, get_message(__plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'no_message'))
+            return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
+        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'no_message'))
     except:
-        return await event_send_msg(bot, event, get_message(__plugin_name__, 'error'))
+        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'error'))
 
 async def translate(text, language):
     client = ZhipuAI(api_key=GLM_API_KEY)

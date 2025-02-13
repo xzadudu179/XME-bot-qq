@@ -13,7 +13,7 @@ async def add(session, user: u.User, arg):
     try:
         id = int(args[0])
     except:
-        await send_session_msg(session,  get_message(__plugin_name__, cmd_name, arg_func_name, "invalid_arg"))
+        await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "invalid_arg"))
         return False
     try:
         count = int(args[1])
@@ -23,12 +23,12 @@ async def add(session, user: u.User, arg):
         print(user)
         if user.inventory.add_item(id, count):
             item = Item.get_item(id)
-            await send_session_msg(session,  get_message(__plugin_name__, cmd_name, arg_func_name, "success", count=count, name=item, pronoun=item.pronoun))
+            await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "success", count=count, name=item, pronoun=item.pronoun))
             return True
     except ValueError:
-        await send_session_msg(session,  get_message(__plugin_name__, cmd_name, arg_func_name, "no_item", id=id))
+        await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "no_item", id=id))
         return False
-    await send_session_msg(session,  get_message(__plugin_name__, cmd_name, arg_func_name, "error"))
+    await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "error"))
     return False
 
 arg_func_name = 'add'

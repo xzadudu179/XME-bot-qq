@@ -12,8 +12,8 @@ alias = ['看看179', '看看九九', '看看九镹', 'peek99', '看看99']
 __plugin_name__ = 'peek179'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'',
     permissions=["无"],
     alias=alias
@@ -42,4 +42,4 @@ async def _(session: CommandSession):
     creation_time = datetime.fromtimestamp(file_path.stat().st_ctime)
     modification_time = datetime.fromtimestamp(file_path.stat().st_mtime)
     print(path)
-    return await send_session_msg(session, get_message(__plugin_name__, 'result', image=await image_msg(path, 1200), name=name, creation_time=creation_time, modification_time=modification_time))
+    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', image=await image_msg(path, 1200), name=name, creation_time=creation_time, modification_time=modification_time))

@@ -11,8 +11,8 @@ __plugin_name__ = 'choice'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     # desc='随机决定事情',
-    desc=get_message(__plugin_name__, "desc"),
-    introduction=get_message(__plugin_name__, "introduction"),
+    desc=get_message("plugins", __plugin_name__, "desc"),
+    introduction=get_message("plugins", __plugin_name__, "introduction"),
     # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数',
     usage=f'(事情列表(空格分隔)或是任意选择语句)',
     permissions=[],
@@ -23,7 +23,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     args = session.current_arg_text.strip()
     if not args:
-        await send_session_msg(session, get_message(__plugin_name__, "no_args"),)
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "no_args"),)
         return
     choices = args.split(" ")
     choice = ""
@@ -46,7 +46,7 @@ async def _(session: CommandSession):
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
-    await send_session_msg(session, get_message(__plugin_name__, 'choice_message', choice=text_tools.me_to_you(str(choice))))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=text_tools.me_to_you(str(choice))))
 
 
 def has_or_not_choice(input_str):

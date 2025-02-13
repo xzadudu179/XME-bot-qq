@@ -12,8 +12,8 @@ alias = ['签到', 'check', 'checkin', 'register', 's']
 cmd_name = 'sign'
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'',
     "permissions": [],
     "alias": alias
@@ -21,11 +21,11 @@ usage = {
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 @u.using_user(save_data=False)
-@u.limit(cmd_name, 1, get_message(__plugin_name__, cmd_name, 'limited'))
+@u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
     FIRST_AWARD = 10
     message = ""
-    # message = get_message(__plugin_name__, cmd_name, 'failed')
+    # message = get_message("plugins", __plugin_name__, cmd_name, 'failed')
     print(user)
     append_coins = random.randint(0, 50)
     user.add_coins(append_coins)
@@ -36,23 +36,23 @@ async def _(session: CommandSession, user: User):
         if counters.get(cmd_name, {}).get('time', 0) == math.floor(time_tools.timenow() / (60 * 60 * 24)):
             signed_users_count += 1
     if append_coins == 0:
-        message = get_message(__plugin_name__, cmd_name, 'login_no_coins',
+        message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
-            login_success=get_message(__plugin_name__, cmd_name, 'login_success')
+            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success')
         )
     else:
-        message = get_message(__plugin_name__, cmd_name, 'success',
-            login_success=get_message(__plugin_name__, cmd_name, 'login_success'),
-            state=get_message(__plugin_name__, cmd_name, 'get_state'),
+        message = get_message("plugins", __plugin_name__, cmd_name, 'success',
+            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success'),
+            state=get_message("plugins", __plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),
             coin_name=coin_pronoun + coin_name,
             coin_total=user.coins
         )
     if signed_users_count == 0:
         user.add_coins(FIRST_AWARD)
-        sign_message = get_message(__plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
+        sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
     else:
-        sign_message = get_message(__plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
+        sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()

@@ -10,8 +10,8 @@ alias = ['旅行伙伴', 'maif']
 __plugin_name__ = 'maifriend'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<at 用户>',
     permissions=["无"],
     alias=alias
@@ -27,5 +27,5 @@ async def _(session: CommandSession):
         image = gen_maifriend(qq_id)
     except:
         traceback.print_exc()
-        return await send_session_msg(session, get_message(__plugin_name__, 'error'))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'))
     return await send_session_msg(session, await image_msg(image))

@@ -135,453 +135,455 @@
     "other": {
         "wife_error": "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu"
     },
-    "answer": {
-        "desc": "查看答案之书",
-        "introduction": "随机翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
-        "default_error": "呜呜，书突然找不到了...",
-        "550w": "答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"",
-        "cannot_fetch": "呜呜，书翻不开了...",
-        "answer": "答案之书："
-    },
-    "choice": {
-        "desc": "随机决定事情",
-        "introduction": "让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0{positive_punc}数字的随机数，choice一个数字范围比如 1{positive_punc}10 会返回 1{positive_punc}10 的随机数",
-        "no_args": "你还没有说我要决定的事情哦 {neutral}",
-        "choice_message": "我觉得可以选择 \"{choice}\"！"
-    },
-    "help": {
-        "desc": "显示帮助",
-        "introduction": "显示帮助，或某个功能的帮助，功能名若填写数字则是翻到数字所指的页数",
-        "no_usage": "无内容",
-        "no_cmds": "{prefix}\nXME-Bot 现在还没有任何指令哦",
-        "prefix": "[XME-Bot V{version}]\n指令以 {command_seps} 中任意字符开头\n当前功能列表",
-        "suffix": "帮助文档: {docs_link}\n使用 \"{cmd_sep}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页",
-        "page_too_small": "页数不能小于 1 啦 xwx",
-        "page_too_big": "页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧{positive_punc}"
-    },
-    "bot_leave": {
-        "desc": "机器人退群",
-        "introduction": "使机器人退出群聊",
-        "leave_message": "正在退出群聊..."
-    },
-    "xmeposts": {
-        "desc": "查看九九最近的文章",
-        "introduction": "通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个",
-        "too_many": "最多查看 {max} 个文章哦",
-        "invalid_count": "请输入正确的文章数量哦",
-        "post_msg": "以下是九九最新的 {count} 个文章哦！\n{posts}"
-    },
-    "prevrecall": {
-        "desc": "防撤回",
-        "introduction": "防撤回功能相关",
-        "stats": "本群 ({group_id}) 的防撤回功能：{stats}",
-        "open": "防撤回功能已开 {positive}",
-        "close": "防撤回功能已关 {positive}",
-        "opened_message": "已开启",
-        "closed_message": "已关闭"
-    },
-    "setu": {
-        "desc": "涩图？",
-        "introduction": "返回一张涩图？",
-        "not_setu_msg": "哪有涩图，XME找不到涩图呜，但是有{image_name}！\n{image}"
-    },
-    "status": {
-        "desc": "查看系统状态",
-        "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
-        "fetch_failed": "当前运行设备暂不支持展示系统状态——",
-        "no_version_info": "暂时无法获取版本信息..."
-    },
-    "weather": {
-        "desc": "查询天气",
-        "introduction": "查看指定地区的天气",
-        "error_param": "出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{future_days}",
-        "cancel_message": "取消",
-        "enter_city_prompt": [
-            "请在下面发送你要查询的地区名{positive_punc}",
-            "在下面发送地区名吧",
-            "你想查询哪里的天气呢{positive_punc}在下面发送地区名吧 {positive} "
-        ],
-        "enter_city_prompt_cancel": "，或发送 \"{cancel_message}\" 取消哦",
-        "search_cancelled": "取消天气查询啦",
-        "future_days": [
-            "设置的天数",
-            "未来天数",
-            "天数"
-        ],
-        "invalid_days": "{future_days}还不可以大于 3 或小于 1 哦",
-        "result_prefix": [
-            "我来看看天气{positive_punc} {positive}",
-            "让我看看天气{positive_punc}",
-            "让我查询一下这里的天气{positive_punc}",
-            "我看看这里的天气{positive_punc} {positive}",
-            "让我看看天气怎么样啦{positive_punc}"
-        ],
-        "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}{positive_punc}{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
-        "result_future": "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
-        "data_from": [
-            "数据来自于高德开放平台{positive_punc}",
-            "数据是高德开放平台的哦{positive_punc}",
-            "通过高德开放平台查询的{positive_punc}"
-        ],
-        "error": "查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
-    },
-    "今日老婆": {
-        "desc": "今日老婆相关指令",
-        "introduction": "查看自己的今日老婆，或者是别人的今日老婆{positive_punc}\n注意：本功能仅供娱乐",
-        "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 则会同时 at 你今日的老婆",
-        "wife_message": "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
-        "no_wife": "{name}今天并没有老婆 {neutral}",
-        "error": "呜呜，无法获取到群员信息：{ex}"
-    },
-    "jrrp": {
-        "desc": "今日人品相关指令",
-        "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
-        "avg_message": "今日群员人品的平均值是 {avg} {reaction}",
-        "reaction>60": "{positive}",
-        "reaction>20": "{neutral}",
-        "reaction<=20": "uwu",
-        "jrrp_row": "\n{index}. {card} ({id})：今日人品值为 {jrrp}",
-        "rank_message": "这是今天人品最{high_or_low}的前 {count} 位群员排名 {reaction}",
-        "rank_too_long": "指定的成员数量太多了哦uwu，范围是 -{max} {positive_punc} {max}",
-        "rank_error": "成员数量需要是整数哦 {neutral}",
-        "jrrp_prefix": "你的今日人品为",
-        "jrrp<0": "{result}...？ xwx",
-        "jrrp<10": "....{result}？uwu",
-        "jrrp>100": "{result}.0000%！All Perfect+ {positive_plus}",
-        "jrrp>=90": "{result}！{positive_plus}",
-        "jrrp_default": "{result} {neutral}"
-    },
-    "实例控制": {
-        "desc": "机器人实例相关指令",
-        "introduction": "全部用于控制后台机器人实例的指令，需要 SUPERUSER 才可使用。",
-        "kill_introduction": "结束 bot 进程",
-        "restart_introduction": "使机器人实例重新启动",
-        "kill_prompt": "请输入 Y 确定结束 bot 进程...",
-        "kill_cancelled": "取消结束 bot 进程。",
-        "on_kill": "(正在结束 bot 进程) uwu",
-        "restarting": "正在重启 uwu",
-        "restart_failed_kill": "无法退出原 xmebot 进程 xwx\n错误原因: {ex}",
-        "restart_failed": "重启失败 xwx\n错误原因: {ex}\ntraceback:\n{traceback}"
-    },
-    "httpcode": {
-        "desc": "查询状态码",
-        "introduction": "获取 http 状态码信息和它的猫猫图",
-        "default": "你没输入状态码诶",
-        "code_prompt": "请发送你想要查询的状态码{positive_punc}",
-        "code_not_found": "查询不到 {search} 状态码代表什么意思诶",
-        "code_found": "状态码 {search} 的意思是: {stat}\n{image}"
-    },
-    "game": {
-        "desc": "各种小游戏",
-        "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
-        "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
-        "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
-        "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
-        "option_help_desc": "查看帮助",
-        "option_args_desc": "指定小游戏的参数",
-        "option_info_desc": "查看你输入的小游戏的帮助而不是游玩",
-        "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
-        "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦",
-        "guess": {
-            "desc": "猜数字游戏",
-            "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次{positive_punc}",
-            "arg_range": "数字范围 (r=范围开始{positive_punc}范围结束)",
-            "arg_times_limit": "猜测次数限制 (t=次数限制)",
-            "guess_start": "游戏开始{positive_punc} 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} {positive_punc} {number_max} 的整数！",
-            "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}",
-            "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数){positive_punc}范围结束(整数)) 哦 uwu\n{ex}",
-            "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
-            "range_equals": "数字范围不能是相同的哦 uwu",
-            "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
-            "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
-            "guess_prompt_prefix_default": "{start}\n请",
-            "guess_prompt": "{prefix}输入你要猜的数字吧{positive_punc} 或输入 {quit_input} 退出",
-            "quit_message": "退出游戏啦 {neutral}",
-            "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
-            "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
-            "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} {neutral}",
-            "num_too_big_result": "大啦{positive_punc}",
-            "num_too_small_result": "小啦{positive_punc}",
-            "num_right_result": "正确{positive_punc}",
-            "guess_result": "{num} {result}",
-            "remaining_times": "你还可以猜 {times} 次数字{neutral}",
-            "limited": "你今天游玩这个游戏的奖励次数用完啦",
-            "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
-            "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
-            "no_award": "你没有拿到任何{coin_name}..."
-        }
-    },
-    "漂流瓶": {
-        "desc": "漂流瓶相关指令",
-        "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc}\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
-        "throw_introduction": "扔一个漂流瓶",
-        "pickup_introduction": "尝试捡一个漂流瓶",
-        "cthulhu_introduction": "毁掉指定的漂流瓶",
-        "no_bottle": "海里一个瓶子里都没有...",
-        "no_bottle_picked": "你没有捡到瓶子{neutral}",
-        "view_message": "被捡到了 {times} 次",
-        "no_view_message": "第一次被捡到",
-        "like_message": "获得了{count}个赞{positive}",
-        "no_like_message": "还没有任何赞{neutral}",
-        "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}\"，混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
-        "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
-        "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
-        "bottle_broken": "啊，你不小心把瓶子摔碎了...",
-        "bottle_broken_messy": "啊...这个瓶子好混乱...唔...它碎掉了！",
-        "bottle_broken?": "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
-        "liked": "点赞成功{positive_punc} 瓶子的混乱值减少了",
-        "reported": "举报成功",
-        "nothing_to_throw": "漂流瓶似乎没有内容呢{neutral}\n格式：\n{command_name} (漂流瓶内容)",
-        "content_too_many": "瓶子的内容太多啦！要 {max_length} 字以内哦",
-        "lines_too_many": "瓶子的行数太多啦！最多 {max_lines} 行哦",
-        "throwed": "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
-        "content_already_thrown": "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
-        "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
-        "cthulhu_error_bottles": "其中这些 id 的瓶子出错了...:\n{ids}",
-        "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
-        "cthulhu_bottle_not_exist": "不存在",
-        "cthulhu_bottle_special": "是特殊瓶子",
-        "cthulhu_bottle_already_broken": "已经被混乱了哦",
-        "cthulhu_fail": "混乱瓶子失败了..."
-    },
-    "骰子": {
-        "desc": "骰子相关指令",
-        "introduction": "自定义面数or规则的骰子",
-        "dice_introduction": "投指定面数 * 指定数量的骰子",
-        "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
-        "dice_error": "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦",
-        "count_too_many": "最多投 {max_count} 个骰子哦",
-        "faces_too_many": "骰子总面数过大啦{neutral} (>{max_faces})",
-        "count_too_low": "骰子数量不可以小于 1 哦",
-        "faces_too_low": "骰子面数不可以小于 1 哦",
-        "count_morethan_1_prefix": "总共",
-        "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
-    },
-    "title": {
-        "desc": "设置头衔",
-        "introduction": "为一个群员设置指定的头衔（需要 bot 是群主哦）",
-        "no_at_arg": "请先 at 你要我设置头衔的群员哦",
-        "no_name_arg": "请指定头衔名哦",
-        "successful": "头衔设置成功啦{positive_punc}",
-        "deleted": "头衔删除成功啦{positive_punc}",
-        "failed": "呜呜，设置失败了...\n错误内容：{ex}"
-    },
-    "whoru": {
-        "desc": "查看当前角色",
-        "introduction": "查看 xme-bot 当前使用的角色{positive_punc}",
-        "whoami": "我是 {chac_name} 哦{positive_punc}\n由 {author} 制作的！"
-    },
-    "用户": {
-        "desc": "用户功能相关",
-        "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
-        "help_suffix": "使用 {help_cmd} 来查看详细的帮助",
-        "userhelp": {
-            "desc": "用户功能帮助",
-            "introduction": "查看某一用户功能指令的详细帮助",
-            "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+    "plugins": {
+        "answer": {
+            "desc": "查看答案之书",
+            "introduction": "随机翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
+            "default_error": "呜呜，书突然找不到了...",
+            "550w": "答案？之书？：\n\"我是 550W。\"\n\"I'AM MOSS.\"",
+            "cannot_fetch": "呜呜，书翻不开了...",
+            "answer": "答案之书："
         },
-        "sign": {
-            "desc": "签到",
-            "introduction": "签到，并且得到一定量的{coin_name}",
-            "limited": "你今天已经签到过了哦{positive_punc}",
-            "get_state": "获得了",
-            "login_success": "签到成功{positive_punc}",
-            "login_no_coins": "你没获得任何{coin_name}...",
-            "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
-            "first_sign": "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
-            "sign_rank": "你是今天第 {count} 个签到的{positive_punc}"
+        "choice": {
+            "desc": "随机决定事情",
+            "introduction": "让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0{positive_punc}数字的随机数，choice一个数字范围比如 1{positive_punc}10 会返回 1{positive_punc}10 的随机数",
+            "no_args": "你还没有说我要决定的事情哦 {neutral}",
+            "choice_message": "我觉得可以选择 \"{choice}\"！"
         },
-        "lottery": {
-            "desc": "抽奖",
-            "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}\n{coin_name}最多设置为 {count_max}。",
-            "limited": "你今天的抽奖次数用完啦{positive_punc}",
-            "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
-            "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
-            "not_enough_coins": "唔，你指定的{coin_name}数量 ({count}) 太多啦！超过了你拥有的{coin_name}总数呢...",
-            "get_coin_result": "获得了 {get_count} {coin_pronoun}{coin_name}！",
-            "no_coin_result": "没有获得任何{coin_name}...",
-            "result": "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
-            "too_many_coins": "你设置的{coin_name}数太多啦！要在 {count_max} 之内哦"
+        "help": {
+            "desc": "显示帮助",
+            "introduction": "显示帮助，或某个功能的帮助，功能名若填写数字则是翻到数字所指的页数",
+            "no_usage": "无内容",
+            "no_cmds": "{prefix}\nXME-Bot 现在还没有任何指令哦",
+            "prefix": "[XME-Bot V{version}]\n指令以 {command_seps} 中任意字符开头\n当前功能列表",
+            "suffix": "帮助文档: {docs_link}\n使用 \"{cmd_sep}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页",
+            "page_too_small": "页数不能小于 1 啦 xwx",
+            "page_too_big": "页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧{positive_punc}"
         },
-        "userinfo": {
-            "desc": "查看个人信息",
-            "introduction": "查看自己当前的 bot 内个人信息，比如{coin_name}数量等, 如果 at 人则会查看那个人的个人信息",
-            "no_user": "唔...我没有记录过这个人的信息呢"
+        "bot_leave": {
+            "desc": "机器人退群",
+            "introduction": "使机器人退出群聊",
+            "leave_message": "正在退出群聊..."
         },
-        "coinrank": {
-            "desc": "{coin_name}排行榜",
-            "introduction": "查看 bot 记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
-            "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
-            "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}\n中位数为 {median}",
-            "rank_msg_sum": "大家一共拥有 {avg} {coin_pronoun}{coin_name}哦{positive_punc}",
-            "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
-            "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
-            "invalid_arg": "不明白指定的排名长度意思呢...",
-            "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
-            "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {neutral}"
+        "xmeposts": {
+            "desc": "查看九九最近的文章",
+            "introduction": "通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个",
+            "too_many": "最多查看 {max} 个文章哦",
+            "invalid_count": "请输入正确的文章数量哦",
+            "post_msg": "以下是九九最新的 {count} 个文章哦！\n{posts}"
         },
-        "sendcoin": {
-            "desc": "给人{coin_name}",
-            "introduction": "at 一个人并且给他指定数量的{coin_name}{positive_punc}",
-            "no_arg": "请 at 你要转账的用户哦",
-            "invalid_user": "找不到 at 的用户呢...",
-            "invalid_coin_count": "{coin_name}数量需要是大于 0 的整数哦",
-            "send_to_self": "你不能给自己{coin_name}哦",
-            "not_enough_coin": "{coin_name}数量不足，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
-            "received_coin_react": "谢谢哇{positive_punc}",
-            "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
-            "no_coin_count": "请指定饼干数量哦"
+        "prevrecall": {
+            "desc": "防撤回",
+            "introduction": "防撤回功能相关",
+            "stats": "本群 ({group_id}) 的防撤回功能：{stats}",
+            "open": "防撤回功能已开 {positive}",
+            "close": "防撤回功能已关 {positive}",
+            "opened_message": "已开启",
+            "closed_message": "已关闭"
         },
-        "inventory": {
-            "desc": "物品栏相关指令",
-            "introduction": "操作物品栏里的物品内容，不填写参数是查看物品栏",
-            "no_permission": "权限不足哦 {negative}",
-            "inv_prefix": "这是你的物品栏信息哦 {positive}",
-            "get": {
-                "invalid_num": "物品栏序号需要是整数哦...",
-                "index_out_range": "物品栏序号 {num} 超出了物品栏的范围啦...",
-                "no_item": "找不到物品栏序号为 {num} 的物品呢...",
-                "no_id_item": "找不到 id 为 {id} 的物品呢...",
-                "no_name_item": "找不到类似 \"{name}\" 的物品呢...",
-                "user_no_item": "你的物品栏里没有类似 \"{name}\" 的物品诶...",
-                "no_num": "请指定物品栏序号哦{positive_punc}"
-            },
-            "reduce": {
-                "invalid_count": "物品数量需要是大于 0 的整数哦 {neutral}",
-                "count_too_many": "指定要删除的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
-                "success": "成功移除了 {count} {pronoun} \"{name}\"{positive_punc}",
-                "error": "移除物品时出错了..."
-            },
-            "add": {
-                "invalid_arg": "物品 id 需要是整数哦...",
-                "success": "成功添加了 {count} {pronoun} \"{name}\"{positive_punc}",
-                "error": "添加物品失败了...",
-                "no_item": "没有 id 为 {id} 的物品呢..."
-            },
-            "drop": {
-                "no_num": "请指定物品栏序号哦{positive_punc}",
-                "item_count_too_many": "指定要丢弃的物品太多啦，超过了你拥有的物品总数哦 {neutral}",
-                "count_too_many": "指定要丢弃的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
-                "item_cant_drop": "不能丢弃物品 {name} 呢...",
-                "success": "成功丢弃了 {count} {pronoun} \"{name}\"{positive_punc}"
-            },
-            "use": {
-                "cannot_use": "这个物品不能使用呢...",
-                "error": "使用物品时出现了错误...",
-                "default_msg": "你使用了 \"{item}\"！{neutral}"
+        "setu": {
+            "desc": "涩图？",
+            "introduction": "返回一张涩图？",
+            "not_setu_msg": "哪有涩图，XME找不到涩图呜，但是有{image_name}！\n{image}"
+        },
+        "status": {
+            "desc": "查看系统状态",
+            "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
+            "fetch_failed": "当前运行设备暂不支持展示系统状态——",
+            "no_version_info": "暂时无法获取版本信息..."
+        },
+        "weather": {
+            "desc": "查询天气",
+            "introduction": "查看指定地区的天气",
+            "error_param": "出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{future_days}",
+            "cancel_message": "取消",
+            "enter_city_prompt": [
+                "请在下面发送你要查询的地区名{positive_punc}",
+                "在下面发送地区名吧",
+                "你想查询哪里的天气呢{positive_punc}在下面发送地区名吧 {positive} "
+            ],
+            "enter_city_prompt_cancel": "，或发送 \"{cancel_message}\" 取消哦",
+            "search_cancelled": "取消天气查询啦",
+            "future_days": [
+                "设置的天数",
+                "未来天数",
+                "天数"
+            ],
+            "invalid_days": "{future_days}还不可以大于 3 或小于 1 哦",
+            "result_prefix": [
+                "我来看看天气{positive_punc} {positive}",
+                "让我看看天气{positive_punc}",
+                "让我查询一下这里的天气{positive_punc}",
+                "我看看这里的天气{positive_punc} {positive}",
+                "让我看看天气怎么样啦{positive_punc}"
+            ],
+            "result_content": "\n======※今日天气: {city_name}※======\n{date} {weekday}\n天气：{weather}\n温度: {temp_min}{positive_punc}{temp_max}℃\n日间: {day_wind_min}风 {day_wind_max} 级\t夜间: {night_wind_min}风 {night_wind_max} 级\n查询时间: {report_time}",
+            "result_future": "未来 {future_days} 天{raining_days}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃",
+            "data_from": [
+                "数据来自于高德开放平台{positive_punc}",
+                "数据是高德开放平台的哦{positive_punc}",
+                "通过高德开放平台查询的{positive_punc}"
+            ],
+            "error": "查询出错了, 呜呜, 请确认地区名称是否输入正确哦\n被解析的地区名：{city}\n{ex}"
+        },
+        "今日老婆": {
+            "desc": "今日老婆相关指令",
+            "introduction": "查看自己的今日老婆，或者是别人的今日老婆{positive_punc}\n注意：本功能仅供娱乐",
+            "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 则会同时 at 你今日的老婆",
+            "wife_message": "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
+            "no_wife": "{name}今天并没有老婆 {neutral}",
+            "error": "呜呜，无法获取到群员信息：{ex}"
+        },
+        "jrrp": {
+            "desc": "今日人品相关指令",
+            "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+            "avg_message": "今日群员人品的平均值是 {avg} {reaction}",
+            "reaction>60": "{positive}",
+            "reaction>20": "{neutral}",
+            "reaction<=20": "uwu",
+            "jrrp_row": "\n{index}. {card} ({id})：今日人品值为 {jrrp}",
+            "rank_message": "这是今天人品最{high_or_low}的前 {count} 位群员排名 {reaction}",
+            "rank_too_long": "指定的成员数量太多了哦uwu，范围是 -{max} {positive_punc} {max}",
+            "rank_error": "成员数量需要是整数哦 {neutral}",
+            "jrrp_prefix": "你的今日人品为",
+            "jrrp<0": "{result}...？ xwx",
+            "jrrp<10": "....{result}？uwu",
+            "jrrp>100": "{result}.0000%！All Perfect+ {positive_plus}",
+            "jrrp>=90": "{result}！{positive_plus}",
+            "jrrp_default": "{result} {neutral}"
+        },
+        "实例控制": {
+            "desc": "机器人实例相关指令",
+            "introduction": "全部用于控制后台机器人实例的指令，需要 SUPERUSER 才可使用。",
+            "kill_introduction": "结束 bot 进程",
+            "restart_introduction": "使机器人实例重新启动",
+            "kill_prompt": "请输入 Y 确定结束 bot 进程...",
+            "kill_cancelled": "取消结束 bot 进程。",
+            "on_kill": "(正在结束 bot 进程) uwu",
+            "restarting": "正在重启 uwu",
+            "restart_failed_kill": "无法退出原 xmebot 进程 xwx\n错误原因: {ex}",
+            "restart_failed": "重启失败 xwx\n错误原因: {ex}\ntraceback:\n{traceback}"
+        },
+        "httpcode": {
+            "desc": "查询状态码",
+            "introduction": "获取 http 状态码信息和它的猫猫图",
+            "default": "你没输入状态码诶",
+            "code_prompt": "请发送你想要查询的状态码{positive_punc}",
+            "code_not_found": "查询不到 {search} 状态码代表什么意思诶",
+            "code_found": "状态码 {search} 的意思是: {stat}\n{image}"
+        },
+        "game": {
+            "desc": "各种小游戏",
+            "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
+            "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
+            "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
+            "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
+            "option_help_desc": "查看帮助",
+            "option_args_desc": "指定小游戏的参数",
+            "option_info_desc": "查看你输入的小游戏的帮助而不是游玩",
+            "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦",
+            "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦",
+            "guess": {
+                "desc": "猜数字游戏",
+                "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小\n猜对了会给{coin_name}奖励哦，一天可以拿到 {times_limit} 次{positive_punc}",
+                "arg_range": "数字范围 (r=范围开始{positive_punc}范围结束)",
+                "arg_times_limit": "猜测次数限制 (t=次数限制)",
+                "guess_start": "游戏开始{positive_punc} 你需要在 {max_guessing_times} 次尝试内猜出一个范围 {number_min} {positive_punc} {number_max} 的整数！",
+                "times_limit_error": "猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}",
+                "range_error": "数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数){positive_punc}范围结束(整数)) 哦 uwu\n{ex}",
+                "range_out_of_range": "数字范围不能大于 {max_range} 或小于 -{max_range} 哦 uwu",
+                "range_equals": "数字范围不能是相同的哦 uwu",
+                "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 uwu",
+                "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
+                "guess_prompt_prefix_default": "{start}\n请",
+                "guess_prompt": "{prefix}输入你要猜的数字吧{positive_punc} 或输入 {quit_input} 退出",
+                "quit_message": "退出游戏啦 {neutral}",
+                "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
+                "cmd_in_game": "你还在游戏中哦，不能执行指令 uwu",
+                "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} {neutral}",
+                "num_too_big_result": "大啦{positive_punc}",
+                "num_too_small_result": "小啦{positive_punc}",
+                "num_right_result": "正确{positive_punc}",
+                "guess_result": "{num} {result}",
+                "remaining_times": "你还可以猜 {times} 次数字{neutral}",
+                "limited": "你今天游玩这个游戏的奖励次数用完啦",
+                "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
+                "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
+                "no_award": "你没有拿到任何{coin_name}..."
             }
+        },
+        "漂流瓶": {
+            "desc": "漂流瓶相关指令",
+            "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc}\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
+            "throw_introduction": "扔一个漂流瓶",
+            "pickup_introduction": "尝试捡一个漂流瓶",
+            "cthulhu_introduction": "毁掉指定的漂流瓶",
+            "no_bottle": "海里一个瓶子里都没有...",
+            "no_bottle_picked": "你没有捡到瓶子{neutral}",
+            "view_message": "被捡到了 {times} 次",
+            "no_view_message": "第一次被捡到",
+            "like_message": "获得了{count}个赞{positive}",
+            "no_like_message": "还没有任何赞{neutral}",
+            "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}\"，混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+            "response_prompt": "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
+            "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
+            "bottle_broken": "啊，你不小心把瓶子摔碎了...",
+            "bottle_broken_messy": "啊...这个瓶子好混乱...唔...它碎掉了！",
+            "bottle_broken?": "啊，你不小心把瓶子摔...咦？这个瓶子自己修复了，然后它飞回了海里...",
+            "liked": "点赞成功{positive_punc} 瓶子的混乱值减少了",
+            "reported": "举报成功",
+            "nothing_to_throw": "漂流瓶似乎没有内容呢{neutral}\n格式：\n{command_name} (漂流瓶内容)",
+            "content_too_many": "瓶子的内容太多啦！要 {max_length} 字以内哦",
+            "lines_too_many": "瓶子的行数太多啦！最多 {max_lines} 行哦",
+            "throwed": "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
+            "content_already_thrown": "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
+            "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
+            "cthulhu_error_bottles": "其中这些 id 的瓶子出错了...:\n{ids}",
+            "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
+            "cthulhu_bottle_not_exist": "不存在",
+            "cthulhu_bottle_special": "是特殊瓶子",
+            "cthulhu_bottle_already_broken": "已经被混乱了哦",
+            "cthulhu_fail": "混乱瓶子失败了..."
+        },
+        "骰子": {
+            "desc": "骰子相关指令",
+            "introduction": "自定义面数or规则的骰子",
+            "dice_introduction": "投指定面数 * 指定数量的骰子",
+            "no_args_message": "使用方法：{command_name} [骰子面数] <骰子数量>",
+            "dice_error": "投骰子出现错误 xwx，请确定骰子面数及数量是不小于 1 的整数哦",
+            "count_too_many": "最多投 {max_count} 个骰子哦",
+            "faces_too_many": "骰子总面数过大啦{neutral} (>{max_faces})",
+            "count_too_low": "骰子数量不可以小于 1 哦",
+            "faces_too_low": "骰子面数不可以小于 1 哦",
+            "count_morethan_1_prefix": "总共",
+            "dice_result": "你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
+        },
+        "title": {
+            "desc": "设置头衔",
+            "introduction": "为一个群员设置指定的头衔（需要 bot 是群主哦）",
+            "no_at_arg": "请先 at 你要我设置头衔的群员哦",
+            "no_name_arg": "请指定头衔名哦",
+            "successful": "头衔设置成功啦{positive_punc}",
+            "deleted": "头衔删除成功啦{positive_punc}",
+            "failed": "呜呜，设置失败了...\n错误内容：{ex}"
+        },
+        "whoru": {
+            "desc": "查看当前角色",
+            "introduction": "查看 xme-bot 当前使用的角色{positive_punc}",
+            "whoami": "我是 {chac_name} 哦{positive_punc}\n由 {author} 制作的！"
+        },
+        "用户": {
+            "desc": "用户功能相关",
+            "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
+            "help_suffix": "使用 {help_cmd} 来查看详细的帮助",
+            "userhelp": {
+                "desc": "用户功能帮助",
+                "introduction": "查看某一用户功能指令的详细帮助",
+                "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+            },
+            "sign": {
+                "desc": "签到",
+                "introduction": "签到，并且得到一定量的{coin_name}",
+                "limited": "你今天已经签到过了哦{positive_punc}",
+                "get_state": "获得了",
+                "login_success": "签到成功{positive_punc}",
+                "login_no_coins": "你没获得任何{coin_name}...",
+                "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
+                "first_sign": "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
+                "sign_rank": "你是今天第 {count} 个签到的{positive_punc}"
+            },
+            "lottery": {
+                "desc": "抽奖",
+                "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}\n{coin_name}最多设置为 {count_max}。",
+                "limited": "你今天的抽奖次数用完啦{positive_punc}",
+                "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
+                "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
+                "not_enough_coins": "唔，你指定的{coin_name}数量 ({count}) 太多啦！超过了你拥有的{coin_name}总数呢...",
+                "get_coin_result": "获得了 {get_count} {coin_pronoun}{coin_name}！",
+                "no_coin_result": "没有获得任何{coin_name}...",
+                "result": "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
+                "too_many_coins": "你设置的{coin_name}数太多啦！要在 {count_max} 之内哦"
+            },
+            "userinfo": {
+                "desc": "查看个人信息",
+                "introduction": "查看自己当前的 bot 内个人信息，比如{coin_name}数量等, 如果 at 人则会查看那个人的个人信息",
+                "no_user": "唔...我没有记录过这个人的信息呢"
+            },
+            "coinrank": {
+                "desc": "{coin_name}排行榜",
+                "introduction": "查看 bot 记录的{coin_name}数量排行榜\n参数填写整数是改变排名长度，最大 20\n填写 avg 为平均，sum 为总和\n最后一个参数是 spacing 将让排名输出格式改为空格而不是换行",
+                "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
+                "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}\n中位数为 {median}",
+                "rank_msg_sum": "大家一共拥有 {avg} {coin_pronoun}{coin_name}哦{positive_punc}",
+                "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
+                "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
+                "invalid_arg": "不明白指定的排名长度意思呢...",
+                "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
+                "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {neutral}"
+            },
+            "sendcoin": {
+                "desc": "给人{coin_name}",
+                "introduction": "at 一个人并且给他指定数量的{coin_name}{positive_punc}",
+                "no_arg": "请 at 你要转账的用户哦",
+                "invalid_user": "找不到 at 的用户呢...",
+                "invalid_coin_count": "{coin_name}数量需要是大于 0 的整数哦",
+                "send_to_self": "你不能给自己{coin_name}哦",
+                "not_enough_coin": "{coin_name}数量不足，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
+                "received_coin_react": "谢谢哇{positive_punc}",
+                "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
+                "no_coin_count": "请指定饼干数量哦"
+            },
+            "inventory": {
+                "desc": "物品栏相关指令",
+                "introduction": "操作物品栏里的物品内容，不填写参数是查看物品栏",
+                "no_permission": "权限不足哦 {negative}",
+                "inv_prefix": "这是你的物品栏信息哦 {positive}",
+                "get": {
+                    "invalid_num": "物品栏序号需要是整数哦...",
+                    "index_out_range": "物品栏序号 {num} 超出了物品栏的范围啦...",
+                    "no_item": "找不到物品栏序号为 {num} 的物品呢...",
+                    "no_id_item": "找不到 id 为 {id} 的物品呢...",
+                    "no_name_item": "找不到类似 \"{name}\" 的物品呢...",
+                    "user_no_item": "你的物品栏里没有类似 \"{name}\" 的物品诶...",
+                    "no_num": "请指定物品栏序号哦{positive_punc}"
+                },
+                "reduce": {
+                    "invalid_count": "物品数量需要是大于 0 的整数哦 {neutral}",
+                    "count_too_many": "指定要删除的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
+                    "success": "成功移除了 {count} {pronoun} \"{name}\"{positive_punc}",
+                    "error": "移除物品时出错了..."
+                },
+                "add": {
+                    "invalid_arg": "物品 id 需要是整数哦...",
+                    "success": "成功添加了 {count} {pronoun} \"{name}\"{positive_punc}",
+                    "error": "添加物品失败了...",
+                    "no_item": "没有 id 为 {id} 的物品呢..."
+                },
+                "drop": {
+                    "no_num": "请指定物品栏序号哦{positive_punc}",
+                    "item_count_too_many": "指定要丢弃的物品太多啦，超过了你拥有的物品总数哦 {neutral}",
+                    "count_too_many": "指定要丢弃的物品太多啦，超过了这个物品栏格子的物品总数哦 {neutral}",
+                    "item_cant_drop": "不能丢弃物品 {name} 呢...",
+                    "success": "成功丢弃了 {count} {pronoun} \"{name}\"{positive_punc}"
+                },
+                "use": {
+                    "cannot_use": "这个物品不能使用呢...",
+                    "error": "使用物品时出现了错误...",
+                    "default_msg": "你使用了 \"{item}\"！{neutral}"
+                }
+            }
+        },
+        "bottodo": {
+            "desc": "查看 bot 待办",
+            "introduction": "查看或修改 bot 的待办事项 / 以后要更新的内容\n修改待办需要 SUPERUSER",
+            "todo_prefix": "以下是待办列表{positive_punc}",
+            "remove_todo_success": "成功移除了待办事项 {todo}！",
+            "no_todo": "暂时没有待办事项哦...",
+            "add_todo_success": "添加待办 \"{todo}\" 成功啦{positive_punc}",
+            "modify_todo_failed": "只有 SUPERUSER 才能管理待办哦...",
+            "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
+        },
+        "peek": {
+            "desc": "视奸179",
+            "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
+            "default_monitor": "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦",
+            "successful": "这是 179 的第 {monitor_num} 个屏幕的状态{positive_punc}",
+            "successful_all": [
+                "这是九九全部屏幕的状态 {neutral}",
+                "这是 179 全部屏幕的状态哦 {neutral}",
+                "这是九九全部屏幕的状态哦 {neutral}"
+            ],
+            "not_in_peek_group": "你不在可视奸的群里哦（？",
+            "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
+        },
+        "ping": {
+            "desc": "检测消息发送延迟",
+            "introduction": "发送后会返回当前的消息延迟",
+            "ping_message": "{shout}",
+            "ping": "{shout}我在 {ping} 秒后听到了回音..."
+        },
+        "alias": {
+            "desc": "获得指令别名",
+            "introduction": "使用参数获得指定指令的别名列表，可以使用别名调用这个指令",
+            "result_prefix": "指令 \"{command}\" 有这些别名哦：",
+            "no_arg": "请在参数里输入指令名或别名哦",
+            "no_alias": "{negative} 找不到指令 \"{command}\" 的别名诶",
+            "alias_line": "{i}. {alias}"
+        },
+        "calc": {
+            "desc": "计算器",
+            "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的自定函数列表\n参数若填写 \"builtins\" 则是查看计算器拥有的内置函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。\n计算器可绘制函数，只需要在需要绘制函数的语句开头输入 \":\" 然后输入函数。 例如 \":sin(x)\"，若需要绘制 3D 函数，需要在需要绘制函数的语句开头输入 \"::\" 然后输入函数。\n注意：不可以写类似 \"2x\" 之类的东西，需要写成 \"2*x\"",
+            "no_arg": "请在输入时指定参数哦",
+            "sympifyerror": "计算出错啦，请确认格式正确哦...\n{ex}",
+            "syntaxerror": "输入格式出错啦，请确认表达式正确哦...\n{ex}",
+            "error": "出现了未知错误...请确认表达式正确哦...\n{ex}",
+            "func_intro": "以下是当前拥有的自定函数列表{positive_punc}",
+            "func_nothing": "什么也没有呢...",
+            "func_builtin_intro": "以下是大部分自带内容及函数列表{positive_punc}",
+            "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
+            "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
+            "drawing": "正在绘制图像{positive_punc} {positive}，请稍等哦",
+            "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
+        },
+        "translate": {
+            "desc": "翻译消息",
+            "introduction": "翻译回复的消息，或你自己的消息，可以指定获取指定消息前面的所有消息数量",
+            "invalid_count": "数量参数需要是整数哦 {negative}",
+            "count_too_low": "要获取的消息数量不能小于 1 哦 {negative}",
+            "count_too_many": "要获取的消息数量太多啦，最多 {max_count} 条哦 {neutral}",
+            "processing": "正在翻译到 \"{language}\" 中~ 请等待 {min} 到 {max} 秒哦",
+            "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
+            "no_message": "唔...没有任何消息呢",
+            "error": "呜呜...翻译时出错了，可以重试或将翻译消息条数减少并重试哦"
+        },
+        "色号显示": {
+            "desc": "显示颜色",
+            "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
+        },
+        "notice": {
+            "desc": "群发消息",
+            "introduction": "在群内发这个指令并且填写消息，XME 会给群内所有成员发消息。",
+            "parsing": "正在给 {count} 个群友发送消息{positive_punc}",
+            "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
+            "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
+            "muted": "静音成功啦 {neutral}"
+        },
+        "announce": {
+            "desc": "修改公告",
+            "introduction": "发布公告，会在报时时出现",
+            "success": "公告 \"{anno}\" 发布成功~ {positive}",
+            "clear": "成功清除公告{positive_punc}"
+        },
+        "divs": {
+            "desc": "质数检测",
+            "introduction": "会输出指定数字能被大于 1 的数相乘得到的最多 20 个算式",
+            "prefix": "以下是关于 {num} 的绝对值可被大于 1 的数相乘所得到的算式{positive_punc}",
+            "invalid_num": "指定的数字需要是整数哦",
+            "no_arg": "需要指定参数哦",
+            "less_than_2": "这个数的绝对值小于 2，不会有算式的哦，也不是质数 ovo",
+            "too_long": [
+                "数字太大啦...",
+                "输入的数字太大啦...{neutral}",
+                "指定的数字太大啦..."
+            ],
+            "nothing": [
+                "没有任何东西呢...说明这个数是质数 {positive}",
+                "没有任何东西诶...看来这个数是质数{positive_punc}"
+            ]
+        },
+        "maifriend": {
+            "desc": "生成旅行伙伴图",
+            "introduction": "生成自己或指定群友的旅行伙伴图",
+            "error": [
+                "{negative} 生成图片出错了，可能是 qq 无效哦...",
+                "{negative} 生成图片出现错误，可以问问 179...",
+                "{negative} 生成图片出问题了，可能是 qq 无效哦..."
+            ]
+        },
+        "peek179": {
+            "desc": "看看 179",
+            "introduction": "返回一张 179 出毛的返图",
+            "result": "{image}\n图片名称：{name}\n创建时间：{creation_time}\n修改时间：{modification_time}"
         }
-    },
-    "bottodo": {
-        "desc": "查看 bot 待办",
-        "introduction": "查看或修改 bot 的待办事项 / 以后要更新的内容\n修改待办需要 SUPERUSER",
-        "todo_prefix": "以下是待办列表{positive_punc}",
-        "remove_todo_success": "成功移除了待办事项 {todo}！",
-        "no_todo": "暂时没有待办事项哦...",
-        "add_todo_success": "添加待办 \"{todo}\" 成功啦{positive_punc}",
-        "modify_todo_failed": "只有 SUPERUSER 才能管理待办哦...",
-        "remove_todo_failed": "删除待办失败了...请确定你输入的待办序号 \"{arg}\" 是对的哦"
-    },
-    "peek": {
-        "desc": "视奸179",
-        "introduction": "查看 bot 当前运行实例的电脑屏幕信息，参数填写显示器序号，填写 0 则是所有显示器",
-        "default_monitor": "唔，参数解析出现了问题，这是 179 的默认屏幕的状态哦",
-        "successful": "这是 179 的第 {monitor_num} 个屏幕的状态{positive_punc}",
-        "successful_all": [
-            "这是九九全部屏幕的状态 {neutral}",
-            "这是 179 全部屏幕的状态哦 {neutral}",
-            "这是九九全部屏幕的状态哦 {neutral}"
-        ],
-        "not_in_peek_group": "你不在可视奸的群里哦（？",
-        "is_private": "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦..."
-    },
-    "ping": {
-        "desc": "检测消息发送延迟",
-        "introduction": "发送后会返回当前的消息延迟",
-        "ping_message": "{shout}",
-        "ping": "{shout}我在 {ping} 秒后听到了回音..."
-    },
-    "alias": {
-        "desc": "获得指令别名",
-        "introduction": "使用参数获得指定指令的别名列表，可以使用别名调用这个指令",
-        "result_prefix": "指令 \"{command}\" 有这些别名哦：",
-        "no_arg": "请在参数里输入指令名或别名哦",
-        "no_alias": "{negative} 找不到指令 \"{command}\" 的别名诶",
-        "alias_line": "{i}. {alias}"
-    },
-    "calc": {
-        "desc": "计算器",
-        "introduction": "输入一个算式，然后进行计算，参数若填写 \"funcs\" 则是查看计算器拥有的自定函数列表\n参数若填写 \"builtins\" 则是查看计算器拥有的内置函数列表\n计算器可定义变量，定义变量需要单独为一行且在算式之前，格式为 变量名=变量值。\n计算器可绘制函数，只需要在需要绘制函数的语句开头输入 \":\" 然后输入函数。 例如 \":sin(x)\"，若需要绘制 3D 函数，需要在需要绘制函数的语句开头输入 \"::\" 然后输入函数。\n注意：不可以写类似 \"2x\" 之类的东西，需要写成 \"2*x\"",
-        "no_arg": "请在输入时指定参数哦",
-        "sympifyerror": "计算出错啦，请确认格式正确哦...\n{ex}",
-        "syntaxerror": "输入格式出错啦，请确认表达式正确哦...\n{ex}",
-        "error": "出现了未知错误...请确认表达式正确哦...\n{ex}",
-        "func_intro": "以下是当前拥有的自定函数列表{positive_punc}",
-        "func_nothing": "什么也没有呢...",
-        "func_builtin_intro": "以下是大部分自带内容及函数列表{positive_punc}",
-        "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
-        "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
-        "drawing": "正在绘制图像{positive_punc} {positive}，请稍等哦",
-        "float_result": "小数结果约为 \"{float_result}\"{positive_punc}"
-    },
-    "translate": {
-        "desc": "翻译消息",
-        "introduction": "翻译回复的消息，或你自己的消息，可以指定获取指定消息前面的所有消息数量",
-        "invalid_count": "数量参数需要是整数哦 {negative}",
-        "count_too_low": "要获取的消息数量不能小于 1 哦 {negative}",
-        "count_too_many": "要获取的消息数量太多啦，最多 {max_count} 条哦 {neutral}",
-        "processing": "正在翻译到 \"{language}\" 中~ 请等待 {min} 到 {max} 秒哦",
-        "success_message": "\"{name}\" 说的语句翻译到 \"{language}\" 是: {message}",
-        "no_message": "唔...没有任何消息呢",
-        "error": "呜呜...翻译时出错了，可以重试或将翻译消息条数减少并重试哦"
-    },
-    "色号显示": {
-        "desc": "显示颜色",
-        "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
-    },
-    "notice": {
-        "desc": "群发消息",
-        "introduction": "在群内发这个指令并且填写消息，XME 会给群内所有成员发消息。",
-        "parsing": "正在给 {count} 个群友发送消息{positive_punc}",
-        "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
-        "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
-        "muted": "静音成功啦 {neutral}"
-    },
-    "announce": {
-        "desc": "修改公告",
-        "introduction": "发布公告，会在报时时出现",
-        "success": "公告 \"{anno}\" 发布成功~ {positive}",
-        "clear": "成功清除公告{positive_punc}"
-    },
-    "divs": {
-        "desc": "质数检测",
-        "introduction": "会输出指定数字能被大于 1 的数相乘得到的最多 20 个算式",
-        "prefix": "以下是关于 {num} 的绝对值可被大于 1 的数相乘所得到的算式{positive_punc}",
-        "invalid_num": "指定的数字需要是整数哦",
-        "no_arg": "需要指定参数哦",
-        "less_than_2": "这个数的绝对值小于 2，不会有算式的哦，也不是质数 ovo",
-        "too_long": [
-            "数字太大啦...",
-            "输入的数字太大啦...{neutral}",
-            "指定的数字太大啦..."
-        ],
-        "nothing": [
-            "没有任何东西呢...说明这个数是质数 {positive}",
-            "没有任何东西诶...看来这个数是质数{positive_punc}"
-        ]
-    },
-    "maifriend": {
-        "desc": "生成旅行伙伴图",
-        "introduction": "生成自己或指定群友的旅行伙伴图",
-        "error": [
-            "{negative} 生成图片出错了，可能是 qq 无效哦...",
-            "{negative} 生成图片出现错误，可以问问 179...",
-            "{negative} 生成图片出问题了，可能是 qq 无效哦..."
-        ]
-    },
-    "peek179": {
-        "desc": "看看 179",
-        "introduction": "返回一张 179 出毛的返图",
-        "result": "{image}\n图片名称：{name}\n创建时间：{creation_time}\n修改时间：{modification_time}"
     }
 }

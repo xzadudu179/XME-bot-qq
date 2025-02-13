@@ -9,21 +9,21 @@ commands = ['throw', 'pickup']
 command_properties = [
     {
         'name': 'throw',
-        'introduction': get_message(__plugin_name__, 'throw_introduction'),
+        'introduction': get_message("plugins", __plugin_name__, 'throw_introduction'),
         # 'introduction': '扔一个漂流瓶',
         'usage': '(瓶子内容)',
         'permission': ['在群内使用']
     },
     {
         'name': 'pickup',
-        'introduction': get_message(__plugin_name__, 'pickup_introduction'),
+        'introduction': get_message("plugins", __plugin_name__, 'pickup_introduction'),
         # 'introduction': '尝试捡一个漂流瓶',
         'usage': '',
         'permission': []
     },
     {
         'name': 'cthulhu',
-        'introduction': get_message(__plugin_name__, 'cthulhu_introduction'),
+        'introduction': get_message("plugins", __plugin_name__, 'cthulhu_introduction'),
         # 'introduction': '尝试捡一个漂流瓶',
         'usage': '(瓶子id 以空格分隔)',
         'permission': ['是 SUPERUSER']
@@ -36,9 +36,9 @@ aliases = [
 ]
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc="漂流瓶相关指令",
-    introduction=get_message(__plugin_name__, 'introduction'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction="扔/捡来自各个群组的漂流瓶~",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],

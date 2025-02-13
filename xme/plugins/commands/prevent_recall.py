@@ -9,9 +9,9 @@ alias = ['防撤回', "precall", "防撤", '防撤回功能']
 __plugin_name__ = 'prevrecall'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, "desc"),
+    desc=get_message("plugins", __plugin_name__, "desc"),
     # desc='防撤回',
-    introduction=get_message(__plugin_name__, "introduction"),
+    introduction=get_message("plugins", __plugin_name__, "introduction"),
     # introduction='防撤回功能相关',
     usage=f'<开|关|T|F>',
     permissions=["在群聊内", "是 SUPERUSER"],
@@ -30,16 +30,16 @@ async def _(session: CommandSession):
             "prevent_recall": {}
         }
     prev = settings['prevent_recall'].get(group_id, False)
-    message = get_message(__plugin_name__, "stats", group_id=group_id, stats=get_message(__plugin_name__, "opened_message") if prev else get_message(__plugin_name__, "closed_message"))
+    message = get_message("plugins", __plugin_name__, "stats", group_id=group_id, stats=get_message("plugins", __plugin_name__, "opened_message") if prev else get_message("plugins", __plugin_name__, "closed_message"))
     # message = f"本群 ({group_id}) 的防撤回功能：{'已开启' if prev else '已关闭'}"
     arg = session.current_arg_text.strip()
     if arg.capitalize() == "开" or arg.capitalize() == "T":
         settings['prevent_recall'][group_id] = True
-        await send_session_msg(session, get_message(__plugin_name__, "open"))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "open"))
         # await send_msg(session, "防撤回功能已开owo")
     elif arg.capitalize() == "关" or arg.capitalize() == "F":
         settings['prevent_recall'][group_id] = False
-        await send_session_msg(session, get_message(__plugin_name__, "close"))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "close"))
         # await send_msg(session, "防撤回功能已关ovo")
     else:
         await send_session_msg(session, message)

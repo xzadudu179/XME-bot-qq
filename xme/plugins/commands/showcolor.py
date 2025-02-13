@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 __plugin_name__ = '色号显示'
 __plugin_usage__ = str(SpecialDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
 ))
 
 @message_preprocessor

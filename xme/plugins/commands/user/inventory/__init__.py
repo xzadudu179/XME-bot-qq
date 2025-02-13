@@ -17,8 +17,8 @@ funcs = {
 alias = ['inv', '物品栏']
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
     "usage": f'',
     "permissions": [],
     "alias": alias
@@ -31,8 +31,8 @@ async def _(session: CommandSession, user: User):
     for k, v in funcs.items():
         if args[0] != k: continue
         if not v['permissions'](user.id):
-            await send_session_msg(session, get_message(__plugin_name__, cmd_name, 'no_permission'))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_permission'))
             return False
         return await v['func'](session, user, " ".join(args[1:]))
-    await send_session_msg(session, get_message(__plugin_name__, cmd_name, 'inv_prefix') + '\n' + str(user.inventory))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'inv_prefix') + '\n' + str(user.inventory))
     return True

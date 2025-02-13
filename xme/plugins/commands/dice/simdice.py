@@ -14,11 +14,11 @@ async def _(session: CommandSession):
     MAX_COUNT = 50
     counts = 1
     arg = session.current_arg_text.strip()
-    message = get_message(__plugin_name__, "dice_error")
+    message = get_message("plugins", __plugin_name__, "dice_error")
     args = arg.split(" ")
     if arg == "":
         faces = 6
-        # return await send_msg(session, get_message(__plugin_name__, "no_args_message", command_name=config.COMMAND_START[0] + command_name))
+        # return await send_msg(session, get_message("plugins", __plugin_name__, "no_args_message", command_name=config.COMMAND_START[0] + command_name))
         # return await send_msg(session, "使用方法：/dice [骰子面数] <骰子数量>")
     else:
         try:
@@ -34,24 +34,24 @@ async def _(session: CommandSession):
         if len(args) > 1:
             counts = int(args[1])
         if counts > 50:
-            message = get_message(__plugin_name__, "count_too_many", max_count=format(MAX_COUNT, ","))
+            message = get_message("plugins", __plugin_name__, "count_too_many", max_count=format(MAX_COUNT, ","))
             # message = "最多投 50 个骰子哦"
             return await send_session_msg(session, message=message)
         if faces * counts > MAX_FACES:
-            message = get_message(__plugin_name__, "faces_too_many", max_faces=format(MAX_FACES, ","))
+            message = get_message("plugins", __plugin_name__, "faces_too_many", max_faces=format(MAX_FACES, ","))
             # message = "骰子总面数过大啦ovo (>100,000,000)"
             return await send_session_msg(session, message=message)
         if counts < 1:
-            return await send_session_msg(session, get_message(__plugin_name__, "count_too_low"))
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, "count_too_low"))
             # return await send_msg(session, "骰子数量不可以小于 1 哦")
         if faces < 1:
-            return await send_session_msg(session, get_message(__plugin_name__, "faces_too_low"))
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, "faces_too_low"))
             # return await send_msg(session, message="骰子面数不可以小于 1 哦")
         for _ in range(counts):
             points_list.append(random.randint(1, faces))
-        count_morethan_1_prefix = get_message(__plugin_name__, "count_morethan_1_prefix")
+        count_morethan_1_prefix = get_message("plugins", __plugin_name__, "count_morethan_1_prefix")
         await send_session_msg(session, message=
-                           get_message(__plugin_name__, "dice_result",
+                           get_message("plugins", __plugin_name__, "dice_result",
                                counts=format(counts, ','),
                                faces=format(faces, ','),
                                faces_result_prefix=count_morethan_1_prefix if len(args) > 1 else '',

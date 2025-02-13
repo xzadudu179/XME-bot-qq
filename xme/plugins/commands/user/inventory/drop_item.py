@@ -7,20 +7,20 @@ from character import get_message
 
 async def valid_drop(session, _, invitem):
     if not invitem.recorded_item.can_drop():
-        send_session_msg(session, get_message(__plugin_name__, cmd_name, arg_func_name, "item_cant_drop", name=invitem.recorded_item.name))
+        send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "item_cant_drop", name=invitem.recorded_item.name))
         return False
     return True
 
 async def valid_drop_item(session, _, item):
     if not item.can_drop():
-        send_session_msg(session, get_message(__plugin_name__, cmd_name, arg_func_name, "item_cant_drop", name=item.name))
+        send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "item_cant_drop", name=item.name))
         return False
     return True
 
 async def drop(session, user: u.User, arg):
     args = arg.split(" ")
     if not args[0].strip():
-        await send_session_msg(session,  get_message(__plugin_name__, cmd_name, arg_func_name, "no_num"))
+        await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "no_num"))
         return False
 
     if len(args) <= 1:

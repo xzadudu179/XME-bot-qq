@@ -9,8 +9,8 @@ __plugin_name__ = 'alias'
 
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<指令名或别名>',
     permissions=["无"],
     alias=alias
@@ -20,7 +20,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     arg = session.current_arg_text.strip()
     if not arg:
-        return await send_session_msg(session, get_message(__plugin_name__, 'no_arg'))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
     cmd = get_cmd_by_alias(arg, False)
     if not cmd and arg:
         cmd = arg
@@ -29,8 +29,8 @@ async def _(session: CommandSession):
     aliases = get_alias_by_cmd(cmd)
     print(cmd, aliases)
     if not aliases:
-        return await send_session_msg(session, get_message(__plugin_name__, 'no_alias', command=cmd))
-    message = get_message(__plugin_name__, 'result_prefix', command=cmd) + "\n"
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_alias', command=cmd))
+    message = get_message("plugins", __plugin_name__, 'result_prefix', command=cmd) + "\n"
     for i, alias in enumerate(aliases):
-        message += get_message(__plugin_name__, 'alias_line', i=i + 1, alias=alias) + "\n"
+        message += get_message("plugins", __plugin_name__, 'alias_line', i=i + 1, alias=alias) + "\n"
     return await send_session_msg(session, message)

@@ -10,8 +10,8 @@ alias = ['divides']
 __plugin_name__ = 'divs'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(数字)',
     permissions=[],
     alias=alias
@@ -21,13 +21,13 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     args = session.current_arg.strip()
     if not args:
-        return await send_session_msg(session, get_message(__plugin_name__, "no_arg"))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, "no_arg"))
     if len(args) > 15:
-        return await send_session_msg(session, get_message(__plugin_name__, "too_long"))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, "too_long"))
     original_num = type_tools.to_type(args, int)
     num = abs(original_num)
     if num is None:
-        return await send_session_msg(session, get_message(__plugin_name__, 'invalid_num'))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_num'))
     if num < 2:
-        return await send_session_msg(session, get_message(__plugin_name__, 'less_than_2'))
-    return await send_session_msg(session, get_message(__plugin_name__, 'prefix', num=original_num) + "\n" + (("\n".join([f"{i + 1}. {item}" for i, item in enumerate(x) if item != "..."]) + ("\n..." if x[-1] == "..." else "")) if len(x:=divs(num)) >= 1 else get_message(__plugin_name__, 'nothing')))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'less_than_2'))
+    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'prefix', num=original_num) + "\n" + (("\n".join([f"{i + 1}. {item}" for i, item in enumerate(x) if item != "..."]) + ("\n..." if x[-1] == "..." else "")) if len(x:=divs(num)) >= 1 else get_message("plugins", __plugin_name__, 'nothing')))

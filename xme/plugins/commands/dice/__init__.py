@@ -7,7 +7,7 @@ commands = ['dice']
 command_properties = [
     {
         'name': 'dice',
-        'introduction': get_message(__plugin_name__, 'dice_introduction'),
+        'introduction': get_message("plugins", __plugin_name__, 'dice_introduction'),
         # 'introduction': '投指定面数 * 指定数量的骰子',
         'usage': '(骰子面数) <骰子数量>',
         'permission': []
@@ -18,9 +18,9 @@ aliases = [
 ]
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc="骰子相关指令",
-    introduction=get_message(__plugin_name__, 'introduction'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction="自定义面数or规则的骰子",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],

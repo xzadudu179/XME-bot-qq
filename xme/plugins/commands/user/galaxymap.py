@@ -12,8 +12,8 @@ from character import get_message
 # cmd_name = 'test'
 # usage = {
 #     "name": cmd_name,
-#     "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-#     "introduction": get_message(__plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+#     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
+#     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
 #     "usage": f'',
 #     "permissions": [],
 #     "alias": alias

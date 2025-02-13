@@ -8,7 +8,7 @@ commands = ['wife']
 command_properties = [
     {
         'name': 'wife',
-        'introduction': get_message(__plugin_name__, 'wife_introduction'),
+        'introduction': get_message("plugins", __plugin_name__, 'wife_introduction'),
         'usage': '<at想看的人>',
         'permission': ['在群内使用']
     },
@@ -18,9 +18,9 @@ aliases = [
 ]
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc="今日老婆相关指令",
-    introduction=get_message(__plugin_name__, 'introduction'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction="查看自己的今日老婆，或者是别人的今日老婆~",
     contents=[f"{prop['name']}: {prop['introduction']}" for prop in command_properties],
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],

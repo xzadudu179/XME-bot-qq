@@ -12,8 +12,8 @@ cmd_name = "userhelp"
 alias = ['uhelp', '用户帮助', 'uh']
 usage = {
     "name": cmd_name,
-    "desc": get_message(__plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message(__plugin_name__, cmd_name, 'introduction'),
+    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction'),
     "usage": f'<指令名或别名>',
     "permissions": [],
     "alias": alias
@@ -23,14 +23,14 @@ commands[cmd_name] = usage
 print([command for command in commands.keys()])
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     contents=[f"{prop['name']} {prop['usage']}: {prop['desc']}" for prop in commands.values()],
     usages=[f"{prop['name']} {prop['usage']}" for prop in commands.values()],
     permissions=[prop['permissions'] for prop in commands.values()],
     alias_list=[prop['alias'] for prop in commands.values()],
     simple_output=True
-)) + "\n########\n" + get_message(__plugin_name__, 'help_suffix', help_cmd=f"{config.COMMAND_START[0]}{cmd_name} {usage['usage']}")
+)) + "\n########\n" + get_message("plugins", __plugin_name__, 'help_suffix', help_cmd=f"{config.COMMAND_START[0]}{cmd_name} {usage['usage']}")
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         await send_session_msg(session, message)
         return False
     if arg not in commands.keys():
-        await send_session_msg(session, get_message(__plugin_name__, cmd_name,'no_cmd', cmd=arg))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name,'no_cmd', cmd=arg))
         return False
     message = str(CommandDoc(
         **commands[arg]

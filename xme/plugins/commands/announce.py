@@ -9,8 +9,8 @@ alias = ['公告', 'anno']
 __plugin_name__ = 'announce'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
-    introduction=get_message(__plugin_name__, 'introduction'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<(SUPERUSER)公告内容>',
     permissions=["无"],
     alias=alias
@@ -29,4 +29,4 @@ async def _(session: CommandSession):
     c = read_from_path(config.BOT_SETTINGS_PATH)
     c["announcement"] = anno
     save_to_path(config.BOT_SETTINGS_PATH, c)
-    return await send_session_msg(session, get_message(__plugin_name__, 'success' if anno else 'clear', anno=anno))
+    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'success' if anno else 'clear', anno=anno))

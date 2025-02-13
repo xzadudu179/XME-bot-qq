@@ -7,9 +7,9 @@ alias = [f'{get_message("bot_info", "name")}退群', f'{get_message("bot_info", 
 __plugin_name__ = 'bot_leave'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
-    desc=get_message(__plugin_name__, 'desc'),
+    desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='机器人退群',
-    introduction=get_message(__plugin_name__, 'introduction'),
+    introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='使机器人退出群聊',
     usage=f'',
     permissions=["是群主 或 是 SUPERUSER & 在群聊内 & 需要@或提及 bot"],
@@ -18,6 +18,6 @@ __plugin_usage__ = str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=True, permission=lambda x: x.is_superuser or x.is_owner and x.is_groupchat)
 async def _(session: CommandSession):
-    await send_session_msg(session, get_message(__plugin_name__, 'leave_message'))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'leave_message'))
     # await send_msg(session, "正在退出群聊...")
     await session.bot.api.set_group_leave(group_id=session.event.group_id)

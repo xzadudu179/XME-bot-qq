@@ -58,7 +58,7 @@ async def _(session: CommandSession):
             # message = "呜呜，书翻不开了..."
         else:
             data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
-            message = f"\n{get_message("plugins", __plugin_name__, 'answer')}\n\"{data}\"\n\"{ans_json['data']['en']}\""
+            message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data}\"\n\"{ans_json['data']['en']}\""
     except Exception as ex:
         print(ex)
     finally:

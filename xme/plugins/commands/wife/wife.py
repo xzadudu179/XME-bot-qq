@@ -37,13 +37,13 @@ async def _(session: CommandSession):
         elif at_id == session.event.user_id:
             at_name = "你"
             at_id = session.event.user_id
-        message = get_message(w.__plugin_name__, "no_wife", name=at_name)
+        message = get_message("plugins", w.__plugin_name__, "no_wife", name=at_name)
         # message = f"{at_name}今天并没有老婆ovo"
         if wife:
             # print(pair_user)
             name = (x if (x:=wife['card']) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
             who = f"{at_name}"
-            message = get_message(w.__plugin_name__, "wife_message",
+            message = get_message("plugins", w.__plugin_name__, "wife_message",
                 who=who,
                 avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
                 # avatar=image_msg(get_qq_avatar(wife['user_id'])),
@@ -51,7 +51,7 @@ async def _(session: CommandSession):
                 user_id=str(wife['user_id']))
             # message = f"{who}今日的老婆是:\n[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]\n{name if arg != 'at' else '[CQ:at,qq=' + str(wife['user_id']) + ']'} ({wife['user_id']})"
     except Exception as ex:
-        message = get_message(w.__plugin_name__, "error", ex=ex)
+        message = get_message("plugins", w.__plugin_name__, "error", ex=ex)
         # message = f"呜呜，无法获取到群员信息：{ex}"
         print(traceback.format_exc())
     await send_session_msg(session, message)

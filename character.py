@@ -48,12 +48,12 @@ def get_item(*keys: str, character: str="", default="[NULL]", search_dict: dict 
         result = default
     return result
 
-def get_message(*keys: str, default: str="[NULL]", character: str="", **kwargs) -> str:
+def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 bot 并发送相关聊天记录/图片报告问题 xwx]", character: str="", **kwargs) -> str:
     """获取 bot 角色字典消息
 
     Args:
         *keys (str): 消息键
-        default (str, optional): 找不到值时返回的默认值. Defaults to "[NULL]".
+        default (str, optional): 找不到值时返回的默认值. Defaults to "[bot 未输出任何消息 请私信 bot 并发送相关聊天记录/图片报告问题 xwx]".
         character (str, optional): 指定的角色名. Defaults to "".
         **kwargs: 格式化参数
 

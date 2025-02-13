@@ -70,7 +70,6 @@ async def jrrp(session: CommandSession):
             reaction=get_message("plugins", __plugin_name__, 'reaction>60') if
             count > 0 else
             get_message("plugins", __plugin_name__, 'reaction<=20'))
-        # message = f"这是今天人品最{'高' if count > 0 else '低'}的前 {abs(count)} 位群员排名 {get_message("plugins", __plugin_name__, 'jrrp>60') if count > 0 else get_message("plugins", __plugin_name__, 'jrrp<=20')}"
         if count > 0:
             enum_list = members[:count]
         elif count < 0:

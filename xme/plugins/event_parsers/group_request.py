@@ -9,7 +9,6 @@ async def _(session: RequestSession):
     name = await bot_control.get_stranger_name(session.event.user_id)
     print(c.gradient_text("#dda3f8","#66afff" ,text=f"{name} 请求添加你为好友"))
     # if session.event.user_id in config.SUPERUSERS:
-    #     # 验证信息正确，同意入群
     print("同意")
     await bot_control.bot_call_action(bot=session.bot, action="set_friend_add_request", flag=session.event.flag, approve=True)
     # await session.approve()

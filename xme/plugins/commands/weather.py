@@ -119,7 +119,7 @@ async def _(session: CommandSession):
                 min_temp=min_temp
             )
             # message += f'未来 {future_days} 天{("" if future_days <= 1 else "")}{("有" if rainning_days == future_days and future_days <= 1 else "")}{("有 " + str(rainning_days) + " 天有" if future_days > 1 and rainning_days < future_days else "都有" if rainning_days == future_days else "没有")}雨, 最高温度 {max_temp}℃, 最低温度 {min_temp}℃'
-        message += f"\n{get_message("plugins", __plugin_name__, 'data_from')}"
+        message += f"\n{get_message('plugins', __plugin_name__, 'data_from')}"
         # message += f"\n{rt.rand_str('数据来自于高德开放平台~', '数据是高德开放平台的哦~', '通过高德开放平台查询的~')}"
     except Exception as ex:
         message = get_message("plugins", __plugin_name__, 'error', city=city, ex=ex)

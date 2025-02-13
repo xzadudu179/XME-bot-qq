@@ -129,7 +129,7 @@ def bot_init():
 
     init_json(config.USER_PATH, USERS)
 
-    gen_doc_md()
+    # gen_doc_md()
 
 
 def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):

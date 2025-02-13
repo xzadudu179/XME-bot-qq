@@ -61,6 +61,9 @@
             "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的"
         ]
     },
+    "apis": {
+        "search_location_error": "搜索地区出现错误 {negative}\n错误码：{code}\n错误消息：{msg}"
+    },
     "config": {
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
@@ -208,10 +211,12 @@
                 "{negative}，查询天气出现了未知错误...\n{ex}"
             ],
             "no_location": [
-                "你没有在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>",
-                "要在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>",
-                "你需要在参数里指定查询的地点名哦 {neutral}\n.wea <地点名>"
-            ]
+                "你没有在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>",
+                "要在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>",
+                "你需要在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>"
+            ],
+            "tips": "可以使用 /loc (地区名) 来绑定自己所在的地区，之后就可以直接使用 \"/wea\" 来查询该地区的天气啦{positive_punc}",
+            "bound_tips": "你对于这个地区的查询你可以直接简化为 \"/wea\" 哦{positive_punc}"
         },
         "今日老婆": {
             "desc": "今日老婆相关指令",
@@ -571,6 +576,32 @@
             "desc": "看看 179",
             "introduction": "返回一张 179 出毛的返图",
             "result": "{image}\n图片名称：{name}\n创建时间：{creation_time}\n修改时间：{modification_time}"
+        },
+        "location": {
+            "desc": "绑定所在地区",
+            "introduction": "查看或绑定你的城市及地区，用于更方便地进行天气查询等功能。\n解绑可使用 \"/loc clear\" 或 \"/loc unbind\"",
+            "unbind_loc": [
+                "成功解绑了你的位置信息 {neutral}",
+                "成功移除了你的位置信息 {neutral}",
+                "成功移除了你记录的位置信息 {neutral}"
+            ],
+            "choose_location": "请发送你要选择的地区的序号{positive_punc}\n{locs}",
+            "invalid_choose": [
+                "{negative} 好像没有 \"{num}\" 序号对应的地区诶...",
+                "{negative} \"{num}\" 序号没有对应的地区...",
+                "{negative} 好像没有 \"{num}\" 序号对应的地区..."
+            ],
+            "no_result": "找不到 \"{loc}\" 对应的地区结果...",
+            "success": [
+                "成功将你绑定到了 \"{loc}\"{positive_punc}",
+                "成功将你绑定到 \"{loc}\" 啦{positive_punc}"
+            ],
+            "curr_loc": "你当前绑定的地区是：{loc}{positive_punc}",
+            "no_curr_loc": [
+                "你当前没绑定任何地区诶... {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}",
+                "你当前还没绑定任何地区诶 {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}",
+                "你还没绑定任何地区诶 {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}"
+            ]
         }
     }
 }

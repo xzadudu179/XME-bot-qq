@@ -7,6 +7,8 @@ from xme.xmetools.time_tools import TimeUnit, iso_format_time
 from xme.xmetools.request_tools import fetch_data
 from xme.plugins.commands.user.classes import xme_user as u
 import traceback
+import config
+from xme.xmetools.json_tools import read_from_path, save_to_path
 from xme.xmetools.location_tools import search_location
 from keys import WEATHER_API_KEY
 import textwrap
@@ -42,39 +44,64 @@ headers = {
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
 @u.using_user(save_data=False)
-@u.limit(__plugin_name__, 15, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.MINUTE, count_limit=5)
+@u.limit(__plugin_name__, 5, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.MINUTE, count_limit=5)
 async def _(session: CommandSession, user: u.User):
     # print(session.current_arg_text)
     parser = ArgumentParser(session=session, usage=arg_usage)
     parser.add_argument('-w', '--warn', action='store_true', default=False)
-    parser.add_argument('text', nargs='+')
+    parser.add_argument('text', nargs='*')
     print(session.argv)
     args = parser.parse_args(session.argv)
     print(args)
     location_text = ' '.join(args.text).strip()
     print(location_text)
+    user_search = False
+    search = None
+    data = read_from_path(config.BOT_SETTINGS_PATH)
+    user_location_info = data["locations"].get(str(session.event.user_id), None)
+    print(user_location_info)
     if not location_text:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
-        return False
+        if not user_location_info:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
+            return False
+        search = {
+            "location": [user_location_info]
+        }
     try:
-        locations = (await search_location(location_text))["location"]
+        if search is None:
+            user_search = True
+            print("搜索城市中...")
+            search = await search_location(location_text, dict_output=False)
+        if isinstance(search, str):
+            await send_session_msg(session, search)
+            return False
+        locations = search["location"]
         # location_info = max(locations, key=lambda x: int(x["rank"]))
         location_info = locations[0]
+        location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
         location_id = location_info["id"]
         warnings = output_warning(await get_warnings(location_id))
         warns_output = "======※预警信息※======\n"
         if args.warn:
+            # 输出预警信息
+            warns_output = f"======※预警信息：{location_name}※======\n"
             output = "\n" + warns_output + (warnings[1] if warnings[1] else "当前无预警")
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
             return True
         weather = ouptut_weather(await get_weather(location_id))
         warns_output += warnings[0]
-        output = f"\n======※现在天气：{location_info['adm1']} {location_info['adm2']} {location_info['name']}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
+        output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
+        tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search else ""
+        if user_location_info:
+            tips_message =  get_message("plugins", __plugin_name__, 'bound_tips') if user_location_info["id"] == location_id and user_search else tips_message
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message)
+        if user_location_info:
+            # 启用了用户位置信息不会增加计时器
+            return False
         return True
     except Exception as ex:
         traceback.print_exc()
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=ex))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"{type(ex)}: {ex}"))
         return False
 
 def ouptut_weather(weather):

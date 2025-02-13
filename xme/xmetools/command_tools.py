@@ -31,6 +31,23 @@ async def event_send_cmd(cmd_string, bot, event, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
+def get_command_args(arg_text: str, mim_args_len: int, split_str: str = None, default: str = "") -> list[str]:
+    """获取指令参数列表
+
+    Args:
+        arg_text (str): 需要解析的指令参数部分
+        mim_args_len (int): 最小参数列表长度
+        split_str (str, optional): 参数列表分割方式，会被用在 split 函数作为参数. Defaults to None.
+        default (str, optional): 为了补充至最小参数列表长度所用的默认值. Defaults to "".
+
+    Returns:
+        list[str]: 参数列表
+    """
+    args = arg_text.split(split_str)
+    if len(args) < mim_args_len:
+        args += [default for _ in range(mim_args_len - len(args))]
+    return args
+
 async def send_cmd(cmd_string, session, check_permission=True):
     return await event_send_cmd(cmd_string, session.bot, session.event, check_permission)
 

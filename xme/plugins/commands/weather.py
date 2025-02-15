@@ -88,10 +88,10 @@ async def _(session: CommandSession, user: u.User):
             output = "\n" + warns_output + (warnings[1] if warnings[1] else "当前无预警")
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
             return True
-        weather = ouptut_weather(await get_weather(location_id))
+        weather = ouptut_weather_now(await get_weather(location_id))
         warns_output += warnings[0]
         output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
-        tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search else ""
+        tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
         if user_location_info:
             tips_message =  get_message("plugins", __plugin_name__, 'bound_tips') if user_location_info["id"] == location_id and user_search else tips_message
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message)
@@ -104,7 +104,8 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"{type(ex)}: {ex}"))
         return False
 
-def ouptut_weather(weather):
+
+def ouptut_weather_now(weather):
     data = weather["now"]
     #  数据更新时间
     obs_time = iso_format_time(data["obsTime"], '%Y年%m月%d日 %H:%M')

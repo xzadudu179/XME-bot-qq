@@ -9,7 +9,7 @@ from xme.plugins.commands.user.classes import xme_user as u
 import traceback
 import config
 from xme.xmetools.json_tools import read_from_path, save_to_path
-from xme.xmetools.location_tools import search_location
+from xme.xmetools.location_tools import search_location, get_user_location
 from keys import WEATHER_API_KEY
 import textwrap
 
@@ -55,54 +55,47 @@ async def _(session: CommandSession, user: u.User):
     print(args)
     location_text = ' '.join(args.text).strip()
     print(location_text)
-    user_search = False
-    search = None
-    data = read_from_path(config.BOT_SETTINGS_PATH)
-    user_location_info = data["locations"].get(str(session.event.user_id), None)
-    print(user_location_info)
-    if not location_text:
-        if not user_location_info:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
-            return False
-        search = {
-            "location": [user_location_info]
-        }
+    locations, user_location_info = await get_user_location(session.event.user_id, location_text)
+    if not user_location_info and not location_text:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
+        return False
+    user_search = bool(location_text)
     try:
-        if search is None:
-            user_search = True
-            print("搜索城市中...")
-            search = await search_location(location_text, dict_output=False)
-        if isinstance(search, str):
-            await send_session_msg(session, search)
-            return False
-        locations = search["location"]
-        # location_info = max(locations, key=lambda x: int(x["rank"]))
         location_info = locations[0]
-        location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
         location_id = location_info["id"]
         warnings = output_warning(await get_warnings(location_id))
-        warns_output = "======※预警信息※======\n"
         if args.warn:
-            # 输出预警信息
-            warns_output = f"======※预警信息：{location_name}※======\n"
-            output = "\n" + warns_output + (warnings[1] if warnings[1] else "当前无预警")
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
-            return True
-        weather = ouptut_weather_now(await get_weather(location_id))
-        warns_output += warnings[0]
-        output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
-        tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
-        if user_location_info:
-            tips_message =  get_message("plugins", __plugin_name__, 'bound_tips') if user_location_info["id"] == location_id and user_search else tips_message
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message)
-        if user_location_info:
-            # 启用了用户位置信息不会增加计时器
-            return False
-        return True
+            return await get_warnings_now(session, location_info, warnings)
+        return await get_weather_now(session, location_info, user_location_info, user_search, warnings)
     except Exception as ex:
         traceback.print_exc()
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"{type(ex)}: {ex}"))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"))
         return False
+
+async def get_warnings_now(session, location_info, warnings):
+    # 输出预警信息
+    location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
+    warns_output = f"======※预警信息：{location_name}※======\n"
+    output = "\n" + warns_output + (warnings[1] if warnings[1] else "当前无预警")
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output))
+    return True
+
+
+async def get_weather_now(session, location_info, user_location_info, user_search, warnings):
+    location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
+    location_id = location_info["id"]
+    warns_output = "======※预警信息※======\n"
+    weather = ouptut_weather_now(await get_weather(location_id))
+    warns_output += warnings[0]
+    output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
+    tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
+    if user_location_info:
+        tips_message =  get_message("plugins", __plugin_name__, 'bound_tips') if user_location_info["id"] == location_id and user_search else tips_message
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message)
+    if user_location_info:
+        # 启用了用户位置信息不会增加计时器
+        return False
+    return True
 
 
 def ouptut_weather_now(weather):

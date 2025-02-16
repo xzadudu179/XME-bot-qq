@@ -689,14 +689,14 @@
                 "{output}\n==========\n通过和风天气 API 查询的哦 {positive}",
                 "{output}\n==========\n数据来自于和风天气 API{positive_punc} {positive}"
             ],
-            "error": [
-                "{negative}，查询天气出现未知错误...\n{ex}",
-                "{negative}，查询天气出现了未知错误...\n{ex}"
+            "output_error": [
+                "{negative}，输出天气文字出现未知错误...\n{ex}",
+                "{negative}，输出天气文字出现了未知错误...\n{ex}"
             ],
             "no_location": [
-                "你没有在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>\n可以使用 \"/loc (地区名)\" 绑定你的地区从而能够快捷查询~",
-                "要在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>\n可以用 \"/loc (地区名)\" 绑定你的地区从而能够快捷查询~",
-                "你需要在参数里指定查询的地区名哦 {neutral}\n/wea <地区名>\n可以用 \"/loc (地区名)\" 绑定你的地区来快捷查询~"
+                "你没有在参数里指定查询的地区名哦 {neutral}\n/wea 地区名\n可以使用 \"/loc 地区名\" 绑定你的地区从而能够快捷查询~",
+                "要在参数里指定查询的地区名哦 {neutral}\n/wea 地区名\n可以用 \"/loc 地区名\" 绑定你的地区从而能够快捷查询~",
+                "你需要在参数里指定查询的地区名哦 {neutral}\n/wea 地区名\n可以用 \"/loc 地区名\" 绑定你的地区来快捷查询~"
             ],
             "tips": "可以使用 /loc (地区名) 来绑定自己所在的地区，之后就可以直接使用 \"/wea\" 来查询该地区的天气啦{positive_punc}",
             "bound_tips": "你对于这个地区的查询你可以直接简化为 \"/wea\" 哦{positive_punc}"
@@ -1525,9 +1525,9 @@
             ],
             "curr_loc": "你当前绑定的地区是：{loc}{positive_punc}",
             "no_curr_loc": [
-                "你当前没绑定任何地区诶... {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}",
-                "你当前还没绑定任何地区诶 {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}",
-                "你还没绑定任何地区诶 {neutral}\n可以使用 \"/loc (地区名)\" 来绑定哦{positive_punc}"
+                "你当前没绑定任何地区诶... {neutral}\n可以使用 \"/loc 地区名\" 来绑定哦{positive_punc}",
+                "你当前还没绑定任何地区诶 {neutral}\n可以使用 \"/loc 地区名\" 来绑定哦{positive_punc}",
+                "你还没绑定任何地区诶 {neutral}\n可以使用 \"/loc 地区名\" 来绑定哦{positive_punc}"
             ]
         }
     }

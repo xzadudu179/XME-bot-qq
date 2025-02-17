@@ -56,8 +56,12 @@ async def _(session: CommandSession, user: u.User):
     location_text = ' '.join(args.text).strip()
     print(location_text)
     locations, user_location_info = await get_user_location(session.event.user_id, location_text)
+    print(len(locations), user_location_info)
     if not user_location_info and not location_text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
+        return False
+    if len(locations) < 1 and location_text:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=location_text))
         return False
     user_search = bool(location_text)
     try:

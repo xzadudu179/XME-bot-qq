@@ -169,6 +169,9 @@ def parse_func(formula):
     print(f"funcs: {funcs}")
     for f in funcs:
         func_name = f.split("(")[0]
+        if func_name == "eval":
+            print("eval func found")
+            return 0
         print(f"func name: {func_name}")
         if func_name not in func.funcs.keys(): continue
         func_body = '('.join(f.split("(")[1:])[:-1]

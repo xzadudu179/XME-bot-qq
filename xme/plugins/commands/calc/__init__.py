@@ -17,11 +17,11 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(算式)',
-    permissions=["无"],
+    permissions=["是 SUPERUSER"],
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: x.is_superuser)
 async def _(session: CommandSession):
     message = "uwu"
     arg = session.current_arg_text.strip()

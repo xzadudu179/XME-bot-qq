@@ -1,7 +1,7 @@
 from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
-from xme.xmetools import command_tools
+from xme.xmetools.command_tools import get_cmd_by_alias
 from xme.xmetools.message_tools import event_send_msg
 from nonebot import message_preprocessor
 from character import get_message, get_item
@@ -53,6 +53,9 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
         if i + 1 >= needed_length:
             send = True
     # del groups_messages[event.group_id]
+    if get_cmd_by_alias(chain_msg, True):
+        print("忽略指令")
+        return
     if break_chain:
         print(f"打断 \"{chain_msg}\"")
         return await event_send_msg(bot, event, random.choice([i for i in get_item("event_parsers", "break_chain") if i != chain_msg]), False)

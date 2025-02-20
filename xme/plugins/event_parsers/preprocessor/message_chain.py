@@ -44,7 +44,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
         # print(m["raw_msg"], chain_msg)
         if i > 0 and msgs[i]["sender"] == msgs[i - 1]["sender"] and msgs[i]["raw_msg"] == msgs[i - 1]["raw_msg"]:
             # print("不是接龙")
-            del groups_messages[event.group_id]
+            del groups_messages[event.group_id][i - 1]
             return
         if m["raw_msg"] != chain_msg:
             # print("接龙中断")
@@ -56,7 +56,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     if get_cmd_by_alias(chain_msg, True):
         print("忽略指令")
         return
-    if break_chain:
+    if send and break_chain:
         print(f"打断 \"{chain_msg}\"")
         return await event_send_msg(bot, event, random.choice([i for i in get_item("event_parsers", "break_chain") if i != chain_msg]), False)
     if send and not sent:

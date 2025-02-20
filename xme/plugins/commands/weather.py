@@ -7,12 +7,12 @@ from xme.xmetools.time_tools import TimeUnit, iso_format_time
 from xme.xmetools.request_tools import fetch_data
 from xme.plugins.commands.user.classes import xme_user as u
 import traceback
-import config
 from xme.xmetools.json_tools import read_from_path, save_to_path
 from xme.xmetools.location_tools import search_location, get_user_location
 from keys import WEATHER_API_KEY
 import textwrap
 
+# TODO 将天气变为插件 合并 7timers 之类的指令
 
 alias = ['当前天气', '天气', '查看天气', 'wea']
 __plugin_name__ = 'weather'

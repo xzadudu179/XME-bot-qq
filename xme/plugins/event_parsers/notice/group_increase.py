@@ -23,6 +23,6 @@ async def _(session: NoticeSession):
     await asyncio.sleep(2)
     # print(increase_people)
     if len(people) == len(increase_people[group]):
-        await send_session_msg(session, get_message("event_parsers", "welcome", at=" ".join(increase_people[group])), False)
         increase_people[group] = []
+        await send_session_msg(session, get_message("event_parsers", "welcome", at=" ".join(increase_people[group])), False)
         return

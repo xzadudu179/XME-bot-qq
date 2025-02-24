@@ -1,6 +1,7 @@
 from nonebot import MessageSegment, Message, NoneBot
 from xme.xmetools.bot_control import bot_call_action
 from aiocqhttp import Event
+import config
 
 def change_group_message_content(message_dict, new_content, user_id=None, nickname=None) -> MessageSegment:
     """修改群消息内容
@@ -20,6 +21,10 @@ def change_group_message_content(message_dict, new_content, user_id=None, nickna
         nickname = message_dict["sender"]["card"] if message_dict["sender"]["card"] else message_dict["sender"]["nickname"]
     message = MessageSegment.node_custom(user_id=user_id, nickname=nickname, content=new_content)
     return message
+
+async def send_to_superusers(bot: NoneBot, message):
+    for u in config.SUPERUSERS:
+        await bot.send_private_msg(user_id=u, message=message)
 
 async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSegment]):
     """发送合并转发消息

@@ -5,3 +5,4 @@ from .read_msg import *
 from .is_it_command import *
 from .is_prime import *
 from .message_chain import *
+from .private_messages import *

@@ -109,8 +109,11 @@
         "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}"
     },
     "event_parsers": {
+        "private_message_copy_prefix": [
+            "{neutral} 我收到了一条新的消息{positive_punc}\n{sender}: {msg}"
+        ],
         "is_it_command": {
-            "no_command": "{negative} 漠月并不知道指令 \"{command}\" 是什么意思诶...\n可以用 \"{help_cmd}\" 看看指令帮助哦"
+            "no_command": "{negative} XME 并不知道指令 \"{command}\" 是什么意思诶...\n可以用 \"{help_cmd}\" 看看指令帮助哦"
         },
         "message_bursts": "不要刷屏 uwu",
         "cmd_bursts": "指令发送过快 uwu",
@@ -162,7 +165,7 @@
             "introduction": "显示帮助，或某个功能的帮助，功能名若填写数字则是翻到数字所指的页数",
             "no_usage": "无内容",
             "no_cmds": "{prefix}\nXME-Bot 现在还没有任何指令哦",
-            "prefix": "[XME-Bot V{version}]\n指令以 {command_seps} 中任意字符开头\n当前功能列表",
+            "prefix": "[XME-Bot v{version} 测试中]\n指令以 {command_seps} 中任意字符开头\n当前功能列表",
             "suffix": "帮助文档: {docs_link}\n使用 \"{cmd_sep}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页",
             "page_too_small": "页数不能小于 1 啦 xwx",
             "page_too_big": "页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧{positive_punc}"

@@ -8,7 +8,7 @@ from .parser import parse_polynomial
 from .func import funcs
 from xme.xmetools.command_tools import send_session_msg
 from xme.xmetools.image_tools import image_msg
-from xme.xmetools.function_tools import draw_exprs, draw_3d_exprs
+from xme.xmetools.calc_draw_tools import draw_exprs, draw_3d_exprs
 
 alias = ['计算', 'cc']
 __plugin_name__ = 'calc'

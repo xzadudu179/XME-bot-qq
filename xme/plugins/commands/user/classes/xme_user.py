@@ -305,6 +305,8 @@ def limit(limit_name: str,
                 print("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
                 user.save()
+            if isinstance(result, str):
+                await send_session_msg(session, result)
             return result
 
         return wrapper

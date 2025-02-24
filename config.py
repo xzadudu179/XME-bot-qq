@@ -13,8 +13,8 @@ DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default
 # DEFAULT_VALIDATION_FAILURE_EXPRESSION = '发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦'
 SESSION_EXPIRE_TIMEOUT = timedelta(minutes=3)
 SESSION_RUN_TIMEOUT = timedelta(minutes=20)
-# SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
-SESSION_RUNNING_EXPRESSION = None
+SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
+# SESSION_RUNNING_EXPRESSION = None
 # SESSION_RUNNING_EXPRESSION = ""
 DEFAULT_COMMAND_PERMISSION = lambda s: s.is_groupchat
 

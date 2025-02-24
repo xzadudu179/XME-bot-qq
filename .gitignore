@@ -173,3 +173,4 @@ screenshots
 xme/xmetools/connection.py
 xme/plugins/schedulers/server_crash_report.py
 docs.md
+prohibited.json

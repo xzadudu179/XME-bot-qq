@@ -24,7 +24,7 @@ async def _(session: CommandSession):
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "no_arg"))
     if len(args) > 15:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "too_long"))
-    original_num = type_tools.to_type(args, int)
+    original_num = type_tools.try_parse(args, int)
     num = abs(original_num)
     if num is None:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_num'))

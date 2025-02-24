@@ -456,7 +456,7 @@
             "看看179",
             "看看179 嗷呜"
         ],
-        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}",
+        "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
         "new_year": "新年好哇~！{positive_plus}"
     },

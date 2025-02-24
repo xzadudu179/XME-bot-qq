@@ -26,7 +26,7 @@ async def send_time_message():
             }
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
         latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")
-        latest_prefix = "最近更新：\n"
+        latest_prefix = "\n最近更新：\n"
         if len(latest) <= 0:
             latest = ""
         elif isinstance(latest, list):

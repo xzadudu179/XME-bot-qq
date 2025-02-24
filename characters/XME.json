@@ -106,7 +106,7 @@
             "b50"
         ],
         "new_year": "新年好哇~！{positive_plus}",
-        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》\n{update}\ntips: {tips}"
+        "time": "{period}好呀{positive_punc}\n{anno}\n\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}"
     },
     "event_parsers": {
         "private_message_copy_prefix": [

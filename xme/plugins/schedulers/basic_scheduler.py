@@ -67,8 +67,6 @@ async def _():
     if not random_tools.random_percent(min(100, 50 + len(groups) * 10)): return
     group = random.choice(groups)
     group_id = group['group_id']
-    # idles = get_message("schedulers", "idles")
-    # idles = json_tools.read_from_path("bot_messages.json")['idles']
     has_faces = True
     try:
         faces = await bot_call_action(bot, "fetch_custom_face")

@@ -69,4 +69,5 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
         sending_msgs[chain_msg] = True
         print(f"接龙 \"{chain_msg}\"")
         await send_event_msg(bot, event, chain_msg, False)
-    del sending_msgs[chain_msg]
+    if sending_msgs.get(chain_msg, False):
+        del sending_msgs[chain_msg]

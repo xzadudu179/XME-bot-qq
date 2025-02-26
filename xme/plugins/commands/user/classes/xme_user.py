@@ -10,7 +10,7 @@ from . import xme_map
 import inspect
 import math
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from .inventory import Inventory
 from ..tools import galaxy_date_tools
 

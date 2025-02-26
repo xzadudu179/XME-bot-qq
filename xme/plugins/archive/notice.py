@@ -4,7 +4,7 @@ from xme.xmetools.json_tools import read_from_path, save_to_path
 import config
 from aiocqhttp import ActionFailed
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 CONFIG_PATH = "./data/_botsettings.json"
 
 alias = ['提醒', '群发']

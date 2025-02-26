@@ -3,7 +3,7 @@ from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.json_tools import read_from_path, save_to_path
 from character import get_message
 import config
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 alias = ['公告', 'anno']
 __plugin_name__ = 'announce'

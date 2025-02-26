@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 import config
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools import text_tools
 
 alias = ['bot待办', 'show_bottodo']

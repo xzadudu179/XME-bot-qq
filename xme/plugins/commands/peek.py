@@ -11,7 +11,7 @@ except:
     pass
 import config
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 alias = ['视奸', '视奸179', 'peekbot']
 __plugin_name__ = 'peek'

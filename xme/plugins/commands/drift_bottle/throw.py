@@ -2,7 +2,7 @@ from xme.xmetools.time_tools import *
 from xme.xmetools import json_tools
 from xme.xmetools import text_tools
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 import config
 from nonebot import on_command, CommandSession

@@ -1,4 +1,4 @@
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools import random_tools
 from character import get_message
 from asyncio import sleep

@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 import os
 import xme.plugins.commands.instance_control as ic
 from character import get_message

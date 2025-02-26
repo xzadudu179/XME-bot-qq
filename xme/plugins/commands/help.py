@@ -3,7 +3,7 @@ import config
 from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
 from xme.xmetools.list_ctrl import split_list
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from nonebot import on_command, CommandSession
 from character import get_message
 from xme.xmetools.text_tools import most_similarity_str
@@ -36,7 +36,7 @@ async def arg_help(arg, plugins, session):
             if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
                 ask_for_help = pl.name.lower()
             if pl.name.lower() != ask_for_help: continue
-            if pl.name.lower() == "用户":
+            if pl.name.lower() == "xme 宇宙":
                 print("发送用户帮助")
                 return await send_cmd("/uh", session)
             return await send_session_msg(session, pl.usage if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True)

@@ -2,7 +2,7 @@ from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools.command_tools import get_cmd_by_alias
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 from nonebot import message_preprocessor
 from character import get_message, get_item
 import random
@@ -11,8 +11,12 @@ groups_messages = {
 
 }
 
+sending_msgs = {}
+
 @message_preprocessor
 async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+    global sending_msgs
+    global groups_messages
     raw_msg = event.raw_message
     if event.group_id is None:
         return
@@ -21,7 +25,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     groups_messages[event.group_id].append(
         {
             "sender": event.user_id,
-            "raw_msg": raw_msg
+            "raw_msg": raw_msg,
         }
     )
     msgs = groups_messages[event.group_id]
@@ -56,9 +60,13 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     if get_cmd_by_alias(chain_msg, True):
         print("忽略指令")
         return
-    if send and break_chain:
+    print(sending_msgs)
+    if send and break_chain and not sending_msgs.get(chain_msg, False):
         print(f"打断 \"{chain_msg}\"")
-        return await event_send_msg(bot, event, random.choice([i for i in get_item("event_parsers", "break_chain") if i != chain_msg]), False)
-    if send and not sent:
+        sending_msgs[chain_msg] == True
+        await send_event_msg(bot, event, random.choice([i for i in get_item("event_parsers", "break_chain") if i != chain_msg]), False)
+    if send and not sent and not sending_msgs.get(chain_msg, False):
+        sending_msgs[chain_msg] == True
         print(f"接龙 \"{chain_msg}\"")
-        return await event_send_msg(bot, event, chain_msg, False)
+        await send_event_msg(bot, event, chain_msg, False)
+    del sending_msgs[chain_msg]

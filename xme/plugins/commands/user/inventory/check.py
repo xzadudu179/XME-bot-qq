@@ -1,7 +1,7 @@
 from xme.plugins.commands.user import __plugin_name__
 from xme.plugins.commands.user.inventory import cmd_name
 from . import inv_get
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 async def check(session, user, arg):
     inv_item = await inv_get.get_inv_item_by_index(session, user, arg)

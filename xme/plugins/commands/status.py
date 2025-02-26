@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 from ...xmetools import cur_system as st
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.bot_control import bot_call_action
 
 alias = ['系统状态', 'stats']

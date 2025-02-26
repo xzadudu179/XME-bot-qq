@@ -3,7 +3,7 @@ from xme.plugins.commands.user.inventory import cmd_name
 import config
 from ..classes import xme_user as u
 from ..classes.item import Item
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from character import get_message
 
 

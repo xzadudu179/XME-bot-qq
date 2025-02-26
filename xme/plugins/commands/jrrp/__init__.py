@@ -2,7 +2,7 @@ from anyio import sleep
 # from itsdangerous import base64_encode
 import nonebot
 import random
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from nonebot import on_command, CommandSession
 from xme.xmetools.time_tools import curr_days
 # from xme.plugins.commands.jrrp.luck_algorithm import get_luck

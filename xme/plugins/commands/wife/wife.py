@@ -4,7 +4,7 @@ import xme.plugins.commands.wife as w
 from character import get_message
 from .wife_tools import *
 import character
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
 @on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)

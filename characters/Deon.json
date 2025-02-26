@@ -1164,11 +1164,11 @@
                 "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你目前总共有 {coin_total} {coin_name}哦"
             ]
         },
-        "用户": {
-            "desc": "用户功能相关",
+        "XME 宇宙": {
+            "desc": "XME 宇宙功能相关",
             "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
             "userhelp": {
-                "desc": "用户功能帮助",
+                "desc": "XME 宇宙用户功能帮助",
                 "introduction": "查看某一用户功能指令的详细帮助",
                 "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
             },

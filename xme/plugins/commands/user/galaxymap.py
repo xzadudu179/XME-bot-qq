@@ -1,6 +1,6 @@
 from xme.plugins.commands.user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 import config
 from .classes import xme_user as u
 from .classes import xme_map

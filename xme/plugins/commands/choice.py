@@ -4,7 +4,7 @@ import jieba.posseg as pseg
 import random
 from xme.xmetools import text_tools
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 alias = ['选择', 'cho', '决定']
 __plugin_name__ = 'choice'

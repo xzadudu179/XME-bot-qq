@@ -371,12 +371,12 @@
             "introduction": "查看 xme-bot 当前使用的角色{positive_punc}",
             "whoami": "我是 {chac_name} 哦{positive_punc}\n由 {author} 制作的！"
         },
-        "用户": {
-            "desc": "用户功能相关",
-            "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
+        "XME 宇宙": {
+            "desc": "XME 宇宙功能相关",
+            "introduction": "需要获取XME 宇宙用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
             "help_suffix": "使用 {help_cmd} 来查看详细的帮助",
             "userhelp": {
-                "desc": "用户功能帮助",
+                "desc": "XME 宇宙用户功能帮助",
                 "introduction": "查看某一用户功能指令的详细帮助",
                 "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
             },

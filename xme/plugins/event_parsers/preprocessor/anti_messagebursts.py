@@ -2,7 +2,7 @@ from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from nonebot.message import CanceledException
 from xme.xmetools import command_tools
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 import aiocqhttp
 from character import get_message
 from nonebot import message_preprocessor
@@ -76,7 +76,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
             if event['group_id'] in config.ANTI_MESSAGEBURST_GROUP or is_cmd:
                 print("提醒群员")
                 # await bot.send_group_msg(message=get_message("event_parsers", "cmd_bursts" if is_cmd else "message_bursts"), group_id=event['group_id'])
-                await event_send_msg(bot, event, message=get_message("event_parsers", "cmd_bursts" if is_cmd else "message_bursts"))
+                await send_event_msg(bot, event, message=get_message("event_parsers", "cmd_bursts" if is_cmd else "message_bursts"))
                 # await bot.send_group_msg(message=get_message("event_parsers", "cmd_bursts" if is_cmd else "message_bursts"), group_id=event['group_id'])
         raise CanceledException(f"消息 \"{event.raw_message}\" 刷屏，不处理")
     return

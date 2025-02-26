@@ -5,7 +5,7 @@ import aiocqhttp
 from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools.command_tools import get_cmd_by_alias
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 from xme.xmetools.bot_control import bot_call_action
 from xme.xmetools.message_tools import change_group_message_content, send_forward_msg, get_pure_text_message
 from character import get_message
@@ -77,16 +77,16 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
     if not count_arg:
         count = 1
     elif not count_arg.isdigit():
-        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'invalid_count'))
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'invalid_count'))
     elif int(count_arg) < 1:
-        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_low'))
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_low'))
     elif int(count_arg) > MAX_MESSAGES_COUNT:
-        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_many', max_count=MAX_MESSAGES_COUNT))
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_many', max_count=MAX_MESSAGES_COUNT))
     else:
         count = int(count_arg)
 
     if count > 2:
-        await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
+        await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'processing', language=lan_arg if lan_arg else "自动检测语言",  min=f"{(count * 0.3):.2f}", max=f"{(count * 2.5):.2f}"))
     try:
         received_messages = (await bot_call_action(bot, "get_group_msg_history", group_id=event.group_id, message_id=message_id, count=count if reply else count + 1))["messages"]
         if not reply:
@@ -110,10 +110,10 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
         if len(new_messages) > 1:
             return await send_forward_msg(bot, event, new_messages)
         elif len(new_messages) == 1:
-            return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
-        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'no_message'))
+            return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'no_message'))
     except:
-        return await event_send_msg(bot, event, get_message("plugins", __plugin_name__, 'error'))
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'error'))
 
 async def translate(text, language):
     client = ZhipuAI(api_key=GLM_API_KEY)

@@ -6,7 +6,7 @@ from xme.xmetools.function_tools import run_with_timeout
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.image_tools import image_msg
 from xme.xmetools.calc_draw_tools import draw_exprs, draw_3d_exprs
 

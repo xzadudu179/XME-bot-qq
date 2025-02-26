@@ -1,7 +1,7 @@
 from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 from xme.xmetools.text_tools import remove_punctuation, remove_suffix, text_combinations
 from xme.xmetools import num_tools
 from nonebot import message_preprocessor
@@ -29,7 +29,7 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
                 del last_process[id]
             except:
                 pass
-            return await event_send_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
+            return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
         try:
             is_prime = num_tools.is_prime(int(x))
         except OverflowError:
@@ -37,7 +37,7 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
                 del last_process[id]
             except:
                 pass
-            return await event_send_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
+            return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
     else:
         try:
             del last_process[id]
@@ -61,4 +61,4 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
         "num": x,
         "is": is_prime
     }
-    return await event_send_msg(bot, event, get_message("event_parsers", "is_prime", "is_prime" if is_prime else "not_prime", num=int(x), append=append))
+    return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "is_prime" if is_prime else "not_prime", num=int(x), append=append))

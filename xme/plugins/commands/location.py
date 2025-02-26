@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from character import get_message
 import config
 from xme.xmetools.location_tools import search_location

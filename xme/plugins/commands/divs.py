@@ -3,7 +3,7 @@ from xme.xmetools.doc_tools import CommandDoc
 from ...xmetools import cur_system as st
 from character import get_message
 from xme.xmetools import type_tools
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.num_tools import divs
 
 alias = ['divides']

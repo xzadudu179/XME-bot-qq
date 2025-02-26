@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 import config
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 alias = ["e"]
 __plugin_name__ = 'echo'

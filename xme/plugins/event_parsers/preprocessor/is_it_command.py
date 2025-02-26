@@ -2,7 +2,7 @@ from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools import command_tools
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 from nonebot import message_preprocessor
 from character import get_message
 import config

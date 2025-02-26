@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.time_tools import TimeUnit, iso_format_time
 from xme.xmetools.request_tools import fetch_data
 from xme.plugins.commands.user.classes import xme_user as u

@@ -7,7 +7,7 @@ from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
 from character import get_message
 import random
 import math
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 
 TIMES_LIMIT = 5
 name = 'guess'

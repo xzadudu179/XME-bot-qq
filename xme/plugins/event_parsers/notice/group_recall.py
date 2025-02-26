@@ -3,7 +3,7 @@ from datetime import datetime
 from xme.xmetools import color_manage as c
 from character import get_message
 import json
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from nonebot import Message
 from xme.xmetools import json_tools
 from xme.xmetools.request_tools import fetch_data

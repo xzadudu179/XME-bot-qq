@@ -5,7 +5,7 @@ from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.random_tools import random_percent
 import random
 import os
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.image_tools import image_msg
 import json
 

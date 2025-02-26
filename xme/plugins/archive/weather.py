@@ -1,5 +1,5 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from ...xmetools import random_tools as rt
 from ...xmetools import request_tools as req
 from ...xmetools import time_tools as dt

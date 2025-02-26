@@ -1,7 +1,7 @@
-__plugin_name__ = '用户'
+__plugin_name__ = 'XME 宇宙'
 from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 import config
 from xme.xmetools.command_tools import get_cmd_by_alias
 from character import get_message

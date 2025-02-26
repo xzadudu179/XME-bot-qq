@@ -2,6 +2,10 @@ from nonebot import MessageSegment, Message, NoneBot
 from xme.xmetools.bot_control import bot_call_action
 from aiocqhttp import Event
 import config
+import config
+from xme.xmetools import color_manage as c
+from nonebot.session import BaseSession
+from character import get_message
 
 def change_group_message_content(message_dict, new_content, user_id=None, nickname=None) -> MessageSegment:
     """修改群消息内容
@@ -54,8 +58,28 @@ def get_pure_text_message(message: dict) -> str:
         msgs.append(msg['data'].get('text', ""))
     return "".join(msgs)
 
-async def event_send_msg(bot: NoneBot, event: Event, message, at=True, **kwargs):
+async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=False, **kwargs):
+    event.message_id
     await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
+
+async def msg_preprocesser(session, message, send_time=-1):
+    funcs = {
+    }
+    if send_time >= 0:
+        message += "\n" + get_message("config", "message_time", secs=send_time)
+    for func in funcs:
+        result = await func(message, session)
+        if result and type(result) == str:
+            message = result
+    return message
+
+async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
+    message_result = message
+    message_result = await msg_preprocesser(session, message)
+    if not message_result and message_result != "":
+        print(f"bot 要发送的消息 {message} 已被阻止/没东西")
+        return
+    await session.send(str(message_result), at_sender=at, **kwargs)
 
 async def send_to_all_group(bot: NoneBot, message):
     """在 bot 所在所有群发消息

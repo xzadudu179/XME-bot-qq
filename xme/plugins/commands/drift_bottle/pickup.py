@@ -6,7 +6,7 @@ from character import get_message
 from xme.xmetools import random_tools
 import random
 from nonebot import on_command, CommandSession
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 import config
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]

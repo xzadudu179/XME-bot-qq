@@ -2,7 +2,7 @@ import config
 from xme.xmetools import color_manage as c
 from xme.xmetools import dict_tools
 from nonebot import NoneBot
-from xme.xmetools.message_tools import event_send_msg
+from xme.xmetools.message_tools import send_event_msg
 import aiocqhttp
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
@@ -88,35 +88,3 @@ def get_args(arg_text: str):
         tuple[str]: 参数
     """
     return tuple([a for a in arg_text.strip().split(" ") if a])
-
-async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
-    message_result = message
-    message_result = await msg_preprocesser(session, message)
-    if not message_result and message_result != "":
-        print(f"bot 要发送的消息 {message} 已被阻止/没东西")
-        return
-    await session.send(str(message_result), at_sender=at, **kwargs)
-
-# async def event_send_msg(bot: NoneBot, event: aiocqhttp.Event, message, at=True, **kwargs):
-#     await bot.send(event, (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
-
-async def msg_preprocesser(session, message, send_time=-1):
-    funcs = {
-        no_8694
-    }
-    if send_time >= 0:
-        message += "\n" + get_message("config", "message_time", secs=send_time)
-    for func in funcs:
-        result = await func(message, session)
-        if result and type(result) == str:
-            message = result
-    return message
-
-async def no_8694(text, session: CommandSession, *_):
-    replaced = False
-    if "8964" in text:
-        replaced = True
-        text = text.replace("8964", "(8965-1)")
-    if replaced:
-        c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"bot 输出的 \"{text}\" 有违禁词\n原发送者：{session.event.user_id} 在群 {session.event.group_id}")
-    return text

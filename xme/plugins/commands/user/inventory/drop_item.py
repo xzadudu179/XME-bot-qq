@@ -2,7 +2,7 @@ from xme.plugins.commands.user import __plugin_name__
 from xme.plugins.commands.user.inventory import cmd_name
 from . import reduce_item
 from ..classes import xme_user as u
-from xme.xmetools.command_tools import send_session_msg
+from xme.xmetools.message_tools import send_session_msg
 from character import get_message
 
 async def valid_drop(session, _, invitem):

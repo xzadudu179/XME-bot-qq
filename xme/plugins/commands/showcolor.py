@@ -4,7 +4,7 @@ import aiocqhttp
 from xme.xmetools.doc_tools import SpecialDoc
 from ...xmetools import color_manage as c
 from character import get_message
-from xme.xmetools.command_tools import event_send_msg
+from xme.xmetools.command_tools import send_event_msg
 from xme.xmetools.text_tools import fullwidth_to_halfwidth
 from xme.xmetools.file_tools import has_file
 from xme.xmetools.image_tools import image_msg
@@ -30,7 +30,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     try:
         path = gen_color_image(color_num_str)
         # return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
-        return await event_send_msg(bot, event, await image_msg(path, to_jpeg=False))
+        return await send_event_msg(bot, event, await image_msg(path, to_jpeg=False))
     except ValueError:
         return
 

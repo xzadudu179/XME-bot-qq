@@ -63,10 +63,10 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     print(sending_msgs)
     if send and break_chain and not sending_msgs.get(chain_msg, False):
         print(f"打断 \"{chain_msg}\"")
-        sending_msgs[chain_msg] == True
+        sending_msgs[chain_msg] = True
         await send_event_msg(bot, event, random.choice([i for i in get_item("event_parsers", "break_chain") if i != chain_msg]), False)
     if send and not sent and not sending_msgs.get(chain_msg, False):
-        sending_msgs[chain_msg] == True
+        sending_msgs[chain_msg] = True
         print(f"接龙 \"{chain_msg}\"")
         await send_event_msg(bot, event, chain_msg, False)
     del sending_msgs[chain_msg]

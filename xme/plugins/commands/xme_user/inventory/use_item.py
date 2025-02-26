@@ -1,5 +1,5 @@
-from xme.plugins.commands.user import __plugin_name__
-from xme.plugins.commands.user.inventory import cmd_name
+from xme.plugins.commands.xme_user import __plugin_name__
+from xme.plugins.commands.xme_user.inventory import cmd_name
 from . import inv_get
 from xme.xmetools.message_tools import send_session_msg
 from character import get_message

@@ -1,12 +1,12 @@
-from xme.plugins.commands.user import __plugin_name__
+from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.message_tools import send_session_msg
 import math
 from xme.xmetools import time_tools
 import asyncio
 import random
-from .classes import xme_user as u
-from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
+from .classes import user as u
+from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 
 alias = ['签到', 'check', 'checkin', 'register', 's']

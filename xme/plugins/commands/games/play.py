@@ -3,8 +3,8 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
-from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
-from xme.plugins.commands.user.classes import xme_user
+from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes import user
 import xme.xmetools.text_tools as t
 from xme.xmetools.message_tools import send_session_msg
 from . import game_commands as games
@@ -60,8 +60,8 @@ def get_game_help(game_name) -> str | bool:
 # """.strip()
 
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda x: x.is_groupchat, shell_like=True)
-@xme_user.using_user(True)
-async def _(session: CommandSession, user: xme_user.User):
+@user.using_user(True)
+async def _(session: CommandSession, user: user.User):
     parser = ArgumentParser(session=session, usage=docs)
     parser.add_argument('-a', '--args', nargs='+')
     parser.add_argument('-i', '--info', action='store_true')

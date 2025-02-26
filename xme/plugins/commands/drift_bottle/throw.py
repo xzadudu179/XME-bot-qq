@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         id = 0
     for k, bottle in bottles_dict['bottles'].items():
         # print(bottle)
-        if text_tools.difflib_similar(arg, bottle['content'], False) > 0.75:
+        if text_tools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] < bottle["views"] / 2):
         # if arg == bottle['content']:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")

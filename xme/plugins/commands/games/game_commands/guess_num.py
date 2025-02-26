@@ -2,8 +2,8 @@ from nonebot import CommandSession
 from xme.plugins.commands.games.play import cmd_name
 from .game import Game
 from xme.xmetools.command_tools import get_cmd_by_alias
-from xme.plugins.commands.user.classes import xme_user
-from xme.plugins.commands.user.classes.xme_user import coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes import user
+from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
 import random
 import math
@@ -96,7 +96,7 @@ def calc_award(basic, game: GuessNum):
     return int(max(0, award) / 2)
 
 
-async def limited(func, session: CommandSession, user: xme_user.User, *args, **kwargs):
+async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
     print(args, kwargs)
     result = await func(session, user, *args, **kwargs)
     print(result)
@@ -104,13 +104,13 @@ async def limited(func, session: CommandSession, user: xme_user.User, *args, **k
         result['data']['limited'] = True
     return result
 
-@xme_user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
-async def play_game(session: CommandSession, user: xme_user.User, args: dict):
+@user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
+async def play_game(session: CommandSession, user: user.User, args: dict):
     BASIC_AWARD = 10
     MAX_RANGE = 34359738368
     MAX_LIMIT = 35
     start_guessing = False
-    get_award_times_left = TIMES_LIMIT - xme_user.get_limit_info(user, f"game_{name}")[1] - 1
+    get_award_times_left = TIMES_LIMIT - user.get_limit_info(user, f"game_{name}")[1] - 1
     # print(TIMES_LIMIT, xme_user.get_limit_info(user, f"game_{name}")[1])
     settings: dict = args
     try:

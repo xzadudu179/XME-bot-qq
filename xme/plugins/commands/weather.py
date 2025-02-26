@@ -5,7 +5,7 @@ from character import get_message
 from xme.xmetools.message_tools import send_session_msg
 from xme.xmetools.time_tools import TimeUnit, iso_format_time
 from xme.xmetools.request_tools import fetch_data
-from xme.plugins.commands.user.classes import xme_user as u
+from xme.plugins.commands.xme_user.classes import user as u
 import traceback
 from xme.xmetools.json_tools import read_from_path, save_to_path
 from xme.xmetools.location_tools import search_location, get_user_location

@@ -1,10 +1,10 @@
-from xme.plugins.commands.user import __plugin_name__
+from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.doc_tools import CommandDoc
 from xme.xmetools.message_tools import send_session_msg
-from xme.plugins.commands.user.classes import xme_user
+from xme.plugins.commands.xme_user.classes import user
 from xme.xmetools import text_tools
-from xme.plugins.commands.user.classes.xme_user import User, coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 import statistics
 
@@ -34,7 +34,7 @@ async def _(session: CommandSession):
         arg = arg.split(" ")[0].replace('spacing', '')
     print(spacing)
     rank_count = 10
-    rank_items = xme_user.get_rank('coins')
+    rank_items = user.get_rank('coins')
     if arg and arg == 'avg':
         # 平均值消息
         rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
@@ -86,7 +86,7 @@ async def _(session: CommandSession):
             spacing=" " * text_tools.calc_spacing([f'{i + 1}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
         )
     # 关于发送者的金币数超过了多少人
-    sender_coins_count, rank_ratio = xme_user.get_user_rank(sender)
+    sender_coins_count, rank_ratio = user.get_user_rank(sender)
     message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'ranking_suffix',
         count=sender_coins_count,
         rank_ratio=f"{rank_ratio:.2f}",

@@ -58,7 +58,7 @@ async def _(session: CommandSession):
             # 如果不能成数字那就是功能
             if await arg_help(arg, plugins, session) != False: return
     # help_list_str = ""
-    page_item_length = 10
+    PAGE_LENGTH = 15
     # 分页
     pages = []
     index = 0
@@ -75,7 +75,7 @@ async def _(session: CommandSession):
         # await send_msg(session, f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
         return
 
-    pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], page_item_length)]
+    pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], PAGE_LENGTH)]
     # print(pages)
     prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'

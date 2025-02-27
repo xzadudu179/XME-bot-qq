@@ -10,20 +10,22 @@ from xme.xmetools import random_tools
 from xme.xmetools.json_tools import read_from_path
 from xme.xmetools import time_tools
 from xme.xmetools import message_tools
-from character import get_item, get_message
+from character import get_character_item, get_message
 import random
 bot = nonebot.get_bot()
 
 async def send_time_message():
-    for group in config.SCHEDULER_GROUP:
-        try:
-            say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        except json.JSONDecodeError:
-            say = {
-                "hitokoto": get_message("schedulers", "hitokoto_error"),
-                "from_who": get_message("bot_info", "name"),
-                "from": "XME_bot"
-            }
+    scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
+    for group in scheduler_groups:
+        say = random.choice(read_from_path("./static/hitokoto.json"))
+        # try:
+        #     say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
+        # except json.JSONDecodeError:
+        #     say = {
+        #         "hitokoto": get_message("schedulers", "hitokoto_error"),
+        #         "from_who": get_message("bot_info", "name"),
+        #         "from": "XME_bot"
+        #     }
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
         latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")
         latest_prefix = "\n最近更新：\n"
@@ -37,8 +39,8 @@ async def send_time_message():
         something_to_say = get_message("schedulers", "time",
             period=time_tools.get_time_period(),
             hitokoto=say['hitokoto'],
-            by=say['from_who'] if say['from_who'] else '无名',
-            from_where=say['from'],
+            by=say['author'] if say['author'] else '无名',
+            from_where=say['source'] if say['source'] else "未知",
             anno=anno_message,
             update=latest,
             tips=get_message("bot_info", "tips")
@@ -56,7 +58,7 @@ async def send_time_message():
 )
 async def _():
     print("新年报时")
-    await message_tools.send_to_all_group(bot, get_message("schedulers", "new_year"))
+    await message_tools.send_to_groups(bot, get_message("schedulers", "new_year"))
 
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
@@ -74,7 +76,7 @@ async def _():
         has_faces = False
     # print(faces)
     # 随机发表情
-    messages = get_item("schedulers", "idles")
+    messages = get_character_item("schedulers", "idles")
     if has_faces:
         messages += faces
     message = random.choice(messages)

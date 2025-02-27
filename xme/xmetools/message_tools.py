@@ -81,13 +81,19 @@ async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
         return
     await session.send(str(message_result), at_sender=at, **kwargs)
 
-async def send_to_all_group(bot: NoneBot, message):
+async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息
 
     Args:
         bot (NoneBot): bot
-        message (str): 消息内容
+        message (Message_T): 消息内容
+        groups (list | tuple | None)
     """
-    groups = await bot.get_group_list()
+    if groups is None:
+        groups = await bot.get_group_list()
     for group in groups:
-        await bot.send_group_msg(group_id=group['group_id'], message=message)
+        if isinstance(group, dict):
+            g = group['group_id']
+        else:
+            g = group
+        await bot.send_group_msg(group_id=g, message=message)

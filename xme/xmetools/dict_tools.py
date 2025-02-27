@@ -36,3 +36,19 @@ def reverse_dict(target_dict: dict, ignore_null: bool = True) -> dict:
         reversed_dict[v].append(k)
 
     return dict(reversed_dict)
+
+def set_value(*keys: str, search_dict: dict, set_method=lambda value: value):
+    """设置字典对应键的值
+
+    Args:
+        *keys (str): 指定的键，会从左到右查找，类似于 dict[key0][key1][key2]...
+        search_dict (dict): 用于搜索的字典.
+        set_method (function): 设置成什么
+    """
+    v = search_dict.get(keys[0], None)
+    if len(keys) > 1:
+        if v is None:
+            search_dict[keys[0]] = {}
+            v = search_dict[keys[0]]
+        return set_value(*keys[1:], search_dict=v, set_method=set_method)
+    search_dict[keys[0]] = set_method(v)

@@ -30,19 +30,19 @@ ANTI_MESSAGEBURST_GROUP = [
     927322136
 ]
 # 报时
-SCHEDULER_GROUP = [
-    727949269,
-    913581215,
-    905122019,
-    819726072
-]
+# SCHEDULER_GROUP = [
+#     727949269,
+#     913581215,
+#     905122019,
+#     819726072
+# ]
 # 视奸
 PEEK_GROUP = [
     727949269,
     913581215
 ]
 
-NICKNAME = character.get_item('bot_info', 'nickname', default=['XME', 'xme'])
+NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
 VERSION = '0.2.0'
 
 USER_PATH = "./data/users.json"

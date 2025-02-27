@@ -18,14 +18,6 @@ USAGE_STATS = {
     "start_time": datetime.now().strftime("%Y年%m月%d日 %H:%M:%S"),
     "datas": [] # datas 字典列表, key 为群号
 }
-BASIC_INFO = {
-    "name": "默认机器人",
-    "author": "unknown",
-    "author_qq": "0",
-    "desc": "默认机器人介绍",
-    "version": "v0.1.0"
-}
-
 DRIFT_BOTTLES_INFO = {
     "max_index": 0,
     "bottles": [
@@ -37,7 +29,15 @@ USERS = {
 }
 
 BOT_SETTINGS = {
-    "prevent_recall": {}
+    "prevent_recall": {
+    },
+    "announcement": "",
+    "latest_update": [],
+    "locations": {
+    },
+    "deburst_groups": [
+    ],
+    "schtime_groups": []
 }
 
 def gen_doc_md():
@@ -111,8 +111,8 @@ def bot_init():
     init_json(wife_path, WIFE_INFO)
 
     # botinfo
-    botinfo_path = f'./data/_botinfo.json'
-    init_json(botinfo_path, BASIC_INFO)
+    # botinfo_path = f'./data/_botinfo.json'
+    # init_json(botinfo_path, BASIC_INFO)
 
     # botsettings
     botsettings_path = "./data/_botsettings.json"

@@ -68,6 +68,7 @@
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
+        "anno_temp_suffix": "在五分钟内 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}\n或者也可以在任何时候私聊我{positive_punc}",
         "anno_message": "[九九的公告] {anno}",
         "no_permission": "权限不足哦 {negative}"
     },
@@ -156,7 +157,7 @@
         },
         "choice": {
             "desc": "随机决定事情",
-            "introduction": "让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0{positive_punc}数字的随机数，choice一个数字范围比如 1{positive_punc}10 会返回 1{positive_punc}10 的随机数",
+            "introduction": "让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0 ~ 数字的随机数，choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数",
             "no_args": "你还没有说我要决定的事情哦 {neutral}",
             "choice_message": "我觉得可以选择 \"{choice}\"！"
         },
@@ -551,7 +552,8 @@
             "desc": "修改公告",
             "introduction": "发布公告，会在报时时出现",
             "success": "公告 \"{anno}\" 发布成功~ {positive}",
-            "clear": "成功清除公告{positive_punc}"
+            "clear": "成功清除公告{positive_punc}",
+            "sending_all_group": "正在将该公告发送至所有群组{positive_punc}"
         },
         "divs": {
             "desc": "质数检测",
@@ -618,6 +620,12 @@
             "invalid_location": "唔...这个经纬度无法被解析诶，以下是被尝试解析的值：\n经度：{lon}\n纬度：{lat}",
             "output_suffix": "来自 https://www.7timer.info/ 的晴天钟图片",
             "error": "{negative} 出现了未知错误...\n{ex}"
+        },
+        "schtime": {
+            "desc": "报时功能",
+            "introduction": "切换是否开启报时功能，报时功能会在每天的 `0` `8` `12` `20` 点进行报时，以及会告诉一些最新版本信息或是小提示",
+            "disabled": "报时功能已关闭 {neutral}",
+            "activated": "报时功能已开启{positive_punc}"
         }
     }
 }

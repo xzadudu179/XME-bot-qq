@@ -20,16 +20,15 @@ __plugin_usage__ = str(CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     loc = session.current_arg_text
+    data = read_from_path(config.BOT_SETTINGS_PATH)
     if not loc:
-        data = read_from_path(config.BOT_SETTINGS_PATH)
         user_loc = data["locations"].get(str(session.event.user_id), None)
         if user_loc:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'curr_loc', loc=f'{user_loc["adm1"]} {user_loc["adm2"]} {user_loc["name"]}'))
             return
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_curr_loc'))
         return
-    if loc in ["clear", "unbind"]:
-        data = read_from_path(config.BOT_SETTINGS_PATH)
+    elif loc in ["clear", "unbind"]:
         del data["locations"][str(session.event.user_id)]
         save_to_path(config.BOT_SETTINGS_PATH, data)
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'unbind_loc'))

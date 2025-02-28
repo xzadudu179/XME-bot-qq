@@ -43,4 +43,4 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, *error_a
         return error_action(bot, *error_action_args)
 
 async def get_group_name(group_id):
-    return await get_bot().api.get_group_info(group_id=group_id)['group_name']
+    return (await get_bot().api.get_group_info(group_id=group_id))['group_name']

@@ -19,10 +19,13 @@ async def _(session: NoticeSession):
     increase_people[group] = increase_people.get(group, [])
     increase_people[group].append(f"[CQ:at,qq={session.event.user_id}]")
     # print(increase_people)
+    # print(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
     people = increase_people[group]
-    await asyncio.sleep(2)
+    await asyncio.sleep(4)
     # print(increase_people)
     if len(people) == len(increase_people[group]):
+        at = " ".join(increase_people[group])
         increase_people[group] = []
-        await send_session_msg(session, get_message("event_parsers", "welcome", at=" ".join(increase_people[group])), False)
+        print(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
+        await send_session_msg(session, get_message("event_parsers", "welcome", at=at), False)
         return

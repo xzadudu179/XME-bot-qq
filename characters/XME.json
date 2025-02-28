@@ -68,7 +68,7 @@
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
-        "anno_temp_suffix": "在五分钟内 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}\n或者也可以在任何时候私聊我{positive_punc}",
+        "anno_temp_suffix": "@ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}\n或者也可以私聊我{positive_punc}",
         "anno_message": "[九九的公告] {anno}",
         "no_permission": "权限不足哦 {negative}"
     },

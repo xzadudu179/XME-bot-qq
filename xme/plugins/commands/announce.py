@@ -11,6 +11,7 @@ from nonebot import message_preprocessor
 import time
 import config
 from xme.xmetools.message_tools import send_session_msg, send_to_groups, send_to_superusers
+from xme.xmetools.bot_control import get_stranger_name, get_group_name
 
 alias = ['公告', 'anno']
 __plugin_name__ = 'announce'
@@ -24,12 +25,12 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 temp_anno_sent = False
-anno_sent_time = 0
+# anno_sent_time = 0
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     global temp_anno_sent
-    global anno_sent_time
+    # global anno_sent_time
     anno = session.current_arg_text.strip()
     if not anno:
         return await send_session_msg(session, "[九九的公告] " + get_message("config", "anno_message", anno=x if (x:=read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "无")) else "无公告"))
@@ -41,7 +42,7 @@ async def _(session: CommandSession):
     if anno.split(" ")[-1] == "temp":
         anno = " ".join(anno.split(" ")[:-1])
         temp_anno_sent = True
-        anno_sent_time = time.time()
+        # anno_sent_time = time.time()
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'sending_all_group'))
         return await send_to_groups(session.bot, "[九九的群发公告] " + anno + "\n" + get_message("config", "anno_temp_suffix"))
     c = read_from_path(config.BOT_SETTINGS_PATH)
@@ -52,13 +53,13 @@ async def _(session: CommandSession):
 @message_preprocessor
 async def private_message_copy(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     global temp_anno_sent
-    global anno_sent_time
+    # global anno_sent_time
     raw_msg = event.raw_message
-    if time.time() - anno_sent_time > 300 and anno_sent_time > 0:
-        print("刷新")
-        anno_sent_time = 0
+    # if time.time() - anno_sent_time > 300 and anno_sent_time > 0:
+        # print("刷新")
+        # anno_sent_time = 0
     if "[CQ:at,qq=" in raw_msg and raw_msg.split("[CQ:at,qq=")[1].split(",")[0] == str(event.self_id):
         if not temp_anno_sent:
             return
         print("这是回应公告的消息")
-        return await send_to_superusers(bot, event.raw_message)
+        return await send_to_superusers(bot, f"{await get_stranger_name(event.user_id)}({await get_group_name(event.group_id)}):" + event.raw_message)

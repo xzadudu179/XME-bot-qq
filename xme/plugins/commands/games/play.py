@@ -1,12 +1,12 @@
 cmd_name = 'game'
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
+from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from xme.plugins.commands.xme_user.classes import user
-import xme.xmetools.text_tools as t
-from xme.xmetools.message_tools import send_session_msg
+import xme.xmetools.texttools as t
+from xme.xmetools.msgtools import send_session_msg
 from . import game_commands as games
 
 # introduction = "各种小游戏"

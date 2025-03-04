@@ -1,14 +1,14 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.doctools import CommandDoc
 from character import get_message
 import traceback
-from xme.xmetools.function_tools import run_with_timeout
+from xme.xmetools.functools import run_with_timeout
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.image_tools import image_msg
-from xme.xmetools.calc_draw_tools import draw_exprs, draw_3d_exprs
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.imgtools import image_msg
+from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
 
 alias = ['计算', 'cc']
 __plugin_name__ = 'calc'

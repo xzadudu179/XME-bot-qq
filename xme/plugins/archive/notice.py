@@ -1,10 +1,10 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.json_tools import read_from_path, save_to_path
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.jsontools import read_from_path, save_to_path
 import config
 from aiocqhttp import ActionFailed
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 CONFIG_PATH = "./data/_botsettings.json"
 
 alias = ['提醒', '群发']

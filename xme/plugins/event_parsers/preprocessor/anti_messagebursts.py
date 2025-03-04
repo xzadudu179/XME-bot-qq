@@ -1,8 +1,8 @@
 from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from nonebot.message import CanceledException
-from xme.xmetools import command_tools
-from xme.xmetools.message_tools import send_event_msg
+from xme.xmetools import cmdtools
+from xme.xmetools.msgtools import send_event_msg
 import aiocqhttp
 from character import get_message
 from nonebot import message_preprocessor
@@ -29,7 +29,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         return
     message = x if (x:=event['raw_message'].strip()) else event['raw_message']
     if message.strip():
-        is_cmd = command_tools.get_cmd_by_alias(message.split(" ")[0])
+        is_cmd = cmdtools.get_cmd_by_alias(message.split(" ")[0])
     else:
         is_cmd = False
     # 不处理空消息了

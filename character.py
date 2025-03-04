@@ -1,7 +1,7 @@
 # import config
-from xme.xmetools import json_tools
-from xme.xmetools.random_tools import str_choice
-from xme.xmetools import dict_tools
+from xme.xmetools import jsontools
+from xme.xmetools.randtools import str_choice
+from xme.xmetools import dicttools
 import config
 import os
 # 其实这就是 i18n
@@ -12,7 +12,7 @@ items = os.listdir("./characters/")
 def get_character(default='XME', target='') -> dict:
     target = target if target != '' else CHARACTER
     try:
-        chacs = json_tools.read_from_path(f"./characters/{target}.json")
+        chacs = jsontools.read_from_path(f"./characters/{target}.json")
     except:
         chacs = False
     result = chacs if chacs else False
@@ -40,7 +40,7 @@ def get_character_item(*keys: str, character: str="", default="[NULL]", search_d
         else:
             search_dict = get_character(target=character)
     try:
-        result = dict_tools.get_value(*keys, search_dict=search_dict)
+        result = dicttools.get_value(*keys, search_dict=search_dict)
     except KeyError:
         if character != 'XME' and CHARACTER != 'XME':
             item = get_character_item(*keys, character='XME', default=default)

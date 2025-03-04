@@ -1,10 +1,10 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 import config
-from xme.xmetools.location_tools import search_location
-from xme.xmetools.json_tools import read_from_path, save_to_path
+from xme.xmetools.loctools import search_location
+from xme.xmetools.jsontools import read_from_path, save_to_path
 
 alias = ['绑定位置', '设置位置', '定位', 'loc']
 __plugin_name__ = 'location'

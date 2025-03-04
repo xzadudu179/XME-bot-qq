@@ -1,6 +1,6 @@
 from .faction import Faction
 from ..tools.map_tools import *
-from xme.xmetools import json_tools
+from xme.xmetools import jsontools
 import random
 from nonebot import get_bot
 # from .faction import Faction
@@ -29,7 +29,7 @@ class GalaxyMap:
         }
 
     def save(self):
-        json_tools.save_to_path("data/init_data/galaxymap.json")
+        jsontools.save_to_path("data/init_data/galaxymap.json")
 
     def create_starfield_block(self, position: tuple[int, int], maxwidth: int = 500, maxheight: int = 500):
         """创建星域地图块

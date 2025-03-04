@@ -1,7 +1,7 @@
 # -- coding: utf-8 --**
-from xme.xmetools.json_tools import change_json, get_json_value
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.jsontools import change_json, get_json_value
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
 from nonebot import on_command, CommandSession
 from character import get_message
 import config

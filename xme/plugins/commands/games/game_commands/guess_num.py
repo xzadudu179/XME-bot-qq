@@ -1,13 +1,13 @@
 from nonebot import CommandSession
 from xme.plugins.commands.games.play import cmd_name
 from .game import Game
-from xme.xmetools.command_tools import get_cmd_by_alias
+from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.plugins.commands.xme_user.classes import user
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
 import random
 import math
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 
 TIMES_LIMIT = 5
 name = 'guess'

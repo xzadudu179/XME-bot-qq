@@ -1,12 +1,12 @@
-from xme.xmetools.time_tools import *
+from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
-from xme.xmetools import json_tools
+from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
+from xme.xmetools import jsontools
 from character import get_message
-from xme.xmetools import random_tools
+from xme.xmetools import randtools
 import random
 from nonebot import on_command, CommandSession
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 import config
 
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
@@ -16,7 +16,7 @@ command_name = "pickup"
 async def _(session: CommandSession):
     user_id = session.event.user_id
     # at = f"[CQ:at,qq={user_id}]"
-    bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+    bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
     bottles = bottles_dict['bottles']
     print("捡瓶子中")
     # 没捡到瓶子
@@ -24,7 +24,7 @@ async def _(session: CommandSession):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle"))
         # await send_msg(session, "海里一个瓶子里都没有...")
         return
-    pickedup = random_tools.random_percent(90)
+    pickedup = randtools.random_percent(90)
     if not pickedup:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
@@ -69,7 +69,7 @@ async def _(session: CommandSession):
     # bottle_card = f"{at} 你捡到了一个漂流瓶~\n[#{index}号漂流瓶，来自 \"{bottle['from_group']}\"]：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} 投出\n这个瓶子{view_message}，{like_message}"
     # 彩蛋瓶子
     if str(index) == "-179":
-        bottle_card = random_tools.messy_string(bottle_card, 35)
+        bottle_card = randtools.messy_string(bottle_card, 35)
     # elif index_is_int:
     #     # 普通瓶子会越来越混乱
     #     bottle_card = random_tools.messy_string(bottle_card, messy_rate)
@@ -80,10 +80,10 @@ async def _(session: CommandSession):
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     print(f"混乱程度：{messy_rate}%")
-    broken = random_tools.random_percent(min(100, 1 + messy_rate / 2) if messy_rate < 100 else 100)
+    broken = randtools.random_percent(min(100, 1 + messy_rate / 2) if messy_rate < 100 else 100)
     if index_is_int and str(index) != "-179":
         # 普通瓶子会越来越混乱
-        bottle_card = random_tools.messy_string(bottle_card, messy_rate)
+        bottle_card = randtools.messy_string(bottle_card, messy_rate)
     if not broken:
         if str(index) == "-179":
             bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
@@ -93,7 +93,7 @@ async def _(session: CommandSession):
             # bottle_card += f"\n你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。"
     # 保存防止消息没发出来
     print("保存中")
-    json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+    jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
     await send_session_msg(session, bottle_card)
     content = ""
     if broken:
@@ -102,11 +102,11 @@ async def _(session: CommandSession):
             content = get_message("plugins", __plugin_name__, "bottle_broken_messy")
         # content = f"{at} 啊，你不小心把瓶子摔碎了..."
         if str(index) != "-179":
-            bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+            bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
             del bottles_dict['bottles'][index]
             print("瓶子碎了")
             print("保存文件中")
-            json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+            jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
         elif str(index) == "-179" or not index_is_int:
             # print("保存中")
             print("瓶子碎了？")
@@ -120,7 +120,7 @@ async def _(session: CommandSession):
             # 处理之后可能的输入
             # 重新读取
             print("重新读取")
-            bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+            bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
             # print("保存文件中")
             # # print(bottle)
             # json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
@@ -136,7 +136,7 @@ async def _(session: CommandSession):
                 print(bottles_dict['bottles'][index])
                 print("保存文件中")
                 # print(bottle)
-                json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+                jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
                 await send_session_msg(session, content)
                 return
             elif reply == '-rep':
@@ -162,5 +162,5 @@ async def _(session: CommandSession):
     print("保存文件中")
     print(bottles_dict['bottles'][index])
     # print(bottle)
-    json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+    jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # await send_msg(session, content)

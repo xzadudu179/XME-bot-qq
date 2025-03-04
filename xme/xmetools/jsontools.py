@@ -1,5 +1,5 @@
 import json
-from xme.xmetools import dict_tools
+from xme.xmetools import dicttools
 
 def read_from_path(path) -> dict | list:
     with open(path, 'r', encoding='utf-8') as file:
@@ -18,10 +18,10 @@ def change_json(path: str, *keys, set_method=lambda v: v):
         set_method (function, optional): 设置修改方法. Defaults to lambdav:v.
     """
     c = read_from_path(path)
-    dict_tools.set_value(*keys, search_dict=c, set_method=set_method)
+    dicttools.set_value(*keys, search_dict=c, set_method=set_method)
     save_to_path(path, c)
 
 def get_json_value(path: str, *keys, default=None):
     data = read_from_path(path)
-    return dict_tools.get_value(*keys, search_dict=data, default=default)
+    return dicttools.get_value(*keys, search_dict=data, default=default)
 

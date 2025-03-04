@@ -1,9 +1,9 @@
 # from .database import Xme_database
-from xme.xmetools import time_tools
+from xme.xmetools import timetools
 from functools import wraps
 import random
 from .items.inventory import Inventory
-from xme.xmetools import text_tools
+from xme.xmetools import texttools
 from .faction import *
 from .db_readable import DbReadable
 import sqlite3
@@ -62,7 +62,7 @@ class User(DbReadable):
     def check_and_replace_username(self, name):
         """将用户名确定为合法字符范围
         """
-        self.name = text_tools.to_spec_string(name)
+        self.name = texttools.to_spec_string(name)
         return True
 
     @DbReadable.update_data
@@ -152,7 +152,7 @@ class User(DbReadable):
 
     @DbReadable.update_data
     def register(self) -> bool:
-        curr_days = time_tools.curr_days()
+        curr_days = timetools.curr_days()
         # 没到时间不给注册
         if self.last_reg_days >= curr_days:
             return False
@@ -173,5 +173,5 @@ class User(DbReadable):
 {bio}----------
 目前{coin}
 物品栏占用: [{self.inventory.get_space()}/{self.inventory.length}]
-上次签到时间: {time_tools.int_to_date(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
+上次签到时间: {timetools.int_to_date(self.last_reg_days) if self.last_reg_days > 0 else '从未签到过'}
 """.strip()

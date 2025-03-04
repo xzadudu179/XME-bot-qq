@@ -1,7 +1,7 @@
 import time
 import base64
 import os
-from xme.xmetools import file_tools
+from xme.xmetools import filetools
 import asyncio
 from aiocqhttp import MessageSegment
 from io import BytesIO
@@ -59,7 +59,7 @@ def get_qq_avatar(qq, size=640):
 
 def take_screenshot(screen_num=1):
     os.makedirs("./data/images/screenshots", exist_ok=True)
-    file_tools.delete_files_in_folder('./data/images/screenshots')
+    filetools.delete_files_in_folder('./data/images/screenshots')
     image, state = screenshot(screen_num)
     name = f'./data/images/screenshots/screenshot{screen_num}{time.strftime(r"%Y%m%d-%H-%M-%S")}.png'
     image.save(name)

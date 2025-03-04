@@ -1,8 +1,9 @@
 __plugin_name__ = '今日老婆'
+
 from .wife import *
 # from .cancanneedwife import *
 from character import get_message
-from xme.xmetools.doc_tools import PluginDoc
+from xme.xmetools.doctools import PluginDoc
 
 commands = ['wife']
 command_properties = [

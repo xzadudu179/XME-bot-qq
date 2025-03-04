@@ -1,13 +1,13 @@
 from nonebot import message_preprocessor, NoneBot
 from nonebot.plugin import PluginManager
 import aiocqhttp
-from xme.xmetools.doc_tools import SpecialDoc
-from ...xmetools import color_manage as c
+from xme.xmetools.doctools import SpecialDoc
+from ...xmetools import colortools as c
 from character import get_message
-from xme.xmetools.command_tools import send_event_msg
-from xme.xmetools.text_tools import fullwidth_to_halfwidth
-from xme.xmetools.file_tools import has_file
-from xme.xmetools.image_tools import image_msg
+from xme.xmetools.cmdtools import send_event_msg
+from xme.xmetools.texttools import fullwidth_to_halfwidth
+from xme.xmetools.filetools import has_file
+from xme.xmetools.imgtools import image_msg
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']

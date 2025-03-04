@@ -4,13 +4,13 @@ from nonebot.message import CanceledException
 from nonebot import message_preprocessor
 from character import get_message
 import aiocqhttp
-from xme.xmetools import json_tools
+from xme.xmetools import jsontools
 import config
 # import asyncio
 @message_preprocessor
 async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     message = event.raw_message.strip()
-    prohibited_list = json_tools.read_from_path('./prohibited.json')['whitelist_prohibited']
+    prohibited_list = jsontools.read_from_path('./prohibited.json')['whitelist_prohibited']
     is_prohibited = False
     if event.user_id == event.self_id:
         return

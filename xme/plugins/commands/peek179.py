@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.doctools import CommandDoc
 import os
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.image_tools import image_msg
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.imgtools import image_msg
 import random
 from pathlib import Path
 from datetime import datetime

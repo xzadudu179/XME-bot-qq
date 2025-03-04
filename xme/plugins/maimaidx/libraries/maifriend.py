@@ -1,8 +1,8 @@
 from PIL import Image
-from xme.xmetools import image_tools
+from xme.xmetools import imgtools
 
 def gen_maifriend(qq, size=640):
-    avatar = image_tools.get_qq_avatar(qq, size).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
+    avatar = imgtools.get_qq_avatar(qq, size).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
     frame = Image.open("./xme/plugins/maimaidx/static/mai/frame.png").resize((size, size))
     # 创建一个新的空白画布，大小为最大图片的尺寸
     new_image = Image.new("RGB", (frame.width, frame.height))

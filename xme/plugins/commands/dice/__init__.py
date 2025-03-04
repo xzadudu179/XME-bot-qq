@@ -1,7 +1,7 @@
 __plugin_name__ = '骰子'
 from .simdice import *
 from character import get_message
-from xme.xmetools.doc_tools import PluginDoc
+from xme.xmetools.doctools import PluginDoc
 
 commands = ['dice']
 command_properties = [

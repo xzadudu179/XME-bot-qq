@@ -1,7 +1,7 @@
 from functools import wraps
 from ..classes.user import User
 import traceback
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 from ..classes.database import Xme_database
 
 def pre_check(pre_func=None, end_func=None):

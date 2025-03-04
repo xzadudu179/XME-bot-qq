@@ -1,8 +1,8 @@
 from nonebot import on_notice, RequestSession
 import aiocqhttp
 from nonebot import get_bot
-from ....xmetools import color_manage as c
-from xme.xmetools.bot_control import bot_call_action, get_group_name
+from ....xmetools import colortools as c
+from xme.xmetools.bottools import bot_call_action, get_group_name
 import asyncio
 import random
 

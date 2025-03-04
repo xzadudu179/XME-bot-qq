@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 
 alias = ['你是谁', 'who', 'chac']

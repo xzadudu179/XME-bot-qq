@@ -1,10 +1,10 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from ...xmetools import cur_system as st
+from xme.xmetools.doctools import CommandDoc
+from ...xmetools import systools as st
 from character import get_message
-from xme.xmetools import type_tools
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.num_tools import divs
+from xme.xmetools import typetools
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.numtools import divs
 
 alias = ['divides']
 __plugin_name__ = 'divs'
@@ -24,7 +24,7 @@ async def _(session: CommandSession):
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "no_arg"))
     if len(args) > 15:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "too_long"))
-    original_num = type_tools.try_parse(args, int)
+    original_num = typetools.try_parse(args, int)
     if original_num is None:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_num'))
     num = abs(original_num)

@@ -1,6 +1,6 @@
 from nonebot import on_notice, NoticeSession
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 import asyncio
 
 increase_people = {}

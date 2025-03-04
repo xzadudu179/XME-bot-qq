@@ -4,7 +4,7 @@ from . import inv_get
 from ..classes import user as u
 from ..classes.inv_item import InvItem
 from ..classes.item import Item
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 
 name = "reduce"

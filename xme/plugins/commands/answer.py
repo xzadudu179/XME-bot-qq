@@ -1,11 +1,11 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools import request_tools
-from xme.xmetools import random_tools
-from xme.xmetools import text_tools
-from xme.xmetools.time_tools import curr_days
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools import reqtools
+from xme.xmetools import randtools
+from xme.xmetools import texttools
+from xme.xmetools.timetools import curr_days
 import random
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 import json
 
@@ -27,7 +27,7 @@ REPLACE_STR_ZH = {
     "有。": "是的。"
 }
 
-@random_tools.change_seed(curr_days())
+@randtools.change_seed(curr_days())
 def get_current_days_550w_percent():
     percent = (random.random() * 17.4) + 0.5
     return percent
@@ -45,14 +45,14 @@ async def _(session: CommandSession):
         percent = get_current_days_550w_percent()
         # random.seed(time.time())
         print(f"今天是 550w 的概率是 {percent}%")
-        if random_tools.random_percent(percent):
+        if randtools.random_percent(percent):
             print("没错，我是 550W")
             await send_session_msg(session, f"\n" + get_message("plugins", __plugin_name__, "550w"))
             return
         else:
             print("550W 还没来")
     try:
-        ans_json = await request_tools.fetch_data('https://api.andeer.top/API/answer.php')
+        ans_json = await reqtools.fetch_data('https://api.andeer.top/API/answer.php')
         if ans_json['code'] != 200:
             message = get_message("plugins", __plugin_name__, "cannot_fetch")
             # message = "呜呜，书翻不开了..."

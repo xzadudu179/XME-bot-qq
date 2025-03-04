@@ -1,6 +1,6 @@
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.command_tools import get_alias_by_cmd, get_cmd_by_alias
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.cmdtools import get_alias_by_cmd, get_cmd_by_alias
+from xme.xmetools.msgtools import send_session_msg
 from nonebot import on_command, CommandSession
 from character import get_message
 

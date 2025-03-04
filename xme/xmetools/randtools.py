@@ -1,5 +1,5 @@
 import random
-from .json_tools import read_from_path
+from .jsontools import read_from_path
 from functools import wraps
 
 def random_percent(percent : float) -> bool:

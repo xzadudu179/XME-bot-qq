@@ -1,5 +1,5 @@
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools import random_tools
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools import randtools
 from character import get_message
 from asyncio import sleep
 from nonebot import CommandSession
@@ -109,7 +109,7 @@ async def talk_to_bot(_, session: CommandSession, user):
         favorability = "low"
     else:
         favorability = "low_plus"
-    if random_tools.random_percent(min(100, max(0, -(user.xme_favorability // 5) * len(user.talked_to_bot)))):
+    if randtools.random_percent(min(100, max(0, -(user.xme_favorability // 5) * len(user.talked_to_bot)))):
         message = get_message("items", "talk", "stop_talk")
         user.talked_to_bot = what_to_talk + high_favorability_talk + ['STOP_TALK']
         return {

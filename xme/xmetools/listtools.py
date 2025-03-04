@@ -1,7 +1,7 @@
 import heapq
 from typing import Any
-
-from . import text_tools as sim
+import random
+from . import texttools as sim
 
 
 def heap_top_k(nums: list, k: int) -> list[int]:
@@ -67,3 +67,28 @@ def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5, key=l
 def split_list(lst, chunk_size=10):
     # 使用列表切片将列表分割成 chunk_size 大小的子列表
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+def create_pairs(lst: list[int]) -> list[tuple[int,int]]:
+    # print(f"seed: {random.seed}")
+    random.shuffle(lst)  # 打乱顺序
+    pairs = []
+
+    # 每次取出两个作为一组，如果剩下一个，则单独作为一组
+    for i in range(0, len(lst) - 1, 2):
+        pairs.append((lst[i], lst[i+1]))
+
+    if len(lst) % 2 != 0:
+        pairs.append((lst[-1],))  # 如果剩下一个，单独作为一组
+    return pairs
+
+def find_pair(pairs, item):
+    for pair in pairs:
+        # print(pair)
+        if item in pair:
+            # print(item)
+            # 如果找到，返回配对的那个值，如果没有配对则返回 0
+            try:
+                return pair[1] if pair[0] == item else pair[0]
+            except Exception as ex:
+                return ""
+    return ""

@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.doctools import CommandDoc
 import config
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools import text_tools
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools import texttools
 
 alias = ['bot待办', 'show_bottodo']
 REMOVES = ("rm", 'remove', 'delete', 'del', '删除')
@@ -23,7 +23,7 @@ async def _(session: CommandSession):
     arg = session.current_arg_text.strip()
     if arg.startswith(REMOVES) and session.event.user_id in config.SUPERUSERS:
         try:
-            arg = text_tools.remove_prefix(arg, REMOVES)
+            arg = texttools.remove_prefix(arg, REMOVES)
             index = int(arg)
         except:
             await send_session_msg(session, get_message("plugins", __plugin_name__,'remove_todo_failed', arg=arg))

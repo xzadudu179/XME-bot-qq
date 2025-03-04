@@ -1,9 +1,9 @@
 from nonebot import MessageSegment, Message, NoneBot
-from xme.xmetools.bot_control import bot_call_action
+from xme.xmetools.bottools import bot_call_action
 from aiocqhttp import Event
 import config
 import config
-from xme.xmetools import color_manage as c
+from xme.xmetools import colortools as c
 from nonebot.session import BaseSession
 from character import get_message
 

@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 import subprocess
 import os
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 import config
 import xme.plugins.commands.instance_control as ic
 

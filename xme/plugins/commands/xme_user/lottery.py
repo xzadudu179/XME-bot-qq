@@ -1,7 +1,7 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.msgtools import send_session_msg
 import random
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun

@@ -1,12 +1,12 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools import request_tools
+from xme.xmetools import reqtools
 from character import get_message
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.random_tools import random_percent
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.randtools import random_percent
 import random
 import os
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.image_tools import image_msg
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.imgtools import image_msg
 import json
 
 alias = ["涩图", "setu", "色图" ]
@@ -57,7 +57,7 @@ class ImageData:
         self.author = author
         self.tags = tags
 async def fetch_image_data(url):
-    data = await request_tools.fetch_data(url)
+    data = await reqtools.fetch_data(url)
     print(data)
 
     if data.get('error'):

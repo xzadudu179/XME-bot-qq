@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools import image_tools
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools import imgtools
 from aiocqhttp import MessageSegment
-from xme.xmetools import json_tools
-from xme.xmetools import color_manage as c
+from xme.xmetools import jsontools
+from xme.xmetools import colortools as c
 import traceback
 try:
     import pygetwindow as gw
@@ -11,7 +11,7 @@ except:
     pass
 import config
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 
 alias = ['视奸', '视奸179', 'peekbot']
 __plugin_name__ = 'peek'
@@ -28,7 +28,7 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     if session.event.group_id not in config.PEEK_GROUP:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_in_peek_group'))
-    private_window_names = json_tools.read_from_path('./private_window_names.json')['private']
+    private_window_names = jsontools.read_from_path('./private_window_names.json')['private']
     try:
         current_window = gw.getActiveWindow()
     except:
@@ -57,7 +57,7 @@ async def _(session: CommandSession):
             monitor_num = 1
             arg_state = False
     try:
-        path, state = image_tools.take_screenshot(monitor_num)
+        path, state = imgtools.take_screenshot(monitor_num)
     except:
         print(traceback.format_exc())
         print("无法截图")
@@ -71,6 +71,6 @@ async def _(session: CommandSession):
     else:
         message = get_message("plugins", __plugin_name__, 'default_monitor')
     # image_msg = f"[CQ:image,file={path}]"
-    image_msg = await image_tools.image_msg(path)
+    image_msg = await imgtools.image_msg(path)
     # print(image_msg)
     await send_session_msg(session, message + '\n' + image_msg)

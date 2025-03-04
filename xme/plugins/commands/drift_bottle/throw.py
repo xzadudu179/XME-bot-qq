@@ -1,8 +1,8 @@
-from xme.xmetools.time_tools import *
-from xme.xmetools import json_tools
-from xme.xmetools import text_tools
+from xme.xmetools.timetools import *
+from xme.xmetools import jsontools
+from xme.xmetools import texttools
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 import config
 from nonebot import on_command, CommandSession
@@ -33,7 +33,7 @@ async def _(session: CommandSession):
     #     print(image)
     #     await session.bot.api.get_image(file=image)
     # bottles_dict = {}
-    bottles_dict = json_tools.read_from_path('./data/drift_bottles.json')
+    bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
     group = await session.bot.get_group_info(group_id=session.event.group_id)
     try:
@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         id = 0
     for k, bottle in bottles_dict['bottles'].items():
         # print(bottle)
-        if text_tools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] < bottle["views"] / 2):
+        if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] < bottle["views"] / 2):
         # if arg == bottle['content']:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
@@ -59,7 +59,7 @@ async def _(session: CommandSession):
         "group_id": user['group_id'],
     }
     bottles_dict["max_index"] = id
-    json_tools.save_to_path('./data/drift_bottles.json', bottles_dict)
+    jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=id))

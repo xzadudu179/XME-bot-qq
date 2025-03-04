@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.doctools import CommandDoc
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools import text_tools
-from xme.xmetools.type_tools import try_parse
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools import texttools
+from xme.xmetools.typetools import try_parse
 
 alias = ['7t', '晴天钟']
 __plugin_name__ = '7timers'
@@ -22,7 +22,7 @@ async def _(session: CommandSession):
         args = session.current_arg_text.strip()
         location = args
         if not args:
-            location = text_tools.replace_chinese_punctuation(await session.aget(prompt=get_message("plugins", __plugin_name__, 'ask_location')))
+            location = texttools.replace_chinese_punctuation(await session.aget(prompt=get_message("plugins", __plugin_name__, 'ask_location')))
             if "[CQ:location" in location:
                 location_info = location.split("[CQ:location,")[1].split(",title")[0].replace(",", "&")
         if args or "[CQ:location" not in location:

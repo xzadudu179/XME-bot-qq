@@ -48,7 +48,8 @@ class PluginDoc(Doc):
 简介：{self.desc}
 作用：{self.introduction}
 ##内容##：
-{contents_lines}""".strip() + ("\n" + not_simple_output + "\n" + self.other_info if not self.simple_output else "\n" + self.other_info + "/////OUTER/////" + not_simple_output)
+{contents_lines}
+""".strip() + ("\n" + not_simple_output + "\n" + self.other_info if not self.simple_output else "\n" + self.other_info + "/////OUTER/////" + not_simple_output)
 
 class CommandDoc(Doc):
 

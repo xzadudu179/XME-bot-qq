@@ -1,5 +1,5 @@
 import nonebot
-from xme.xmetools.bot_control import bot_call_action
+from xme.xmetools.bottools import bot_call_action
 bot = nonebot.get_bot()
 
 @nonebot.scheduler.scheduled_job('cron', day='*')

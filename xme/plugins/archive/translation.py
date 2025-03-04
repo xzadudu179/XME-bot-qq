@@ -4,9 +4,9 @@ from nonebot.argparse import ArgumentParser
 import traceback
 from json import JSONDecodeError
 import keys
-from xme.xmetools.message_tools import send_session_msg
-import xme.xmetools.text_tools as t
-from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
+from xme.xmetools.msgtools import send_session_msg
+import xme.xmetools.texttools as t
+from xme.xmetools.doctools import CommandDoc, shell_like_usage
 import json
 
 alias = ['翻译', 'trans']

@@ -1,7 +1,7 @@
 import nonebot
 from nonebot.session import BaseSession
-from xme.xmetools import pair as p
-from xme.xmetools import time_tools as d
+from xme.xmetools import listtools as lt
+from xme.xmetools import timetools as d
 from .wife_tools import *
 import json
 
@@ -46,7 +46,7 @@ def wife_update(group_id: str, members) -> dict:
     if pairs == [] or days > wifeinfo[group_id]['days']:
         wifeinfo[group_id]["days"] = days
         print("|||更新老婆数据|||")
-        pairs = p.create_pairs(members)
+        pairs = lt.create_pairs(members)
         wifeinfo[group_id]['members'] = pairs
     with open("./data/wife.json", 'w', encoding='utf-8') as file:
         file.write(json.dumps(wifeinfo))
@@ -67,7 +67,7 @@ async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: Base
     """
     pairs = wifeinfo.get(group_id, {}).get("members", [])
     # print(pairs)
-    pair = p.find_pair(pairs, user_id)
+    pair = lt.find_pair(pairs, user_id)
     print(f"pair: {pair}")
     if pair == "":
         user = None

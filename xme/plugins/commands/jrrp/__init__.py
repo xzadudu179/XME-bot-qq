@@ -2,12 +2,12 @@ from anyio import sleep
 # from itsdangerous import base64_encode
 import nonebot
 import random
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 from nonebot import on_command, CommandSession
-from xme.xmetools.time_tools import curr_days
+from xme.xmetools.timetools import curr_days
 # from xme.plugins.commands.jrrp.luck_algorithm import get_luck
-from xme.xmetools import random_tools
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools import randtools
+from xme.xmetools.doctools import CommandDoc
 from character import get_message
 
 alias = ["今日人品" , "luck"]
@@ -101,7 +101,7 @@ async def jrrp(session: CommandSession):
         await send_session_msg(session, content + get_message("plugins", __plugin_name__, 'jrrp_default', result=result))
         # await send_msg(session, content + f"{result} ovo")
 
-@random_tools.change_seed()
+@randtools.change_seed()
 def jrrp_gen(id):
     random.seed(int(str(curr_days()) + str(id)))
     return random.randint(-1, 101)

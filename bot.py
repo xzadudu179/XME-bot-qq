@@ -1,6 +1,6 @@
 import nonebot
 from os import path
-from xme.xmetools import color_manage as c
+from xme.xmetools import colortools as c
 import os
 from nonebot.log import logger
 import bot_variables

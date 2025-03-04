@@ -5,11 +5,11 @@ import json
 from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
 from nonebot import log
-from xme.xmetools.bot_control import bot_call_action
-from xme.xmetools import random_tools
-from xme.xmetools.json_tools import read_from_path
-from xme.xmetools import time_tools
-from xme.xmetools import message_tools
+from xme.xmetools.bottools import bot_call_action
+from xme.xmetools import randtools
+from xme.xmetools.jsontools import read_from_path
+from xme.xmetools import timetools
+from xme.xmetools import msgtools
 from character import get_character_item, get_message
 import random
 bot = nonebot.get_bot()
@@ -37,7 +37,7 @@ async def send_time_message():
         if not anno_message:
             anno_message = ''
         something_to_say = get_message("schedulers", "time",
-            period=time_tools.get_time_period(),
+            period=timetools.get_time_period(),
             hitokoto=say['hitokoto'],
             by=say['author'] if say['author'] else '无名',
             from_where=say['source'] if say['source'] else "未知",
@@ -58,15 +58,15 @@ async def send_time_message():
 )
 async def _():
     print("新年报时")
-    await message_tools.send_to_groups(bot, get_message("schedulers", "new_year"))
+    await msgtools.send_to_groups(bot, get_message("schedulers", "new_year"))
 
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
     if not (6 <= datetime.now().hour <= 24): return
-    if not random_tools.random_percent(0.03): return
+    if not randtools.random_percent(0.03): return
     groups = await bot.get_group_list()
     # 群组太少就降低概率
-    if not random_tools.random_percent(min(100, 50 + len(groups) * 10)): return
+    if not randtools.random_percent(min(100, 50 + len(groups) * 10)): return
     group = random.choice(groups)
     group_id = group['group_id']
     has_faces = True

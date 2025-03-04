@@ -1,7 +1,7 @@
 import sympy as sp
-from xme.xmetools.color_manage import hex_to_rgb, gradient_hex_color
-from xme.xmetools.text_tools import limit_str_len, hash_text
-from xme.xmetools.file_tools import has_file
+from xme.xmetools.colortools import hex_to_rgb, gradient_hex_color
+from xme.xmetools.texttools import limit_str_len, hash_text
+from xme.xmetools.filetools import has_file
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 import numpy as np

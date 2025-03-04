@@ -1,7 +1,7 @@
 from concurrent.futures import TimeoutError, ThreadPoolExecutor
 import multiprocessing
 from functools import wraps
-from xme.xmetools.json_tools import read_from_path, change_json
+from xme.xmetools.jsontools import read_from_path, change_json
 import config
 import signal
 import copy
@@ -60,9 +60,6 @@ def linux_set_timeout(seconds=10, timeout_message="函数执行超时", callback
             return result
         return wrapper
     return decorator
-
-
-
 
 def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", *args, **kwargs):
     """设置函数执行超时

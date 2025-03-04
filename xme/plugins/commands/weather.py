@@ -1,14 +1,14 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
+from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
-from xme.xmetools.time_tools import TimeUnit, iso_format_time
-from xme.xmetools.request_tools import fetch_data
+from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.timetools import TimeUnit, iso_format_time
+from xme.xmetools.reqtools import fetch_data
 from xme.plugins.commands.xme_user.classes import user as u
 import traceback
-from xme.xmetools.json_tools import read_from_path, save_to_path
-from xme.xmetools.location_tools import search_location, get_user_location
+from xme.xmetools.jsontools import read_from_path, save_to_path
+from xme.xmetools.loctools import search_location, get_user_location
 from keys import WEATHER_API_KEY
 import textwrap
 

@@ -1,8 +1,8 @@
 from nonebot import on_command, CommandSession
 import time
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.doctools import CommandDoc
 from character import get_message
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg
 
 alias = ['echotime', '延迟', '测延迟']
 __plugin_name__ = 'ping'

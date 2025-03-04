@@ -1,9 +1,9 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.message_tools import send_session_msg
-from ...xmetools import random_tools as rt
-from ...xmetools import request_tools as req
-from ...xmetools import time_tools as dt
-from xme.xmetools.doc_tools import CommandDoc
+from xme.xmetools.msgtools import send_session_msg
+from ...xmetools import randtools as rt
+from ...xmetools import reqtools as req
+from ...xmetools import timetools as dt
+from xme.xmetools.doctools import CommandDoc
 from datetime import datetime
 from character import get_message
 

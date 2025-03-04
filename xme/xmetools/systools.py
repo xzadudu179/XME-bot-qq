@@ -1,7 +1,7 @@
 import psutil as pt
 import platform
 import time
-from .time_tools import secs_to_ymdh
+from .timetools import secs_to_ymdh
 import socket
 
 # 将字节转换为 MiB

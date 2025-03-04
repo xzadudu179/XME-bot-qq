@@ -4,8 +4,8 @@ from nonebot.log import logger
 import nonebot
 from logging.handlers import TimedRotatingFileHandler
 import logging
-from xme.xmetools import color_manage as c
-from xme.xmetools.text_tools import lazy_pinyin
+from xme.xmetools import colortools as c
+from xme.xmetools.texttools import lazy_pinyin
 from datetime import datetime
 import config
 

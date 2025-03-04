@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.json_tools import read_from_path, save_to_path
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.jsontools import read_from_path, save_to_path
 from character import get_message
 from nonebot import NoneBot
 from nonebot.plugin import PluginManager
@@ -10,8 +10,8 @@ import aiocqhttp
 from nonebot import message_preprocessor
 import time
 import config
-from xme.xmetools.message_tools import send_session_msg, send_to_groups, send_to_superusers
-from xme.xmetools.bot_control import get_stranger_name, get_group_name
+from xme.xmetools.msgtools import send_session_msg, send_to_groups, send_to_superusers
+from xme.xmetools.bottools import get_stranger_name, get_group_name
 
 alias = ['公告', 'anno']
 __plugin_name__ = 'announce'

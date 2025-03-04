@@ -1,7 +1,7 @@
 from enum import Enum
 import inspect
 from . import item_methods
-from xme.xmetools import list_ctrl
+from xme.xmetools import listtools
 
 class Rarity(Enum):
     """稀有度"""
@@ -90,7 +90,7 @@ class Item:
                     continue
                 return item
             return None
-        sim = list_ctrl.top_k_sim(items, name, 1, fuzzy_threshold, key)
+        sim = listtools.top_k_sim(items, name, 1, fuzzy_threshold, key)
         if len(sim) < 1:
             return None
         return Item.get_item_by_name(sim[0][0])

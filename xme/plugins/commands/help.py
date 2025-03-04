@@ -1,12 +1,12 @@
 import nonebot
 import config
-from xme.xmetools.doc_tools import CommandDoc
-from xme.xmetools.command_tools import send_cmd, get_cmd_by_alias
-from xme.xmetools.list_ctrl import split_list
-from xme.xmetools.message_tools import send_session_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
+from xme.xmetools.listtools import split_list
+from xme.xmetools.msgtools import send_session_msg
 from nonebot import on_command, CommandSession
 from character import get_message
-from xme.xmetools.text_tools import most_similarity_str
+from xme.xmetools.texttools import most_similarity_str
 
 alias = ["usage", "docs", "帮助", "h"]
 __plugin_name__ = 'help'

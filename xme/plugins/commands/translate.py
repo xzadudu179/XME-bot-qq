@@ -2,14 +2,14 @@ from nonebot import on_command, CommandSession, NoneBot, MessageSegment, message
 from nonebot.command import call_command
 from nonebot.plugin import PluginManager
 import aiocqhttp
-from xme.xmetools.doc_tools import CommandDoc, shell_like_usage
-from xme.xmetools.json_tools import read_from_path
-from xme.xmetools.command_tools import get_cmd_by_alias
-from xme.xmetools.message_tools import send_event_msg
-from xme.xmetools.bot_control import bot_call_action
-from xme.xmetools.message_tools import change_group_message_content, send_forward_msg, get_pure_text_message
+from xme.xmetools.doctools import CommandDoc, shell_like_usage
+from xme.xmetools.jsontools import read_from_path
+from xme.xmetools.cmdtools import get_cmd_by_alias
+from xme.xmetools.msgtools import send_event_msg
+from xme.xmetools.bottools import bot_call_action
+from xme.xmetools.msgtools import change_group_message_content, send_forward_msg, get_pure_text_message
 from character import get_message
-import xme.xmetools.text_tools as t
+import xme.xmetools.texttools as t
 from keys import GLM_API_KEY
 import asyncio
 from zhipuai import ZhipuAI

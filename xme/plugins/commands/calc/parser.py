@@ -1,5 +1,5 @@
 import re
-from xme.xmetools.text_tools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
+from xme.xmetools.texttools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
 from . import func
 from sympy import sympify, Integer
 

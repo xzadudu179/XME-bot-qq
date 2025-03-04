@@ -1,8 +1,8 @@
 import config
-from xme.xmetools import color_manage as c
-from xme.xmetools import dict_tools
+from xme.xmetools import colortools as c
+from xme.xmetools import dicttools
 from nonebot import NoneBot
-from xme.xmetools.message_tools import send_event_msg
+from xme.xmetools.msgtools import send_event_msg
 import aiocqhttp
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
@@ -52,7 +52,7 @@ async def send_cmd(cmd_string, session, check_permission=True):
     return await event_send_cmd(cmd_string, session.bot, session.event, check_permission)
 
 def get_alias_by_cmd(cmd_name: str):
-    cmds = {k.name[0]: v for k, v in dict_tools.reverse_dict(CommandManager._aliases).items()}
+    cmds = {k.name[0]: v for k, v in dicttools.reverse_dict(CommandManager._aliases).items()}
     # print(cmds)
     return cmds.get(cmd_name, False)
 

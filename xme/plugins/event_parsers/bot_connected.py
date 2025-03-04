@@ -1,7 +1,7 @@
 from nonebot import on_websocket_connect
 import aiocqhttp
-import xme.xmetools.color_manage as c
-import xme.xmetools.num_tools as n
+import xme.xmetools.colortools as c
+import xme.xmetools.numtools as n
 import nonebot
 import config
 import bot_variables as var

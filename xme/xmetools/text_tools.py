@@ -145,7 +145,7 @@ def get_image_str(raw_message):
     raw_message = re.sub(r'\[CQ:.*?\]', '', raw_message)
     return (raw_message, tuple(images))
 
-def characters_only_contains_ch_en_num_udline_horzline(s, replace_to_horzline=False):
+def to_spec_string(s, replace_to_horzline=False):
     """返回只包含中文 英文 数字 下划线 横线的字符串
 
     Args:

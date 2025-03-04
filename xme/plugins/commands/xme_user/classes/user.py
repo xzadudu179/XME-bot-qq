@@ -170,7 +170,7 @@ def get_user_rank(user):
     Returns:
         tuple: 金币数量, 排名比例
     """
-    rank_items = get_rank('coins')
+    rank_items = get_rank('coins', excluding_zero=True)
     sender_coins_count = None
     sender_index = None
     for index, item in enumerate(rank_items):
@@ -178,6 +178,7 @@ def get_user_rank(user):
         print("匹配到了")
         sender_coins_count = item[1]
         sender_index = index
+    rank_ratio = 0
     if sender_coins_count is not None:
         rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
     return sender_coins_count, rank_ratio
@@ -240,7 +241,7 @@ def get_limit_info(user, name):
     return (user.counters[name]["time"], user.counters[name]["count"])
 
 
-def get_rank(*rank_item_key, key=None):
+def get_rank(*rank_item_key, key=None, excluding_zero=False):
     """获取用户某项内容排名
 
     Args:
@@ -256,7 +257,10 @@ def get_rank(*rank_item_key, key=None):
         value = dict_tools.get_value(*rank_item_key, search_dict=v)
         if value == None: continue
         rank[k] = value
-    rank_values = list(rank.items())
+    if excluding_zero:
+        rank_values = [r for r in rank.items() if r[1] > 0]
+    else:
+        rank_values = [r for r in rank.items()]
     # print(rank_values)
     rank_values.sort(reverse=True, key=lambda x: key(x[1]) if key else x[1])
     # print(rank)

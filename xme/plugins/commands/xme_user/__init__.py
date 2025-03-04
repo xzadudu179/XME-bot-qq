@@ -18,9 +18,9 @@ usage = {
     "permissions": [],
     "alias": alias
 }
+
 commands = module_tools.get_module_funcs('cmd_name', 'usage', __name__)
 commands[cmd_name] = usage
-print([command for command in commands.keys()])
 __plugin_usage__ = str(PluginDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),

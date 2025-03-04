@@ -58,10 +58,10 @@ def get_qq_avatar(qq, size=640):
     return get_url_image(f"https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}")
 
 def take_screenshot(screen_num=1):
-    os.makedirs("./screenshots", exist_ok=True)
-    file_tools.delete_files_in_folder('./screenshots')
+    os.makedirs("./data/images/screenshots", exist_ok=True)
+    file_tools.delete_files_in_folder('./data/images/screenshots')
     image, state = screenshot(screen_num)
-    name = f'./screenshots/screenshot{screen_num}{time.strftime(r"%Y%m%d-%H-%M-%S")}.png'
+    name = f'./data/images/screenshots/screenshot{screen_num}{time.strftime(r"%Y%m%d-%H-%M-%S")}.png'
     image.save(name)
     name = os.path.abspath(name)
     return name, state
@@ -125,5 +125,5 @@ def create_image_message(b64: str):
         raise e
 
 if __name__ == "__main__":
-    os.makedirs("./screenshots", exist_ok=True)
+    os.makedirs("./data/images/screenshots", exist_ok=True)
     take_screenshot(2)

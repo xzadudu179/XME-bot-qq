@@ -62,7 +62,7 @@ class User(DbReadable):
     def check_and_replace_username(self, name):
         """将用户名确定为合法字符范围
         """
-        self.name = text_tools.characters_only_contains_ch_en_num_udline_horzline(name)
+        self.name = text_tools.to_spec_string(name)
         return True
 
     @DbReadable.update_data

@@ -105,12 +105,12 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
     return result
 
 @user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
-async def play_game(session: CommandSession, user: user.User, args: dict):
+async def play_game(session: CommandSession, u: user.User, args: dict):
     BASIC_AWARD = 10
     MAX_RANGE = 34359738368
     MAX_LIMIT = 35
     start_guessing = False
-    get_award_times_left = TIMES_LIMIT - user.get_limit_info(user, f"game_{name}")[1] - 1
+    get_award_times_left = TIMES_LIMIT - user.get_limit_info(u, f"game_{name}")[1] - 1
     # print(TIMES_LIMIT, xme_user.get_limit_info(user, f"game_{name}")[1])
     settings: dict = args
     try:

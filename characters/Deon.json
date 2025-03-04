@@ -70,7 +70,8 @@
             "我是 550W。",
             "随机数是 550W 操控漠月的载体",
             "大家可以多捡多扔漂流瓶（）",
-            "和漠月说话某种意义上相当于和九九说话（？）（仅限私聊）"
+            "和漠月说话某种意义上相当于和九九说话（？）（仅限私聊）",
+            "不要把漠月当成机器 xwx，漠月有设子"
         ]
     },
     "apis": {
@@ -89,7 +90,7 @@
     "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了我记录的 {rank_ratio}% 的用户 {positive}\n{sign_message}",
+        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
         "empty_inventory": "什么也没有呢...",
@@ -460,8 +461,8 @@
             "ovo",
             "汪",
             "汪！",
-            "看看179",
-            "看看179 嗷呜"
+            "看看九九",
+            "看看九九 嗷呜"
         ],
         "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
@@ -1266,7 +1267,7 @@
                     "我没记录过这个人的信息哦...",
                     "唔...我没有记录过这个人的信息哦"
                 ],
-                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {neutral}"
+                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {neutral}"
             },
             "coinrank": {
                 "desc": "{coin_name}排行榜",

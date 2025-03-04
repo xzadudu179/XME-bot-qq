@@ -66,7 +66,7 @@ async def _(session: CommandSession):
     for p in plugins:
         index += 1
         try:
-            total_pages += "\n\t" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+            total_pages += "\n\t" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
         except:
             total_pages += "\n\t" + f"[未知] {p.name}"
 

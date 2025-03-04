@@ -75,7 +75,7 @@
     "user": {
         "coin_name": "金币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户\n{sign_message}",
+        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}",
         "no_sign": "从未签到过",
         "empty_inventory": "物品栏空空如也...",
@@ -419,7 +419,7 @@
                 "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
                 "invalid_arg": "不明白指定的排名长度意思呢...",
                 "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
-                "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 的用户 {neutral}"
+                "ranking_suffix": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {neutral}"
             },
             "sendcoin": {
                 "desc": "给人{coin_name}",

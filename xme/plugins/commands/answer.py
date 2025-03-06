@@ -2,12 +2,11 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import reqtools
 from xme.xmetools import randtools
-from xme.xmetools import texttools
+from xme.xmetools import jsontools
 from xme.xmetools.timetools import curr_days
 import random
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
-import json
 
 alias = ['答案之书', 'ans']
 __plugin_name__ = 'answer'
@@ -52,13 +51,15 @@ async def _(session: CommandSession):
         else:
             print("550W 还没来")
     try:
-        ans_json = await reqtools.fetch_data('https://api.andeer.top/API/answer.php')
-        if ans_json['code'] != 200:
-            message = get_message("plugins", __plugin_name__, "cannot_fetch")
+        ans_json = jsontools.read_from_path("./static/answers.json")
+        # ans_json = await reqtools.fetch_data('https://api.andeer.top/API/answer.php')
+        # if ans_json['code'] != 200:
+            # message = get_message("plugins", __plugin_name__, "cannot_fetch")
             # message = "呜呜，书翻不开了..."
-        else:
-            data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
-            message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data}\"\n\"{ans_json['data']['en']}\""
+        # else:
+        data = random.choice(ans_json)
+        # data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
+        message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data['zh']}\"\n\"{data['en']}\""
     except Exception as ex:
         print(ex)
     finally:

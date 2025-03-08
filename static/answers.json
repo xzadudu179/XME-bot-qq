@@ -1,786 +1,634 @@
 [
     {
-        "zh": "记得不要太急进。",
-        "en": "REMEMBER NOT TO BE TOO AGGRESSIVE."
+        "zh": "不要抱有希望。",
+        "en": "DON’T BET ON IT"
     },
     {
-        "zh": "只有一次机会。",
-        "en": "THERE'S ONLY ONE CHANCE."
+        "zh": "答案或许会以另一种语言降临。",
+        "en": "THE ANSWER MAY COME TO YOU IN ANOTHER LANGUAGE"
     },
     {
-        "zh": "问问自己为什么要这么干。",
-        "en": "ASK YOURSELF WHY YOU DID IT."
+        "zh": "先探究，再享受。",
+        "en": "INVESTIGATE AND THEN ENJOY IT"
     },
     {
-        "zh": "并非永恒。",
-        "en": "NOT FOREVER."
+        "zh": "等待会更好。",
+        "en": "BETTER TO WAIT"
     },
     {
-        "zh": "以后再说。",
-        "en": "WE'LL TALK ABOUT IT LATER."
+        "zh": "你可能会发现自己难以妥协。",
+        "en": "YOU COULD FIND YOURSELF UNABLE TO COMPROMISE"
     },
     {
-        "zh": "现在没法要求太多。",
-        "en": "I CAN'T ASK TOO MUCH RIGHT NOW."
+        "zh": "尽早行动。",
+        "en": "DO IT EARLY"
     },
     {
-        "zh": "障碍重重。",
-        "en": "THERE ARE MANY OBSTACLES."
+        "zh": "听从专家的建议。",
+        "en": "FOLLOW THE ADVICE OF EXPERTS"
     },
     {
-        "zh": "需要冒险。",
-        "en": "YOU NEED TO TAKE RISKS."
+        "zh": "保持低调。",
+        "en": "KEEP IT TO YOURSELF"
     },
     {
-        "zh": "三思而后行。",
-        "en": "THINK TWICE BEFORE YOU DO."
+        "zh": "关注你的家庭生活。",
+        "en": "FOCUS ON YOUR HOME LIFE"
     },
     {
-        "zh": "静观其变。",
-        "en": "WAIT AND SEE WHAT HAPPENS."
+        "zh": "似乎已成定局。",
+        "en": "IT SEEMS ASSURED"
     },
     {
-        "zh": "你猜。",
-        "en": "GUESS WHAT."
+        "zh": "怀抱冒险的心态。",
+        "en": "ADOPT AN ADVENTUROUS ATTITUDE"
     },
     {
-        "zh": "最后一次机会。",
-        "en": "LAST CHANCE."
+        "zh": "此举或将带来惊人的结果。",
+        "en": "STARTLING EVENTS MAY OCCUR AS A RESULT"
     },
     {
-        "zh": "不。",
-        "en": "NO, NO."
+        "zh": "你的行动将改善局势。",
+        "en": "YOUR ACTIONS WILL IMPROVE THINGS"
     },
     {
-        "zh": "你需要尝试接受。",
-        "en": "YOU NEED TO TRY TO ACCEPT IT."
-    },
-    {
-        "zh": "继续走你的路，问题当没有事情发生过吧。",
-        "en": "KEEP GOING YOUR WAY, AND THE PROBLEM IS THAT NOTHING HAS EVER HAPPENED."
-    },
-    {
-        "zh": "万一错过，就没有这个机会了。",
-        "en": "IN CASE WE MISS IT, WE WON'T HAVE THE CHANCE."
-    },
-    {
-        "zh": "好运会降临。",
-        "en": "GOOD LUCK WILL COME."
-    },
-    {
-        "zh": "木已成舟。",
-        "en": "THE DIE IS CAST."
-    },
-    {
-        "zh": "继续前进。",
-        "en": "MOVE ON."
-    },
-    {
-        "zh": "听一下别人劝告吧。",
-        "en": "LISTEN TO OTHER PEOPLE'S ADVICE."
-    },
-    {
-        "zh": "先做点别的。",
-        "en": "DO SOMETHING ELSE FIRST."
-    },
-    {
-        "zh": "时机未到。",
-        "en": "IT'S NOT THE RIGHT TIME."
-    },
-    {
-        "zh": "另择吉日。",
-        "en": "CHOOSE ANOTHER AUSPICIOUS DAY."
-    },
-    {
-        "zh": "这不切实际。",
-        "en": "IT'S IMPRACTICAL."
-    },
-    {
-        "zh": "这是肯定的。",
-        "en": "THAT'S FOR SURE."
-    },
-    {
-        "zh": "听听专家的意见。",
-        "en": "LISTEN TO THE EXPERT'S OPINION."
-    },
-    {
-        "zh": "多留意身边事物、另有出路。",
-        "en": "PAY MORE ATTENTION TO THE THINGS AROUND YOU AND FIND ANOTHER WAY OUT."
-    },
-    {
-        "zh": "不作死就不会死。",
-        "en": "NO ZUO NO DIE."
-    },
-    {
-        "zh": "事与愿违，须多留意自己情绪。",
-        "en": "THINGS GO AGAINST YOUR WISHES, SO YOU SHOULD PAY MORE ATTENTION TO YOUR EMOTIONS."
-    },
-    {
-        "zh": "你将取得成功。",
-        "en": "YOU WILL SUCCEED."
-    },
-    {
-        "zh": "不用担心。",
-        "en": "NEVER MIND."
-    },
-    {
-        "zh": "放手。",
-        "en": "LET GO."
-    },
-    {
-        "zh": "顺其自然。",
-        "en": "LET IT BE."
-    },
-    {
-        "zh": "不要自钻牛角尖，包容较挑剔来得开心。",
-        "en": "DON'T MAKE A FOOL OF YOURSELF. IT'S FUN TO BE TOLERANT AND PICKY."
-    },
-    {
-        "zh": "会后悔的。",
-        "en": "YOU'LL REGRET IT."
-    },
-    {
-        "zh": "有可能。",
-        "en": "IT'S POSSIBLE."
-    },
-    {
-        "zh": "需要合作。",
-        "en": "WE NEED COOPERATION."
-    },
-    {
-        "zh": "这种事不要告诉别人。",
-        "en": "DON'T TELL ANYONE ABOUT THIS."
-    },
-    {
-        "zh": "用轻松的态度面对。",
-        "en": "FACE IT WITH A RELAXED ATTITUDE."
-    },
-    {
-        "zh": "要求不要太高。",
-        "en": "DON'T ASK TOO MUCH."
-    },
-    {
-        "zh": "不值得。",
-        "en": "UNWORTHY."
-    },
-    {
-        "zh": "答案就在你身边。",
-        "en": "THE ANSWER IS RIGHT NEXT TO YOU."
-    },
-    {
-        "zh": "一笑了之。",
-        "en": "LAUGH AWAY."
-    },
-    {
-        "zh": "现在你可以。",
-        "en": "NOW YOU CAN."
-    },
-    {
-        "zh": "迟一点才去解决。",
-        "en": "WE'LL DEAL WITH IT LATER."
-    },
-    {
-        "zh": "有。",
-        "en": "YES."
-    },
-    {
-        "zh": "为什么不呢？",
-        "en": "WHY NOT?"
-    },
-    {
-        "zh": "用感觉去行动吧。",
-        "en": "ACT WITH YOUR FEELINGS."
-    },
-    {
-        "zh": "凡事都有两面，一时不爽未必是坏事。",
-        "en": "THERE ARE TWO SIDES TO EVERYTHING, AND BEING UNHAPPY FOR A MOMENT IS NOT NECESSARILY A BAD THING."
-    },
-    {
-        "zh": "小心外来的引诱，不要意气用事啊 !",
-        "en": "BEWARE OF FOREIGN TEMPTATIONS, DON'T GET EMOTIONAL!"
-    },
-    {
-        "zh": "千万不能失败。",
-        "en": "NEVER FAIL."
-    },
-    {
-        "zh": "辛苦的付出与收获不成正比，但切忌意气用事。",
-        "en": "HARD WORK IS NOT IN DIRECT PROPORTION TO GAIN, BUT DON'T BE EMOTIONAL."
-    },
-    {
-        "zh": "学会释然。",
-        "en": "LEARN TO LET GO."
-    },
-    {
-        "zh": "为何你还相信自己的幻想。",
-        "en": "WHY DO YOU STILL BELIEVE IN YOUR FANTASIES."
-    },
-    {
-        "zh": "当局者迷。",
-        "en": "THE PLAYER CAN'T SEE MOST OF THE GAME."
-    },
-    {
-        "zh": "你说了算。",
-        "en": "IT'S UP TO YOU."
-    },
-    {
-        "zh": "会很不顺利。",
-        "en": "IT'S NOT GONNA GO WELL."
-    },
-    {
-        "zh": "相信你的直觉。",
-        "en": "TRUST YOUR INSTINCTS."
-    },
-    {
-        "zh": "不要纠结了。",
-        "en": "DON'T WORRY ABOUT IT."
-    },
-    {
-        "zh": "绝对不可。",
-        "en": "ABSOLUTELY NOT."
-    },
-    {
-        "zh": "要抓住问题的关键。",
-        "en": "WE SHOULD GRASP THE CRUX OF THE PROBLEM."
-    },
-    {
-        "zh": "要变通。",
-        "en": "BE FLEXIBLE."
-    },
-    {
-        "zh": "遇上方知有。",
-        "en": "YOU DON'T KNOW IT UNTIL YOU MEET IT."
-    },
-    {
-        "zh": "不在你控制范围以内。",
-        "en": "IT'S OUT OF YOUR CONTROL."
-    },
-    {
-        "zh": "没法保证。",
-        "en": "THERE'S NO GUARANTEE."
-    },
-    {
-        "zh": "肯定的。",
-        "en": "THAT'S FOR SURE."
-    },
-    {
-        "zh": "重新想一下是否真正对你最重要吧。",
-        "en": "RETHINK WHETHER IT IS REALLY THE MOST IMPORTANT TO YOU."
-    },
-    {
-        "zh": "会失去自我。",
-        "en": "YOU LOSE YOURSELF."
-    },
-    {
-        "zh": "太疑神疑鬼了、加强自信吧。",
-        "en": "TOO PARANOID, STRENGTHEN YOUR SELF-CONFIDENCE."
-    },
-    {
-        "zh": "会感到庆幸。",
-        "en": "YOU'LL FEEL LUCKY."
-    },
-    {
-        "zh": "不会失望的。",
-        "en": "YOU WON'T BE DISAPPOINTED."
-    },
-    {
-        "zh": "保持警愓、并非如你所想。",
-        "en": "KEEP YOUR GUARD UP. IT'S NOT WHAT YOU THINK."
-    },
-    {
-        "zh": "再过几年。",
-        "en": "IN A FEW YEARS."
-    },
-    {
-        "zh": "别心急。",
-        "en": "DON'T BE HASTY."
-    },
-    {
-        "zh": "见好就收。",
-        "en": "STOP AS SOON AS YOU SEE IT."
-    },
-    {
-        "zh": "接受改变，面对现实啦。",
-        "en": "ACCEPT THE CHANGE AND FACE THE REALITY."
-    },
-    {
-        "zh": "只想不努力是没用的!!加油…。",
-        "en": "IT'S NO USE TRYING NOT TO WORK HARD! COME ON... NO, NO, NO."
-    },
-    {
-        "zh": "很大机会出现另一局面。",
-        "en": "THERE IS A GOOD CHANCE OF ANOTHER SITUATION."
-    },
-    {
-        "zh": "无论如何你都会继续去做 !",
-        "en": "YOU WILL CONTINUE TO DO IT ANYWAY!"
+        "zh": "你需要学会适应。",
+        "en": "YOU WILL NEED TO ACCOMMODATE"
     },
     {
         "zh": "毫无疑问。",
-        "en": "WITHOUT DOUBT."
+        "en": "DEFINITELY"
     },
     {
-        "zh": "这件事会很麻烦。",
-        "en": "THIS WILL BE TROUBLESOME."
+        "zh": "绝对不行。",
+        "en": "ABSOLUTELY NOT"
     },
     {
-        "zh": "没什么好结果。",
-        "en": "IT DIDN'T END WELL."
+        "zh": "它会带来好运。",
+        "en": "IT WILL BRING GOOD LUCK"
     },
     {
-        "zh": "与你无关。",
-        "en": "NONE OF YOUR BUSINESS."
+        "zh": "避开第一个解决方案。",
+        "en": "AVOID THE FIRST SOLUTION"
     },
     {
-        "zh": "你心里已经有答案了。",
-        "en": "YOU ALREADY HAVE THE ANSWER IN YOUR HEART."
+        "zh": "它将影响他人对你的看法。",
+        "en": "IT WILL AFECT HOW OTHERS SEE YOU"
     },
     {
-        "zh": "绝对不。",
-        "en": "ABSOLUTELY NOT."
+        "zh": "此时机不利。",
+        "en": "UNFAVORABLE AT THIS TIME"
     },
     {
-        "zh": "大胆一点。",
-        "en": "BE BOLD."
+        "zh": "另有重要关联之事。",
+        "en": "THERE IS A SUBSTANTIAL LINK TO ANOTHER SITUATION"
     },
     {
-        "zh": "要有点耐心。",
-        "en": "BE PATIENT."
+        "zh": "若遵从指引，你将有所收获。",
+        "en": "IF YOU DO AS YOU’RE TOLD"
     },
     {
-        "zh": "再等等看。",
-        "en": "JUST WAIT AND SEE."
+        "zh": "你将得知一切所需之事。",
+        "en": "YOU WILL FIND OUT EVERYTHING YOU’LL NEED TO KNOW"
     },
     {
-        "zh": "等待一个更好机会。",
-        "en": "WAITING FOR A BETTER CHANCE."
+        "zh": "要么做到极致，要么干脆不做。",
+        "en": "IF IT’S DONE WELL; IF NOT, DON’T DO IT AT ALL"
     },
     {
-        "zh": "时机尚不成熟。",
-        "en": "THE TIME IS NOT YET RIPE."
+        "zh": "静观其变。",
+        "en": "WATCH AND SEE WHAT HAPPENS"
     },
     {
-        "zh": "别想了。",
-        "en": "FORGET IT."
-    },
-    {
-        "zh": "不会后悔的。",
-        "en": "I WON'T REGRET IT."
-    },
-    {
-        "zh": "学会妥协。",
-        "en": "LEARN TO COMPROMISE."
-    },
-    {
-        "zh": "重新想想。",
-        "en": "THINK AGAIN."
-    },
-    {
-        "zh": "不要表态。",
-        "en": "DON'T STATE YOUR POSITION."
-    },
-    {
-        "zh": "你在开玩笑吗？",
-        "en": "YOU ARE KIDDING?"
-    },
-    {
-        "zh": "结果会让你惊喜。",
-        "en": "THE RESULT WILL SURPRISE YOU."
-    },
-    {
-        "zh": "得真的努力一下。",
-        "en": "WE HAVE TO MAKE A REAL EFFORT."
-    },
-    {
-        "zh": "这是在浪费金钱。",
-        "en": "THIS IS A WASTE OF MONEY."
-    },
-    {
-        "zh": "会特别顺利。",
-        "en": "IT'S GOING TO BE GREAT."
-    },
-    {
-        "zh": "一定会有好结果的。",
-        "en": "IT WILL COME TO A GOOD END."
-    },
-    {
-        "zh": "换个角度想想。",
-        "en": "THINK ABOUT IT ANOTHER WAY."
-    },
-    {
-        "zh": "办何自己不肯妥协，先问一下自已的能力。",
-        "en": "IF YOU REFUSE TO COMPROMISE, ASK YOUR ABILITY FIRST."
-    },
-    {
-        "zh": "时间会证明一切。",
-        "en": "TIME WILL TELL."
-    },
-    {
-        "zh": "这件事你说了不算。",
-        "en": "IT'S NOT UP TO YOU."
+        "zh": "尽可能提升自己。",
+        "en": "UPGRADE ANY WAY YOU CAN"
     },
     {
         "zh": "耐心等待。",
-        "en": "WAIT PATIENTLY."
+        "en": "BE PATIENT"
+    },
+    {
+        "zh": "此刻不宜再多求。",
+        "en": "DON’T ASK FOR ANY MORE AT THIS TIME"
+    },
+    {
+        "zh": "不太可能。",
+        "en": "DOUBT IT"
+    },
+    {
+        "zh": "最终决定权在你。",
+        "en": "YOU’LL GET THE FINAL WORD"
+    },
+    {
+        "zh": "你会因自己的选择而感到欣慰。",
+        "en": "YOU’LL BE HAPPY YOU DID"
+    },
+    {
+        "zh": "确保一切白纸黑字。",
+        "en": "GET IT IN WRITING"
+    },
+    {
+        "zh": "最佳方案未必显而易见。",
+        "en": "THE BEST SOLUTION MAY NOT BE THE OBVIOUS ONE"
+    },
+    {
+        "zh": "别被情绪左右。",
+        "en": "DON’T GET CAUGHT UP IN YOUR EMOTIONS"
+    },
+    {
+        "zh": "谨慎行事。",
+        "en": "APPROACH CAUTIOUSLY"
+    },
+    {
+        "zh": "不要犹豫。",
+        "en": "DON’T HESITATE"
+    },
+    {
+        "zh": "向前迈进。",
+        "en": "MOVE ON"
+    },
+    {
+        "zh": "此事已超出你的掌控。",
+        "en": "THAT’S OUT OF YOUR CONTROL"
+    },
+    {
+        "zh": "无可保证。",
+        "en": "THERE IS NO GUARANTEE"
+    },
+    {
+        "zh": "享受其中的过程。",
+        "en": "ENJOY THE EXPERIENCE"
+    },
+    {
+        "zh": "现在是制定新计划的好时机。",
+        "en": "THIS IS A GOOD TIME TO MAKE A NEW PLAN"
+    },
+    {
+        "zh": "保持灵活。",
+        "en": "REMAIN FLEXIBLE"
+    },
+    {
+        "zh": "局势将迅速变化。",
+        "en": "THE CIRCUMSTANCES WILL CHANGE VERY QUICKLY"
+    },
+    {
+        "zh": "放慢步调，从容前行。",
+        "en": "PROCEED AT A MORE RELAXED PAGE"
+    },
+    {
+        "zh": "调整你的关注点。",
+        "en": "SHIFT YOUR FOCUS"
     },
     {
         "zh": "注意细节。",
-        "en": "ATTENTION TO DETAIL."
+        "en": "PAY ATTENTION TO THE DETAILS"
     },
     {
-        "zh": "出现了最佳时机，记着要踏实去干。",
-        "en": "WHEN THE BEST TIME COMES, REMEMBER TO DO IT IN A DOWN-TO-EARTH MANNER."
+        "zh": "大胆表达你的想法。",
+        "en": "SPEAK UP ABOUT IT"
     },
     {
-        "zh": "大方一点。",
-        "en": "BE GENEROUS."
+        "zh": "重新审视真正重要的事物。",
+        "en": "REPRIORITIZE WHAT IS IMPORTANT"
     },
     {
-        "zh": "想想还有没有机会。",
-        "en": "THINK ABOUT WHETHER THERE IS STILL A CHANCE."
+        "zh": "你需要妥协。",
+        "en": "YOU’LL HAVE TO COMPROMISE"
     },
     {
-        "zh": "用尽一切办法去努力。",
-        "en": "TRY EVERY MEANS YOU CAN."
+        "zh": "寻求更多选择。",
+        "en": "SEEK OUT MORE OPTIONS"
     },
     {
-        "zh": "要主动。",
-        "en": "TAKE THE INITIATIVE."
+        "zh": "跟随他人的引导。",
+        "en": "FOLLOW SOMEONE ELSE’S LEAD"
     },
     {
-        "zh": "这不值得努力。",
-        "en": "IT'S NOT WORTH THE EFFORT."
+        "zh": "这将成为你难忘的经历。",
+        "en": "IT IS SOMETHING YOU WON’T FORGET"
     },
     {
-        "zh": "休息一下就好了。",
-        "en": "JUST TAKE A BREAK."
+        "zh": "大胆尝试。",
+        "en": "TAKE A CHANCE"
     },
     {
-        "zh": "不要浪费精力。",
-        "en": "DON'T WASTE YOUR ENERGY."
+        "zh": "不要等待。",
+        "en": "DON’T WAIT"
     },
     {
-        "zh": "无法预测。",
-        "en": "UNPREDICTABLE."
+        "zh": "接受生活中的变动。",
+        "en": "ACCEPT A CHANCE TO YOUR ROUTINE"
     },
     {
-        "zh": "管他呢。",
-        "en": "WHATEVER."
+        "zh": "做好妥协的准备。",
+        "en": "EXPECT TO SETTLE"
     },
     {
-        "zh": "相信你最初的想法。",
-        "en": "BELIEVE WHAT YOU THOUGHT IN THE FIRST PLACE."
+        "zh": "列出原因。",
+        "en": "MAKE A LIST OF WHY"
     },
     {
-        "zh": "结果可能令人惊讶。",
-        "en": "THE RESULTS MAY BE SURPRISING."
+        "zh": "列出反对的理由。",
+        "en": "MAKE A LIST OF WHY NOT"
     },
     {
-        "zh": "会很顺利。",
-        "en": "IT'S GONNA BE FINE."
+        "zh": "你需要主动出击。",
+        "en": "YOU’LL NEED TO TAKE THE INITIATIVE"
     },
     {
-        "zh": "现在不是最佳时机。",
-        "en": "NOW IS NOT THE BEST TIME."
+        "zh": "此事至关重要。",
+        "en": "IT IS SIGNIFICANT"
     },
     {
-        "zh": "困扰你的问题可望得到解决。",
-        "en": "THE PROBLEM THAT BOTHERS YOU IS EXPECTED TO BE SOLVED."
+        "zh": "你需要获取更多信息。",
+        "en": "YOU’LL NEED MORE INFORMATION"
     },
     {
-        "zh": "再想清楚你要的是什么。",
-        "en": "AND FIGURE OUT WHAT YOU WANT."
+        "zh": "履行你的承诺。",
+        "en": "FOLLOW THROUGH ON YOUR OBLIGATIONS"
     },
     {
-        "zh": "现在还说不清。",
-        "en": "I DON'T KNOW YET."
+        "zh": "稍后再处理。",
+        "en": "DEAL WITH IT LATER"
     },
     {
-        "zh": "奇迹将会降临。",
-        "en": "A MIRACLE WILL COME."
+        "zh": "此事将引起波澜。",
+        "en": "IT WILL CREATE A STIR"
     },
     {
-        "zh": "要知足。",
-        "en": "BE CONTENT."
+        "zh": "重新考虑你的方式。",
+        "en": "RECONSIDER YOUR APPROACH"
     },
     {
-        "zh": "接受别人的意见会有助力。",
-        "en": "IT HELPS TO ACCEPT OTHER PEOPLE'S OPINIONS."
+        "zh": "尽管下注吧。",
+        "en": "BET ON IT"
     },
     {
-        "zh": "忽略了一件显而易见的事。",
-        "en": "OVERLOOKED ONE OBVIOUS THING."
+        "zh": "你距离太近，难以看清全貌。",
+        "en": "YOU ARE TOO CLOSE TO SEE"
     },
     {
-        "zh": "不然呢？",
-        "en": "OR WHAT?"
+        "zh": "专注于你的工作会更好。",
+        "en": "IT WOULD BE BETTER TO FOCUS ON YOUR WORK"
     },
     {
-        "zh": "小心!!",
-        "en": "LOOK OUT!"
+        "zh": "此事需付出极大努力。",
+        "en": "A SUBSTANTIAL EFFORT WILL BE REQUIRED"
     },
     {
-        "zh": "要节制了，记得见好就收。",
-        "en": "WHEN IT COMES TO ABSTINENCE, REMEMBER TO STOP AS SOON AS YOU ARE READY."
+        "zh": "它将带来愉悦。",
+        "en": "IT WILL BE A PLEASURE"
     },
     {
-        "zh": "别再浪费时间。",
-        "en": "DON'T WASTE ANY MORE TIME."
+        "zh": "先让自己休息一下。",
+        "en": "ALLOW YOURSELF TO REST FIRST"
     },
     {
-        "zh": "倾听你内心的声音。",
-        "en": "LISTEN TO YOUR INNER VOICE."
+        "zh": "待人更慷慨些。",
+        "en": "BE MORE GENEROUS"
     },
     {
-        "zh": "不要抱期望。",
-        "en": "DON'T EXPECT."
+        "zh": "局势尚不明朗。",
+        "en": "THE SITUATION IS UNCLEAR"
     },
     {
-        "zh": "不要心存侥幸，不付出又那会有收获呢 ?",
-        "en": "DON'T TAKE ANY CHANCES. IF YOU DON'T PAY, WHAT WILL YOU GET?"
+        "zh": "清除你自己的障碍。",
+        "en": "REMOVE YOUR OWN OBSTACLES"
     },
     {
-        "zh": "放轻松，慢点来。",
-        "en": "TAKE IT EASY. SLOW DOWN."
+        "zh": "此机会短时间内不会再来。",
+        "en": "THE CHANCE WILL NOT COME AGAIN SOON"
     },
     {
-        "zh": "值得奋斗。",
-        "en": "IT'S WORTH FIGHTING FOR."
+        "zh": "相信你的最初想法。",
+        "en": "TRUST YOUR ORIGINAL THOUGHT"
     },
     {
-        "zh": "危机四伏，较为冲击动荡，需要过关斩将。",
-        "en": "CRISIS IS EVERYWHERE, THE IMPACT IS MORE TURBULENT, AND WE NEED TO GET THROUGH THE CUSTOMS."
+        "zh": "不宜贸然行动。",
+        "en": "IT WOULD BE INADVISABLE"
     },
     {
-        "zh": "这没有什么意义。",
-        "en": "IT DOESN'T MAKE ANY SENSE."
+        "zh": "先完成其他事情。",
+        "en": "FINISH SOMETHING ELSE FIRST"
     },
     {
-        "zh": "好好把握啦 !",
-        "en": "TAKE ADVANTAGE OF IT!"
+        "zh": "你可能会遇到阻力。",
+        "en": "YOU MAY HAVE OPPOSITION"
     },
     {
-        "zh": "这不是你想要的。",
-        "en": "THIS IS NOT WHAT YOU WANT."
+        "zh": "尽快解决此事。",
+        "en": "SETTLE IT SOON"
     },
     {
-        "zh": "机会不会短期内再出现。",
-        "en": "THE OPPORTUNITY WILL NOT HAPPEN AGAIN ANY TIME SOON."
+        "zh": "无论如何，都要坚持。",
+        "en": "NO MATTER WHAT"
     },
     {
-        "zh": "可能会好难，但值得的。",
-        "en": "IT MIGHT BE HARD, BUT IT'S WORTH IT."
+        "zh": "别做得太过火。",
+        "en": "DON’T OVERDO IT"
     },
     {
-        "zh": "如你所愿。",
-        "en": "AS YOU WISH."
+        "zh": "务实一些。",
+        "en": "BE PRACTICAL"
     },
     {
-        "zh": "仍然难以估计。",
-        "en": "IT'S STILL HARD TO ESTIMATE."
+        "zh": "大胆尝试。",
+        "en": "TAKE A CHANCE"
     },
     {
-        "zh": "这会影响你的形象。",
-        "en": "IT WILL AFFECT YOUR IMAGE."
+        "zh": "此事毋庸置疑。",
+        "en": "IT IS CERTAIN"
     },
     {
-        "zh": "眼光长远一点。",
-        "en": "TAKE A LONG VIEW."
+        "zh": "看清全局。",
+        "en": "GET A CLEARER VIEW"
     },
     {
-        "zh": "拭目以待。",
-        "en": "RUB ONE'S EYES AND WAIT."
+        "zh": "尚不确定。",
+        "en": "IT IS UNCERTAIN"
     },
     {
-        "zh": "寻找机会就行。",
-        "en": "JUST LOOK FOR OPPORTUNITIES."
+        "zh": "现在你可以行动了。",
+        "en": "NOW YOU CAN"
     },
     {
-        "zh": "不要做的过火了。",
-        "en": "DON'T GO TOO FAR."
+        "zh": "保留你的精力。",
+        "en": "SAVE YOUR ENERGY"
     },
     {
-        "zh": "有意外困扰，停滞不前，情绪会受到动摇。",
-        "en": "IF YOU HAVE UNEXPECTED TROUBLES, YOU WILL STAGNATE, AND YOUR EMOTIONS WILL BE SHAKEN."
+        "zh": "可以，但别强求。",
+        "en": "YES, BUT DON’T FORCE IT"
     },
     {
-        "zh": "你需要放弃其它东西才成事。",
-        "en": "YOU NEED TO GIVE UP SOMETHING ELSE TO GET IT DONE."
+        "zh": "结果将是积极的。",
+        "en": "THE OUTCOME WILL BE POSITIVE"
     },
     {
-        "zh": "答案不是你所想但又会成功。",
-        "en": "THE ANSWER IS NOT WHAT YOU THINK, BUT IT WILL SUCCEED."
+        "zh": "等待更好的机会。",
+        "en": "WAIT FOR A BETTER OFFER"
     },
     {
-        "zh": "千万别信。",
-        "en": "DON'T BELIEVE IT."
+        "zh": "你可能需要放弃其他事情。",
+        "en": "YOU MAY HAVE TO DROP OTHER THINGS"
     },
     {
-        "zh": "等等。",
-        "en": "WAIT."
+        "zh": "这将付出代价。",
+        "en": "IT’LL COST YOU"
     },
     {
-        "zh": "可按自己的目标进行计划。",
-        "en": "YOU CAN PLAN ACCORDING TO YOUR OWN GOALS."
+        "zh": "它一定会让事情变得有趣。",
+        "en": "IT IS SURE TO MAKE THINGS INTERESTING"
     },
     {
-        "zh": "你必须解决一些相关的问题。",
-        "en": "YOU MUST SOLVE SOME RELATED PROBLEMS."
+        "zh": "掌控局势。",
+        "en": "TAKE CHARGE"
     },
     {
-        "zh": "尝试去想一下其它更多的可能性。",
-        "en": "TRY TO THINK OF OTHER MORE POSSIBILITIES."
+        "zh": "或许不易，但你会发现其中的价值。",
+        "en": "IT MAY BE DIFFICULT BUT YOU WILL FIND VALUE IN IT"
     },
     {
-        "zh": "不妨改变一下想法。",
-        "en": "YOU MIGHT AS WELL CHANGE YOUR MIND."
+        "zh": "相关问题可能浮现。",
+        "en": "RELATED ISSUES MAY SURFACE"
     },
     {
-        "zh": "这取决于你的行动。",
-        "en": "IT DEPENDS ON YOUR ACTIONS."
+        "zh": "无论你做什么，结果都将持久。",
+        "en": "WHATEVER YOU DO THE RESULTS WILL BE LASTING"
     },
     {
-        "zh": "仔细想想再说。",
-        "en": "THINK ABOUT IT."
+        "zh": "寻求帮助能让你成功推进。",
+        "en": "ASSISTANCE WOULD MAKE YOUR PROGRESS A SUCCESS"
     },
     {
-        "zh": "听听别人怎么说。",
-        "en": "LISTEN TO WHAT OTHER PEOPLE HAVE TO SAY."
+        "zh": "告诉别人这对你意味着什么。",
+        "en": "TELL SOMEONE WHAT IT MEANS TO YOU"
     },
     {
-        "zh": "认清现实吧。",
-        "en": "RECOGNIZE THE REALITY."
+        "zh": "合作是关键。",
+        "en": "COLLABORATION WILL BE THE KEY"
     },
     {
-        "zh": "将会受到一些挫折，要积极面对。",
-        "en": "THERE WILL BE SOME SETBACKS, SO WE SHOULD FACE THEM POSITIVELY."
+        "zh": "保持开放的心态。",
+        "en": "KEEP AN OPEN MIND"
     },
     {
-        "zh": "这难以置信。",
-        "en": "THIS IS UNBELIEVABLE."
+        "zh": "你一定会得到支持。",
+        "en": "YOU ARE SURE TO HAVE SUPPORT"
     },
     {
-        "zh": "不要浪费你的时间了。",
-        "en": "DON'T WASTE YOUR TIME."
+        "zh": "这不重要。",
+        "en": "IT IS NOT SIGNIFICANT"
     },
     {
-        "zh": "可能会造成震惊事件。",
-        "en": "IT COULD BE A SHOCK."
+        "zh": "寻求更多选择。",
+        "en": "SEEK OUT MORE OPTIONS"
     },
     {
-        "zh": "问题将会解决。",
-        "en": "THE PROBLEM WILL BE SOLVED."
+        "zh": "不要担心。",
+        "en": "DON’T BE CONCERNED"
     },
     {
-        "zh": "你需要付出代价。",
-        "en": "YOU HAVE TO PAY THE PRICE."
+        "zh": "它不会崩溃。",
+        "en": "IT CANNOT FALL"
     },
     {
-        "zh": "别瞎折腾了。",
-        "en": "STOP MESSING AROUND."
+        "zh": "这值得一试。",
+        "en": "IT IS WORTH THE TROUBLE"
     },
     {
-        "zh": "结果如何你都不会忘记这件事。",
-        "en": "YOU WON'T FORGET IT IN THE END."
+        "zh": "你将面临需要克服的障碍。",
+        "en": "THERE WILL BE OBSTACLES TO OVERCOME"
     },
     {
-        "zh": "全力以赴。",
-        "en": "GO ALL OUT."
+        "zh": "你必须立即行动。",
+        "en": "YOU MUST ACT NOW"
     },
     {
-        "zh": "还有别的选择。",
-        "en": "THERE ARE OTHER OPTIONS."
+        "zh": "坚定的承诺将带来良好的结果。",
+        "en": "A STRONG COMMITMENT WILL ACHIEVE GOOD RESULTS"
     },
     {
-        "zh": "没错",
-        "en": "THAT'S RIGHT"
+        "zh": "坚持你的良好意图。",
+        "en": "FOLLOW THROUGH WITH YOUR GOOD INTENTIONS"
     },
     {
-        "zh": "你做什么都没用。",
-        "en": "THERE'S NOTHING YOU CAN DO."
+        "zh": "不要忽视显而易见的事物。",
+        "en": "DON’T IGNORE THE OBVIOUS"
     },
     {
-        "zh": "尽在掌握之中。",
-        "en": "IT'S ALL UNDER CONTROL."
+        "zh": "你不会失望的。",
+        "en": "YOU WILL NOT BE DISAPPOINTED"
     },
     {
-        "zh": "毫无道理。",
-        "en": "IT DOESN'T MAKE ANY SENSE."
+        "zh": "这不值得一番争斗。",
+        "en": "IT’S NOT WORTH A STRUGGLE"
     },
     {
-        "zh": "问问你的亲人",
-        "en": "ASK YOUR RELATIVES."
+        "zh": "温和的坚持会有所回报。",
+        "en": "GENTLE PERSISTENCE WILL PAY OFF"
     },
     {
-        "zh": "这辈子都不可能。",
-        "en": "NOT FOR THE REST OF MY LIFE."
+        "zh": "别忘了享受过程。",
+        "en": "DON’T FORGET TO HAVE FUN"
     },
     {
-        "zh": "省点力气吧。",
-        "en": "SAVE YOUR BREATH."
+        "zh": "它可能已经是板上钉钉的事。",
+        "en": "IT MAY ALREADY BE A DONE DEAL"
     },
     {
-        "zh": "车到山前必有路。",
-        "en": "THE CAR WILL FIND ITS WAY ROUND THE HILL WHEN IT GETS THERE."
+        "zh": "如果你不抗拒。",
+        "en": "IF YOU DON’T RESIST"
     },
     {
-        "zh": "想得美。",
-        "en": "DAYDREAMING."
+        "zh": "遵守规则。",
+        "en": "RESPECT THE RULES"
     },
     {
-        "zh": "地点不合适。",
-        "en": "IT'S NOT THE RIGHT PLACE."
+        "zh": "不要怀疑它。",
+        "en": "DON’T DOUBT IT"
     },
     {
-        "zh": "这是必然的，不要抗拒。",
-        "en": "IT'S INEVITABLE. DON'T RESIST."
+        "zh": "走路时小心脚下。",
+        "en": "WATCH YOUR STEP AS YOU GO"
     },
     {
-        "zh": "是你心思误放在其它地方，影响运程。",
-        "en": "IT IS YOUR MIND THAT IS MISPLACED IN OTHER PLACES, AFFECTING YOUR LUCK."
+        "zh": "尝试一个更不可能的解决方案。",
+        "en": "TRY A MORE UNLIKELY SOLUTION"
     },
     {
-        "zh": "做最坏的打算。",
-        "en": "PREPARE FOR THE WORST."
+        "zh": "花更多时间做决定。",
+        "en": "TAKE MORE TIME TO DECIDE"
     },
     {
-        "zh": "这不可取。",
-        "en": "IT'S NOT ADVISABLE."
+        "zh": "不要急于行动。",
+        "en": "DON’T BE PRESSURED INTO ACTING TOO QUICKLY"
     },
     {
-        "zh": "转移目标吧。",
-        "en": "SHIFT THE TARGET."
+        "zh": "如果你独自一人，就不要做。",
+        "en": "NOT IF YOU’RE ALONE"
     },
     {
-        "zh": "别被自己情绪影响。",
-        "en": "DON'T BE INFLUENCED BY YOUR EMOTIONS."
+        "zh": "你需要考虑其他方法。",
+        "en": "YOU’LL NEED TO CONSIDER OTHER WAYS"
     },
     {
-        "zh": "别太赶了。",
-        "en": "DON'T BE IN SUCH A HURRY."
+        "zh": "仔细听；然后你会明了。",
+        "en": "LISTEN MORE CAREFULLY; THEN YOU WILL KNOW"
     },
     {
-        "zh": "不要忽视自己的力量。",
-        "en": "DON'T IGNORE YOUR STRENGTH."
+        "zh": "他人将依赖你的选择。",
+        "en": "OTHERS WILL DEPEND ON YOUR CHOICES"
     },
     {
-        "zh": "尚待时日。",
-        "en": "IT WILL TAKE TIME."
+        "zh": "意识到选择过多也如同选择过少一样困难。",
+        "en": "REALIZE THAT TOO MANY CHOICES IS AS DIFFICULT AS TOO FEW"
     },
     {
-        "zh": "不要自作多情。",
-        "en": "DON'T FLATTER YOURSELF."
+        "zh": "那将是浪费钱财。",
+        "en": "THAT WOULD BE A WASTE OF MONEY"
     },
     {
-        "zh": "众所周知。",
-        "en": "AS EVERYONE KNOWS."
+        "zh": "推动事情尽快结束。",
+        "en": "PRESS FOR CLOSURE"
     },
     {
-        "zh": "会付出代价。",
-        "en": "WILL PAY THE PRICE."
+        "zh": "尽全力去做。",
+        "en": "GIVE IT ALL YOU’VE GOT"
     },
     {
-        "zh": "非常冒险...机会不大。",
-        "en": "IT'S VERY RISKY. IT'S A LONG SHOT."
+        "zh": "是的。",
+        "en": "YES"
+    },
+    {
+        "zh": "放手吧。",
+        "en": "LET IT GO"
+    },
+    {
+        "zh": "意外事故非常可能发生。",
+        "en": "MISHAPS ARE HIGHLY PROBALE"
+    },
+    {
+        "zh": "你其实不在乎。",
+        "en": "YOU DON’T REALLY CARE"
+    },
+    {
+        "zh": "抛弃旧有的解决方案。",
+        "en": "LEAVE BEHIND OLD SOLUTIONS"
+    },
+    {
+        "zh": "一年后，这将不再重要。",
+        "en": "A YEAR FROM NOW IT WON’T MATTER"
+    },
+    {
+        "zh": "答案就在你身边。",
+        "en": "THE ANSWER IS IN YOUR BACKYARD"
+    },
+    {
+        "zh": "笑一笑吧。",
+        "en": "LAUGH ABOUT IT"
+    },
+    {
+        "zh": "它可能是非凡的。",
+        "en": "IT COULD BE EXTRAORDINARY"
+    },
+    {
+        "zh": "相信你的直觉。",
+        "en": "TRUST YOUR INTUITION"
+    },
+    {
+        "zh": "一切都会变得精彩。",
+        "en": "IT’S GONNA BE GREAT"
+    },
+    {
+        "zh": "你得边走边做。",
+        "en": "YOU’LL HAVE TO MAKE IT UP AS YOU GO"
+    },
+    {
+        "zh": "设定优先事项将是过程中的必要步骤。",
+        "en": "SETTING PRIORITIES WILL BE A NECESSARY PART OF THE PROCESS"
+    },
+    {
+        "zh": "毫无疑问。",
+        "en": "UNQUESTIONABLY"
+    },
+    {
+        "zh": "表现得就像它已经实现了。",
+        "en": "ACT AS THOUGH IT IS ALREADY REAL"
+    },
+    {
+        "zh": "当然。",
+        "en": "OF COURSE"
+    },
+    {
+        "zh": "发挥你的想象力。",
+        "en": "USE YOUR IMAGINATION"
+    },
+    {
+        "zh": "你会后悔的。",
+        "en": "YOU’LL REGRET IT"
+    },
+    {
+        "zh": "数到十，再问一次。",
+        "en": "COUNT TO 10; ASK AGAIN"
+    },
+    {
+        "zh": "你现在比以往任何时候都更懂得了。",
+        "en": "YOU KNOW BETTER NOW THAN EVER BEFORE"
+    },
+    {
+        "zh": "不要浪费时间。",
+        "en": "DON’T WASTE YOUR TIME"
+    },
+    {
+        "zh": "把它当作一个机会。",
+        "en": "CONSIDER IT AN OPPORTUNITY"
+    },
+    {
+        "zh": "为了做出最佳决定，保持冷静。",
+        "en": "TO ENSURE THE BEST DECISION, BE CALM"
+    },
+    {
+        "zh": "等待。",
+        "en": "WAIT"
     }
 ]

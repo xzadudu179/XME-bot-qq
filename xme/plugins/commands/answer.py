@@ -21,10 +21,6 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-REPLACE_STR_ZH = {
-    "办何自己不肯妥协，先问一下自已的能力。": "为何自己不肯妥协，先问一下自己的能力。",
-    "有。": "是的。"
-}
 
 @randtools.change_seed(curr_days())
 def get_current_days_550w_percent():

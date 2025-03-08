@@ -38,6 +38,7 @@ async def jrrp(session: CommandSession):
             avg = int(sum([member['jrrp'] for member in members]) / len(members))
             await send_session_msg(session,
                 get_message(
+                    "plugins",
                     __plugin_name__, 'avg_message', avg=avg,
                     reaction=
                     get_message("plugins", __plugin_name__, 'reaction>60') if
@@ -63,6 +64,7 @@ async def jrrp(session: CommandSession):
             count = 5
             # return
         message = get_message(
+            "plugins",
             __plugin_name__,
             'rank_message',
             high_or_low='高' if count > 0 else '低',

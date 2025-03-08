@@ -11,6 +11,7 @@ from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
 from character import get_message
 import xme.xmetools.texttools as t
 from keys import GLM_API_KEY
+import traceback
 import asyncio
 from zhipuai import ZhipuAI
 
@@ -112,8 +113,9 @@ async def translate_message(bot: NoneBot, event: aiocqhttp.Event, message_id, ar
         elif len(new_messages) == 1:
             return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'success_message', name=new_messages[0]["data"]["nickname"], message=new_messages[0]["data"]["content"], language=lan))
         return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'no_message'))
-    except:
-        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'error'))
+    except Exception as ex:
+        print(type(ex), ex)
+        return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'error') + "\n")
 
 async def translate(text, language):
     client = ZhipuAI(api_key=GLM_API_KEY)
@@ -128,10 +130,10 @@ async def translate(text, language):
     task_id = response.id
     task_status = ''
     get_cnt = 0
-    while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= 40:
+    while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= 100:
         result_response = client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
         # print(result_response)
         task_status = result_response.task_status
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
         get_cnt += 1
     return result_response.choices[0].message.content

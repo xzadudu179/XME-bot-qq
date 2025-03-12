@@ -83,10 +83,11 @@ def parse_plugin_doc(doc_str):
     usages = {item.strip()[1:].split(" ")[0].replace(":", ""): item.strip() for item in doc_str.split("##所有指令用法##：")[1].split("##权限/可用范围##：")[0].split("\n") if item}
     perms = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(" & ") for item in doc_str.split("##权限/可用范围##：")[1].split("##别名##：")[0].split("\n") if item}
     alias = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(", ") for item in doc_str.split("##别名##：")[1].split("\n########")[0].split("\n") if item}
+    # print(alias)
     md_cmds = []
     for cmd, u in cmds.items():
         perm_lines = "\n    ".join(f"{i}. **{perm}**" for i, perm in enumerate(perms[cmd]))
-        md_cmds.append(f'  #### {cmd}\n\n  - **作用**\n\n    {u}\n\n  - **用法**\n\n  ```Text\n  {usages[cmd]}\n  ```\n\n  - **权限/可用范围**\n\n    {perm_lines}\n\n  - **别名**\n\n    {"、 ".join([f"`{a}`" for a in alias])}。\n\n  ---\n')
+        md_cmds.append(f'  #### {cmd}\n\n  - **作用**\n\n    {u}\n\n  - **用法**\n\n  ```Text\n  {usages[cmd]}\n  ```\n\n  - **权限/可用范围**\n\n    {perm_lines}\n\n  - **别名**\n\n    {"、 ".join([f"`{a}`" for a in alias[cmd]])}。\n\n  ---\n')
     return f'{header}\n\n{desc}\n\n{content}' + "\n".join(md_cmds)
 
 def parse_special_doc(doc_str):

@@ -449,7 +449,7 @@
     "schedulers": {
         "idles": [
             "嗷呜~",
-            "嗷呜..有点无聊 owo",
+            "冒泡一下 owo",
             "嗷呜~！",
             "冒泡冒泡~",
             "嗷呜——",
@@ -457,12 +457,11 @@
             "冒泡",
             "冒泡~",
             "好无聊哦~",
-            "呜呜 被图灵测试了...",
             "ovo",
             "汪",
             "汪~！",
             "看看九九",
-            "看看九九 嗷呜"
+            "看看九九~"
         ],
         "time": "{period}好呀{positive_punc}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",

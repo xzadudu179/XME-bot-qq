@@ -1283,10 +1283,10 @@
                 "desc": "给人{coin_name}",
                 "introduction": "at 一个人并且给他指定数量的{coin_name}{positive_punc}",
                 "no_arg": [
-                    "请 at 你要送给的用户哦",
-                    "嗷呜，请 at 你要送给的用户哦",
-                    "请 at 你要送的用户哦 {positive}",
-                    "请 at 你要送的用户哦{positive_punc}"
+                    "请在参数里 at 你要送给的用户哦",
+                    "嗷呜，请在参数里 at 你要送给的用户哦",
+                    "请在参数里 at 你要送的用户哦 {positive}",
+                    "请在参数里 at 你要送的用户哦{positive_punc}"
                 ],
                 "invalid_user": "找不到 at 的用户呢...",
                 "send_to_self": "你不能给自己{coin_name}哦",

@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
+import re
 from xme.xmetools import texttools
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
@@ -30,7 +31,6 @@ async def _(session: CommandSession):
     # 只有一项选择
     if len(choices) <= 1:
         special_choices = [
-            num_choice(choices[0], True),
             has_or_not_choice(choices[0]),
             is_or_not_choice(choices[0]),
             ends_is_or_not_choice(choices[0]),
@@ -46,6 +46,7 @@ async def _(session: CommandSession):
     if not choice:
         item = random.choice(choices)
         choice = x if (x:=num_choice(item)) else item
+    choice = parse_num_choice(choice)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
 
 
@@ -82,7 +83,7 @@ def another_or_choice(input_str, another_text="还是"):
         temp = ''
     if len(result) <= 1:
         return False
-    return texttools.remove_punctuation(random.choice(result))
+    return random.choice(result).replace("?", "").replace("？", "")
 
 def is_or_not_split_choice(text):
     splits = [text.split("不")[0], "不".join(text.split("不")[1:])]
@@ -142,3 +143,13 @@ def num_choice(input_str, one_num=False):
             return random.randint(min(num_range), max(num_range))
         except:
             return False
+
+def parse_num_choice(s):
+    def ra_int(match):
+        start, end = map(int, match.group().split("~"))
+        result = random.randrange(start, end + 1)
+        return str(result)
+    try:
+        return re.sub(r'\d+~\d+', ra_int, s)
+    except:
+        return s

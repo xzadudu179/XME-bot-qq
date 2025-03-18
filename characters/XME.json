@@ -64,6 +64,51 @@
     "apis": {
         "search_location_error": "搜索地区出现错误 {negative}\n错误码：{code}\n错误消息：{msg}"
     },
+    "character": {
+        "time_period_reactions": {
+            "凌晨": [
+                "凌晨可以看日出哦",
+                "晚安呀"
+            ],
+            "早上": [
+                "新的一天开始啦",
+                "早上吃点什么呀{positive_punc}",
+                "今天要做些什么呢",
+                "今天要去哪玩呢{positive_punc}",
+                "今天天气怎么样呀"
+            ],
+            "上午": [
+                "在想今天中午吃什么呢...",
+                "好喜欢上午的时光哦"
+            ],
+            "中午": [
+                "要吃什么呀",
+                "中午吃完饭适合睡觉{positive_punc}",
+                "下次去哪玩呢..."
+            ],
+            "下午": [
+                "下午很适合放松呢"
+            ],
+            "晚上": [
+                "晚饭要吃什么呢{positive_punc} 或者是直接睡觉？",
+                "你们都是什么时候吃晚饭的呀 {positive}"
+            ]
+        },
+        "info_reactions": [
+            "嗷呜~",
+            "(探头)喵!",
+            "喵喵~",
+            "喵?",
+            "owo!",
+            "悄悄吃一口——",
+            "探个头应该没人发现, 嘻嘻",
+            "贴张贴纸, owo!",
+            "嗷呜!",
+            "喵!",
+            "感觉好好玩哦",
+            "嘻嘻, 摸一摸"
+        ]
+    },
     "config": {
         "busy": "我还有指令未处理 uwu",
         "default_validation_failure_expression": "发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦",
@@ -384,13 +429,39 @@
             "sign": {
                 "desc": "签到",
                 "introduction": "签到，并且得到一定量的{coin_name}",
-                "limited": "你今天已经签到过了哦{positive_punc}",
-                "get_state": "获得了",
-                "login_success": "签到成功{positive_punc}",
-                "login_no_coins": "你没获得任何{coin_name}...",
+                "limited": [
+                    "你今天已经签到过了哦{positive_punc}",
+                    "明天再签到吧{positive_punc}",
+                    "你今天签到过啦{positive_punc}"
+                ],
+                "get_state": [
+                    "获得了",
+                    "得到了",
+                    "拿到了"
+                ],
+                "login_success": [
+                    "{time_period}好呀{positive_punc}",
+                    "{time_period}好哇{positive_punc}",
+                    "{time_period}好呀！{positive}",
+                    "{time_period}好{positive_punc}{positive}"
+                ],
+                "login_no_coins": [
+                    "{time_period}好哦，你似乎没有通过签到获得任何{coin_name}... {negative}",
+                    "{time_period}好哦，不过你没有通过签到拿到任何{coin_name}... {negative}",
+                    "{time_period}好呀，你似乎没通过签到得到任何{coin_name}诶... {negative}",
+                    "{time_period}好哦，但是你似乎没通过签到得到任何{coin_name}...{negative}"
+                ],
                 "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
-                "first_sign": "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
-                "sign_rank": "你是今天第 {count} 个签到的{positive_punc}"
+                "first_sign": [
+                    "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
+                    "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc} 奖励你 {first_award} {coin_pronoun}{coin_name}{positive_punc}",
+                    "你是今天第一个签到的哦 {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
+                ],
+                "sign_rank": [
+                    "你是今天第 {count} 个签到的哦 {neutral}",
+                    "你是今天第 {count} 个签到的哦{positive_punc}",
+                    "你是今天第 {count} 位签到的{positive_punc}"
+                ]
             },
             "lottery": {
                 "desc": "抽奖",

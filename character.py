@@ -21,7 +21,6 @@ def get_character(default='XME', target='') -> dict:
     # 如果没有查询到且角色不是 XME，切换为 XME 再查询
     return result if result else get_character(default=default, target='XME')
 
-
 def get_character_item(*keys: str, character: str="", default="[NULL]", search_dict: dict | None=None):
     """得到角色字典对应键的值，如果找不到对应角色的值会返回 XME 的，还找不到则返回 default 值
 

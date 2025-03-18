@@ -3,7 +3,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 import math
 from xme.xmetools import timetools
-import asyncio
+from xme.xmetools import randtools
 import random
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
@@ -32,6 +32,7 @@ async def _(session: CommandSession, user: User):
     user.add_coins(append_coins)
     users = User.get_users()
     signed_users_count = 0
+    reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
     for u in users.values():
         counters = u.get('counters', {})
         if counters.get(cmd_name, {}).get('time', 0) == math.floor(timetools.timenow() / (60 * 60 * 24)):
@@ -39,22 +40,22 @@ async def _(session: CommandSession, user: User):
     if append_coins == 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',
             coin_name=coin_name,
-            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success')
+            time_period=timetools.get_time_period()
         )
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'success',
-            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success'),
+            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success', time_period=timetools.get_time_period()),
             state=get_message("plugins", __plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),
             coin_name=coin_pronoun + coin_name,
-            coin_total=user.coins
+            coin_total=user.coins,
         )
     if signed_users_count == 0:
         user.add_coins(FIRST_AWARD)
         sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
     else:
         sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
-    message += "\n" + sign_message
+    message += "\n" + sign_message + reaction
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()
     print("保存用户数据")

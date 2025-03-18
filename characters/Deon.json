@@ -97,6 +97,58 @@
         "inventory_prefix": "物品栏占用 ({space})",
         "inventory_item": "{num}. {name} x{count}"
     },
+    "character": {
+        "time_period_reactions": {
+            "凌晨": [
+                "凌晨可以看日出哦",
+                "好困{positive_punc}唔——",
+                "晚安呀"
+            ],
+            "早上": [
+                "新的一天开始啦",
+                "早上吃点什么呀{positive_punc}",
+                "今天要做些什么呢",
+                "今天要去哪玩呢{positive_punc}",
+                "今天天气怎么样呀"
+            ],
+            "上午": [
+                "在想今天中午吃什么呢...",
+                "这里上午的太阳好大呀..."
+            ],
+            "中午": [
+                "要吃什么呀",
+                "中午吃完饭适合睡觉{positive_punc}",
+                "下次去哪玩呢..."
+            ],
+            "下午": [
+                "要不要去外面玩呀{positive_punc}",
+                "不知道有什么地方可以继续探险呢",
+                "想出去玩玩..."
+            ],
+            "晚上": [
+                "晚饭要吃什么呢{positive_punc} 或者是直接睡觉？",
+                "你们都是什么时候吃晚饭的呀 {positive}",
+                "沙漠有点冷呢...{neutral}",
+                "汪{positive_punc}"
+            ]
+        },
+        "info_reactions": [
+            "汪~!",
+            "嗷呜~",
+            "(探头)",
+            "嗷呜嗷呜~",
+            "汪?",
+            "{positive}",
+            "悄悄吃一口——",
+            "探个头应该没人发现, 嘻嘻",
+            "贴张贴纸, {positive}",
+            "捏捏~",
+            "{positive_plus}",
+            "汪!",
+            "感觉好有意思哦 {positive}",
+            "嘻嘻, 摸一摸"
+        ]
+    },
     "items": {
         "talk": {
             "stop_talk": [
@@ -1137,41 +1189,6 @@
                 "{positive}我是{chac_name}哦{positive_punc}\n被 {author} 拉过来玩啦{positive_punc}"
             ]
         },
-        "sign": {
-            "desc": "签到",
-            "introduction": "签到，并且得到一定量的{coin_name}",
-            "limited": [
-                "你今天已经签到过了哦 {neutral}",
-                "你今天已经签到过啦 {neutral}",
-                "你今天的签到次数用光啦 {neutral}"
-            ],
-            "get_state": [
-                "获得了",
-                "拿到了"
-            ],
-            "login_success": [
-                "签到成功{positive_punc}",
-                "签到成功！",
-                "签到成功！{positive}，",
-                "签到成功 {positive},",
-                "{positive}签到成功{positive_punc}",
-                "{positive}签到成功{positive_punc}",
-                "签到成功啦{positive_punc}"
-            ],
-            "login_no_coins": [
-                "{login_success}，但是你没获得任何{coin_name}...",
-                "{login_success}，不过你没有获得任何{coin_name}...",
-                "{login_success}，但是你没获得任何{coin_name}...{negative}",
-                "{login_success}，不过{negative}你没获得任何{coin_name}...",
-                "{login_success}，不过{negative}你没获得任何{coin_name}..."
-            ],
-            "success": [
-                "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你现在一共有 {coin_total} {coin_name}哦",
-                "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
-                "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你现在一共有 {coin_total} {coin_name}哦{positive_punc}",
-                "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}\n你目前总共有 {coin_total} {coin_name}哦"
-            ]
-        },
         "XME 宇宙": {
             "desc": "XME 宇宙功能相关",
             "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
@@ -1194,16 +1211,16 @@
                     "拿到了"
                 ],
                 "login_success": [
-                    "签到成功{positive_punc}",
-                    "签到成功啦{positive_punc}",
-                    "签到成功{positive}",
-                    "签到成功{positive_punc}{positive}"
+                    "{time_period}好呀{positive_punc}",
+                    "{time_period}好哇{positive_punc}",
+                    "{time_period}好呀！{positive}",
+                    "{time_period}好{positive_punc}{positive}"
                 ],
                 "login_no_coins": [
-                    "签到成功，但是你没获得任何{coin_name}... {negative}",
-                    "签到成功，不过你没拿到任何{coin_name}... {negative}",
-                    "签到成功，但是你没得到任何{coin_name}诶... {negative}",
-                    "签到成功，但是你没获得任何{coin_name}...{negative}"
+                    "{time_period}好哦，你似乎没有通过签到获得任何{coin_name}... {negative}",
+                    "{time_period}好哦，不过你没有通过签到拿到任何{coin_name}... {negative}",
+                    "{time_period}好呀，你似乎没通过签到得到任何{coin_name}诶... {negative}",
+                    "{time_period}好哦，但是你似乎没通过签到得到任何{coin_name}...{negative}"
                 ],
                 "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
                 "first_sign": [

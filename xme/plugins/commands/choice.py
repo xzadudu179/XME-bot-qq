@@ -14,7 +14,7 @@ __plugin_usage__ = str(CommandDoc(
     # desc='随机决定事情',
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
-    # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 1~10 会返回 1~10 的随机数',
+    # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 -1~10 会返回 1~10 1~-10 的随机数',
     usage=f'(事情列表(空格分隔)或是任意选择语句)',
     permissions=[],
     alias=alias
@@ -145,11 +145,12 @@ def num_choice(input_str, one_num=False):
             return False
 
 def parse_num_choice(s):
+    s = texttools.replace_chinese_punctuation(s)
     def ra_int(match):
         start, end = map(int, match.group().split("~"))
         result = random.randrange(start, end + 1)
         return str(result)
     try:
-        return re.sub(r'\d+~\d+', ra_int, s)
+        return re.sub(r'-?\d+~-?\d+', ra_int, s)
     except:
         return s

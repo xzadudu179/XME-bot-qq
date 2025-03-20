@@ -1,7 +1,6 @@
 from xme.xmetools import jsontools
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
-from xme.xmetools import imgtools
 from functools import wraps
 import config
 from nonebot import get_bot
@@ -19,8 +18,9 @@ coin_pronoun = get_message("user", "coin_pronoun")
 
 
 class User:
-    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list=[]):
+    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = ""):
         self.id = user_id
+        self.desc = desc
         self.inventory = inventory
         self.coins = coins
         self.xme_favorability = 0
@@ -42,7 +42,8 @@ class User:
             coin_pronoun=coin_pronoun,
             sign_message=sign_message,
             rank_ratio=f"{rank_ratio:.2f}",
-            space=self.inventory.get_space_left()
+            space=self.inventory.get_space_left(),
+            desc=self.desc + "\n----------\n" if self.desc else ""
         )
 
     def add_favorability(self, count):
@@ -69,6 +70,7 @@ class User:
             "coins": self.coins,
             "counters": self.counters,
             "xme_favorability": self.xme_favorability,
+            "desc": self.desc,
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot
         }
@@ -345,4 +347,5 @@ def load_from_dict(data: dict, id: int) -> User:
     user = User(id, data.get('coins', 0), inventory, data.get('talked_to_bot', []))
     user.counters = data.get('counters', {})
     user.xme_favorability = data.get('xme_favorability', 0)
+    user.desc = data.get('desc', "")
     return user

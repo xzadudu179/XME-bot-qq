@@ -1,7 +1,7 @@
 import config
 from xme.xmetools import colortools as c
 from xme.xmetools import dicttools
-from nonebot import NoneBot
+from functools import wraps
 from xme.xmetools.msgtools import send_event_msg
 import aiocqhttp
 from nonebot.command import call_command, CommandManager, Command
@@ -55,6 +55,24 @@ def get_alias_by_cmd(cmd_name: str):
     cmds = {k.name[0]: v for k, v in dicttools.reverse_dict(CommandManager._aliases).items()}
     # print(cmds)
     return cmds.get(cmd_name, False)
+
+def use_args(arg_len, split_str: str = None, default: str = ""):
+    """解析指令内参数
+
+    Args:
+        arg_len (int): 参数列表长度
+        split_str (str, optional): 分割方法. Defaults to None.
+        default (str, optional): 未获取到参数时的默认值. Defaults to "".
+    """
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(session: CommandSession, *args, **kwargs):
+            arg_list = get_command_args(session.current_arg_text, arg_len, split_str, default)
+            return await func(session, arg_list=arg_list, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 def get_cmd_by_alias(input_string, need_cmd_start=True):
     """尝试通过别名获得指令

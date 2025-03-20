@@ -90,7 +90,7 @@
     "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {positive}\n{sign_message}",
+        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
         "empty_inventory": "什么也没有呢...",
@@ -1380,6 +1380,32 @@
                     "error": "使用物品时出现了错误...",
                     "default_msg": "你使用了 \"{item}\"！{neutral}"
                 }
+            },
+            "describe": {
+                "desc": "个人介绍",
+                "introduction": "设置自己在 \"/info\" 指令下可被看到的个人介绍",
+                "no_arg": [
+                    "请在参数里输入你的个人介绍哦 {neutral}",
+                    "你要在参数里写上你的个人介绍哦 {neutral}",
+                    "用法为 \"/desc 个人介绍内容\" 哦{positive_punc}",
+                    "你需要在参数里输入你的个人介绍哦 {neutral}"
+                ],
+                "ask_for_delete": [
+                    "请确定是否要删除你的个人介绍哦{positive_punc} (确定请回复 y，否则回复其他内容 {neutral})",
+                    "你想要删除你的个人介绍嘛 (确定请回复 y，否则回复其他内容 {neutral})"
+                ],
+                "deleted": [
+                    "成功删除了你的个人介绍 \"{desc}\"！",
+                    "删除介绍 \"{desc}\" 成功！"
+                ],
+                "canceled_delete": [
+                    "取消删除个人介绍啦{positive_punc}",
+                    "取消删除操作啦{positive_punc}"
+                ],
+                "success": [
+                    "成功设置了你的个人介绍{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}",
+                    "个人介绍设置成功{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}"
+                ]
             }
         },
         "bottodo": {

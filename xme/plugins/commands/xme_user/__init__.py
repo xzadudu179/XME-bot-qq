@@ -1,5 +1,5 @@
 __plugin_name__ = 'XME 宇宙'
-from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory
+from . import coinrank, lottery, sign, userinfo, sendcoin, galaxymap, inventory, describe
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 import config
@@ -44,8 +44,15 @@ async def _(session: CommandSession):
     if arg not in commands.keys():
         await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name,'no_cmd', cmd=arg))
         return False
-    message = str(CommandDoc(
-        **commands[arg]
-    ))
+    message = get_userhelp(arg)
+    # message = str(CommandDoc(
+    #     **commands[arg]
+    # ))
     await send_session_msg(session, message, at=False)
     return True
+
+def get_userhelp(cmd_name: str):
+    message = str(CommandDoc(
+        **commands[cmd_name]
+    ))
+    return message

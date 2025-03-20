@@ -120,7 +120,7 @@
     "user": {
         "coin_name": "金币",
         "coin_pronoun": "枚",
-        "user_info_str": "用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户\n{sign_message}",
+        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}",
         "no_sign": "从未签到过",
         "empty_inventory": "物品栏空空如也...",

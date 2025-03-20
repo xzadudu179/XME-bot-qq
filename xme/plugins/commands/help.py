@@ -4,6 +4,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.listtools import split_list
 from xme.xmetools.msgtools import send_session_msg
+from xme.plugins.commands.xme_user import get_userhelp
 from nonebot import on_command, CommandSession
 from character import get_message
 from xme.xmetools.texttools import most_similarity_str
@@ -31,6 +32,7 @@ async def arg_help(arg, plugins, session):
     else:
         ask_for_help = ask_for_help.name[0]
     print(ask_for_help)
+    ask_cmd = ask_for_help
     if ask_for_help:
         for pl in plugins:
             if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
@@ -38,7 +40,7 @@ async def arg_help(arg, plugins, session):
             if pl.name.lower() != ask_for_help: continue
             if pl.name.lower() == "xme 宇宙":
                 print("发送用户帮助")
-                return await send_cmd("/uh", session)
+                return await send_session_msg(session, get_userhelp(ask_cmd))
             return await send_session_msg(session, pl.usage if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True)
             # return await send_msg(session, pl.usage if pl.usage else "无内容")
     # print(p)

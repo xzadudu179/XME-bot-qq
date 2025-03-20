@@ -33,7 +33,7 @@ async def _(session: CommandSession, user: User):
         await send_session_msg(session, message)
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
-    reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(max(100, max(0, user.xme_favorability))) else ""
+    reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
     message = f'\n{target_user}\n' + str(user) + reaction
     await send_session_msg(session, message)
     return True

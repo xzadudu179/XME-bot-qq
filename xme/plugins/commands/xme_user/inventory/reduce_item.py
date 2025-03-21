@@ -9,20 +9,21 @@ from character import get_message
 
 name = "reduce"
 
-def try_get_msg(name, key, default, **kwargs):
+def try_get_msg(message_value, key, default, **kwargs):
     """尝试通过自定义键获得消息
 
     Args:
-        name (str): 消息名
+        message_value (str): 消息名
         key (str): 自定义键
         default (str): 获取消息失败后用的默认键
 
     Returns:
         str: 获取到的消息
     """
-    result = get_message("plugins", __plugin_name__, cmd_name, key, name, **kwargs)
+    # print(value)
+    result = get_message("plugins", __plugin_name__, cmd_name, key, message_value, default='[NULL]',**kwargs)
     if result == '[NULL]':
-        return get_message("plugins", __plugin_name__, cmd_name, default, name, **kwargs)
+        return get_message("plugins", __plugin_name__, cmd_name, default, message_value, **kwargs)
     return result
 
 async def reduce_item_by_id(

@@ -48,11 +48,6 @@ async def _(session: CommandSession):
             print("550W 还没来")
     try:
         ans_json = jsontools.read_from_path("./static/answers.json")
-        # ans_json = await reqtools.fetch_data('https://api.andeer.top/API/answer.php')
-        # if ans_json['code'] != 200:
-            # message = get_message("plugins", __plugin_name__, "cannot_fetch")
-            # message = "呜呜，书翻不开了..."
-        # else:
         data = random.choice(ans_json)
         # data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
         message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data['zh']}\"\n\"{data['en']}\""

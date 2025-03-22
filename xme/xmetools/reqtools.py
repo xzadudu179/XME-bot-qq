@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import json
 
 async def get_weather(city: str) -> dict:
@@ -24,6 +25,8 @@ async def fetch_data(url, response_type="json", *args, **kwargs):
                     data = await response.json()
                 case "text":
                     data = await response.text()
+                case "byte":
+                    data = await response.read()
                 case _:
-                    raise ValueError("返回类型只能是 json 或 text")
+                    raise ValueError("返回类型只能是 json, byte 或 text")
             return data

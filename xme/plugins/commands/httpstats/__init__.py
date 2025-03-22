@@ -3,6 +3,7 @@ from . import httpstats as h
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.reqtools import fetch_data
 
 alias = ['http', 'http状态码']
 __plugin_name__ = 'httpcode'
@@ -30,8 +31,11 @@ async def _(session: CommandSession):
 
     if params:
         search = params.strip()
-        stat = h.httpstats(search)
-        if not stat:
+        stat = ": " + x if (x:=h.httpstats(search)) else ""
+        cat_image = await fetch_data(f"https://http.cat/{search}", "byte")
+        image_404 = await fetch_data("https://http.cat/404", "byte")
+        image_is_404 = cat_image == image_404
+        if not stat and image_is_404 and search != "404":
             message = get_message("plugins", __plugin_name__, 'code_not_found', search=search)
             # message = f"查询不到 {search} 状态码代表什么意思诶"
         else:

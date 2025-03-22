@@ -932,11 +932,11 @@
                 "唔，不知道 {search} 状态码代表什么意思诶..."
             ],
             "code_found": [
-                "{positive} 状态码 {search} 的意思是: {stat}\n{image}",
-                "状态码 {search} 的意思是这个 {positive}: {stat}\n{image}",
-                "状态码 {search} 的意思是: {stat}\n{image}",
-                "{neutral}，状态码 {search} 的意思是: {stat}\n{image}",
-                "{positive} 我找到状态码 {search} 的意思是: {stat}\n{image}"
+                "{positive} 状态码 {search} 的意思是{stat}\n{image}",
+                "状态码 {search} 的意思是这个 {positive}{stat}\n{image}",
+                "状态码 {search} 的意思是{stat}\n{image}",
+                "{neutral}，状态码 {search} 的意思是{stat}\n{image}",
+                "{positive} 我找到状态码 {search} 的意思是{stat}\n{image}"
             ]
         },
         "game": {

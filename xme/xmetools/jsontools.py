@@ -2,8 +2,11 @@ import json
 from xme.xmetools import dicttools
 
 def read_from_path(path) -> dict | list:
-    with open(path, 'r', encoding='utf-8') as file:
-        return json.load(file)
+    try:
+        with open(path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except:
+        return None
 
 
 def save_to_path(path, data, ensure_ascii=False, indent: int | str | None=None):

@@ -7,7 +7,7 @@ from matplotlib import font_manager
 import numpy as np
 
 bg_color = (4 / 255, 23 / 255, 32 / 255)
-prop = font_manager.FontProperties(fname=rf'./fonts/Cubic_11.ttf')
+prop = font_manager.FontProperties(fname=rf"static/fonts/Cubic_11.ttf")
 plt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
 

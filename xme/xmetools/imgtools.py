@@ -92,6 +92,8 @@ async def image_msg(path_or_image, max_value=0, to_jpeg=True):
 
     Args:
         path_or_image (str): 图片路径或图片
+        max_value (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
+        to_jpeg (bool): 是否转换为 Jpeg 格式
 
     Returns:
         MessageSegment: 消息段

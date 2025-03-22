@@ -1,13 +1,46 @@
-from .faction import Faction
+
 from ..tools.map_tools import *
+from .faction import Faction, FACTIONS
+from .celestial.station import Station
+from .celestial.planet import Planet
+from .celestial import Celestial
+from .celestial.star import Star
+from .celestial.ship import Ship
+from .celestial.tools import load_celestial
 from xme.xmetools import jsontools
 import random
-from nonebot import get_bot
-# from .faction import Faction
+from xme.xmetools.colortools import rgb_to_hex
+from PIL import Image
+
+celestial_draw_sides = {
+    Planet: 5,
+    Star: 7,
+    Ship: 4,
+    Station: 3,
+}
+
+def get_starfield_map(location, default=None):
+    return GalaxyMap().starfields.get(location, default)
+
 class GalaxyMap:
-    def __init__(self, maxwidth=500, maxheight=500) -> None:
+    """星系地图
+    """
+    def __init__(self, maxwidth=499, maxheight=499) -> None:
         self.max_size = (maxwidth, maxheight)
-        self.starfields = self.init_starfields(0.01)
+
+        if map:=jsontools.read_from_path("static/map/map.json"):
+            map = map["starfields"]
+            starfields = {}
+            for index, starfield in map.items():
+                starfield = StarfieldMap.load(starfield)
+                starfields[tuple([int(i) for i in index.split(",")])] = starfield
+            self.starfields = starfields
+        else:
+            print("正在生成地图...")
+            jsontools.save_to_path("data/used_names.json", [])
+            self.starfields = self.init_starfields(0.01)
+            self.load_map_from_image("static/img/map-1.png")
+            self.save()
         # print(self.starfields)
 
     def init_starfields(self, percent):
@@ -19,17 +52,40 @@ class GalaxyMap:
             x = random.randint(0, self.max_size[0])
             y = random.randint(0, self.max_size[1])
             xys.add((x, y))
-        return {index: StarfieldMap() for index in xys}
+        print(f"需要生成 {len(xys)} 个星域")
+        fields = {index: StarfieldMap(location=(x, y)) for index in xys}
+        return fields
 
     def __dict__(self):
         # print(self.starfields)
         return {
             "max_size": self.max_size,
-            "starfields": {index: m.__dict__() for index, m in self.starfields.items()}
+            "starfields": {f"{index[0]},{index[1]}": m.__dict__() for index, m in self.starfields.items()}
         }
 
+    def load_map_from_image(self, path):
+        img = Image.open(path)
+        for index in self.starfields.keys():
+            try:
+                pixel = img.getpixel(index)
+            except IndexError:
+                pixel = (0, 0, 0, 0)
+            hex_color = rgb_to_hex(pixel[:3])
+            if hex_color == "#000000":
+                continue
+            for faction in FACTIONS.values():
+                # print(hex_color, faction.color)
+                if hex_color.upper() != faction.color.upper():
+                    continue
+                # print("是阵营颜色")
+                self.starfields[index] = StarfieldMap(
+                    location=index,
+                    faction=faction,
+                )
+
     def save(self):
-        jsontools.save_to_path("data/init_data/galaxymap.json")
+        # jsontools.save_to_path("data/init_data/galaxymap.json")
+        jsontools.save_to_path("static/map/map.json", self.__dict__())
 
     def create_starfield_block(self, position: tuple[int, int], maxwidth: int = 500, maxheight: int = 500):
         """创建星域地图块
@@ -43,13 +99,13 @@ class GalaxyMap:
             raise ValueError("星域地图块坐标超过范围")
         self.starfields[position] = StarfieldMap(position, self, maxwidth, maxheight)
 
-    def draw_galaxy_map(self, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735') -> Image.Image:
+    def draw_galaxy_map(self, center=(0, 0), zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735') -> Image.Image:
         # 图片大小
         img_zoom = 2
         map_width, map_height = self.max_size
 
         zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
-        append = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
+        # append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
 
         # 计算图像宽高
         width, height = int(zoom_width * 2 * zoom_fac + padding * 2) * img_zoom, int(zoom_height * 2 * zoom_fac + padding * 2) * img_zoom
@@ -61,38 +117,165 @@ class GalaxyMap:
 
         # 背景
         # 绘制随机线条
-        random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
+        random_node_lines(draw, 100, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
         # 绘制网格
         write_grid(draw, int(15 * zoom_fac * img_zoom), width, height, grid_color, int(1 * zoom_fac * img_zoom))
 
         # for i, (point, starfield) in enumerate(self.starfields.items()):
         for point, starfield in self.starfields.items():
-            color = "#FFEE55" # TODO 计算颜色，颜色跟种族和信号强度有关
-            draw_point(draw, zoom_fac * img_zoom, point, (width, height), color)
+            # print(starfield)
+            # print("point", point)
+            color = starfield.calc_faction().color
+            # print(color)
+            # print(append_, point)
+            draw_point(draw, zoom_fac * img_zoom, (point[0] - center[0], point[1] - center[1]), (width, height), color)
         # 保存图片
-        img.save('data/images/temp/chart.png')
+        img.save('data/images/temp/galaxy_map.png')
         return img
 
 class StarfieldMap:
     """星域地图
     """
-    def __init__(self, maxwidth: int = 500, maxheight: int = 500) -> None:
+    def __init__(self, location, faction: Faction = FACTIONS[0], maxwidth: int = 500, maxheight: int = 500, celestials = {}) -> None:
         """创建星域地图
 
         Args:
-            faction (Faction, None): 所属阵营
+            faction (Faction, None): 所属阵营. Defaults to factions[0].
             maxwidth (int, optional): 坐标最大宽度. Defaults to 500.
             maxheight (int, optional): 坐标最大高度. Defaults to 500.
         """
         self.max_size = (maxwidth, maxheight)
-        self.celestials = {}
+        self.celestials: dict[tuple[int, int], Celestial] = celestials
+        self.location = location
 
-    def calc_color(self):
+        if not faction:
+            faction = self.calc_faction()
+        if not celestials:
+            # print("正在生成星域...")
+            self.init_celestials(min_distance=30, count=max(1, random.randint(-25, 3)), celestial_type=Star, faction=faction, max_distance=60, target_position=(maxwidth // 2, maxheight // 2))
+            self.init_celestials(min_distance=50, count=random.randint(1, 7), celestial_type=Planet, faction=faction, target_celestial_type=Star)
+            # if faction.id != 0:
+                # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 7)), celestial_type=Station, faction=faction, target_celestial_type=Planet)
+                # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 3)), celestial_type=Ship, faction=faction)
+
+    def init_celestials(self, min_distance, count, celestial_type, faction, target_celestial_type=None, max_distance=-1, target_position=None):
+        """生成天体
+
+        Args:
+            min_distance (int): 天体之间最小距离
+            count (int): 天体数量
+            celestial_type (type): 天体类型
+            faction (Faction): 所属阵营
+        """
+        ATTEMPTS = 50000
+        points = []
+        def is_valid(x, y):
+            """检查距离是否够大"""
+            if self.celestials.get((x, y)):
+                return False
+            for point in self.celestials.keys():
+                # print(point)
+                if (x, y) == point:
+                    return False
+            for px, py in points:
+                distance = math.dist((x, y), (px, py))
+                if distance < min_distance or max_distance > min_distance and distance > max_distance:
+                    return False
+            if target_celestial_type is not None:
+                for target in [p for p, t in self.celestials.items() if t == target_celestial_type]:
+                    target_distance = math.dist(target, (x, y))
+                    if target_distance < min_distance or max_distance > min_distance and distance > max_distance:
+                        return False
+            elif target_position is not None:
+                distance = math.dist((x, y), (target_position[0], target_position[1]))
+                if distance > 10:
+                    return False
+            return True
+        # 生成点
+        i = 0
+        while len(points) < count and i < ATTEMPTS:
+            x, y = random.randint(0, self.max_size[0] - 1), random.randint(0, self.max_size[1] - 1)
+            if is_valid(x, y):
+                points.append((x, y))
+            i += 1
+        result = {}
+        planet_num = 1
+        for point in points:
+            # print("正在生成天体...")
+            if celestial_type == Planet:
+                celestial = Planet(name="", desc="", galaxy_location=self.location, location=point, star=random.choice([s for s in self.celestials.values() if isinstance(s, Star)]), serial_number=planet_num)
+                planet_num += 1
+            else:
+                celestial = celestial_type(name="", desc="", galaxy_location=self.location, location=point, faction_id=faction.id)
+            result[point] = celestial
+        self.celestials = self.celestials | result
+
+
+    def calc_faction(self) -> Faction:
         # 通过大型星体所属阵营数量等来判断属于哪个阵营
-        ...
+        has_factions = {}
+        for c in self.celestials.values():
+            if c.faction.id != 0:
+                has_factions[c.faction.id] = FACTIONS.get(c.faction, 0) + 1
+        if not has_factions:
+            return FACTIONS[0]
+        # print(has_factions, max(has_factions, key=lambda f: has_factions[f]))
+        return FACTIONS[max(has_factions, key=lambda f: has_factions[f])]
 
     def __dict__(self):
+        # print({f"{k[0]},{k[1]}": v.__dict__() for k, v in self.celestials.items()})
         return {
             "max_size": self.max_size,
-            "celestials": self.celestials
+            "celestials": {f"{k[0]},{k[1]}": v.__dict__() for k, v in self.celestials.items()},
+            "location": self.location
         }
+
+    @staticmethod
+    def load(map_json: dict):
+        # print(map_json)
+        return StarfieldMap(
+            maxwidth=map_json["max_size"][0],
+            maxheight=map_json["max_size"][1],
+            location=map_json["location"],
+            celestials={k: load_celestial(v) for k, v in map_json["celestials"].items()}
+        )
+
+    def get_celestial(self, location, default=None):
+        return self.celestials.get(location, default)
+
+    def draw_starfield_map(self, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735', font_size: int = 12) -> Image.Image:
+        # 图片大小
+        img_zoom = 2
+        map_width, map_height = self.max_size
+
+        zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
+        append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
+
+        # 计算图像宽高
+        width, height = int(zoom_width * 2 * zoom_fac + padding * 2) * img_zoom, int(zoom_height * 2 * zoom_fac + padding * 2) * img_zoom
+        # print(width, height)
+
+        # 创建画布
+        img = Image.new('RGB', (width, height), background_color)
+        draw = ImageDraw.Draw(img)
+
+        # 背景
+        # 绘制随机线条
+        random_node_lines(draw, 50, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
+        # 绘制网格
+        write_grid(draw, int(15 * zoom_fac * img_zoom), width, height, grid_color, int(1 * zoom_fac * img_zoom))
+
+        # 前景
+
+        for point, celestial in self.celestials.items():
+            side = celestial_draw_sides[type(celestial)]
+            color = celestial.faction.color
+            point_to_draw = (int(point[0] * zoom_fac + padding + append_[0]) * img_zoom, int(point[1] * zoom_fac + padding + append_[1]) * img_zoom)
+            mark_point(draw, point_to_draw, point, side, color, int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac), f'[{celestial.faction.name}] {celestial.name}', int(font_size * ui_zoom_fac))
+
+        # # 绘制圆加十字
+        # mark_point(draw, points[0],regular_points[0], 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),'xzadudu179 (你)', int(font_size * ui_zoom_fac))
+
+        # 保存图片
+        img.save('data/images/temp/starfield_map.png')
+        return img

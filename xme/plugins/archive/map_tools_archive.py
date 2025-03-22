@@ -141,7 +141,7 @@ def write_crosshair(draw, point: tuple[int, int], radius: int, lineout: int, col
 def draw_text_on_image(draw: ImageDraw, text, position, font_size, color, spacing=4):
     # 创建字体对象
     # try:
-        # font = ImageFont.truetype("fonts/Cubic.ttf", font_size)  # 使用字体
+        # font = ImageFont.truetype("static/fonts/Cubic_11.ttf", font_size)  # 使用字体
     # except IOError:
         # font = ImageFont.load_default()  # 加载默认字体
     font = ImageFont.load_default()  # 加载默认字体

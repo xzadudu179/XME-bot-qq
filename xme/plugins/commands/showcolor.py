@@ -45,7 +45,7 @@ def gen_color_image(color_num, size=(300, 200)):
     image = Image.new("RGB", (width, height), color)
     draw = ImageDraw.Draw(image)#1
     font_size = 48
-    font = ImageFont.truetype("./fonts/Cubic_11.ttf", font_size)
+    font = ImageFont.truetype("static/fonts/Cubic_11.ttf", font_size)
 
     text_bbox = draw.textbbox((0, 0), color, font=font)  # 返回 (x_min, y_min, x_max, y_max)
     text_width = text_bbox[2] - text_bbox[0]

@@ -9,7 +9,7 @@ from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 
-alias = ['签到', 'check', 'checkin', 'register', 's']
+alias = ['签到', 'register', 's']
 cmd_name = 'sign'
 usage = {
     "name": cmd_name,

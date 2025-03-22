@@ -1,0 +1,8 @@
+from . import Celestial, CanDevelop
+from ..faction import FACTIONS
+
+class Station(Celestial, CanDevelop):
+    """空间站类型"""
+    def __init__(self, name: str, desc: str, galaxy_location, location: tuple[int, int], buildings=[], faction_id: int = 0) -> None:
+        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id)
+        CanDevelop.__init__(self, buildings)

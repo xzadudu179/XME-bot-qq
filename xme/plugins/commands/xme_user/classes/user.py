@@ -5,12 +5,15 @@ from functools import wraps
 import config
 from nonebot import get_bot
 from ..tools.map_tools import *
-from . import xme_map
 import inspect
 import math
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from .inventory import Inventory
+from .celestial import Celestial
+from .celestial.tools import load_celestial
+from .celestial.star import Star
+from .xme_map import GalaxyMap, StarfieldMap
 from ..tools import galaxy_date_tools
 
 coin_name = get_message("user", "coin_name")
@@ -18,14 +21,35 @@ coin_pronoun = get_message("user", "coin_pronoun")
 
 
 class User:
-    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = ""):
+    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = "", celestial: Celestial = None):
         self.id = user_id
         self.desc = desc
         self.inventory = inventory
+        # 用户所在天体
+        if celestial is not None:
+            self.celestial = celestial
+        else:
+            self.get_celestial()
         self.coins = coins
         self.xme_favorability = 0
         self.talked_to_bot = talked_to_bot
         self.counters = {}
+
+    def get_celestial(self):
+        map = GalaxyMap()
+        choice_celestials = []
+        # print("USERRRRRRRRRRRRRRR", map.starfields)
+        for starfield in map.starfields.values():
+            if starfield.calc_faction().id != 1:
+                continue
+            for c in starfield.celestials.values():
+                if isinstance(c, Star):
+                    continue
+                choice_celestials.append(c)
+        if choice_celestials:
+            self.celestial = random.choice(choice_celestials)
+        else:
+            print("无法获取到合适的行星")
 
     def __str__(self):
         try:
@@ -72,7 +96,8 @@ class User:
             "xme_favorability": self.xme_favorability,
             "desc": self.desc,
             "inventory": self.inventory.__list__(),
-            "talked_to_bot": self.talked_to_bot
+            "talked_to_bot": self.talked_to_bot,
+            "celestial": self.celestial.__dict__()
         }
 
     def add_coins(self, amount: int) -> bool:
@@ -100,9 +125,11 @@ class User:
         users['users'][str(self.id)] = data_to_save
         jsontools.save_to_path(config.USER_PATH, users)
 
-    #                              ↓ 临时参数
-    async def draw_user_map(self, galaxy_map: xme_map.GalaxyMap, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, background_color="black", line_width=1, grid_color='#102735'):
-        map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
+    async def get_user_starfield_map(self):
+        self.celestial.location
+
+    async def draw_user_map(self, map_img, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100) -> str:
+        # map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
         font_size = 12
         width, height = map_img.size
         text_draw = ImageDraw.Draw(map_img)
@@ -111,7 +138,9 @@ class User:
         draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
         # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
         # 保存图片
-        map_img.save('data/images/temp/chartinfo.png')
+        path = 'data/images/temp/chartinfo.png'
+        map_img.save(path)
+        return path
 
         # 显示图片
         # map_img.show()
@@ -344,7 +373,16 @@ def load_from_dict(data: dict, id: int) -> User:
     inventory = Inventory()
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
-    user = User(id, data.get('coins', 0), inventory, data.get('talked_to_bot', []))
+    celestial = data.get('celestial', None)
+    if celestial is not None:
+        celestial = load_celestial(celestial)
+    user = User(
+        id,
+        data.get('coins', 0),
+        inventory,
+        data.get('talked_to_bot', []),
+        celestial=celestial
+    )
     user.counters = data.get('counters', {})
     user.xme_favorability = data.get('xme_favorability', 0)
     user.desc = data.get('desc', "")

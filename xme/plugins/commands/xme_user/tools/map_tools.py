@@ -78,8 +78,8 @@ def mark_point(draw: ImageDraw, point, regular_point, sides_or_cross: int, color
 
     Args:
         draw (ImageDraw): 绘制工具
-        point (tuple): 坐标点
-        regular_point (tuple): 计算出来的实际绘制位置
+        point (tuple): 实际绘制位置
+        regular_point (tuple): 坐标点
         sides_or_cross (int): 大于等于 3 是绘制多边形，否则是绘制十字准心
         color (color): 颜色
         line_width (int): 线条宽度
@@ -94,6 +94,7 @@ def mark_point(draw: ImageDraw, point, regular_point, sides_or_cross: int, color
     else:
         draw_polygon(draw, point, radius, sides_or_cross, (random.randint(0, 314) / 100), color, line_width)
     # draw.ellipse((point[0] - 1, point[1] - 1, point[0] + 1, point[1] + 1), fill=color)
+
     draw_text_on_image(draw, str(regular_point), (point[0] + radius, point[1] + radius), font_size, color, text_space)
     if name:
         draw_text_on_image(draw, name, (point[0] + radius + text_space, point[1] - radius), font_size, color, text_space)
@@ -154,6 +155,7 @@ def draw_point(draw, scale_factor, point, image_size, fill_color="yellow"):
     x2 = x1 + cell_width
     y2 = y1 + cell_height
     draw.rectangle([x1, y1, x2, y2], fill=fill_color)
+    # print(fill_color)
 
 def write_crosshair(draw: ImageDraw, point: tuple[int, int], radius: int, lineout: int, color, width: int=2):
     """绘制准心
@@ -175,7 +177,7 @@ def write_crosshair(draw: ImageDraw, point: tuple[int, int], radius: int, lineou
 def draw_text_on_image(draw: ImageDraw, text, position, font_size, color, spacing=4):
     # 创建字体对象
     try:
-        font = ImageFont.truetype("fonts/Cubic.ttf", font_size)  # 使用字体
+        font = ImageFont.truetype("static/fonts/Cubic_11.ttf", font_size)  # 使用字体
     except IOError:
         font = ImageFont.load_default()  # 加载默认字体
     # 在指定位置绘制文字

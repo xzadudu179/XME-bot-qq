@@ -6,8 +6,8 @@ import random
 
 class Star(Celestial, CanDevelop):
     """恒星类型"""
-    def __init__(self, name: str, desc: str, galaxy_location, location: tuple[int, int], star_type: StarType = None, buildings=[], faction_id = 0, thermal_luminosity=-1) -> None:
-        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id)
+    def __init__(self, name: str, desc: str, galaxy_location, location: tuple[int, int], star_type: StarType = None, buildings=[], faction_id = 0, thermal_luminosity=-1, uid=None) -> None:
+        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id, uid=uid)
         CanDevelop.__init__(self, buildings)
         # 恒星类型
         self.star_type = star_type
@@ -40,6 +40,16 @@ class Star(Celestial, CanDevelop):
             num = random.randint(0, 12800)
             suffix = random.choice(["D", "D", "D", "D" "C", "C", "C", "C", "C" "B", "B"])
             suffix = "A" if random_percent(10) else suffix
+            if self.star_type in [
+                StarType.BLACKHOLE,
+                StarType.RED_GIANT,
+                StarType.RED_GIANT,
+                StarType.YELLOW_GIANT,
+                StarType.RED_SUPERGIANT,
+                StarType.BLUE_SUPERGIANT,
+                StarType.YELLOW_SUPERGIANT,
+                StarType.NEUTRON_STAR]:
+                suffix = random.choice(["B", "B", "A"])
             suffix = "R" if random_percent(3) else suffix
             if self.faction.id in [4, 5, 7, 9]:
                 suffix = suffix + "Z" if random_percent(50) else suffix
@@ -69,6 +79,7 @@ class Star(Celestial, CanDevelop):
         # from ..xme_map import get_starfield_map
         return Star(
             # starfield_map=get_starfield_map(celestial_dict["galaxy_location"]),
+            uid=celestial_dict["uid"],
             name=celestial_dict["name"],
             desc=celestial_dict["desc"],
             galaxy_location=celestial_dict["galaxy_location"],

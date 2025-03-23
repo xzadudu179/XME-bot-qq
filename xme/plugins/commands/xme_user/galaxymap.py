@@ -10,7 +10,7 @@ from character import get_message
 
 
 alias = []
-cmd_name = 'galaxy'
+cmd_name = 'map'
 usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),

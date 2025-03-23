@@ -101,7 +101,8 @@ def mark_point(draw: ImageDraw, point_to_draw, point, sides_or_cross: int, color
     if name:
         draw_text_on_image(draw, name, (point_to_draw[0] + radius + text_space + offset_x, point_to_draw[1] - radius + offset_y), font_size, color, text_space)
 
-
+def mark_ring(draw: ImageDraw, center, radius, line_width, name="", font_size=12, text_space=8):
+    ...
 
 def write_grid(draw, grid_spacing, width, height, color='#102735', line_width=1):
     """绘制网格

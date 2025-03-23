@@ -8,15 +8,14 @@ import math
 
 class Planet(Celestial, CanDevelop):
     """行星类型"""
-    def __init__(self, galaxy_location: tuple[int, int], location: tuple[int, int], serial_number, star: Star = None, planet_type: PlanetType = None, name: str = "", desc: str = "", is_known=False, buildings=[], faction_id: int = 0) -> None:
-        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id)
+    def __init__(self, galaxy_location: tuple[int, int], location: tuple[int, int], serial_number, star: Star = None, planet_type: PlanetType = None, name: str = "", desc: str = "", is_known=False, buildings=[], faction_id: int = 0, uid=None) -> None:
+        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id, uid=uid)
         CanDevelop.__init__(self, buildings)
         # 是否被开发
         # 未知的行星不可被雷达 / 星图发现
         self.is_known = is_known
         # 行星需要有恒星
         # star = star
-        self.star_uid = star.uid
         # 序号
         self.serial_number = serial_number
         # 行星类型
@@ -27,16 +26,20 @@ class Planet(Celestial, CanDevelop):
             self.gen_random_info(star)
 
     def calc_habitable_zone_ratio(self, range, star: Star) -> tuple[float, float]:
-        return tuple([r * star.thermal_luminosity for r in range])
+        return tuple([r * star.thermal_luminosity / 0.05 for r in range])
 
-    def gen_planet_type(self, star):
+    def gen_planet_type(self, star: Star):
         can_gen_types = []
-        habitable_zone_distance = math.dist(star.location, self.location) - star.habitable_zone
-        print(habitable_zone_distance, star.star_type)
+        habitable_zone_distance =  math.dist(star.location, self.location) - star.habitable_zone
+        # print(math.dist(star.location, self.location), habitable_zone_distance, star.star_type, star.habitable_zone)
         for r, planet_type in planet_HZproximity.items():
+            # print(r, end=" ")
+            # print(planet_type.value, end=" ")
             r = self.calc_habitable_zone_ratio(r, star)
             # print(r)
-            if habitable_zone_distance < r[0] and habitable_zone_distance < r[1]:
+            # print("dist", habitable_zone_distance, r[0], r[1])
+            if habitable_zone_distance < r[0] and habitable_zone_distance < r[1] or habitable_zone_distance > r[0] and habitable_zone_distance > r[1]:
+                # print("cant")
                 continue
             # 谁见过黑洞旁边有类地行星的
             if star.star_type in [
@@ -46,7 +49,8 @@ class Planet(Celestial, CanDevelop):
                 StarType.RED_SUPERGIANT,
                 StarType.YELLOW_SUPERGIANT,
                 StarType.RED_GIANT,
-                StarType.BLUE_GIANT] and planet_type in [PlanetType.TERRESTRIAL, PlanetType.DRY, PlanetType.SEA, PlanetType.DESOLATE, PlanetType.VOLCANIC]:
+                StarType.BLUE_GIANT] and planet_type in [PlanetType.TERRESTRIAL, PlanetType.DRY, PlanetType.SEA, PlanetType.DESOLATE]:
+                # print("NO")
                 continue
             can_gen_types.append(planet_type)
         # print(star.name, can_gen_types)
@@ -55,13 +59,14 @@ class Planet(Celestial, CanDevelop):
         # 默认岩石星球
         if not self.planet_type:
             self.planet_type = PlanetType.ROCK if PlanetType.ROCK in can_gen_types else PlanetType.LAVA
-        # self.planet_type = random.choice(can_gen_types)
 
     def gen_random_info(self, star):
         used_names: list = read_from_path("data/used_names.json")
         first = random.choice(["FE", "TS", "EF", "LI", "RST", "ET", "T", "ME"])
         suffix = random.choice(["D", "D", "D", "D" "C", "C", "C", "C", "C" "B", "B"])
         suffix = "A" if random_percent(10) else suffix
+        if self.planet_type in [PlanetType.TERRESTRIAL, PlanetType.ICE, PlanetType.DESOLATE, PlanetType.DRY]:
+            suffix = random.choice(["B", "B", "B", "A", "A"])
         suffix = "R" if random_percent(3) else suffix
         if self.faction.id in [4, 5, 7, 9]:
             suffix = suffix + "Z" if random_percent(50) else suffix
@@ -78,7 +83,6 @@ class Planet(Celestial, CanDevelop):
             "name": self.name,
             "desc": self.desc,
             "galaxy_location": self.galaxy_location,
-            "star": self.star_uid,
             "location": self.location,
             "faction": self.faction.id,
             "is_known": self.is_known,
@@ -90,6 +94,7 @@ class Planet(Celestial, CanDevelop):
     @staticmethod
     def load(celestial_dict):
         return Planet(
+            uid=celestial_dict["uid"],
             name=celestial_dict["name"],
             desc=celestial_dict["desc"],
             galaxy_location=celestial_dict["galaxy_location"],

@@ -3,11 +3,12 @@ from ..tools.map_tools import *
 from .faction import Faction, FACTIONS
 from .celestial.station import Station
 from .celestial.planet import Planet
-from .celestial import Celestial
+from .celestial import Celestial, planet_type_color, star_type_color
 from .celestial.star import Star
 from .celestial.ship import Ship
 from .celestial.tools import load_celestial
 from xme.xmetools import jsontools
+from xme.xmetools.randtools import random_percent
 import random
 from xme.xmetools.colortools import rgb_to_hex
 from PIL import Image
@@ -24,6 +25,7 @@ def get_celestial_from_uid(uid, default=None):
         for c in v.celestials.values():
             if c.uid == uid:
                 return c
+    print("无法通过uid找到星体")
     return default
 
 def get_starfield_map(location, default=None):
@@ -45,7 +47,8 @@ class GalaxyMap:
     """
     def __init__(self, maxwidth=499, maxheight=499) -> None:
         self.max_size = (maxwidth, maxheight)
-
+        # POSSIBILITY = 0.6
+        POSSIBILITY = 0.02
         if map:=jsontools.read_from_path("static/map/map.json"):
             self.max_size = tuple(map["max_size"])
             map = map["starfields"]
@@ -58,7 +61,7 @@ class GalaxyMap:
         else:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
-            self.starfields = self.init_starfields(0.01)
+            self.starfields = self.init_starfields(POSSIBILITY)
             self.load_map_from_image("static/img/map-1.png")
             self.save()
         # print(self.starfields)
@@ -85,6 +88,8 @@ class GalaxyMap:
 
     def load_map_from_image(self, path):
         img = Image.open(path)
+        img = img.resize(self.max_size, Image.Resampling.NEAREST)
+        # img.show()
         for index in self.starfields.keys():
             try:
                 pixel = img.getpixel(index)
@@ -177,7 +182,7 @@ class StarfieldMap:
         if not celestials:
             # print("正在生成星域...")
             self.init_celestials(min_distance=30, count=max(1, random.randint(-25, 3)), celestial_type=Star, faction=faction, max_distance=60, target_position=(maxwidth // 2, maxheight // 2))
-            self.init_celestials(min_distance=50, count=random.randint(1, 7), celestial_type=Planet, faction=faction, target_celestial_type=Star)
+            self.init_celestials(min_distance=50, count=random.randint(1, 3) if random_percent(65) else random.randint(3, 9), celestial_type=Planet, faction=faction, target_celestial_type=Star)
             # if faction.id != 0:
                 # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 7)), celestial_type=Station, faction=faction, target_celestial_type=Planet)
                 # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 3)), celestial_type=Ship, faction=faction)
@@ -304,7 +309,16 @@ class StarfieldMap:
             side = celestial_draw_sides[type(celestial)]
             color = celestial.faction.color
             point_to_draw = (int(point[0] * zoom_fac + padding + append_[0]) * img_zoom, int(point[1] * zoom_fac + padding + append_[1]) * img_zoom)
-            mark_point(draw, point_to_draw, point, side, color, int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac), f'[{celestial.faction.name}] {celestial.name}', int(font_size * ui_zoom_fac))
+            prefix = celestial.faction.name
+            if isinstance(celestial, Planet):
+                color = planet_type_color[celestial.planet_type]
+                prefix = celestial.planet_type.value
+            elif isinstance(celestial, Star):
+                color = star_type_color[celestial.star_type]
+                prefix = celestial.star_type.value
+            elif isinstance(celestial, Ship):
+                ...
+            mark_point(draw, point_to_draw, point, side, color, int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac), f'[{prefix}] {celestial.name}', int(font_size * ui_zoom_fac))
 
         # # 绘制圆加十字
         # mark_point(draw, points[0],regular_points[0], 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),'xzadudu179 (你)', int(font_size * ui_zoom_fac))

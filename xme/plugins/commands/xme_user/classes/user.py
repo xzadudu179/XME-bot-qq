@@ -34,9 +34,10 @@ class User:
         self.counters = {}
         # print(celestial)
         # 用户所在天体
+        self.celestial = None
         if celestial_uid is not None:
             self.celestial = get_celestial_from_uid(celestial_uid)
-        else:
+        if self.celestial is None:
             self.get_celestial()
 
     def get_celestial(self):
@@ -113,7 +114,7 @@ class User:
             "desc": self.desc,
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
-            "celestial": self.celestial.__dict__()
+            "celestial": self.celestial.uid if self.celestial else ""
         }
 
     def add_coins(self, amount: int) -> bool:
@@ -142,6 +143,9 @@ class User:
         jsontools.save_to_path(config.USER_PATH, users)
 
     async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
+        print(self.celestial )
+        if self.celestial is None:
+            return "static/img/no-signal.png"
         center = self.celestial.location
         starfield = get_starfield_map(self.celestial.galaxy_location)
         if starfield is None:
@@ -163,11 +167,14 @@ class User:
 
 
     async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-        center = self.celestial.galaxy_location
+        if not self.celestial:
+            center = (0, 0)
+        else:
+            center = self.celestial.galaxy_location
         # center = (0, 0)
         map_size = GalaxyMap().max_size
         map_img = GalaxyMap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
-        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=self.celestial.galaxy_location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
+        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=center, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
 
     async def draw_user_map(self, map_size, img_zoom, map_img, location, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, line_width=1, font_size=12) -> str:
@@ -196,11 +203,10 @@ class User:
 
 
 def try_load(id):
-    try:
-        return User.load(id)
-    except Exception as ex:
-        # print(f"try load 出现异常：{traceback.format_exc()}")
-        return User(id)
+    u = User.load(id)
+    if u is None:
+        u = User(id)
+    return  u
 def verify_timers(user: User, name: str):
     if not name in user.counters or type(user.counters[name]) != dict:
         user.counters[name] = {}
@@ -425,15 +431,13 @@ def load_from_dict(data: dict, id: int) -> User:
     # print(data)
     celestial = data.get('celestial', None)
     # print(celestial)
-    if celestial is not None:
-        celestial = load_celestial(celestial)
     # print(celestial)
     user = User(
         id,
         data.get('coins', 0),
         inventory,
         data.get('talked_to_bot', []),
-        celestial=celestial
+        celestial_uid=celestial
     )
     user.counters = data.get('counters', {})
     user.xme_favorability = data.get('xme_favorability', 0)

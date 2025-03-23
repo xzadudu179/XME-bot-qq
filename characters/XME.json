@@ -542,6 +542,10 @@
                     "error": "使用物品时出现了错误...",
                     "default_msg": "你使用了 \"{item}\"！{neutral}"
                 }
+            },
+            "map": {
+                "desc": "查看周边星系地图（测试）",
+                "introduction": "可以查看到你周边的恒星系"
             }
         },
         "bottodo": {

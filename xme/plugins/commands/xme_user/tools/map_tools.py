@@ -73,13 +73,13 @@ def random_node_lines(draw, count, node_range: tuple[int, int], lightness_range:
         # 生成线条
         gen_node_lines(line_points, draw, color, node_size, line_width)
 
-def mark_point(draw: ImageDraw, point, regular_point, sides_or_cross: int, color, line_width, radius, name='', font_size=12, text_space=8):
+def mark_point(draw: ImageDraw, point_to_draw, point, sides_or_cross: int, color, line_width, radius, name='', font_size=12, text_space=8, text_offset=(0, 0)):
     """标记地图坐标点
 
     Args:
         draw (ImageDraw): 绘制工具
-        point (tuple): 实际绘制位置
-        regular_point (tuple): 坐标点
+        point_to_draw (tuple): 实际绘制位置
+        point (tuple): 坐标点
         sides_or_cross (int): 大于等于 3 是绘制多边形，否则是绘制十字准心
         color (color): 颜色
         line_width (int): 线条宽度
@@ -87,17 +87,19 @@ def mark_point(draw: ImageDraw, point, regular_point, sides_or_cross: int, color
         name (str, optional): 坐标点名称. Defaults to ''.
         font_size (int, optional): 字体大小. Defaults to 12.
         text_space (int, optional): 字间距. Defaults to 8.
+        text_offset (tuple[int, int], optiaonal): 字偏移. Defaults to 0.
     """
     # 标记坐标点
     if sides_or_cross < 3:
-        write_crosshair(draw, point, radius * 0.8, int(radius * 0.7) * 0.8, color, line_width)
+        write_crosshair(draw, point_to_draw, radius * 0.8, int(radius * 0.7) * 0.8, color, line_width)
     else:
-        draw_polygon(draw, point, radius, sides_or_cross, (random.randint(0, 314) / 100), color, line_width)
+        draw_polygon(draw, point_to_draw, radius, sides_or_cross, (random.randint(0, 314) / 100), color, line_width)
     # draw.ellipse((point[0] - 1, point[1] - 1, point[0] + 1, point[1] + 1), fill=color)
+    offset_x, offset_y = text_offset
 
-    draw_text_on_image(draw, str(regular_point), (point[0] + radius, point[1] + radius), font_size, color, text_space)
+    draw_text_on_image(draw, str(point), (point_to_draw[0] + radius + offset_x, point_to_draw[1] + radius + offset_y), font_size, color, text_space)
     if name:
-        draw_text_on_image(draw, name, (point[0] + radius + text_space, point[1] - radius), font_size, color, text_space)
+        draw_text_on_image(draw, name, (point_to_draw[0] + radius + text_space + offset_x, point_to_draw[1] - radius + offset_y), font_size, color, text_space)
 
 
 
@@ -129,7 +131,7 @@ def write_grid(draw, grid_spacing, width, height, color='#102735', line_width=1)
     draw.line([(center_x, 0), (center_x, height)], fill=color, width=line_width)  # 垂直中心线
     draw.line([(0, center_y), (width, center_y)], fill=color, width=line_width)   # 水平中心线
 
-def draw_point(draw, scale_factor, point, image_size, fill_color="yellow"):
+def draw_point(draw, zoom_fac, point_to_draw, fill_color="yellow"):
     """
     标记点。
 
@@ -139,21 +141,15 @@ def draw_point(draw, scale_factor, point, image_size, fill_color="yellow"):
     :param fill_color: 方形填充颜色
     :return: 绘制方形后的图像
     """
-    # 原图的 3x3 网格，计算每个格子的大小
-    grid_width, grid_height = image_size
-
-    # 缩放后的图像大小
-    scaled_width = grid_width * scale_factor
-    scaled_height = grid_height * scale_factor
-
-    # 计算每个格子的宽度和高度
-    cell_width = scaled_width // grid_width
-    cell_height = scaled_height // grid_height
-    row, col = point
-    x1 = col * cell_width
-    y1 = row * cell_height
-    x2 = x1 + cell_width
-    y2 = y1 + cell_height
+    # print(zoom_fac)
+    x1, y1 = point_to_draw
+    block_center = zoom_fac//2
+    x2 = x1 + zoom_fac
+    y2 = y1 + zoom_fac
+    x1 -= block_center
+    x2 -= block_center
+    y1 -= block_center
+    y2 -= block_center
     draw.rectangle([x1, y1, x2, y2], fill=fill_color)
     # print(fill_color)
 

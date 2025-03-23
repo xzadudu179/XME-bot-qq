@@ -16,6 +16,7 @@ class Planet(Celestial, CanDevelop):
         self.is_known = is_known
         # 行星需要有恒星
         # star = star
+        self.star_uid = star.uid
         # 序号
         self.serial_number = serial_number
         # 行星类型
@@ -25,20 +26,36 @@ class Planet(Celestial, CanDevelop):
         if not self.name or not self.desc:
             self.gen_random_info(star)
 
-    def calc_habitable_zone_ratio(self, range, star) -> tuple[float, float]:
+    def calc_habitable_zone_ratio(self, range, star: Star) -> tuple[float, float]:
         return tuple([r * star.thermal_luminosity for r in range])
 
     def gen_planet_type(self, star):
         can_gen_types = []
+        habitable_zone_distance = math.dist(star.location, self.location) - star.habitable_zone
+        print(habitable_zone_distance, star.star_type)
         for r, planet_type in planet_HZproximity.items():
             r = self.calc_habitable_zone_ratio(r, star)
             # print(r)
-            habitable_zone_distance = math.dist(star.location, self.location) - star.habitable_zone
             if habitable_zone_distance < r[0] and habitable_zone_distance < r[1]:
+                continue
+            # 谁见过黑洞旁边有类地行星的
+            if star.star_type in [
+                StarType.BLACKHOLE,
+                StarType.NEUTRON_STAR,
+                StarType.WHITE_DWARF,
+                StarType.RED_SUPERGIANT,
+                StarType.YELLOW_SUPERGIANT,
+                StarType.RED_GIANT,
+                StarType.BLUE_GIANT] and planet_type in [PlanetType.TERRESTRIAL, PlanetType.DRY, PlanetType.SEA, PlanetType.DESOLATE, PlanetType.VOLCANIC]:
                 continue
             can_gen_types.append(planet_type)
         # print(star.name, can_gen_types)
-        self.planet_type = random.choice(can_gen_types)
+        for planet_type, probability in planet_probabilities.items():
+            self.planet_type = planet_type if random_percent(probability) else self.planet_type
+        # 默认岩石星球
+        if not self.planet_type:
+            self.planet_type = PlanetType.ROCK if PlanetType.ROCK in can_gen_types else PlanetType.LAVA
+        # self.planet_type = random.choice(can_gen_types)
 
     def gen_random_info(self, star):
         used_names: list = read_from_path("data/used_names.json")
@@ -57,9 +74,11 @@ class Planet(Celestial, CanDevelop):
     def __dict__(self):
         return {
             "type": "Planet",
+            "uid": self.uid,
             "name": self.name,
             "desc": self.desc,
             "galaxy_location": self.galaxy_location,
+            "star": self.star_uid,
             "location": self.location,
             "faction": self.faction.id,
             "is_known": self.is_known,

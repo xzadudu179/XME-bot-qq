@@ -1,12 +1,13 @@
 from enum import Enum
 from ..faction import FACTIONS
-
+import uuid
 class Celestial:
     """天体地点 可被雷达显示
     """
-    # 天体会有 所属星域地图 所属银河系地图位置 所属星域地图位置 名称 介绍 位置坐标
+    # 天体会有 uid 所属星域地图 所属银河系地图位置 所属星域地图位置 名称 介绍 位置坐标
     def __init__(self,  galaxy_location: tuple[int, int], location: tuple[int, int], name: str = "", desc: str = "", faction_id: int = 0) -> None:
         # from ..xme_map import get_starfield_map
+        self.uid = uuid.uuid4()
         self.name = name
         self.desc = desc
         self.galaxy_location = galaxy_location
@@ -16,6 +17,7 @@ class Celestial:
     def __dict__(self):
         return {
             "type": "Celestial",
+            "uid": self.uid,
             "name": self.name,
             "desc": self.desc,
             "galaxy_location": self.galaxy_location,
@@ -30,7 +32,7 @@ class Celestial:
             # starfield_map=get_starfield_map(celestial_dict["galaxy_location"]),
             name=celestial_dict["name"],
             desc=celestial_dict["desc"],
-            galaxy_location=celestial_dict["galaxy_location"],
+            galaxy_location=tuple(celestial_dict["galaxy_location"]),
             location=tuple([x for x in celestial_dict["location"].split(",")]),
             faction_id=celestial_dict["faction"],
         )
@@ -58,6 +60,20 @@ class PlanetType(Enum):
     ICE_GIANT = "冰巨星"
     STRUCTURE = "构造体星球"
 
+planet_probabilities = {
+    PlanetType.DESOLATE: 20,
+    PlanetType.DRY: 20,
+    PlanetType.GAS: 15,
+    PlanetType.SEA: 4,
+    PlanetType.LAVA: 50,
+    PlanetType.VOLCANIC: 10,
+    PlanetType.TERRESTRIAL: 5,
+    PlanetType.ROCK: 80,
+    PlanetType.TOXIC: 50,
+    PlanetType.ICE: 30,
+    PlanetType.ICE_GIANT: 20,
+}
+
 class StarType(Enum):
     RED_SUPERGIANT = "红超巨星"
     YELLOW_SUPERGIANT = "黄超巨星"
@@ -71,6 +87,21 @@ class StarType(Enum):
     RED_DWARF = "红矮星"
     NEUTRON_STAR = "中子星"
     BLACKHOLE = "黑洞"
+
+star_probabilities = {
+    StarType.RED_SUPERGIANT: 0.001,
+    StarType.YELLOW_SUPERGIANT: 0.01,
+    StarType.BLUE_SUPERGIANT: 0.01,
+    StarType.RED_GIANT: 5,
+    StarType.BLUE_GIANT: 0.5,
+    StarType.YELLOW_GIANT: 1,
+    StarType.YELLOW_DWARF: 7,
+    StarType.ORANGE_DWARF: 12,
+    StarType.WHITE_DWARF: 5,
+    StarType.RED_DWARF: 73,
+    StarType.NEUTRON_STAR: 0.001,
+    StarType.BLACKHOLE: 0.0001,
+}
 
 star_thermal_luminosity_range: dict[StarType, tuple[float, float]] = {
     StarType.RED_SUPERGIANT: (10000.0, 300000.0),
@@ -94,9 +125,9 @@ planet_HZproximity = {
     (1.5, 10): PlanetType.GAS,
     (0.99, 1.02): PlanetType.TERRESTRIAL,
     (0.97, 1.02): PlanetType.SEA,
-    (-0.9, -0.25): PlanetType.LAVA,
+    (-100, -30): PlanetType.LAVA,
     (-0.5, -0.1): PlanetType.VOLCANIC,
-    (-100, 100): PlanetType.ROCK,
+    (-35, 100): PlanetType.ROCK,
     (-0.27, 0.1): PlanetType.TOXIC,
     (0.5, 100): PlanetType.ICE,
     (0.5, 100): PlanetType.ICE_GIANT,

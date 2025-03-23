@@ -6,6 +6,7 @@ import config
 from nonebot import get_bot
 from ..tools.map_tools import *
 import inspect
+from xme.xmetools.imgtools import hash_image
 import math
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
@@ -13,7 +14,9 @@ from .inventory import Inventory
 from .celestial import Celestial
 from .celestial.tools import load_celestial
 from .celestial.star import Star
+from .celestial.planet import Planet, PlanetType
 from .xme_map import GalaxyMap, StarfieldMap
+from .xme_map import get_starfield_map, get_celestial_from_uid
 from ..tools import galaxy_date_tools
 
 coin_name = get_message("user", "coin_name")
@@ -21,23 +24,25 @@ coin_pronoun = get_message("user", "coin_pronoun")
 
 
 class User:
-    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = "", celestial: Celestial = None):
+    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = "", celestial_uid=None):
         self.id = user_id
         self.desc = desc
         self.inventory = inventory
-        # 用户所在天体
-        if celestial is not None:
-            self.celestial = celestial
-        else:
-            self.get_celestial()
         self.coins = coins
         self.xme_favorability = 0
         self.talked_to_bot = talked_to_bot
         self.counters = {}
+        # print(celestial)
+        # 用户所在天体
+        if celestial_uid is not None:
+            self.celestial = get_celestial_from_uid(celestial_uid)
+        else:
+            self.get_celestial()
 
     def get_celestial(self):
         map = GalaxyMap()
         choice_celestials = []
+        print("随机生成出生星体中")
         # print("USERRRRRRRRRRRRRRR", map.starfields)
         for starfield in map.starfields.values():
             if starfield.calc_faction().id != 1:
@@ -45,6 +50,17 @@ class User:
             for c in starfield.celestials.values():
                 if isinstance(c, Star):
                     continue
+                if isinstance(c, Planet):
+                    if c.planet_type not in [
+                        PlanetType.CITY,
+                        PlanetType.DESOLATE,
+                        PlanetType.DRY,
+                        PlanetType.SEA,
+                        PlanetType.TERRESTRIAL,
+                        PlanetType.ICE,
+                        PlanetType.VOLCANIC,
+                    ]:
+                        continue
                 choice_celestials.append(c)
         if choice_celestials:
             self.celestial = random.choice(choice_celestials)
@@ -125,20 +141,53 @@ class User:
         users['users'][str(self.id)] = data_to_save
         jsontools.save_to_path(config.USER_PATH, users)
 
-    async def get_user_starfield_map(self):
-        self.celestial.location
+    async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
+        center = self.celestial.location
+        starfield = get_starfield_map(self.celestial.galaxy_location)
+        if starfield is None:
+            print("用户星域坐标无效")
+            self.celestial = None
+            self.get_celestial()
+        map_img = starfield.draw_starfield_map(
+            img_zoom=img_zoom,
+            zoom_fac=zoom_fac,
+            ui_zoom_fac=ui_zoom_fac,
+            center=center,
+            padding=padding,
+            background_color=background_color,
+            line_width=line_width,
+            grid_color=grid_color
+        )
+        map_size = starfield.max_size
+        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=self.celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
-    async def draw_user_map(self, map_img, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100) -> str:
+
+    async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
+        center = self.celestial.galaxy_location
+        # center = (0, 0)
+        map_size = GalaxyMap().max_size
+        map_img = GalaxyMap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
+        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=self.celestial.galaxy_location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
+
+
+    async def draw_user_map(self, map_size, img_zoom, map_img, location, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, line_width=1, font_size=12) -> str:
         # map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
-        font_size = 12
+        # font_size = 12
         width, height = map_img.size
+        map_width, map_height = map_size
         text_draw = ImageDraw.Draw(map_img)
         user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
-        text = f'[测试星图终端]\n[用户] {user_name}\n坐标轴中心: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
+        text = f'[HIUN 星图终端]\n[用户] {user_name}\n你在: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
         draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
         # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
+        # 绘制圆加十字
+        zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
+        append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
+        point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
+        print("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
+        mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
         # 保存图片
-        path = 'data/images/temp/chartinfo.png'
+        path = f'data/images/temp/{hash_image(map_img)}.png'
         map_img.save(path)
         return path
 
@@ -146,12 +195,12 @@ class User:
         # map_img.show()
 
 
-def try_load(id, default):
+def try_load(id):
     try:
         return User.load(id)
     except Exception as ex:
         # print(f"try load 出现异常：{traceback.format_exc()}")
-        return default
+        return User(id)
 def verify_timers(user: User, name: str):
     if not name in user.counters or type(user.counters[name]) != dict:
         user.counters[name] = {}
@@ -355,7 +404,7 @@ def using_user(save_data=False, id=0):
             if not id:
                 user_id = session.event.user_id
             print(user_id)
-            user = try_load(user_id, User(user_id))
+            user = try_load(user_id)
             result = await func(session, user, *args, **kwargs)
             print(f"result: {result}")
             if save_data and result != False:
@@ -373,9 +422,12 @@ def load_from_dict(data: dict, id: int) -> User:
     inventory = Inventory()
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
+    # print(data)
     celestial = data.get('celestial', None)
+    # print(celestial)
     if celestial is not None:
         celestial = load_celestial(celestial)
+    # print(celestial)
     user = User(
         id,
         data.get('coins', 0),

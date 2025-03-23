@@ -1406,6 +1406,10 @@
                     "成功设置了你的个人介绍{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}",
                     "个人介绍设置成功{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}"
                 ]
+            },
+            "galaxy": {
+                "desc": "查看周边星系地图（测试）",
+                "introduction": "可以查看到你周边的恒星系"
             }
         },
         "bottodo": {

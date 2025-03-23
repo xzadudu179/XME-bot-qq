@@ -7,6 +7,7 @@ from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image
 import pyautogui
+from xme.xmetools.texttools import hash_byte
 import mss
 import requests
 
@@ -53,6 +54,12 @@ def get_url_image(url):
         return img
     else:
         raise Exception("获取图片失败")
+
+def hash_image(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    img_bytes = buffer.getvalue()
+    return hash_byte(img_bytes)
 
 def get_qq_avatar(qq, size=640):
     return get_url_image(f"https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}")

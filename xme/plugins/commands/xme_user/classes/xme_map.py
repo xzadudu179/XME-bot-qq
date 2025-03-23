@@ -19,7 +19,25 @@ celestial_draw_sides = {
     Station: 3,
 }
 
+def get_celestial_from_uid(uid, default=None):
+    for v in GalaxyMap().starfields.values():
+        for c in v.celestials.values():
+            if c.uid == uid:
+                return c
+    return default
+
 def get_starfield_map(location, default=None):
+    """通过位置获得星域地图
+
+    Args:
+        location (tuple[int, int]): 星域坐标
+        default (Any, optional): 获取不到时的默认值. Defaults to None.
+
+    Returns:
+        StarfieldMap: 星域地图
+    """
+    location = tuple(location)
+    # print(GalaxyMap().starfields)
     return GalaxyMap().starfields.get(location, default)
 
 class GalaxyMap:
@@ -29,12 +47,14 @@ class GalaxyMap:
         self.max_size = (maxwidth, maxheight)
 
         if map:=jsontools.read_from_path("static/map/map.json"):
+            self.max_size = tuple(map["max_size"])
             map = map["starfields"]
             starfields = {}
             for index, starfield in map.items():
                 starfield = StarfieldMap.load(starfield)
                 starfields[tuple([int(i) for i in index.split(",")])] = starfield
             self.starfields = starfields
+            print(self.max_size)
         else:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
@@ -99,10 +119,10 @@ class GalaxyMap:
             raise ValueError("星域地图块坐标超过范围")
         self.starfields[position] = StarfieldMap(position, self, maxwidth, maxheight)
 
-    def draw_galaxy_map(self, center=(0, 0), zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735') -> Image.Image:
+    def draw_galaxy_map(self, img_zoom=2, center=(0, 0), zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735') -> Image.Image:
         # 图片大小
-        img_zoom = 2
-        map_width, map_height = self.max_size
+        # img_zoom = 2
+        map_width, map_height = self.max_size[0] + 1, self.max_size[1] + 1
 
         zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
         # append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
@@ -117,18 +137,22 @@ class GalaxyMap:
 
         # 背景
         # 绘制随机线条
-        random_node_lines(draw, 100, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width * (width // (zoom_width * 2)), height * (height // (zoom_height * 2)), max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
+        random_node_lines(draw, 35, (2, 6), (10, 30), int(line_width * zoom_fac) * img_zoom, width, height, max_length=int(50 * zoom_fac * img_zoom), node_size=int(1 * zoom_fac))
         # 绘制网格
         write_grid(draw, int(15 * zoom_fac * img_zoom), width, height, grid_color, int(1 * zoom_fac * img_zoom))
 
         # for i, (point, starfield) in enumerate(self.starfields.items()):
+        append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
         for point, starfield in self.starfields.items():
             # print(starfield)
             # print("point", point)
             color = starfield.calc_faction().color
-            # print(color)
-            # print(append_, point)
-            draw_point(draw, zoom_fac * img_zoom, (point[0] - center[0], point[1] - center[1]), (width, height), color)
+            point_to_draw = (int(point[0] * zoom_fac + padding + append_[0]) * img_zoom, int(point[1] * zoom_fac + padding + append_[1]) * img_zoom)
+            if point[0] == 42 and point[1] == 48:
+                print("4248", point_to_draw, zoom_fac, img_zoom, padding, append_)
+            draw_point(draw, zoom_fac, point_to_draw, color)
+
+        # mark_point(draw, (int(0 * zoom_fac + padding + append_[0]) * img_zoom, int(0 * zoom_fac + padding + append_[1]) * img_zoom),(0, 0), 0, 'cyan', int(line_width * 1), int(10 * 1),'测试坐标', int(12 * 1))
         # 保存图片
         img.save('data/images/temp/galaxy_map.png')
         return img
@@ -203,7 +227,16 @@ class StarfieldMap:
         for point in points:
             # print("正在生成天体...")
             if celestial_type == Planet:
-                celestial = Planet(name="", desc="", galaxy_location=self.location, location=point, star=random.choice([s for s in self.celestials.values() if isinstance(s, Star)]), serial_number=planet_num)
+                celestial = Planet(
+                    name="",
+                    desc="",
+                    galaxy_location=self.location,
+                    location=point,
+                    star=random.choice([s for s in self.celestials.values() if isinstance(s, Star)]),
+                    serial_number=planet_num,
+                    faction_id=faction.id,
+                    is_known=False if faction.id == 0 else True
+                )
                 planet_num += 1
             else:
                 celestial = celestial_type(name="", desc="", galaxy_location=self.location, location=point, faction_id=faction.id)
@@ -237,16 +270,16 @@ class StarfieldMap:
             maxwidth=map_json["max_size"][0],
             maxheight=map_json["max_size"][1],
             location=map_json["location"],
-            celestials={k: load_celestial(v) for k, v in map_json["celestials"].items()}
+            celestials={tuple([int(x) for x in k.split(",")]): load_celestial(v) for k, v in map_json["celestials"].items()}
         )
 
     def get_celestial(self, location, default=None):
         return self.celestials.get(location, default)
 
-    def draw_starfield_map(self, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735', font_size: int = 12) -> Image.Image:
+    def draw_starfield_map(self, img_zoom=2, center=(0, 0), zoom_fac=1, ui_zoom_fac=1, padding=100, background_color="black", line_width=1, grid_color='#102735', font_size: int = 12) -> Image.Image:
         # 图片大小
-        img_zoom = 2
-        map_width, map_height = self.max_size
+        # img_zoom = 2
+        map_width, map_height = self.max_size[0] + 1, self.max_size[1] + 1
 
         zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
         append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)

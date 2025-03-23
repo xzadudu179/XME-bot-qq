@@ -174,6 +174,22 @@ def hash_text(text):
     hex_result = hash_object.hexdigest()
     return hex_result.upper()
 
+
+def hash_byte(byte):
+    """使用 SHA-256 将字节码转为 16 进制 HASH
+
+    Args:
+        byte (Any): 输入
+
+    Returns:
+        str: 输出的字符串
+    """
+    # 使用 SHA-256 哈希算法
+    hash_object = hashlib.sha256(byte)
+    # 将哈希值转换为十六进制字符串
+    hex_result = hash_object.hexdigest()
+    return hex_result.upper()
+
 def fullwidth_to_halfwidth(text):
     """将字符串中的全角字符替换为半角字符。（注意：中文标点【】之类的不算可替换的全角字符）
 

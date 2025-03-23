@@ -12,7 +12,12 @@ class Star(Celestial, CanDevelop):
         # 恒星类型
         self.star_type = star_type
         if not self.star_type:
-            self.star_type = random.choice(list(StarType))
+            # self.star_type = random.choice(list(StarType))
+            for star_type, probability in star_probabilities.items():
+                self.star_type = star_type if random_percent(probability) else self.star_type
+            if not self.star_type:
+                # 红矮星默认
+                self.star_type = StarType.RED_DWARF
         # 建筑物
         self.buildings = buildings
         # 辐射热发光度
@@ -48,6 +53,7 @@ class Star(Celestial, CanDevelop):
     def __dict__(self):
         return {
             "type": "Star",
+            "uid": self.uid,
             "name": self.name,
             "desc": self.desc,
             "galaxy_location": self.galaxy_location,

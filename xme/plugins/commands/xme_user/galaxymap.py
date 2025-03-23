@@ -10,7 +10,7 @@ from character import get_message
 
 
 alias = []
-cmd_name = 'test'
+cmd_name = 'galaxy'
 usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
@@ -20,15 +20,10 @@ usage = {
     "alias": alias
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False)
-@u.using_user(save_data=False)
+@u.using_user(save_data=True)
 async def _(session: CommandSession, user: User):
-    point = session.current_arg_text.strip().split(" ")
-    galaxy_map = xme_map.GalaxyMap()
-    zoom_fac = 1.5
-    center=(int(point[0]), int(point[1]))
-    map_img = galaxy_map.draw_galaxy_map(zoom_fac=zoom_fac, center=center)
-    path = await user.draw_user_map(map_img, zoom_fac=zoom_fac, center=center)
-    print(path)
-    # save_to_path("static/map/map.json", galaxy_map.__dict__())
-    await send_session_msg(session, await image_msg(path, to_jpeg=False))
-
+    zoom_fac = 3
+    path = await user.draw_user_galaxy_map(zoom_fac=zoom_fac)
+    zoom_fac = 1
+    path2 = await user.draw_user_starfield_map(zoom_fac=zoom_fac)
+    await send_session_msg(session, f"{await image_msg(path, to_jpeg=False)}{await image_msg(path2, to_jpeg=False)}")

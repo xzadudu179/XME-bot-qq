@@ -33,18 +33,16 @@ async def arg_help(arg, plugins, session):
         ask_for_help = ask_for_help.name[0]
     print(ask_for_help)
     ask_cmd = ask_for_help
-    if ask_for_help:
-        for pl in plugins:
-            if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
-                ask_for_help = pl.name.lower()
-            if pl.name.lower() != ask_for_help: continue
-            if pl.name.lower() == "xme 宇宙":
-                print("发送用户帮助")
-                return await send_session_msg(session, get_userhelp(ask_cmd))
-            return await send_session_msg(session, pl.usage if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True)
-            # return await send_msg(session, pl.usage if pl.usage else "无内容")
-    # print(p)
-    return False
+    if not ask_for_help:
+        return False
+    for pl in plugins:
+        if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
+            ask_for_help = pl.name.lower()
+        if pl.name.lower() != ask_for_help: continue
+        if pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
+            print("发送用户帮助")
+            return await send_session_msg(session, get_userhelp(ask_cmd))
+        return await send_session_msg(session, pl.usage.split("/////OUTER/////")[0] if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):

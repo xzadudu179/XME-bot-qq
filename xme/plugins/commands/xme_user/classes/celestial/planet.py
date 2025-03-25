@@ -5,6 +5,7 @@ import random
 from .star import Star
 from xme.xmetools.jsontools import read_from_path, save_to_path
 import math
+import os
 
 class Planet(Celestial, CanDevelop):
     """行星类型"""
@@ -24,6 +25,10 @@ class Planet(Celestial, CanDevelop):
             self.gen_planet_type(star)
         if not self.name or not self.desc:
             self.gen_random_info(star)
+        self.img_path = f"./static/img/planets/{self.planet_type.value}/imgs"
+
+    def __str__(self):
+        return f"[{self.planet_type.value}] {self.name}\n{self.desc}"
 
     def calc_habitable_zone_ratio(self, range, star: Star) -> tuple[float, float]:
         return tuple([r * star.thermal_luminosity / 0.05 for r in range])

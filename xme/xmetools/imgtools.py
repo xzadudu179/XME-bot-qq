@@ -73,14 +73,36 @@ def take_screenshot(screen_num=1):
     name = os.path.abspath(name)
     return name, state
 
-def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
+def image_to_base64(img: Image.Image, format="PNG", to_jpeg=True) -> str:
     output_buffer = BytesIO()
     print("正在将图片转为base64")
     if img.mode == "RGBA" or not to_jpeg:
         print("save to png")
-        img.save(output_buffer, format="PNG", optimize=True)
+        img.save(output_buffer, format=format)
     else:
         img.save(output_buffer, format="JPEG", quality=75)
+    byte_data = output_buffer.getvalue()
+    base64_str = base64.b64encode(byte_data).decode()
+    print("result len", len(base64_str))
+    return base64_str
+
+def gif_to_base64(img, frames: list[Image.Image]):
+    """将 GIF 以 base64 编码
+
+    Args:
+        img (Image): 原 gif 图片
+        frames (list[Image.Image]): GIF 帧
+    """
+    output_buffer = BytesIO()
+    frames[0].save(
+        output_buffer,
+        save_all=True,
+        append_images=frames[1:],
+        loop=img.info.get("loop", 0),
+        duration=img.info.get("duration", 100),
+        format="GIF",
+        disposal=2,
+    )
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
     print("result len", len(base64_str))
@@ -94,12 +116,34 @@ def limit_size(image: Image.Image, max_value):
     image_resized = image.resize((new_width, new_height))
     return image_resized
 
-async def image_msg(path_or_image, max_value=0, to_jpeg=True):
+async def gif_msg(input_path, scale=1):
+    img = Image.open(input_path)
+
+    frames = []
+    for frame in range(img.n_frames):
+        img.seek(frame)  # 选中当前帧
+        resized_frame = img.resize(
+            (img.width * scale, img.height * scale), Image.Resampling.NEAREST
+        )  # 放大2倍
+        frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
+    b64 = gif_to_base64(img, frames)
+    print("gif b64 success")
+    try:
+        # 将消息发送的同步方法放到后台线程执行
+        result = await asyncio.to_thread(create_image_message, b64)
+        return result
+    except Exception as e:
+        print(f"发生错误: {e}")
+        return MessageSegment.text(f"[图片加载失败]")
+
+
+async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
     """获得可以直接发送的图片消息
 
     Args:
         path_or_image (str): 图片路径或图片
-        max_value (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
+        max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
+        load_format (str): 图片原格式
         to_jpeg (bool): 是否转换为 Jpeg 格式
 
     Returns:
@@ -110,11 +154,12 @@ async def image_msg(path_or_image, max_value=0, to_jpeg=True):
         is_image = True
     print(is_image)
     image = path_or_image if is_image else Image.open(path_or_image)
-    if max_value > 0:
+    # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
+    if max_size > 0:
         print("重新缩放")
-        image = limit_size(image, max_value)
+        image = limit_size(image, max_size)
     # print(image)
-    b64 = image_to_base64(image, to_jpeg)
+    b64 = image_to_base64(image, load_format, to_jpeg)
     print("b64 success")
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:

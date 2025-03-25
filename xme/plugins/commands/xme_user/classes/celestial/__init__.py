@@ -1,6 +1,11 @@
 from enum import Enum
 from ..faction import FACTIONS
 import uuid
+import os
+from PIL import Image
+# from xme.xmetools.randtools import change_seed
+import random
+
 class Celestial:
     """天体地点 可被雷达显示
     """
@@ -16,6 +21,33 @@ class Celestial:
         self.galaxy_location = galaxy_location
         self.location = location
         self.faction = FACTIONS.get(faction_id, FACTIONS[0])
+        self.img_path = None
+
+    def get_image(self, default=None) -> str | None:
+        random.seed(self.uid)
+        if self.img_path is None:
+            return default
+        # path = f"./static/img/planets/{t.value}/imgs"
+        try:
+            imgs =  os.listdir(self.img_path)
+        except FileNotFoundError:
+            imgs = []
+        results = []
+        for img in imgs:
+            try:
+                with Image.open(os.path.join(self.img_path, img)) as i:
+                    i.verify()  # 只验证文件，不加载完整内容
+                results.append(img)
+            except Exception:
+                continue
+        if not results:
+            return default
+        img_path = random.choice(results)
+        random.seed()
+        return os.path.join(self.img_path, img_path)
+
+    def __str__(self):
+        return self.desc
 
     def __dict__(self):
         return {
@@ -65,16 +97,16 @@ class PlanetType(Enum):
     STRUCTURE = "构造体星球"
 
 planet_probabilities = {
-    PlanetType.DESOLATE: 50,
-    PlanetType.DRY: 50,
+    PlanetType.DESOLATE: 45,
+    PlanetType.DRY: 45,
     PlanetType.GAS: 15,
-    PlanetType.SEA: 14,
+    PlanetType.SEA: 10,
     PlanetType.LAVA: 50,
     PlanetType.VOLCANIC: 10,
-    PlanetType.TERRESTRIAL: 20,
+    PlanetType.TERRESTRIAL: 13,
     PlanetType.ROCK: 60,
     PlanetType.TOXIC: 20,
-    PlanetType.ICE: 15,
+    PlanetType.ICE: 6,
     PlanetType.ICE_GIANT: 15,
 }
 
@@ -141,15 +173,15 @@ star_thermal_luminosity_range: dict[StarType, tuple[float, float]] = {
 planet_HZproximity = {
     (0.3, 0.8): PlanetType.DESOLATE,
     (-0.25, -0.05): PlanetType.DRY,
-    (1.5, 15): PlanetType.GAS,
-    (0.99, 1.02): PlanetType.TERRESTRIAL,
-    (0.97, 1.02): PlanetType.SEA,
+    (-1.5, 25): PlanetType.GAS,
+    (-0.05, 0.05): PlanetType.TERRESTRIAL,
+    (-0.05, 0.04): PlanetType.SEA,
     (-10000000000, -60): PlanetType.LAVA,
-    (-1, -0.6): PlanetType.VOLCANIC,
-    (-35, 10000000000): PlanetType.ROCK,
-    (-0.27, 0.1): PlanetType.TOXIC,
-    (1, 60): PlanetType.ICE,
-    (3.5, 60): PlanetType.ICE_GIANT,
+    (-10, -3): PlanetType.VOLCANIC,
+    (-60, 10000000000): PlanetType.ROCK,
+    (-2.7, 1): PlanetType.TOXIC,
+    (2, 90): PlanetType.ICE,
+    (20, 120): PlanetType.ICE_GIANT,
 }
 
 planet_type_color = {
@@ -172,7 +204,7 @@ planet_type_color = {
 
 planet_type_desc = {
     PlanetType.DESOLATE: "曾经或许是地球一般宜居的行星，但是环境的改变让这颗行星变成了遍布尘土，空气稀薄的恶地，被狂风与沙尘肆虐着...",
-    PlanetType.DRY: "干燥，植物稀少的星球，沙漠随处可见，恶劣的环境让开发这颗星球变得困难，但是相比于宇宙中大部分荒无人烟的星球来说，这样的星球已经有足够价值。",
+    PlanetType.DRY: "干燥，植物稀少的星球，沙漠随处可见，恶劣的环境让开发这颗星球变得困难，但是相比于宇宙中大部分极端危险的星球来说，这样的星球已经有足够价值。",
     PlanetType.FUNGI: "表面几乎被真菌覆盖的星球，已经见不到太多原本地表的环境。除了那些真菌本身以外，这样的星球在大多数生物眼里都是极度危险的。",
     PlanetType.CITY: "城市化完全的星球，大气控制系统维持着环境的舒适，已经见不到太多天然景观与地形。人造的生物圈维持着星球上仅有的一片绿色，而生物圈之外就是由钢铁铸成的世界。",
     PlanetType.TERRESTRIAL: "漂亮且稀有的行星，植被与生物遍布，到处都有独特的自然景观可供欣赏。",
@@ -183,7 +215,7 @@ planet_type_desc = {
     PlanetType.ROCK: "宇宙中最常见的一类星球，几乎没有任何生命的痕迹...不过有的时候能在这样的星球上发现非常丰富的矿产资源。",
     PlanetType.TOXIC: "或是由于温室失控，又或是因为某些奇怪的事情让这颗星球拥有厚厚的有毒大气层，其地表温度很可能不理想。",
     PlanetType.UNNATURAL: "一种奇怪的星球...其大气成分非常独特，可能会导致幻觉...",
-    PlanetType.ICE: "由于寒冷被冰封的星球，地表略微可以居住，冰层之下可能有丰富的生态圈。",
+    PlanetType.ICE: "由于寒冷被冰封的星球，地表勉强可以居住，冰层之下可能有丰富的生态圈。",
     PlanetType.ICE_GIANT: "另一类巨行星，由氧，碳，氮气等较重的气体组成，这种行星有狂暴且多变的气候，且内部压力极大。",
     PlanetType.STRUCTURE: "这颗行星的表面完全被各种构造体覆盖了...完全看不出来它曾经是什么样子了。"
 }

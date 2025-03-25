@@ -1,5 +1,4 @@
 from .tools.find_item import *
-from .xme_config import *
 from .classes.user import *
 from .classes.database import *
 import config

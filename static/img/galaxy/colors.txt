@@ -4,3 +4,10 @@
 #f4e6d3
 #f8d3ff
 #1f2e6e
+
+#e4fffe
+#a1fff7
+#b5daff
+#c4e9ff
+#438fff
+#1f2e6e

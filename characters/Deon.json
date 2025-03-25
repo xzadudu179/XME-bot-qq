@@ -1390,9 +1390,8 @@
                     "用法为 \"/desc 个人介绍内容\" 哦{positive_punc}",
                     "你需要在参数里输入你的个人介绍哦 {neutral}"
                 ],
-                "ask_for_delete": [
-                    "请确定是否要删除你的个人介绍哦{positive_punc} (确定请回复 y，否则回复其他内容 {neutral})",
-                    "你想要删除你的个人介绍嘛 (确定请回复 y，否则回复其他内容 {neutral})"
+                "desc_info": [
+                    "这是你的个人介绍 {positive}：\n{desc}\n你可以在下一句话输入 \"delete-desc\" 来删除你的个人介绍哦"
                 ],
                 "deleted": [
                     "成功删除了你的个人介绍 \"{desc}\"！",
@@ -1405,11 +1404,24 @@
                 "success": [
                     "成功设置了你的个人介绍{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}",
                     "个人介绍设置成功{positive_punc}\n可以使用 \"/info\" 指令来查看你的个人资料哦{positive_punc}"
+                ],
+                "too_long_desc": [
+                    "个人介绍太长啦{positive_punc} 需要在 500 字以内哦，你的个人介绍已经有 {count} 字啦。"
+                ],
+                "too_many_lines": [
+                    "个人介绍太长啦{positive_punc} 需要在 15 行以内哦，你的个人介绍已经有 {count} 行啦。"
                 ]
             },
             "map": {
                 "desc": "查看周边星系地图（测试）",
                 "introduction": "可以查看到你周边的恒星系"
+            },
+            "celestial": {
+                "desc": "查看星体信息",
+                "introduction": "查看你所在或是周边的星体（输入坐标）",
+                "no_celestial": "这个地方好像没有任何天体诶 {neutral}",
+                "output": "{img}\n{desc}",
+                "invalid_args": "参数解析错误，请确认你输入的是两个以空格分开的正整数哦"
             }
         },
         "bottodo": {

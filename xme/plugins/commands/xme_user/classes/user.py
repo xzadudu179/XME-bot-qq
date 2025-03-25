@@ -24,23 +24,43 @@ coin_pronoun = get_message("user", "coin_pronoun")
 
 
 class User:
-    def __init__(self, user_id: int, coins: int = 0, inventory: Inventory = Inventory(), talked_to_bot: list = [], desc: str = "", celestial_uid=None):
+    def __init__(
+            self,
+            user_id: int,
+            coins: int = 0,
+            inventory: Inventory = Inventory(),
+            talked_to_bot: list = [],
+            desc: str = "",
+            celestial_uid=None,
+            xme_favorability=0,
+            counters: dict=0,
+        ):
         self.id = user_id
         self.desc = desc
         self.inventory = inventory
         self.coins = coins
-        self.xme_favorability = 0
+        self.xme_favorability = xme_favorability
         self.talked_to_bot = talked_to_bot
-        self.counters = {}
+        self.counters = counters
         # print(celestial)
         # 用户所在天体
         self.celestial = None
         if celestial_uid is not None:
             self.celestial = get_celestial_from_uid(celestial_uid)
         if self.celestial is None:
-            self.get_celestial()
+            self.gen_celestial()
+        starfield = self.get_starfield()
+        if starfield is None:
+            print("用户星域坐标无效")
+            self.celestial = None
+            self.gen_celestial()
 
-    def get_celestial(self):
+    def get_starfield(self):
+        return get_starfield_map(self.celestial.galaxy_location)
+
+    def gen_celestial(self):
+        """随机获取出生星体
+        """
         map = GalaxyMap()
         choice_celestials = []
         print("随机生成出生星体中")
@@ -65,6 +85,7 @@ class User:
                 choice_celestials.append(c)
         if choice_celestials:
             self.celestial = random.choice(choice_celestials)
+            # self.save()
         else:
             print("无法获取到合适的行星")
 
@@ -147,11 +168,12 @@ class User:
         if self.celestial is None:
             return "static/img/no-signal.png"
         center = self.celestial.location
-        starfield = get_starfield_map(self.celestial.galaxy_location)
+        starfield = self.get_starfield()
         if starfield is None:
-            print("用户星域坐标无效")
-            self.celestial = None
-            self.get_celestial()
+            raise ValueError("用户星域坐标无效")
+        #     print("用户星域坐标无效")
+        #     self.celestial = None
+        #     self.get_celestial()
         map_img = starfield.draw_starfield_map(
             img_zoom=img_zoom,
             zoom_fac=zoom_fac,
@@ -422,7 +444,6 @@ def using_user(save_data=False, id=0):
 
     return decorator
 
-
 def load_from_dict(data: dict, id: int) -> User:
     inventory_data = data.get('inventory', None)
     inventory = Inventory()
@@ -433,13 +454,16 @@ def load_from_dict(data: dict, id: int) -> User:
     # print(celestial)
     # print(celestial)
     user = User(
-        id,
-        data.get('coins', 0),
-        inventory,
-        data.get('talked_to_bot', []),
-        celestial_uid=celestial
+        user_id=id,
+        coins=data.get('coins', 0),
+        inventory=inventory,
+        talked_to_bot=data.get('talked_to_bot', []),
+        desc=data.get('desc', ""),
+        celestial_uid=celestial,
+        xme_favorability=data.get('xme_favorability', 0),
+        counters=data.get('counters', {}),
     )
-    user.counters = data.get('counters', {})
-    user.xme_favorability = data.get('xme_favorability', 0)
-    user.desc = data.get('desc', "")
+    # user.counters = data.get('counters', {})
+    # user.xme_favorability = data.get('xme_favorability', 0)
+    # user.desc = data.get('desc', "")
     return user

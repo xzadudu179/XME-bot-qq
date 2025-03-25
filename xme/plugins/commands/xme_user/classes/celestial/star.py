@@ -28,6 +28,10 @@ class Star(Celestial, CanDevelop):
         # 宜居带中心距离
         self.habitable_zone = math.sqrt(self.thermal_luminosity) / 0.05
         self.gen_random_info()
+        self.img_path = f"./static/img/stars/{self.star_type.value}/imgs"
+
+    def __str__(self):
+        return f"[{self.star_type.value}] {self.name}\n{self.desc}\n发光度：{self.thermal_luminosity}\n宜居带距离：{self.habitable_zone:.2f}"
 
     def calc_thermal_luminosity(self) -> float:
         # self.star_type

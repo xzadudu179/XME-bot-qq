@@ -21,7 +21,7 @@ def random_percent(percent : float) -> bool:
     return rd < percent
 
 def change_seed(seed=None):
-    """修改函数内 random 的种子或让函数结束后种子重置
+    """装饰器，修改函数内 random 的种子或让函数结束后种子重置
 
     Args:
         func (_type_): 函数

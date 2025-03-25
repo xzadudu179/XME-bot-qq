@@ -31,7 +31,7 @@ async def event_send_cmd(cmd_string, bot, event, check_permission=True):
         current_arg=args,
         check_perm=check_permission)
 
-def get_command_args(arg_text: str, mim_args_len: int, split_str: str = None, default: str = "") -> list[str]:
+def get_command_args(arg_text: str, mim_args_len: int, max_args_len: int, split_str: str = None, default: str = "") -> list[str]:
     """获取指令参数列表
 
     Args:
@@ -43,9 +43,13 @@ def get_command_args(arg_text: str, mim_args_len: int, split_str: str = None, de
     Returns:
         list[str]: 参数列表
     """
-    args = arg_text.split(split_str)
-    if len(args) < mim_args_len:
+    args = [a for a in arg_text.split(split_str) if a]
+    if mim_args_len == 0 or max_args_len == 0:
+        return args
+    elif len(args) < mim_args_len:
         args += [default for _ in range(mim_args_len - len(args))]
+    elif len(args) > max_args_len:
+        args = args[:max_args_len]
     return args
 
 async def send_cmd(cmd_string, session, check_permission=True):
@@ -56,8 +60,8 @@ def get_alias_by_cmd(cmd_name: str):
     # print(cmds)
     return cmds.get(cmd_name, False)
 
-def use_args(arg_len, split_str: str = None, default: str = ""):
-    """解析指令内参数
+def use_args(arg_len: int, split_str: str = None, default: str = ""):
+    """解析指令内参数，会添加一个名叫 arg_list 的指定参数
 
     Args:
         arg_len (int): 参数列表长度
@@ -67,7 +71,7 @@ def use_args(arg_len, split_str: str = None, default: str = ""):
     def decorator(func):
         @wraps(func)
         async def wrapper(session: CommandSession, *args, **kwargs):
-            arg_list = get_command_args(session.current_arg_text, arg_len, split_str, default)
+            arg_list = get_command_args(session.current_arg_text, arg_len, arg_len, split_str, default)
             return await func(session, arg_list=arg_list, *args, **kwargs)
 
         return wrapper

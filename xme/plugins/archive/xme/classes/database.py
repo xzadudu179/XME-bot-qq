@@ -1,6 +1,6 @@
 import sqlite3
 import traceback
-from xme.plugins.commands.xme.xme_config import XME_DB_PATH
+from xme.plugins.archive.xme.xme_config import XME_DB_PATH
 from nonebot import log
 from functools import wraps
 import pickle

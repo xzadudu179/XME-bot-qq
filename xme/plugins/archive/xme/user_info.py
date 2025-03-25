@@ -1,5 +1,3 @@
-
-from .xme_config import *
 from .classes.user import *
 from .classes.database import *
 import config

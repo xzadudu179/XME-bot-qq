@@ -1,6 +1,7 @@
 import nonebot
 from os import path
 from xme.xmetools import colortools as c
+import random
 import os
 from nonebot.log import logger
 import bot_variables
@@ -13,6 +14,7 @@ def load_plugins_list(*args: list[str, str]):
         nonebot.load_plugins(arg[0], arg[1])
 
 if __name__ == '__main__':
+    random.seed()
     print("正在启动...")
     bot_init.saving_log(logger)
     nonebot.init(config)

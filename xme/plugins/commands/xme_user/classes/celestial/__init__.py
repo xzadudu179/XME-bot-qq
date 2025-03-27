@@ -26,6 +26,7 @@ class Celestial:
     def get_image(self, default=None) -> str | None:
         random.seed(self.uid)
         if self.img_path is None:
+            random.seed()
             return default
         # path = f"./static/img/planets/{t.value}/imgs"
         try:
@@ -41,9 +42,10 @@ class Celestial:
             except Exception:
                 continue
         if not results:
+            random.seed()
             return default
-        img_path = random.choice(results)
         random.seed()
+        img_path = random.choice(results)
         return os.path.join(self.img_path, img_path)
 
     def __str__(self):

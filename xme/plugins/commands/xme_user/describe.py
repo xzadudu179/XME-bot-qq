@@ -20,10 +20,10 @@ usage = {
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 @u.using_user(save_data=True)
-@use_args(arg_len=0, split_str=" ")
-async def _(session: CommandSession, user: User, arg_list: list):
-    print(arg_list)
-    if not arg_list:
+# @use_args(arg_len=0, split_str=" ")
+async def _(session: CommandSession, user: User):
+    arg = session.current_arg_text
+    if not arg:
         if not user.desc:
             await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_arg'))
             return False
@@ -34,7 +34,7 @@ async def _(session: CommandSession, user: User, arg_list: list):
             return True
         # await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'canceled_delete'))
         return False
-    desc = " ".join(arg_list).strip()
+    desc = arg.strip()
     line_count = max(desc.count("\r"), desc.count("\n"))
     if len(desc) > 500:
         await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_long_desc', count=len(desc)))

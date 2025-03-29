@@ -1,9 +1,10 @@
 
 from ..tools.map_tools import *
 from .faction import Faction, FACTIONS
+from xme.xmetools.functools import run_with_timeout
 from .celestial.station import Station
 from .celestial.planet import Planet
-from .celestial import Celestial, planet_type_color, star_type_color
+from .celestial import Celestial, planet_type_color, star_type_color, PlanetType
 from .celestial.star import Star
 from .celestial.ship import Ship
 from .celestial.tools import load_celestial
@@ -13,6 +14,8 @@ import random
 from xme.xmetools.colortools import rgb_to_hex
 from PIL import Image
 
+galaxy_initing = False
+
 celestial_draw_sides = {
     Planet: 5,
     Star: 7,
@@ -20,7 +23,15 @@ celestial_draw_sides = {
     Station: 3,
 }
 
+def get_galaxymap():
+    try:
+        return GalaxyMap()
+    except:
+        return False
+
 def get_celestial_from_uid(uid, default=None):
+    if not get_galaxymap():
+        return default
     for v in GalaxyMap().starfields.values():
         for c in v.celestials.values():
             if c.uid == uid:
@@ -47,8 +58,11 @@ class GalaxyMap:
     """
     def __init__(self, maxwidth=499, maxheight=499) -> None:
         self.max_size = (maxwidth, maxheight)
+        global galaxy_initing
+        if galaxy_initing:
+            raise ValueError("Galaxy Initing")
         # POSSIBILITY = 0.6
-        POSSIBILITY = 0.02
+        POSSIBILITY = 0.03
         if map:=jsontools.read_from_path("static/map/map.json"):
             self.max_size = tuple(map["max_size"])
             map = map["starfields"]
@@ -58,15 +72,17 @@ class GalaxyMap:
                 starfields[tuple([int(i) for i in index.split(",")])] = starfield
             self.starfields = starfields
             print(self.max_size)
-        else:
+        elif not galaxy_initing:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
-            self.starfields = self.init_starfields(POSSIBILITY)
+            self.starfields = run_with_timeout(self.init_starfields(POSSIBILITY), 9999)
             self.load_map_from_image("static/img/map-1.png")
             self.save()
         # print(self.starfields)
 
     def init_starfields(self, percent):
+        global galaxy_initing
+        galaxy_initing = True
         xys = set()
         if percent > 1 or percent <= 0:
             raise ValueError(f"百分比不能小于0 或大于1：precent: {percent}")
@@ -77,6 +93,7 @@ class GalaxyMap:
             xys.add((x, y))
         print(f"需要生成 {len(xys)} 个星域")
         fields = {index: StarfieldMap(location=(x, y)) for index in xys}
+        galaxy_initing = False
         return fields
 
     def __dict__(self):
@@ -181,11 +198,31 @@ class StarfieldMap:
             faction = self.calc_faction()
         if not celestials:
             # print("正在生成星域...")
-            self.init_celestials(min_distance=30, count=max(1, random.randint(-25, 3)), celestial_type=Star, faction=faction, max_distance=60, target_position=(maxwidth // 2, maxheight // 2))
-            self.init_celestials(min_distance=50, count=random.randint(1, 3) if random_percent(65) else random.randint(3, 9), celestial_type=Planet, faction=faction, target_celestial_type=Star)
+            self.init_celestials(min_distance=20, count=1, celestial_type=Star, faction=faction, max_distance=20, target_position=(maxwidth // 2, maxheight // 2))
+            self.init_celestials(min_distance=30, count=random.randint(1, 5) if random_percent(65) else random.randint(5, 14), celestial_type=Planet, faction=faction, target_celestial_type=Star)
+            self.delete_stone()
+            # self.init_celestials(min_distance=50, count=random.randint(1, 3) if random_percent(65) else random.randint(3, 5), celestial_type=Planet, faction=faction, target_celestial_type=Star)
             # if faction.id != 0:
                 # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 7)), celestial_type=Station, faction=faction, target_celestial_type=Planet)
                 # self.init_celestials(min_distance=10, count=max(0, random.randint(-7, 3)), celestial_type=Ship, faction=faction)
+
+    def delete_stone(self):
+        del_item = []
+        i = 0
+        for k, v in self.celestials.items():
+            # 保证一个
+            if isinstance(v, Planet) and v.planet_type == PlanetType.ROCK and random_percent(50):
+                if i == 0:
+                    continue
+                del_item.append(k)
+            i += 1
+        if not del_item:
+            return
+
+        for d in del_item:
+            del self.celestials[d]
+        # print(f"删除了 {len(del_item)} 个没有用的石头星球")
+
 
     def init_celestials(self, min_distance, count, celestial_type, faction, target_celestial_type=None, max_distance=-1, target_position=None):
         """生成天体

@@ -99,17 +99,17 @@ class PlanetType(Enum):
     STRUCTURE = "构造体星球"
 
 planet_probabilities = {
-    PlanetType.DESOLATE: 45,
-    PlanetType.DRY: 45,
+    PlanetType.DESOLATE: 20,
+    PlanetType.DRY: 20,
     PlanetType.GAS: 15,
-    PlanetType.SEA: 10,
+    PlanetType.SEA: 50,
     PlanetType.LAVA: 50,
-    PlanetType.VOLCANIC: 10,
-    PlanetType.TERRESTRIAL: 13,
+    PlanetType.VOLCANIC: 13,
+    PlanetType.TERRESTRIAL: 80,
     PlanetType.ROCK: 60,
-    PlanetType.TOXIC: 20,
-    PlanetType.ICE: 6,
-    PlanetType.ICE_GIANT: 15,
+    PlanetType.TOXIC: 10,
+    PlanetType.ICE: 10,
+    PlanetType.ICE_GIANT: 20,
 }
 
 class StarType(Enum):
@@ -127,16 +127,16 @@ class StarType(Enum):
     BLACKHOLE = "黑洞"
 
 star_probabilities = {
-    StarType.RED_SUPERGIANT: 0.2,
-    StarType.YELLOW_SUPERGIANT: 0.15,
-    StarType.BLUE_SUPERGIANT: 0.15,
+    StarType.RED_SUPERGIANT: 0.5,
+    StarType.YELLOW_SUPERGIANT: 0.4,
+    StarType.BLUE_SUPERGIANT: 0.5,
     StarType.RED_GIANT: 5,
-    StarType.BLUE_GIANT: 0.7,
+    StarType.BLUE_GIANT: 2,
     StarType.YELLOW_GIANT: 1,
-    StarType.YELLOW_DWARF: 40,
+    StarType.YELLOW_DWARF: 50,
     StarType.ORANGE_DWARF: 26,
     StarType.WHITE_DWARF: 8,
-    StarType.RED_DWARF: 50,
+    StarType.RED_DWARF: 30,
     StarType.NEUTRON_STAR: 0.1,
     StarType.BLACKHOLE: 0.1,
 }
@@ -166,22 +166,22 @@ star_thermal_luminosity_range: dict[StarType, tuple[float, float]] = {
     StarType.YELLOW_DWARF: (0.1, 10),
     StarType.ORANGE_DWARF: (0.01, 0.6),
     StarType.WHITE_DWARF: (0.0001, 0.01),
-    StarType.RED_DWARF: (0.01, 0.1),
+    StarType.RED_DWARF: (0.01, 0.2),
     StarType.NEUTRON_STAR: (1, 1000),
     StarType.BLACKHOLE: (0.000000001, 0.000000001),
 }
 
 # 至少距离宜居带多近的范围才可能生成该行星 一单位相较于太阳 0.05au，负数代表接近恒星
 planet_HZproximity = {
-    (0.3, 0.8): PlanetType.DESOLATE,
+    (0.2, 0.8): PlanetType.DESOLATE,
     (-0.25, -0.05): PlanetType.DRY,
     (-1.5, 25): PlanetType.GAS,
-    (-0.05, 0.05): PlanetType.TERRESTRIAL,
-    (-0.05, 0.04): PlanetType.SEA,
+    (-0.07, 0.07): PlanetType.TERRESTRIAL,
+    (-0.07, 0.05): PlanetType.SEA,
     (-10000000000, -60): PlanetType.LAVA,
     (-10, -3): PlanetType.VOLCANIC,
     (-60, 10000000000): PlanetType.ROCK,
-    (-2.7, 1): PlanetType.TOXIC,
+    (-8, 1): PlanetType.TOXIC,
     (2, 90): PlanetType.ICE,
     (20, 120): PlanetType.ICE_GIANT,
 }

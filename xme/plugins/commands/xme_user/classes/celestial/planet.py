@@ -43,7 +43,7 @@ class Planet(Celestial, CanDevelop):
             r = self.calc_habitable_zone_ratio(r, star)
             # print(r)
             # print("dist", habitable_zone_distance, r[0], r[1])
-            if habitable_zone_distance < r[0] and habitable_zone_distance < r[1] or habitable_zone_distance > r[0] and habitable_zone_distance > r[1]:
+            if habitable_zone_distance < r[0] or habitable_zone_distance > r[1]:
                 # print("cant")
                 continue
             # 谁见过黑洞旁边有类地行星的
@@ -54,13 +54,13 @@ class Planet(Celestial, CanDevelop):
                 StarType.RED_SUPERGIANT,
                 StarType.YELLOW_SUPERGIANT,
                 StarType.RED_GIANT,
-                StarType.BLUE_GIANT] and planet_type in [PlanetType.TERRESTRIAL, PlanetType.DRY, PlanetType.SEA, PlanetType.DESOLATE]:
+                StarType.BLUE_GIANT] and planet_type in [PlanetType.TERRESTRIAL, PlanetType.DRY, PlanetType.SEA]:
                 # print("NO")
                 continue
             can_gen_types.append(planet_type)
         # print(star.name, can_gen_types)
         for planet_type, probability in planet_probabilities.items():
-            self.planet_type = planet_type if random_percent(probability) else self.planet_type
+            self.planet_type = planet_type if random_percent(probability) and planet_type in can_gen_types else self.planet_type
         # 默认岩石星球
         if not self.planet_type:
             self.planet_type = PlanetType.ROCK if PlanetType.ROCK in can_gen_types else PlanetType.LAVA

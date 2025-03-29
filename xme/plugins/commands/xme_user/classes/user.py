@@ -15,8 +15,8 @@ from .celestial import Celestial
 from .celestial.tools import load_celestial
 from .celestial.star import Star
 from .celestial.planet import Planet, PlanetType
-from .xme_map import GalaxyMap, StarfieldMap
-from .xme_map import get_starfield_map, get_celestial_from_uid
+from .xme_map import StarfieldMap
+from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
 from ..tools import galaxy_date_tools
 
 coin_name = get_message("user", "coin_name")
@@ -61,7 +61,10 @@ class User:
     def gen_celestial(self):
         """随机获取出生星体
         """
-        map = GalaxyMap()
+        map = get_galaxymap()
+        if not map:
+            print("地图未生成")
+            return
         choice_celestials = []
         print("随机生成出生星体中")
         # print("USERRRRRRRRRRRRRRR", map.starfields)
@@ -78,8 +81,6 @@ class User:
                         PlanetType.DRY,
                         PlanetType.SEA,
                         PlanetType.TERRESTRIAL,
-                        PlanetType.ICE,
-                        PlanetType.VOLCANIC,
                     ]:
                         continue
                 choice_celestials.append(c)
@@ -194,8 +195,10 @@ class User:
         else:
             center = self.celestial.galaxy_location
         # center = (0, 0)
-        map_size = GalaxyMap().max_size
-        map_img = GalaxyMap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
+        if not get_galaxymap():
+            return None
+        map_size = get_galaxymap().max_size
+        map_img = get_galaxymap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
         return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=center, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
 

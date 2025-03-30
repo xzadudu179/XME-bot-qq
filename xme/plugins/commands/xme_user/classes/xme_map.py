@@ -72,7 +72,7 @@ def init_starfields(percent, max_size):
 class GalaxyMap:
     """星系地图
     """
-    def __init__(self, maxwidth=499, maxheight=499) -> None:
+    def __init__(self, maxwidth=100, maxheight=100) -> None:
         self.max_size = (maxwidth, maxheight)
         global galaxy_initing
         if galaxy_initing:
@@ -91,7 +91,7 @@ class GalaxyMap:
         elif not galaxy_initing:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
-            self.starfields = run_with_timeout(init_starfields, 9999, "银河系生成超时", POSSIBILITY, self.max_size)
+            self.starfields = init_starfields(POSSIBILITY, self.max_size)
             self.load_map_from_image("static/img/map-1.png")
             self.save()
         # print(self.starfields)

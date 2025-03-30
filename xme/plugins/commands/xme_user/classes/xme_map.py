@@ -53,6 +53,22 @@ def get_starfield_map(location, default=None):
     # print(GalaxyMap().starfields)
     return GalaxyMap().starfields.get(location, default)
 
+def init_starfields(percent, max_size):
+        global galaxy_initing
+        galaxy_initing = True
+        xys = set()
+        if percent > 1 or percent <= 0:
+            raise ValueError(f"百分比不能小于0 或大于1：precent: {percent}")
+        count = max_size[0] * max_size[1] * percent
+        while len(xys) < count:
+            x = random.randint(0, max_size[0])
+            y = random.randint(0, max_size[1])
+            xys.add((x, y))
+        print(f"需要生成 {len(xys)} 个星域")
+        fields = {index: StarfieldMap(location=(x, y)) for index in xys}
+        galaxy_initing = False
+        return fields
+
 class GalaxyMap:
     """星系地图
     """
@@ -62,7 +78,7 @@ class GalaxyMap:
         if galaxy_initing:
             raise ValueError("Galaxy Initing")
         # POSSIBILITY = 0.6
-        POSSIBILITY = 0.03
+        POSSIBILITY = 0.02
         if map:=jsontools.read_from_path("static/map/map.json"):
             self.max_size = tuple(map["max_size"])
             map = map["starfields"]
@@ -75,26 +91,10 @@ class GalaxyMap:
         elif not galaxy_initing:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
-            self.starfields = run_with_timeout(self.init_starfields(POSSIBILITY), 9999)
+            self.starfields = run_with_timeout(init_starfields, 9999, "银河系生成超时", POSSIBILITY, self.max_size)
             self.load_map_from_image("static/img/map-1.png")
             self.save()
         # print(self.starfields)
-
-    def init_starfields(self, percent):
-        global galaxy_initing
-        galaxy_initing = True
-        xys = set()
-        if percent > 1 or percent <= 0:
-            raise ValueError(f"百分比不能小于0 或大于1：precent: {percent}")
-        count = self.max_size[0] * self.max_size[1] * percent
-        while len(xys) < count:
-            x = random.randint(0, self.max_size[0])
-            y = random.randint(0, self.max_size[1])
-            xys.add((x, y))
-        print(f"需要生成 {len(xys)} 个星域")
-        fields = {index: StarfieldMap(location=(x, y)) for index in xys}
-        galaxy_initing = False
-        return fields
 
     def __dict__(self):
         # print(self.starfields)

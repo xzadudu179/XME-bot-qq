@@ -15,8 +15,6 @@ class Planet(Celestial, CanDevelop):
         # 是否被开发
         # 未知的行星不可被雷达 / 星图发现
         self.is_known = is_known
-        # 行星需要有恒星
-        # star = star
         # 序号
         self.serial_number = serial_number
         # 行星类型

@@ -125,7 +125,9 @@
         "no_sign": "从未签到过",
         "empty_inventory": "物品栏空空如也...",
         "inventory_prefix": "物品栏占用 ({space})",
-        "inventory_item": "{num}. {name} x{count}"
+        "inventory_item": "{num}. {name} x{count}",
+        "galaxy_initing": "银河系还未初始化完成哦 {neutral}",
+        "no_galaxy": "还没有生成银河系哦"
     },
     "items": {
         "talk": {}

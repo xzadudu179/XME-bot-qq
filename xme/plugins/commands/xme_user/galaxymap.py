@@ -5,7 +5,7 @@ from xme.xmetools.imgtools import image_msg
 from xme.xmetools.jsontools import save_to_path
 from .classes import user as u
 from .classes import xme_map
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded, is_galaxy_initing
 from character import get_message
 
 
@@ -22,6 +22,10 @@ usage = {
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 @u.using_user(save_data=True)
 async def _(session: CommandSession, user: User):
+    if is_galaxy_initing():
+        await send_session_msg(session, get_message("user", "galaxy_initing"))
+    if not is_galaxy_loaded():
+        await send_session_msg(session, get_message("user", "no_galaxy"))
     zoom_fac = 3
     path = await user.draw_user_galaxy_map(zoom_fac=zoom_fac)
     zoom_fac = 1

@@ -3,6 +3,7 @@ from os import path
 from xme.xmetools import colortools as c
 import random
 import os
+from xme.plugins.commands.xme_user.classes.xme_map import GalaxyMap
 from nonebot.log import logger
 import bot_variables
 import config
@@ -27,6 +28,8 @@ if __name__ == '__main__':
     )
 
     bot_init.bot_init()
+    # 初始化银河系地图
+    # GalaxyMap()
     bot_variables.currentpid = os.getpid()
     print(c.gradient_text("#dda3f8", "#66afff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))
     nonebot.run()

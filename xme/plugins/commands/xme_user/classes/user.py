@@ -16,12 +16,19 @@ from .celestial.tools import load_celestial
 from .celestial.star import Star
 from .celestial.planet import Planet, PlanetType
 from .xme_map import StarfieldMap
-from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
+from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap, galaxy_initing
 from ..tools import galaxy_date_tools
 
 coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
 
+def is_galaxy_loaded():
+    if get_galaxymap():
+        return True
+    return False
+
+def is_galaxy_initing():
+    return galaxy_initing
 
 class User:
     def __init__(
@@ -49,13 +56,16 @@ class User:
             self.celestial = get_celestial_from_uid(celestial_uid)
         if self.celestial is None:
             self.gen_celestial()
-        starfield = self.get_starfield()
-        if starfield is None:
-            print("用户星域坐标无效")
-            self.celestial = None
-            self.gen_celestial()
+        if self.celestial is not None:
+            starfield = self.get_starfield()
+            if starfield is None:
+                print("用户星域坐标无效")
+                self.celestial = None
+                self.gen_celestial()
 
     def get_starfield(self):
+        if self.celestial is None:
+            raise ValueError("星体未初始化")
         return get_starfield_map(self.celestial.galaxy_location)
 
     def gen_celestial(self):

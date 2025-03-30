@@ -95,7 +95,9 @@
         "no_sign": "没有签过到呢...",
         "empty_inventory": "什么也没有呢...",
         "inventory_prefix": "物品栏占用 ({space})",
-        "inventory_item": "{num}. {name} x{count}"
+        "inventory_item": "{num}. {name} x{count}",
+        "galaxy_initing": "银河系还未初始化完成哦 {neutral}",
+        "no_galaxy": "还没有生成银河系哦"
     },
     "character": {
         "time_period_reactions": {

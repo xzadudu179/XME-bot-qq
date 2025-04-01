@@ -16,7 +16,7 @@ from .celestial.tools import load_celestial
 from .celestial.star import Star
 from .celestial.planet import Planet, PlanetType
 from .xme_map import StarfieldMap
-from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap, galaxy_initing
+from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
 from ..tools import galaxy_date_tools
 
 coin_name = get_message("user", "coin_name")
@@ -27,8 +27,8 @@ def is_galaxy_loaded():
         return True
     return False
 
-def is_galaxy_initing():
-    return galaxy_initing
+# def is_galaxy_initing():
+#     return galaxy_initing
 
 class User:
     def __init__(

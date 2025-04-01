@@ -14,7 +14,7 @@ import random
 from xme.xmetools.colortools import rgb_to_hex
 from PIL import Image
 
-galaxy_initing = False
+# galaxy_initing = False
 
 celestial_draw_sides = {
     Planet: 5,
@@ -54,8 +54,8 @@ def get_starfield_map(location, default=None):
     return GalaxyMap().starfields.get(location, default)
 
 def init_starfields(percent, max_size):
-        global galaxy_initing
-        galaxy_initing = True
+        # global galaxy_initing
+        # galaxy_initing = True
         xys = set()
         if percent > 1 or percent <= 0:
             raise ValueError(f"百分比不能小于0 或大于1：precent: {percent}")
@@ -66,19 +66,19 @@ def init_starfields(percent, max_size):
             xys.add((x, y))
         print(f"需要生成 {len(xys)} 个星域")
         fields = {index: StarfieldMap(location=(x, y)) for index in xys}
-        galaxy_initing = False
+        # galaxy_initing = False
         return fields
 
 class GalaxyMap:
     """星系地图
     """
-    def __init__(self, maxwidth=100, maxheight=100) -> None:
+    def __init__(self, maxwidth=499, maxheight=499) -> None:
         self.max_size = (maxwidth, maxheight)
-        global galaxy_initing
-        if galaxy_initing:
-            raise ValueError("Galaxy Initing")
+        # global galaxy_initing
+        # if galaxy_initing:
+        #     raise ValueError("Galaxy Initing")
         # POSSIBILITY = 0.6
-        POSSIBILITY = 0.02
+        POSSIBILITY = 0.03
         if map:=jsontools.read_from_path("static/map/map.json"):
             self.max_size = tuple(map["max_size"])
             map = map["starfields"]
@@ -88,7 +88,8 @@ class GalaxyMap:
                 starfields[tuple([int(i) for i in index.split(",")])] = starfield
             self.starfields = starfields
             print(self.max_size)
-        elif not galaxy_initing:
+        # elif not galaxy_initing:
+        else:
             print("正在生成地图...")
             jsontools.save_to_path("data/used_names.json", [])
             self.starfields = init_starfields(POSSIBILITY, self.max_size)

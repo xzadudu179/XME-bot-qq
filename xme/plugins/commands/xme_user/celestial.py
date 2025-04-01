@@ -5,7 +5,7 @@ from xme.xmetools.imgtools import gif_msg
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.xme_map import StarfieldMap, get_starfield_map
 from xme.xmetools.cmdtools import use_args
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded, is_galaxy_initing
+from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded
 from character import get_message
 
 
@@ -23,8 +23,8 @@ usage = {
 @u.using_user(save_data=True)
 @use_args(arg_len=2)
 async def _(session: CommandSession, user: User, arg_list: list[str]):
-    if is_galaxy_initing():
-        await send_session_msg(session, get_message("user", "galaxy_initing"))
+    # if is_galaxy_initing():
+        # await send_session_msg(session, get_message("user", "galaxy_initing"))
     if not is_galaxy_loaded():
         await send_session_msg(session, get_message("user", "no_galaxy"))
     starfield: StarfieldMap = user.get_starfield()

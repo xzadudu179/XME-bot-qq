@@ -12,7 +12,6 @@ class Planet(Celestial, CanDevelop):
     def __init__(self, galaxy_location: tuple[int, int], location: tuple[int, int], serial_number, star: Star = None, planet_type: PlanetType = None, name: str = "", desc: str = "", is_known=False, buildings=[], faction_id: int = 0, uid=None) -> None:
         Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id, uid=uid)
         CanDevelop.__init__(self, buildings)
-        # 是否被开发
         # 未知的行星不可被雷达 / 星图发现
         self.is_known = is_known
         # 序号

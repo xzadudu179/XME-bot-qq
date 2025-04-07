@@ -45,8 +45,8 @@ async def _(session: CommandSession):
                 break
     if not choice:
         item = random.choice(choices)
-        choice = x if (x:=num_choice(item)) else item
-    choice = parse_num_choice(choice)
+        # choice = x if (x:=num_choice(item)) else item
+    choice = parse_num_choice(item)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
 
 
@@ -126,26 +126,27 @@ def is_or_not_choice(input_str):
     message = ('' if splits[0] in ['我', '你'] else splits[0]) + random.choice([is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)])
     return message
 
-def num_choice(input_str, one_num=False):
-    # 选择数字
-    input_str = texttools.replace_chinese_punctuation(input_str)
-    try:
-        input_num = int(input_str)
-        if one_num:
-            return random.randint(0, input_num)
-        return False
-    except:
-        range_str_list = input_str.split("~")
-        if len(range_str_list) < 2:
-            return False
-        try:
-            num_range = [int(i.strip()) for i in range_str_list]
-            return random.randint(min(num_range), max(num_range))
-        except:
-            return False
+# def num_choice(input_str, one_num=False):
+#     # 选择数字
+#     input_str = texttools.replace_chinese_punctuation(input_str)
+#     try:
+#         input_num = int(input_str)
+#         if one_num:
+#             return random.randint(0, input_num)
+#         return False
+#     except:
+#         range_str_list = input_str.split("~")
+#         if len(range_str_list) < 2:
+#             return False
+#         try:
+#             num_range = [int(i.strip()) for i in range_str_list]
+#             return random.randint(min(num_range), max(num_range))
+#         except:
+#             return False
 
 def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)
+    print("numchoice " + s)
     def ra_int(match):
         start, end = map(int, match.group().split("~"))
         result = random.randrange(start, end + 1)

@@ -13,7 +13,7 @@ cmd_name = 'describe'
 usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'<个人资料文本>',
     "permissions": [],
     "alias": alias

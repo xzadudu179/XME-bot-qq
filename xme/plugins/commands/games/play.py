@@ -89,7 +89,7 @@ async def _(session: CommandSession, user: user.User):
     # 玩游戏
     cost = game_to_play['meta'].get('cost', 0)
     if not user.spend_coins(cost):
-        return await send_session_msg(session, get_message("plugins", cmd_name, 'not_enough_coins', cost=cost, coin_name=coin_name, coin_pronoun=coin_pronoun))
+        return await send_session_msg(session, get_message("plugins", cmd_name, 'not_enough_coins', cost=cost,  ))
     # 游戏以后会返回东西
     game_return = await game_to_play['func'](session, user, game_args)
     print(game_return)
@@ -106,11 +106,11 @@ async def _(session: CommandSession, user: user.User):
         messages.append(game_to_play['meta']['award_message'].format(
             award=award,
             coins_left=user.coins,
-            coin_name=coin_name,
-            coin_pronoun=coin_pronoun
+
+
         ))
     elif award == 0:
-        messages.append(game_to_play['meta']['no_award_message'].format(coin_name=coin_name))
+        messages.append(game_to_play['meta']['no_award_message'].format())
     if times_left != False and not limited:
         messages.append(game_to_play['meta']['times_left_message'].format(times_left=times_left))
     elif limited or times_left <= 0:

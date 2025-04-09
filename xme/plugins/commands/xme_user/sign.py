@@ -14,7 +14,7 @@ cmd_name = 'sign'
 usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
-    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'',
     "permissions": [],
     "alias": alias
@@ -39,7 +39,7 @@ async def _(session: CommandSession, user: User):
             signed_users_count += 1
     if append_coins == 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',
-            coin_name=coin_name,
+
             time_period=timetools.get_time_period()
         )
     else:
@@ -47,12 +47,12 @@ async def _(session: CommandSession, user: User):
             login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success', time_period=timetools.get_time_period()),
             state=get_message("plugins", __plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),
-            coin_name=coin_pronoun + coin_name,
+            coin_pron_name=coin_pronoun + coin_name,
             coin_total=user.coins,
         )
     if signed_users_count == 0:
         user.add_coins(FIRST_AWARD)
-        sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD, coin_pronoun=coin_pronoun, coin_name=coin_name)
+        sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD,  )
     else:
         sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message + reaction

@@ -517,7 +517,7 @@
             "看看九九",
             "看看九九~"
         ],
-        "time": "{period}好呀{positive_punc}\n昨天通过大家在抽奖机的抽奖，使我{get_lose_pron}了 {lottery_total} {coins_pron}{coins_name} {neutral} (+{lottery_get}, -{lottery_lose})\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
+        "time": "{period}好呀{positive_punc}\n昨天通过大家在抽奖机的抽奖，使我{get_lose_pron}了 {lottery_total} {coin_pronoun}{coin_name} {neutral} (+{lottery_get}, -{lottery_lose})\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
         "new_year": "新年好哇~！{positive_plus}"
     },
@@ -1224,7 +1224,7 @@
                     "{time_period}好呀，你似乎没通过签到得到任何{coin_name}诶... {negative}",
                     "{time_period}好哦，但是你似乎没通过签到得到任何{coin_name}...{negative}"
                 ],
-                "success": "{login_success} 你{state} {coin_count} {coin_name}{positive_punc}",
+                "success": "{login_success} 你{state} {coin_count} {coin_pron_name}{positive_punc}",
                 "first_sign": [
                     "你是今天第一个签到的哦{positive_punc} {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}",
                     "你是今天第一个签到的哦！ 好诶 {positive}{positive_punc} 奖励你 {first_award} {coin_pronoun}{coin_name}{positive_punc}",

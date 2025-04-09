@@ -14,13 +14,13 @@ import random
 bot = nonebot.get_bot()
 
 def calc_lottery():
-    user: User = try_load(vars["self_id"])
     vars = read_from_path("data/bot_vars.json")
+    user: User = try_load(vars["self_id"])
     coins_add = vars["lottery_get_coins"] - vars["lottery_lose_coins"]
     user.coins += coins_add
     if user.coins < 0:
         user.coins = 0
-    save_to_path()
+    save_to_path("data/bot_vars.json", vars)
     get_coins, lose_coins = vars["lottery_get_coins"], vars["lottery_lose_coins"]
     vars["lottery_get_coins"] = 0
     vars["lottery_lose_coins"] = 0

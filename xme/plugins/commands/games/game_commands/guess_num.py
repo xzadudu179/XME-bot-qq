@@ -15,7 +15,7 @@ game_meta = {
     "name": name,
     "desc": get_message("plugins", cmd_name, name, 'desc'),
     # "desc": "猜数字游戏",
-    "introduction": get_message("plugins", cmd_name, name, 'introduction', coin_name=coin_name, times_limit=TIMES_LIMIT),
+    "introduction": get_message("plugins", cmd_name, name, 'introduction',  times_limit=TIMES_LIMIT),
     # "introduction": "指定一个数字范围并且生成一个随机数字，然后不断猜测直到猜中随机的数字。\n每次猜测时会说目标数字比猜测的数字大还是小",
     "args": {
         "r": get_message("plugins", cmd_name, name, 'arg_range'),
@@ -26,8 +26,8 @@ game_meta = {
     "cost": 2,
     "times_left_message": get_message("plugins", cmd_name, name, 'times_left', times_left='{times_left}'),
     "limited_message": get_message("plugins", cmd_name, name, 'limited'),
-    "award_message": get_message("plugins", cmd_name, name, 'award', award="{award}", coins_left='{coins_left}', coin_name='{coin_name}', coin_pronoun='{coin_pronoun}'),
-    "no_award_message": get_message("plugins", cmd_name, name, 'no_award', coin_name='{coin_name}'),
+    "award_message": get_message("plugins", cmd_name, name, 'award', award="{award}", coins_left='{coins_left}'),
+    "no_award_message": get_message("plugins", cmd_name, name, 'no_award'),
 }
 
 class GuessNum(Game):
@@ -141,7 +141,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     guess = GuessNum(num_range, times_limit)
     # await send_msg(session, guess.start())
     prefix = get_message("plugins", cmd_name, name, 'guess_prompt_prefix_default',
-        start=get_message("plugins", cmd_name, name, 'cost_message', cost=game_meta['cost'], coin_name=coin_name, coin_pronoun=coin_pronoun,) + guess.start(),
+        start=get_message("plugins", cmd_name, name, 'cost_message', cost=game_meta['cost'],  ) + guess.start(),
     )
     # prefix = f"{guess.start()}\n请"
     ask_to_guess = True
@@ -152,7 +152,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f" {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()
         if user_input.lower().strip() in quit_inputs:
-            await send_session_msg(session, get_message("plugins", cmd_name, name, 'quit_message') if start_guessing else get_message("plugins", cmd_name, name, 'quit_message_not_start', coin_name=coin_name))
+            await send_session_msg(session, get_message("plugins", cmd_name, name, 'quit_message') if start_guessing else get_message("plugins", cmd_name, name, 'quit_message_not_start', ))
             # await send_msg(session, f" 退出游戏啦 ovo")
             if start_guessing:
                 return return_state(state="OK", data={

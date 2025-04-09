@@ -14,8 +14,8 @@ MAX_RANK_COUNT = 20
 cmd_name = 'coinrank'
 usage = {
     "name": cmd_name,
-    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', coin_name=coin_name),
-    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name),
+    "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', ),
+    "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'<参数>',
     "permissions": [],
     "alias": alias
@@ -26,7 +26,7 @@ def rank_operation(func, rank_items):
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     sender = session.event.user_id
-    message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_prefix', coin_name=coin_name, coin_pronoun=coin_pronoun)
+    message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_prefix',  )
     arg = session.current_arg_text.strip().lower()
     spacing = False
     if arg:
@@ -39,8 +39,8 @@ async def _(session: CommandSession):
         # 平均值消息
         rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_avg',
-            coin_name=coin_name,
-            coin_pronoun=coin_pronoun,
+
+
             avg=int(rank_avg),
             median=int(rank_operation(lambda x: statistics.median(x), rank_items))
         )
@@ -50,8 +50,8 @@ async def _(session: CommandSession):
         # 总和消息
         rank_sum = rank_operation(lambda x: sum(x), rank_items)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_sum',
-            coin_name=coin_name,
-            coin_pronoun=coin_pronoun,
+
+
             sum=rank_sum
         )
         await send_session_msg(session, message)
@@ -81,8 +81,8 @@ async def _(session: CommandSession):
             rank=i + 1,
             nickname=str(nickname),
             coins_count=v,
-            coin_pronoun=coin_pronoun,
-            coin_name=coin_name,
+
+
             spacing=" " * texttools.calc_spacing([f'{i + 1}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
         )
     # 关于发送者的金币数超过了多少人
@@ -90,8 +90,8 @@ async def _(session: CommandSession):
     message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'ranking_suffix',
         count=sender_coins_count,
         rank_ratio=f"{rank_ratio:.2f}",
-        coin_pronoun=coin_pronoun,
-        coin_name=coin_name
+
+
     )
     await send_session_msg(session, message)
     return True

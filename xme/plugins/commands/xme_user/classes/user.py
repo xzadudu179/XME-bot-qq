@@ -111,8 +111,8 @@ class User:
         return get_message("user", "user_info_str",
             id=str(self.id),
             coins_count=self.coins,
-            coin_name=coin_name,
-            coin_pronoun=coin_pronoun,
+
+
             sign_message=sign_message,
             rank_ratio=f"{rank_ratio:.2f}",
             space=self.inventory.get_space_left(),

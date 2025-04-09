@@ -111,8 +111,6 @@ async def _(session: CommandSession, user: User):
     u.limit_count_tick(user, cmd_name, count - 1)
     times_left = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1] - 1
     message = get_message("plugins", __plugin_name__, cmd_name, 'result',
-
-
         count=arg,
         times=count,
         result=result,

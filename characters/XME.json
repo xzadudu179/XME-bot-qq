@@ -467,14 +467,41 @@
             },
             "lottery": {
                 "desc": "抽奖",
-                "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}\n{coin_name}最多设置为 {count_max}。",
-                "limited": "你今天的抽奖次数用完啦{positive_punc}",
+                "introduction": "花费指定量的{coin_name}，抽取最多 2 倍量的{coin_name}",
+                "limited": [
+                    "你今天的抽奖次数用完啦{positive_punc}",
+                    "诶...你今天的抽奖次数用完啦",
+                    "诶...你今天的抽奖次数用完了哦",
+                    "诶...你今天不能再抽{coin_name}了哦",
+                    "你今天没有抽奖次数啦...",
+                    "你今天没有更多抽奖次数啦..."
+                ],
                 "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
                 "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
-                "not_enough_coins": "唔，你指定的{coin_name}数量 ({count}) 太多啦！超过了你拥有的{coin_name}总数呢...",
-                "get_coin_result": "获得了 {get_count} {coin_pronoun}{coin_name}！",
-                "no_coin_result": "没有获得任何{coin_name}...",
-                "result": "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
+                "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
+                "invalid_count": "批量投入的次数需要是大于 0 的整数哦 {neutral}",
+                "get_coin_result": [
+                    "获得了 {get_count} {coin_pronoun}{coin_name}！",
+                    "得到了 {get_count} {coin_pronoun}{coin_name}！",
+                    "得到了 {get_count} {coin_pronoun}{coin_name}！{positive}",
+                    "拿到了 {get_count} {coin_pronoun}{coin_name}！"
+                ],
+                "count_limited": [
+                    "你指定的投入次数 {times} 太多啦！大于了你剩余的抽奖次数 {times_left} 呢...",
+                    "你想要的投入次数 {times} 太多啦！超过了你剩余的抽奖次数 {times_left} 哦",
+                    "你指定的投入次数 {times} 太多啦！大于了你剩余的抽奖次数 {times_left} 呢... {neutral}"
+                ],
+                "no_coin_result": [
+                    "没有获得任何{coin_name}...",
+                    "但是没有获得任何{coin_name}...",
+                    "但是没有一{coin_pronoun}{coin_name}出来...{negative}",
+                    "但是没有任何{coin_name}出来...{negative}"
+                ],
+                "result": [
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
+                    "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
+                ],
                 "too_many_coins": "你设置的{coin_name}数太多啦！要在 {count_max} 之内哦"
             },
             "userinfo": {

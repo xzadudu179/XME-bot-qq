@@ -1,31 +1,35 @@
 import nonebot
 import config
-import requests
-import json
 from aiocqhttp.exceptions import Error as CQHttpError
 from datetime import datetime
+from xme.plugins.commands.xme_user.classes.user import try_load, User
 from nonebot import log
 from xme.xmetools.bottools import bot_call_action
 from xme.xmetools import randtools
-from xme.xmetools.jsontools import read_from_path
+from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools import timetools
 from xme.xmetools import msgtools
 from character import get_character_item, get_message
 import random
 bot = nonebot.get_bot()
 
+def calc_lottery():
+    user: User = try_load(vars["self_id"])
+    vars = read_from_path("data/bot_vars.json")
+    coins_add = vars["lottery_get_coins"] - vars["lottery_lose_coins"]
+    user.coins += coins_add
+    if user.coins < 0:
+        user.coins = 0
+    save_to_path()
+    get_coins, lose_coins = vars["lottery_get_coins"], vars["lottery_lose_coins"]
+    vars["lottery_get_coins"] = 0
+    vars["lottery_lose_coins"] = 0
+    return get_coins, lose_coins
+
 async def send_time_message():
     scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
     for group in scheduler_groups:
         say = random.choice(read_from_path("./static/hitokoto.json"))
-        # try:
-        #     say = json.loads(requests.get('https://v1.hitokoto.cn/').text)
-        # except json.JSONDecodeError:
-        #     say = {
-        #         "hitokoto": get_message("schedulers", "hitokoto_error"),
-        #         "from_who": get_message("bot_info", "name"),
-        #         "from": "XME_bot"
-        #     }
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
         latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")
         latest_prefix = "\n最近更新：\n"
@@ -36,6 +40,7 @@ async def send_time_message():
         anno_message = get_message("config", "anno_message", anno=("[九九的公告] " + anno + "\n") if anno != "" else "")
         if not anno_message:
             anno_message = ''
+        get_coins, lose_coins = calc_lottery()
         something_to_say = get_message("schedulers", "time",
             period=timetools.get_time_period(),
             hitokoto=say['hitokoto'],
@@ -43,6 +48,10 @@ async def send_time_message():
             from_where=say['source'] if say['source'] else "未知",
             anno=anno_message,
             update=latest,
+            get_lose_pron="得到" if get_coins - lose_coins > 0 else "失去",
+            lottery_get=get_coins,
+            lottery_lose=lose_coins,
+            lottery_total=abs(get_coins - lose_coins),
             tips=get_message("bot_info", "tips")
         )
         try:

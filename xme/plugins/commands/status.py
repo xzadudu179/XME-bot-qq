@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from ...xmetools import systools as st
 from character import get_message
+from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import bot_call_action
 
@@ -31,4 +32,7 @@ async def _(session: CommandSession):
     except:
         message = get_message("plugins", __plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
-    await send_session_msg(session, message + "=== 当前 bot 状态 ===\n" + info)
+    vars = read_from_path("data/bot_vars.json")
+
+    save_to_path("data/bot_vars.json", vars)
+    await send_session_msg(session, message + "=== 当前 bot 状态 ===\n" + info + f"\n- self_id: {vars['self_id']}")

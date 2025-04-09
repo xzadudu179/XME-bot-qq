@@ -270,14 +270,15 @@ def reset_limit(user: User, name: str, unit: timetools.TimeUnit = timetools.Time
     # user.save()
 
 
-def limit_count_tick(user: User, name: str):
-    """增加一次计数器计数
+def limit_count_tick(user: User, name: str, count=1):
+    """增加默认1次计数器计数
 
     Args:
         user (User): 用户
         name (str): 时间限制名
+        count (int): 次数. Defaults to 1.
     """
-    user.counters[name]["count"] += 1
+    user.counters[name]["count"] += count
     # user.save()
 
 def get_user_rank(user):

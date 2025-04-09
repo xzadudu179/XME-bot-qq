@@ -3,14 +3,19 @@ import aiocqhttp
 import xme.xmetools.colortools as c
 import xme.xmetools.numtools as n
 import nonebot
+from xme.xmetools.jsontools import read_from_path, save_to_path
 import config
 import bot_variables as var
 import character
 
 @on_websocket_connect
 async def connect(event: aiocqhttp.Event):
+    global self_id
     bot = nonebot.get_bot()
     print(c.gradient_text("#dda3f8","#66afff" ,text=f"{character.get_message('bot_info', 'name')} 准备好啦~"))
+    vars = read_from_path("data/bot_vars.json")
+    vars["self_id"] = event.self_id
+    save_to_path("data/bot_vars.json", vars)
     if not n.is_prime(var.currentpid):
         message = f"[DEBUG] {character.get_message('bot_info', 'name')} 准备好啦~"
         if not config.DEBUG: return

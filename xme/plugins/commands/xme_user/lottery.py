@@ -1,7 +1,9 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.texttools import remove_punctuation
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.jsontools import save_to_path, read_from_path
 import random
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
@@ -16,7 +18,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', coin_name=coin_name, count_max=MAX_COIN_COUNT),
-    "usage": f'({coin_name}数量)',
+    "usage": f'({coin_name}数量/梭哈) <连续抽取次数>',
     "permissions": [],
     "alias": alias
 }
@@ -26,24 +28,57 @@ usage = {
 @u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited', coin_name=coin_name), TIMES_LIMIT)
 async def _(session: CommandSession, user: User):
     message = ""
-    arg = session.current_arg_text.strip()
+    arg = remove_punctuation(session.current_arg_text.strip())
     if not arg:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_arg', coin_name=coin_name)
         await send_session_msg(session, message)
         return False
-    try:
-        arg = int(arg)
-        if arg <= 0:
+    all_in = False
+    times_left_now = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1]
+    count = 1
+    arg_list = arg.split(" ")
+    if arg.lower() in ["土块", "all", "梭哈", "allin"]:
+        all_in = True
+        count = times_left_now
+        arg = MAX_COIN_COUNT
+        for c in range(count):
+            if user.coins < MAX_COIN_COUNT:
+                count = 1
+                break
+            if c * MAX_COIN_COUNT < user.coins:
+                continue
+            count = c
+            break
+        count = min(times_left_now, count)
+        while user.coins - count * arg < 0:
+            arg -= 1
+        print("count is", count)
+    if len(arg_list) > 1 and not all_in:
+        arg = arg_list[0]
+        if arg_list[1].isdigit() and int(arg_list[1]) > 0:
+            count = int(arg_list[1])
+        else:
+            message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_count')
+            await send_session_msg(session, message)
+            return False
+    if times_left_now - count < 0:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'count_limited', times_left=times_left_now, times=count))
+        return False
+    if not all_in:
+        try:
+            arg = int(arg)
+            if arg <= 0:
+                message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', coin_name=coin_name)
+                await send_session_msg(session, message)
+                return False
+        except ValueError as ex:
+            print(ex)
+            print(traceback.format_exc())
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', coin_name=coin_name)
             await send_session_msg(session, message)
             return False
-    except ValueError as ex:
-        print(ex)
-        print(traceback.format_exc())
-        message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', coin_name=coin_name)
-        await send_session_msg(session, message)
-        return False
 
+    calc_count = arg * count
     if arg > MAX_COIN_COUNT:
         message = get_message("plugins", __plugin_name__, cmd_name, 'too_many_coins',
             coin_name=coin_name,
@@ -53,29 +88,38 @@ async def _(session: CommandSession, user: User):
         )
         await send_session_msg(session, message)
         return False
-    elif user.coins - arg < 0:
+    elif user.coins - calc_count < 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'not_enough_coins',
             coin_name=coin_name,
-            count=arg,
+            count=calc_count,
             coin_pronoun=coin_pronoun,
             coins_left=user.coins,
         )
         await send_session_msg(session, message)
         return False
-    user.coins -= arg
-    result = random.randint(0, int(arg * 2))
+    vars = read_from_path("data/bot_vars.json")
+    user.coins -= calc_count
+    vars["lottery_get_coins"] += calc_count
+    result = 0
+    for _ in range(count):
+        result += random.randint(0, int(arg * 2))
+    vars["lottery_lose_coins"] += result
+    save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)
     result_content = (get_message("plugins", __plugin_name__, cmd_name, 'get_coin_result', coin_name=coin_name, get_count=result, coin_pronoun=coin_pronoun) if result > 0 else
                       get_message("plugins", __plugin_name__, cmd_name, 'no_coin_result', coin_name=coin_name, get_count=result, coin_pronoun=coin_pronoun))
+    u.limit_count_tick(user, cmd_name, count - 1)
     times_left = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1] - 1
     message = get_message("plugins", __plugin_name__, cmd_name, 'result',
         coin_name=coin_name,
         coin_pronoun=coin_pronoun,
         count=arg,
+        times=count,
         result=result,
         coins_left=user.coins,
         result_content=result_content,
         times_left=times_left
     )
+
     await send_session_msg(session, message)
     return True

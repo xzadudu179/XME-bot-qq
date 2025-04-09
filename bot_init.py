@@ -24,6 +24,11 @@ DRIFT_BOTTLES_INFO = {
     ]
 }
 
+BOT_VARS = {
+    "lottery_get_coins": 0,
+    "lottery_lose_coins": 0
+}
+
 USERS = {
     "users": {}
 }
@@ -127,6 +132,9 @@ def bot_init():
 
     time_limit_path = "./data/time_limit_usage.json"
     init_json(time_limit_path, TIME_LIMIT_INFO)
+
+    time_limit_path = "./data/bot_vars.json"
+    init_json(time_limit_path, BOT_VARS)
 
     init_json(config.USER_PATH, USERS)
 

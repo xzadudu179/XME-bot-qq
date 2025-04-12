@@ -6,7 +6,7 @@ from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pro
 from character import get_message
 
 
-alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin']
+alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin', 'v']
 cmd_name = 'sendcoin'
 usage = {
     "name": cmd_name,

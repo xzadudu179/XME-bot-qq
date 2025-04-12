@@ -23,10 +23,12 @@ def calc_lottery():
     get_coins, lose_coins = vars["lottery_get_coins"], vars["lottery_lose_coins"]
     vars["lottery_get_coins"] = 0
     vars["lottery_lose_coins"] = 0
+    print(vars)
     save_to_path("data/bot_vars.json", vars)
+    user.save()
     return get_coins, lose_coins
 
-async def send_time_message():
+async def send_time_message(new_day=False):
     scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
     for group in scheduler_groups:
         say = random.choice(read_from_path("./static/hitokoto.json"))
@@ -40,7 +42,18 @@ async def send_time_message():
         anno_message = get_message("config", "anno_message", anno=("[九九的公告] " + anno + "\n") if anno != "" else "")
         if not anno_message:
             anno_message = ''
-        get_coins, lose_coins = calc_lottery()
+        if new_day:
+            get_coins, lose_coins = calc_lottery()
+            lottery_info = "\n" + get_message(
+                "schedulers",
+                "lottery_info",
+                get_lose_pron="得到" if get_coins - lose_coins > 0 else "失去",
+                lottery_get=get_coins,
+                lottery_lose=lose_coins,
+                lottery_total=abs(get_coins - lose_coins)
+            )
+        else:
+            lottery_info = ""
         something_to_say = get_message("schedulers", "time",
             period=timetools.get_time_period(),
             hitokoto=say['hitokoto'],
@@ -48,10 +61,7 @@ async def send_time_message():
             from_where=say['source'] if say['source'] else "未知",
             anno=anno_message,
             update=latest,
-            get_lose_pron="得到" if get_coins - lose_coins > 0 else "失去",
-            lottery_get=get_coins,
-            lottery_lose=lose_coins,
-            lottery_total=abs(get_coins - lose_coins),
+            lottery_info=lottery_info,
             tips=get_message("bot_info", "tips")
         )
         try:
@@ -126,4 +136,4 @@ async def _():
 @nonebot.scheduler.scheduled_job('cron', hour='0')
 async def _():
     print("报时")
-    await send_time_message()
+    await send_time_message(True)

@@ -3,7 +3,7 @@ from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
-from xme.xmetools.timetools import TimeUnit, iso_format_time
+from xme.xmetools.timetools import TimeUnit, iso_format_time, get_time_difference, secs_to_ymdh, get_closest_time, get_time_now
 from xme.xmetools.reqtools import fetch_data
 from xme.plugins.commands.xme_user.classes import user as u
 import traceback
@@ -89,7 +89,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
     location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
     location_id = location_info["id"]
     warns_output = "======※预警信息※======\n"
-    weather = ouptut_weather_now(await get_weather(location_id))
+    weather = ouptut_weather_now(await get_weather(location_id), await get_air(location_id), await get_moon(location_id))
     warns_output += warnings[0]
     output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
     tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
@@ -102,7 +102,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
     return True
 
 
-def ouptut_weather_now(weather):
+def ouptut_weather_now(weather, air, moon):
     data = weather["now"]
     #  数据更新时间
     obs_time = iso_format_time(data["obsTime"], '%Y年%m月%d日 %H:%M')
@@ -116,8 +116,33 @@ def ouptut_weather_now(weather):
     precip = data["precip"]
     # 气压 (hPa)
     pressure = data["pressure"]
+    # print(air)
+    air_indexes = air.get("indexes", None)
+    aqi = air_indexes[0]["aqiDisplay"] if air_indexes is not None else "未知"
+    category = air_indexes[0]["category"] if air_indexes is not None else "未知"
+
+    moonrise = moon.get("moonrise", None)
+    moonset = moon.get("moonset", None)
+    # print(moon)
+    moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]])]["name"]
+    moon_info = f"今日月相为{moon_phase}"
+    if moonrise and moonset:
+        rise_difference = int(get_time_difference(iso_format_time(moonrise)))
+        set_difference = int(get_time_difference(iso_format_time(moonset)))
+        if rise_difference > 0:
+            moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]
+            moon_info = f"将在{secs_to_ymdh(rise_difference)}后升起{moon_phase}"
+        elif set_difference > 0:
+            moon_info = f"现在抬头可见{moon_phase}"
+        else:
+            moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonset))]["name"]
+            moon_info = f"{moon_phase}已经落下"
+
+
     return textwrap.dedent(f"""
         - 天气：{weather_stats}，{wind_dir} {wind_scale} 级
+        - {moon_info}
+        - 空气质量指数：{aqi} ({category})
         - 温度：{temp}℃，体感 {feels_temp}℃
         - 相对湿度 {humidity}%
         - 过去 1 小时降水量 {precip} mm
@@ -125,7 +150,10 @@ def ouptut_weather_now(weather):
         - 数据更新时间：{obs_time}""")
 
 def output_warning(warning):
-    datas = warning["warning"]
+    # print("warnings", warning)
+    datas = warning.get("warning", None)
+    if datas is None:
+        return f"获取预警消息错误：http {warning['code']}", f"获取预警消息错误：http {warning['code']}"
     lines = []
     details = []
     for data in datas:
@@ -159,14 +187,32 @@ def output_warning(warning):
         details.append(detail)
     return "\n".join(lines), "\n------------------\n".join(details)
 
-async def get_weather(location: str):
+async def get_air(location: str):
+    city_info = await search_location(location)
+    lat, lon = city_info["location"][0]["lat"], city_info["location"][0]["lon"]
+    air = await fetch_data(f"https://devapi.qweather.com/airquality/v1/current/{lat}/{lon}", headers=headers)
+    return air
+
+async def get_city_id_from_location(location: str, loc_id=""):
+    if loc_id:
+        return loc_id
     city_info = await search_location(location)
     city_id = city_info["location"][0]["id"]
+    return city_id
+
+async def get_moon(location: str, loc_id=""):
+    city_id = await get_city_id_from_location(location, loc_id)
+    moon = await fetch_data(f'https://devapi.qweather.com/v7/astronomy/moon?location={city_id}&date={get_time_now("%Y%m%d")}', headers=headers)
+    return moon
+
+async def get_weather(location: str, loc_id=""):
+    # city_info = await search_location(location)
+    # city_id = city_info["location"][0]["id"]
+    city_id = await get_city_id_from_location(location, loc_id)
     weather = await fetch_data(f'https://devapi.qweather.com/v7/weather/now?location={city_id}', headers=headers)
     return weather
 
-async def get_warnings(location: str):
-    city_info = await search_location(location)
-    city_id = city_info["location"][0]["id"]
+async def get_warnings(location: str, loc_id=""):
+    city_id = await get_city_id_from_location(location, loc_id)
     warnings = await fetch_data(f'https://devapi.qweather.com/v7/warning/now?location={city_id}', headers=headers)
     return warnings

@@ -48,6 +48,7 @@ async def _(session: CommandSession):
             print("550W 还没来")
     try:
         ans_json = jsontools.read_from_path("./static/answers.json")
+        random.seed()
         data = random.choice(ans_json)
         # data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
         message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data['zh']}\"\n\"{data['en']}\""

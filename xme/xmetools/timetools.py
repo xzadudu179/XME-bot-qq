@@ -12,6 +12,29 @@ class TimeUnit(Enum):
     MONTH = 60 * 60 * 24 * 30
     YEAR = 60 * 60 * 24 * 365
 
+def get_closest_time(times: list, target_time="NOW", format="%Y-%m-%d %H:%M:%S"):
+    """获得与目标时间最接近的时间索引
+
+    Args:
+        times (list): 时间列表
+        target_time (str): 目标时间，填写 NOW 为现在. Defaults to "NOW"
+        format (str, optional): 时间格式. Defaults to "%Y-%m-%d %H:%M:%S".
+
+    Returns:
+        int: 最接近的时间索引
+    """
+    min_time = -1
+    min_index = -1
+    for i, t in enumerate(times):
+        differ = abs(get_time_difference(t, target_time, format))
+        if min_time < 0:
+            min_time = differ
+            min_index = i
+            continue
+        min_time = differ if differ < min_time else min_time
+        min_index = i
+    return min_index
+
 def secs_to_ymdh(secs):
     """将秒数转换为年月天小时分钟秒
 
@@ -52,6 +75,9 @@ def curr_days():
     start_date = datetime(1970, 1, 1)
     current_date = datetime.now()
     return (current_date - start_date).days
+
+def get_time_now(format="%Y-%m-%d %H:%M:%S"):
+    return datetime.now().strftime(format)
 
 def days_differ(start_date: int):
     """计算今天与指定天数相差
@@ -105,7 +131,7 @@ def week_str(week_num, is_chinese: bool=True):
         }
     return week.get(week_num, "Error")
 
-def iso_format_time(time_str, format):
+def iso_format_time(time_str, format="%Y-%m-%d %H:%M:%S"):
     """将 ISO 时间转换为指定格式的 GMT+8 时间
 
     Args:
@@ -121,19 +147,22 @@ def iso_format_time(time_str, format):
     formatted_time = dt_gmt8.strftime(format)
     return formatted_time
 
-def get_secs_difference(time, new_time):
-    """获取两个时间相隔的秒数
+def get_time_difference(t, target_time="NOW", time_format="%Y-%m-%d %H:%M:%S"):
+    """获取两个日期相隔的秒数
 
     Args:
-        time (_type_): 旧时间
-        new_time (_type_): 新时间
+        time (str): 指定的时间
+        target_time (str): 目标时间，填写 NOW 为现在. Defaults to "NOW"
+        time_format (str): 时间格式
 
     Returns:
-        int: 秒数
+        float: 秒数，负数为更晚，正数为更早
     """
-    difference = new_time - time
-    seconds_diff = difference.total_seconds()
-    return seconds_diff
+    date1 = datetime.strptime(t, time_format)
+    date2 = datetime.now() if target_time == "NOW" else datetime.strptime(target_time, time_format)
+    difference = abs((date2 - date1).total_seconds())
+    return difference
+
 
 def get_curr_hour():
     # 获取当前时间

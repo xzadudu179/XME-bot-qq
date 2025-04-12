@@ -50,13 +50,13 @@ async def _(session: CommandSession, user: u.User):
     parser = ArgumentParser(session=session, usage=arg_usage)
     parser.add_argument('-w', '--warn', action='store_true', default=False)
     parser.add_argument('text', nargs='*')
-    print(session.argv)
+    # print(session.argv)
     args = parser.parse_args(session.argv)
-    print(args)
+    # print(args)
     location_text = ' '.join(args.text).strip()
-    print(location_text)
+    # print(location_text)
     locations, user_location_info = await get_user_location(session.event.user_id, location_text)
-    print(len(locations), user_location_info)
+    # print(len(locations), user_location_info)
     if not user_location_info and not location_text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
         return False

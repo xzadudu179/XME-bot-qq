@@ -30,7 +30,8 @@ def calc_lottery():
 
 async def send_time_message(new_day=False):
     scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
-    get_coins, lose_coins = calc_lottery()
+    if new_day:
+        get_coins, lose_coins = calc_lottery()
     for group in scheduler_groups:
         say = random.choice(read_from_path("./static/hitokoto.json"))
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()

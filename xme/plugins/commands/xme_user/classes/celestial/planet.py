@@ -2,6 +2,7 @@ from . import *
 from ..faction import FACTIONS
 from xme.xmetools.randtools import random_percent
 import random
+random.seed()
 from .star import Star
 from xme.xmetools.jsontools import read_from_path, save_to_path
 import math

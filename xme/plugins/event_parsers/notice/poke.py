@@ -5,6 +5,7 @@ from ....xmetools import colortools as c
 from xme.xmetools.bottools import bot_call_action, get_group_name
 import asyncio
 import random
+random.seed()
 
 @on_notice("notify")
 async def _(session: RequestSession):

@@ -6,6 +6,7 @@ from xme.plugins.commands.xme_user.classes import user
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
 import random
+random.seed()
 import math
 from xme.xmetools.msgtools import send_session_msg
 

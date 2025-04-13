@@ -2,9 +2,11 @@ from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools import jsontools
+from xme.xmetools.bottools import get_stranger_name, get_group_name
 from character import get_message
 from xme.xmetools import randtools
 import random
+random.seed()
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 import config
@@ -14,6 +16,7 @@ command_name = "pickup"
 
 @on_command(command_name, aliases=pickup_alias, only_to_me=False)
 async def _(session: CommandSession):
+    random.seed()
     user_id = session.event.user_id
     # at = f"[CQ:at,qq={user_id}]"
     bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
@@ -56,12 +59,16 @@ async def _(session: CommandSession):
         messy_rate_string = "##纯洁无暇##"
     else:
         messy_rate_string = f"{messy_rate}%"
+    sender_now = await get_stranger_name(bottle['sender_id'])
+    group_now = await get_group_name(bottle['group_id'])
     bottle_card = get_message("plugins", __plugin_name__, "bottle_card_content",
         index=index,
         messy_rate=messy_rate_string,
         from_group=bottle['from_group'],
+        group_now=f" (现 '{group_now}')" if group_now != bottle['from_group'] and group_now else "" ,
         content=bottle['content'],
         sender=bottle['sender'],
+        sender_now=f" (现 '{sender_now}')" if sender_now != bottle['sender'] and sender_now else "",
         send_time=bottle['send_time'],
         view_message=view_message,
         like_message=like_message

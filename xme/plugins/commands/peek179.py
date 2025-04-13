@@ -5,6 +5,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import image_msg
 import random
+random.seed()
 from pathlib import Path
 from datetime import datetime
 

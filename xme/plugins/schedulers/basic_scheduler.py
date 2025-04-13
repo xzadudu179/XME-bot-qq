@@ -11,6 +11,7 @@ from xme.xmetools import timetools
 from xme.xmetools import msgtools
 from character import get_character_item, get_message
 import random
+random.seed()
 bot = nonebot.get_bot()
 
 def calc_lottery():

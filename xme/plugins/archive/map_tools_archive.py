@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
+random.seed()
 import math
 
 def gen_node_lines(node_xys: list[tuple], draw: ImageDraw, color, radius=1, width=1):

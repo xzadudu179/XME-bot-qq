@@ -5,6 +5,7 @@ import config
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 import random
+random.seed()
 
 dicealias = ["d"]
 command_name = 'dice'

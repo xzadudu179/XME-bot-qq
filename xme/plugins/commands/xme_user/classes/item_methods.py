@@ -4,6 +4,7 @@ from character import get_message
 from asyncio import sleep
 from nonebot import CommandSession
 import random
+random.seed()
 
 what_to_talk = [
     "0你住在哪里呢？",

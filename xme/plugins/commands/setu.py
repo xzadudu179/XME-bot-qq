@@ -4,6 +4,7 @@ from character import get_message
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.randtools import random_percent
 import random
+random.seed()
 import os
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import image_msg

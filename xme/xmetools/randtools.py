@@ -1,4 +1,5 @@
 import random
+random.seed()
 from .jsontools import read_from_path
 from functools import wraps
 

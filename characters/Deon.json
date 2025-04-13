@@ -549,7 +549,9 @@
         ],
         "welcome": [
             "欢迎 {at} 进群{positive_punc}",
-            "{at} 欢迎进群{positive_punc}"
+            "{at} 欢迎进群{positive_punc}",
+            "{at} 欢迎欢迎{positive_punc}",
+            "{at} 欢迎呀{positive_punc}"
         ],
         "welcome_self": [
             "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
@@ -633,6 +635,11 @@
                 "你还没有说我要决定的事情哦",
                 "漠月还不知道决定什么诶",
                 "我还不知道决定什么哦"
+            ],
+            "no_choice": [
+                "{negative} 漠月没有选择...",
+                "没有可以给漠月选择的选项诶...",
+                "没有可以给漠月选择的选项诶...{negative}"
             ],
             "choice_message": [
                 "汪！我觉得可以选择 \"{choice}\"！",
@@ -1016,7 +1023,7 @@
                 "获得了 {count} 个赞{positive_punc}"
             ],
             "no_like_message": "还没有任何赞 {neutral}",
-            "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
+            "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}{group_now}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}{sender_now}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
             "response_prompt": [
                 "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
                 "可以马上发送 \"-like\" 点赞，或发送 \"-rep\" 举报哦。",
@@ -1253,10 +1260,10 @@
                 "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",
                 "invalid_count": "批量投入的次数需要是大于 0 的整数哦 {neutral}",
                 "get_coin_result": [
-                    "一共获得了 {get_count} {coin_pronoun}{coin_name}！",
-                    "一共得到了 {get_count} {coin_pronoun}{coin_name}！",
-                    "一共得到了 {get_count} {coin_pronoun}{coin_name}！{positive}",
-                    "一共拿到了 {get_count} {coin_pronoun}{coin_name}！"
+                    "{prefix}获得了 {get_count} {coin_pronoun}{coin_name}！",
+                    "{prefix}得到了 {get_count} {coin_pronoun}{coin_name}！",
+                    "{prefix}得到了 {get_count} {coin_pronoun}{coin_name}！{positive}",
+                    "{prefix}拿到了 {get_count} {coin_pronoun}{coin_name}！"
                 ],
                 "count_limited": [
                     "你指定的投入次数 {times} 太多啦！大于了你剩余的抽奖次数 {times_left} 呢...",
@@ -1270,9 +1277,9 @@
                     "但是没有任何{coin_name}出来...{negative}"
                 ],
                 "result": [
-                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
-                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
-                    "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times} 次！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
+                    "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
                 ],
                 "too_many_coins": [
                     "{count} {coin_pronoun}{coin_name}太多啦！不能多于 {count_max} 呢...",

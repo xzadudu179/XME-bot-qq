@@ -5,6 +5,7 @@ from xme.xmetools import randtools
 from xme.xmetools import jsontools
 from xme.xmetools.timetools import curr_days
 import random
+random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 

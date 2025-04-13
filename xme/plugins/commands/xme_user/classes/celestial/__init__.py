@@ -5,6 +5,7 @@ import os
 from PIL import Image
 # from xme.xmetools.randtools import change_seed
 import random
+random.seed()
 
 class Celestial:
     """天体地点 可被雷达显示

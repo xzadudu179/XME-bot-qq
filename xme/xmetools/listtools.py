@@ -1,6 +1,7 @@
 import heapq
 from typing import Any
 import random
+random.seed()
 from . import texttools as sim
 
 

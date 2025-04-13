@@ -4,7 +4,9 @@ from xme.xmetools.msgtools import send_session_msg
 import math
 from xme.xmetools import timetools
 from xme.xmetools import randtools
+from nonebot.permission import SenderRoles
 import random
+random.seed()
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message

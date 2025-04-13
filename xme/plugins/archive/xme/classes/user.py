@@ -2,6 +2,7 @@
 from xme.xmetools import timetools
 from functools import wraps
 import random
+random.seed()
 from .items.inventory import Inventory
 from xme.xmetools import texttools
 from .faction import *

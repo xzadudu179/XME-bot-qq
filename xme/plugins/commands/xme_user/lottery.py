@@ -5,6 +5,7 @@ from xme.xmetools.texttools import remove_punctuation
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.jsontools import save_to_path, read_from_path
 import random
+random.seed()
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
@@ -106,13 +107,13 @@ async def _(session: CommandSession, user: User):
     vars["lottery_lose_coins"] += result
     save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)
-    result_content = (get_message("plugins", __plugin_name__, cmd_name, 'get_coin_result',  get_count=result, ) if result > 0 else
+    result_content = (get_message("plugins", __plugin_name__, cmd_name, 'get_coin_result',  get_count=result, prefix="一共" if count > 1 else "") if result > 0 else
                       get_message("plugins", __plugin_name__, cmd_name, 'no_coin_result',  get_count=result, ))
     u.limit_count_tick(user, cmd_name, count - 1)
     times_left = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1] - 1
     message = get_message("plugins", __plugin_name__, cmd_name, 'result',
         count=arg,
-        times=count,
+        times=f"{count} 次" if count > 1 else "",
         result=result,
         coins_left=user.coins,
         result_content=result_content,

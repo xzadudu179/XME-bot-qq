@@ -2,6 +2,7 @@ import nonebot
 from os import path
 from xme.xmetools import colortools as c
 import random
+random.seed()
 import os
 from xme.plugins.commands.xme_user.classes.xme_map import GalaxyMap
 from nonebot.log import logger

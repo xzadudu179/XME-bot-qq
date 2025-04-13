@@ -11,6 +11,7 @@ from .celestial.tools import load_celestial
 from xme.xmetools import jsontools
 from xme.xmetools.randtools import random_percent
 import random
+random.seed()
 from xme.xmetools.colortools import rgb_to_hex
 from PIL import Image
 

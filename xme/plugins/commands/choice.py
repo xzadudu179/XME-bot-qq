@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
+random.seed()
 import re
 from xme.xmetools import texttools
 from character import get_message
@@ -42,9 +43,13 @@ async def _(session: CommandSession):
         ]
         for c in special_choices:
             if c:
-                choice = c
+                if all(x == c[0] for x in c):
+                    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
+                choice = random.choice(c)
                 break
     if not choice:
+        if all(x == choices[0] for x in choices):
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
         choice = parse_num_choice(item)
@@ -61,8 +66,10 @@ def has_or_not_choice(input_str):
         if len(splits) < 2: return False
         # if splits[0][-1] != splits[1][0]:
         #     return False
-        choice = random.randint(0, 1)
-        return texttools.merge_positive_negative(splits[0]) + ((split_str[0] + splits[1]) if choice else split_str[1:] + splits[1])
+        # choice = random.randint(0, 1)
+        choices = [texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[0] + splits[1]), texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[1:] + splits[1])]
+        # return texttools.merge_positive_negative(splits[0]) + ((split_str[0] + splits[1]) if choice else split_str[1:] + splits[1])
+        return choices
     except Exception as ex:
         print(ex)
         return False
@@ -84,13 +91,13 @@ def another_or_choice(input_str, another_text="还是"):
         temp = ''
     if len(result) <= 1:
         return False
-    return random.choice(result).replace("?", "").replace("？", "")
+    return [r.replace("?", "").replace("？", "") for r in result]
 
 def is_or_not_split_choice(text):
     splits = [text.split("不")[0], "不".join(text.split("不")[1:])]
     if splits[0] == splits[1]:
         splits[0] = "不" + splits[0]
-        return random.choice(splits)
+        return splits
     return False
 
 def ends_is_or_not_choice(text):
@@ -99,15 +106,16 @@ def ends_is_or_not_choice(text):
         return False
     # 使用jieba进行词性标注
     words = list(pseg.cut(text))
-    choice = random.randint(0, 1)
+    # choice = random.randint(0, 1)
     print(words)
     # 寻找动词作为分割点
     for i, (_, flag) in enumerate(words):
         if flag == 'v':
             prefix = "".join([t for t, _ in words[:i]])
-            is_or_not = "" if choice else "不"
+            # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
-            return f"{prefix}{is_or_not}{suffix}"
+            choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
+            return choices
             # return ("".join([t for t, _ in words[:i]]), text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]]))))
 
     # 如果没有找到特殊标志词，则返回
@@ -124,26 +132,10 @@ def is_or_not_choice(input_str):
         first_last = splits[0][-1]
     except:
         first_last = ""
-    message = ('' if splits[0] in ['我', '你'] else splits[0]) + random.choice([is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)])
-    return message
-
-# def num_choice(input_str, one_num=False):
-#     # 选择数字
-#     input_str = texttools.replace_chinese_punctuation(input_str)
-#     try:
-#         input_num = int(input_str)
-#         if one_num:
-#             return random.randint(0, input_num)
-#         return False
-#     except:
-#         range_str_list = input_str.split("~")
-#         if len(range_str_list) < 2:
-#             return False
-#         try:
-#             num_range = [int(i.strip()) for i in range_str_list]
-#             return random.randint(min(num_range), max(num_range))
-#         except:
-#             return False
+    choices = [is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)]
+    choices = [('' if splits[0] in ['我', '你'] else splits[0]) + c for c in choices]
+    # message = ('' if splits[0] in ['我', '你'] else splits[0]) + random.choice([is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)])
+    return choices
 
 def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)

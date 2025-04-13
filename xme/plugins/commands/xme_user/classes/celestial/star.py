@@ -3,6 +3,7 @@ import math
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.jsontools import read_from_path, save_to_path
 import random
+random.seed()
 
 class Star(Celestial, CanDevelop):
     """恒星类型"""

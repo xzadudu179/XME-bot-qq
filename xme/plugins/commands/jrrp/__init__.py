@@ -2,6 +2,7 @@ from anyio import sleep
 # from itsdangerous import base64_encode
 import nonebot
 import random
+random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from nonebot import on_command, CommandSession
 from xme.xmetools.timetools import curr_days

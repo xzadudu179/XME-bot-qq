@@ -6,6 +6,7 @@ from xme.xmetools.msgtools import send_event_msg
 from nonebot import message_preprocessor
 from character import get_message, get_character_item
 import random
+random.seed()
 
 groups_messages = {
 

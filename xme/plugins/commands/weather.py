@@ -123,21 +123,18 @@ def ouptut_weather_now(weather, air, moon):
 
     moonrise = moon.get("moonrise", None)
     moonset = moon.get("moonset", None)
-    # print(moon)
+    print(moon)
     moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]])]["name"]
     moon_info = f"今日月相为{moon_phase}"
-    if moonrise and moonset:
-        rise_difference = int(get_time_difference(iso_format_time(moonrise)))
-        set_difference = int(get_time_difference(iso_format_time(moonset)))
-        if rise_difference > 0:
+    if moonrise:
+        rise_difference = -int(get_time_difference(iso_format_time(moonrise)))
+        set_difference = -int(get_time_difference(iso_format_time(moonset)))
+        # print("Rd", rise_difference, "sd", set_difference)
+        if rise_difference > 0 and set_difference < 0:
             moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]
             moon_info = f"将在{secs_to_ymdh(rise_difference)}后升起{moon_phase}"
-        elif set_difference > 0:
-            moon_info = f"现在抬头可见{moon_phase}"
         else:
-            moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonset))]["name"]
-            moon_info = f"{moon_phase}已经落下"
-
+            moon_info = f"现在抬头可见{moon_phase}"
 
     return textwrap.dedent(f"""
         - 天气：{weather_stats}，{wind_dir} {wind_scale} 级

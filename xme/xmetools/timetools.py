@@ -160,7 +160,7 @@ def get_time_difference(t, target_time="NOW", time_format="%Y-%m-%d %H:%M:%S"):
     """
     date1 = datetime.strptime(t, time_format)
     date2 = datetime.now() if target_time == "NOW" else datetime.strptime(target_time, time_format)
-    difference = abs((date2 - date1).total_seconds())
+    difference = (date2 - date1).total_seconds()
     return difference
 
 

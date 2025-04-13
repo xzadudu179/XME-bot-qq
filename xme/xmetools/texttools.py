@@ -254,7 +254,9 @@ def replace_chinese_punctuation(text: str) -> str:
     return text
 
 def me_to_you(content: str) -> str:
-    return content.replace("你", "<>WO1-<>").replace("我", "你").replace("<>WO1-<>", "我")
+    content = content.replace("你", "<>WO1-<>").replace("我", "你").replace("<>WO1-<>", "我")
+    content = content.replace("敌众你寡", "敌众我寡").replace("我追你赶", "你追我赶").replace("彼竭你盈", "彼竭我盈").replace("自你意识", "自我意识").replace("自我意识到", "自你意识到")
+    return content
 
 def doubt_to_excl(content):
     content = replace_chinese_punctuation(content)

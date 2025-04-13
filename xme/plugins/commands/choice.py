@@ -22,6 +22,7 @@ __plugin_usage__ = str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
+    random.seed()
     args = session.current_arg_text.strip()
     if not args:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_args"),)
@@ -46,7 +47,7 @@ async def _(session: CommandSession):
     if not choice:
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
-    choice = parse_num_choice(item)
+        choice = parse_num_choice(item)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
 
 

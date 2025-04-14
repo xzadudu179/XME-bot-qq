@@ -1074,11 +1074,11 @@
                 "漂流瓶里面好像什么都没有...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦"
             ],
             "content_too_many": [
-                "瓶子的内容太多啦！要 {max_length} 字以内哦",
-                "瓶子的内容太多啦...要 {max_length} 字以内哦",
-                "瓶子塞不下啦...要 {max_length} 字以内哦",
-                "唔...瓶子塞不下啦！内容要在 {max_length} 字以内哦",
-                "{negative}..瓶子的内容太多啦...要 {max_length} 字以内哦"
+                "瓶子的内容太多啦 ({text_len}字)！要 {max_length} 字以内哦",
+                "瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦",
+                "瓶子塞不下啦 ({text_len}字)...要 {max_length} 字以内哦",
+                "唔...瓶子塞不下啦 ({text_len}字)！内容要在 {max_length} 字以内哦",
+                "{negative}..瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦"
             ],
             "lines_too_many": [
                 "瓶子的行数太多啦！最多 {max_lines} 行哦",
@@ -1246,7 +1246,7 @@
             },
             "lottery": {
                 "desc": "抽奖",
-                "introduction": "花费指定量的{coin_name}，抽取最多 2.5 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大星币值。",
+                "introduction": "花费指定量的{coin_name}，抽取最多 2.45 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大星币值。",
                 "limited": [
                     "你今天的抽奖次数用完啦{positive_punc}",
                     "诶...你今天的抽奖次数用完啦",
@@ -1310,7 +1310,8 @@
                 "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
                 "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
                 "invalid_arg": "不明白指定的排名长度意思呢...",
-                "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}"
+                "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
+                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {neutral}"
             },
             "sendcoin": {
                 "desc": "给人{coin_name}",

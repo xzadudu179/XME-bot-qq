@@ -87,11 +87,9 @@ async def _(session: CommandSession):
         )
     # 关于发送者的金币数超过了多少人
     sender_coins_count, rank_ratio = user.get_user_rank(sender)
-    message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'ranking_suffix',
+    message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'rank_info',
         count=sender_coins_count,
         rank_ratio=f"{rank_ratio:.2f}",
-
-
     )
     await send_session_msg(session, message)
     return True

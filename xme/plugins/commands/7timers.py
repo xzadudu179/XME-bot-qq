@@ -4,6 +4,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools import texttools
 from xme.xmetools.typetools import try_parse
+from xme.xmetools.loctools import get_user_location
 
 alias = ['7t', '晴天钟']
 __plugin_name__ = '7timers'
@@ -21,11 +22,17 @@ async def _(session: CommandSession):
     try:
         args = session.current_arg_text.strip()
         location = args
-        if not args:
+        _, user_location_info = await get_user_location(session.event.user_id)
+        # print(len(locations), user_location_info)
+        if not args and not user_location_info:
             location = texttools.replace_chinese_punctuation(await session.aget(prompt=get_message("plugins", __plugin_name__, 'ask_location')))
             if "[CQ:location" in location:
                 location_info = location.split("[CQ:location,")[1].split(",title")[0].replace(",", "&")
-        if args or "[CQ:location" not in location:
+        elif user_location_info:
+            lat, lon = user_location_info["lat"], user_location_info["lon"]
+            print(user_location_info)
+            location_info = f'lat={lat}&lon={lon}'
+        elif args or "[CQ:location" not in location:
             loc = [try_parse(l, float, None) for l in location.split(",")]
             if len(loc) < 2:
                 loc.append(0)

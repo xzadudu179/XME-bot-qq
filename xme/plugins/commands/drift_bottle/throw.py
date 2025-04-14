@@ -21,7 +21,7 @@ async def _(session: CommandSession):
         # await send_msg(session, f"漂流瓶似乎没有内容呢ovo\n格式：\n{config.COMMAND_START[0]}throw (漂流瓶内容)")
         return
     if len(arg) > MAX_LENGTH:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(arg)))
         # await send_msg(session, f"瓶子的内容太多啦！要 200 字以内哦")
         return
     if arg.count('\n') > MAX_LINES or arg.count('\r') > MAX_LINES:
@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         id = 0
     for k, bottle in bottles_dict['bottles'].items():
         # print(bottle)
-        if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] < bottle["views"] / 2):
+        if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] <= bottle["views"] // 2):
         # if arg == bottle['content']:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")

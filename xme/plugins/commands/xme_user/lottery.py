@@ -103,7 +103,7 @@ async def _(session: CommandSession, user: User):
     vars["lottery_get_coins"] += calc_count
     result = 0
     for _ in range(count):
-        result += random.randint(0, int(arg * (random.random() + 1.4)))
+        result += random.randint(0, int(arg * (random.random() + 1.45)))
     vars["lottery_lose_coins"] += result
     save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)

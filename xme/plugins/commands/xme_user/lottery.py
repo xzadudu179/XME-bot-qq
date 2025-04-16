@@ -91,9 +91,7 @@ async def _(session: CommandSession, user: User):
         return False
     elif user.coins - calc_count < 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'not_enough_coins',
-
             count=calc_count,
-
             coins_left=user.coins,
         )
         await send_session_msg(session, message)

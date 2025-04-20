@@ -48,11 +48,11 @@ async def _(session: CommandSession):
                 choice = random.choice(c)
                 break
     if not choice:
-        if all(x == choices[0] for x in choices):
-            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
-        choice = parse_num_choice(item)
+        choice, can_choice = parse_num_choice(item)
+        if all(x == choices[0] for x in choices) and not can_choice:
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
 
 
@@ -143,8 +143,8 @@ def parse_num_choice(s):
     def ra_int(match):
         start, end = map(int, match.group().split("~"))
         result = random.randrange(start, end + 1)
-        return str(result)
+        return str(result), True
     try:
-        return re.sub(r'-?\d+~-?\d+', ra_int, s)
+        return re.sub(r'-?\d+~-?\d+', ra_int, s), True
     except:
-        return s
+        return s, False

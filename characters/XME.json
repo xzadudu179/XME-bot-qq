@@ -886,7 +886,7 @@
             },
             "lottery": {
                 "desc": "抽奖",
-                "introduction": "花费指定量的{coin_name}，抽取最多 2.45 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大星币值。",
+                "introduction": "花费指定量的{coin_name}，抽取最多 4 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大星币值。",
                 "limited": [
                     "你今天的抽奖次数用完啦{positive_punc}",
                     "诶...你今天的抽奖次数用完啦",

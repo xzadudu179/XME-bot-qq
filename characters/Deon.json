@@ -614,7 +614,11 @@
             "550w": [
                 "答案？之书？：\n\"我是 55...???\n{shout}漠月不是 550W 汪！",
                 "汪？答案之书说它是 550W 呜！",
+                "答案？之书？：\n\"我是 550W。\"\n\"I AM MOSS.\"",
                 "答案之书说它是 550W...漠月不是 550W 汪！"
+            ],
+            "550w_1": [
+                "答案？之书？：\n\"从历史上看，文明的命运取决于人类的选择。\"\n\"LOOKING THROUGH HUMAN HISTORY, THE FATES OF CIVILIZATIONS HAVE ALWAYS BEEN DICTATED BY THE CHOICES MEN MAKE.\""
             ],
             "cannot_fetch": [
                 "{negative}，书翻不开了...",

@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools import reqtools
+from xme.xmetools import texttools
 from xme.xmetools import randtools
 from xme.xmetools import jsontools
 from xme.xmetools.timetools import curr_days
@@ -39,6 +39,7 @@ async def _(session: CommandSession):
         print("有人在询问 550W")
         # random.seed(curr_days())
         percent = get_current_days_550w_percent()
+        random.seed()
         # random.seed(time.time())
         print(f"今天是 550w 的概率是 {percent}%")
         if randtools.random_percent(percent):
@@ -47,6 +48,11 @@ async def _(session: CommandSession):
             return
         else:
             print("550W 还没来")
+    elif args and texttools.remove_punctuation(args) in ['人类能活下来吗', '人类能活下来嘛']:
+        if randtools.random_percent(25):
+            print("触发 550W 彩蛋 01")
+            await send_session_msg(session, randtools.messy_string(f"\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
+            return
     try:
         ans_json = jsontools.read_from_path("./static/answers.json")
         random.seed()

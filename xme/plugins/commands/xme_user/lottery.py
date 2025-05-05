@@ -62,6 +62,10 @@ async def _(session: CommandSession, user: User):
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_count')
             await send_session_msg(session, message)
             return False
+    elif all_in and arg < 1:
+        message = get_message("plugins", __plugin_name__, cmd_name, 'all_in_no_coins')
+        await send_session_msg(session, message)
+        return False
     if times_left_now - count < 0:
         await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'count_limited', times_left=times_left_now, times=count))
         return False

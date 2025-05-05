@@ -77,13 +77,6 @@ async def _(session: CommandSession):
     # 彩蛋瓶子
     if str(index) == "-179":
         bottle_card = randtools.messy_string(bottle_card, 35)
-    # elif index_is_int:
-    #     # 普通瓶子会越来越混乱
-    #     bottle_card = random_tools.messy_string(bottle_card, messy_rate)
-    # ----------------------------
-    # 拼接回复
-    #     bottle_card = f"{at} 你捡?到了一个漂流..??瓶..?\n[#{index}号?...瓶，来..自. \"{bottle['from_group']}\"]..：\n-----------\n{bottle['content']}\n-----------\n由 \"{bottle['sender']}\" 在{bottle['send_time']} [生成]\n这...个..{view_message}，{like_message} uwu"
-    # ----------------------------
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     print(f"混乱程度：{messy_rate}%")

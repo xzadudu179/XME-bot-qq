@@ -1262,6 +1262,12 @@
                     "你今天没有抽奖次数啦...",
                     "你今天没有更多抽奖次数啦..."
                 ],
+                "all_in_no_coins": [
+                    "你没有可用的星币来抽奖了哦...",
+                    "你没有足够的星币来抽奖了哦...",
+                    "你没有可用的星币来抽奖了哦...{neutral}",
+                    "你没有足够的星币来抽奖了哦...{neutral}"
+                ],
                 "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
                 "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
                 "not_enough_coins": "唔，你指定的 {count} {coin_pronoun}{coin_name}太多啦！超过了你拥有的{coin_name}总数 {coins_left} 呢...",

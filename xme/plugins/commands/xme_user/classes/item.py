@@ -32,7 +32,7 @@ class Item:
     def has_tag(self, tag: Tag):
         return tag in self.tags
 
-    def __init__(self, id: int, name: str, desc: str, rarity: Rarity, tags: list[Tag]=[], maxcount: int=1, price=0, pronoun="个", **kwargs) -> None:
+    def __init__(self, id: int, name: str, desc: str, rarity: Rarity, tags: list[Tag]=[], maxcount: int=1, price=0, pronoun="个", action_args: dict = {}, **kwargs) -> None:
         """创建一个物品
 
         Args:
@@ -55,6 +55,7 @@ class Item:
         self.pronoun = pronoun
         self.price = price
         self.actions = {k: v for k, v in kwargs.items() if callable(v)}
+        self.action_args = action_args
 
     def __getstate__(self):
         return self.id
@@ -127,7 +128,7 @@ class Item:
     def has_action(self, name: str) -> bool:
         return name in self.actions and self.actions[name]
 
-    async def call_action(self, action_name: str, *args, **kwargs):
+    async def call_action(self, action_name: str, **kwargs):
         """使用物品自定方法
 
         Args:
@@ -138,8 +139,8 @@ class Item:
         """
         if action_name in self.actions and self.actions[action_name]:
             if inspect.iscoroutinefunction(self.actions[action_name]):
-                return (True, await self.actions[action_name](self, *args, **kwargs))
-            return (True, self.actions[action_name](self, *args, **kwargs))
+                return (True, await self.actions[action_name](self, **self.action_args.get(action_name, {}), **kwargs))
+            return (True, self.actions[action_name](self, **kwargs))
         else:
             return (False, None)
 
@@ -255,5 +256,21 @@ item_table = {
         price=0,
         pronoun="个",
         use=item_methods.talk_to_bot
+    ),
+    11: Item(
+        id=11,
+        name="刮奖彩票（20）",
+        desc="一张价值 20 星币的刮奖彩票，刮一刮尝试一下？",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=10,
+        price=20,
+        pronoun="张",
+        action_args={
+            "use": {
+                "price": 20,
+            }
+        },
+        use=item_methods.use_ticket
     ),
 }

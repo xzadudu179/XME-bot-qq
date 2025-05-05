@@ -77,7 +77,7 @@ class InvItem:
         return self.try_reduce_item(count=count)
 
 
-    async def try_use_item(self, action, remove_after_use: bool, id: int | None = None, *args, **kwargs) -> tuple[bool, Any]:
+    async def try_use_item(self, action, remove_after_use: bool, id: int | None = None, **kwargs) -> tuple[bool, Any]:
         """尝试使用物品
 
         Args:
@@ -91,7 +91,7 @@ class InvItem:
         if not self.recorded_item:
             return (False, None)
         id = id if id is not None else self.recorded_item.id
-        state, result = await self.recorded_item.call_action(action, *args, **kwargs)
+        state, result = await self.recorded_item.call_action(action, **kwargs)
         if state and remove_after_use:
             state = self.try_reduce_item(id)
         return (state, result)

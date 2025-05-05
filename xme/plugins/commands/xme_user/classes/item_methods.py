@@ -135,3 +135,10 @@ async def talk_to_bot(_, session: CommandSession, user):
         "state": True,
         "silent": True,
     }
+
+async def use_ticket(_, session: CommandSession, user, price):
+    await send_session_msg(session, f"彩票使用测试：价值 {price}")
+    return {
+        "state": True,
+        "silent": True,
+    }

@@ -1669,6 +1669,18 @@
                 "报时功能已激活{positive_punc}",
                 "报时功能已启用{positive_punc}"
             ]
+        },
+        "count": {
+            "desc": "查看字符串长度",
+            "introduction": "检查一段文字所拥有的字符数量",
+            "result": [
+                "这些文字一共有 {length} 个字符哦{positive_punc}",
+                "这些文字一共有 {length} 个字符哦 {neutral}"
+            ],
+            "no_str": [
+                "你没有在参数输入任何文字哦 {neutral}",
+                "你需要在参数里输入要检测的文字哦 {neutral}"
+            ]
         }
     }
 }

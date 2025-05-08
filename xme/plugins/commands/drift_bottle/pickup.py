@@ -55,8 +55,10 @@ async def _(session: CommandSession):
     messy_rate_string = ""
     if str(index) == '-179':
         messy_rate_string = "##未知##"
+        messy_rate = random.randint(0, 100)
     elif not index_is_int:
         messy_rate_string = "##纯洁无暇##"
+        messy_rate = 0
     else:
         messy_rate_string = f"{messy_rate}%"
     sender_now = await get_stranger_name(bottle['sender_id'])

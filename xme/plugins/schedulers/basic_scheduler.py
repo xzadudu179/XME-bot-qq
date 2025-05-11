@@ -18,6 +18,9 @@ def calc_lottery():
     vars = read_from_path("data/bot_vars.json")
     user: User = try_load(vars["self_id"])
     coins_add = vars["lottery_get_coins"] - vars["lottery_lose_coins"]
+    if coins_add < 0:
+        # 暗黑心理学
+        coins_add = 0
     user.coins += coins_add
     if user.coins < 0:
         user.coins = 0

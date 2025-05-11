@@ -37,7 +37,7 @@ def reverse_dict(target_dict: dict, ignore_null: bool = True) -> dict:
 
     return dict(reversed_dict)
 
-def set_value(*keys: str, search_dict: dict, set_method=lambda value: value):
+def set_value(*keys: str, search_dict: dict, set_method=lambda value: value, delete=False):
     """设置字典对应键的值
 
     Args:
@@ -50,5 +50,8 @@ def set_value(*keys: str, search_dict: dict, set_method=lambda value: value):
         if v is None:
             search_dict[keys[0]] = {}
             v = search_dict[keys[0]]
-        return set_value(*keys[1:], search_dict=v, set_method=set_method)
+        return set_value(*keys[1:], search_dict=v, set_method=set_method, delete=delete)
+    if delete:
+        del  search_dict[keys[0]]
+        return
     search_dict[keys[0]] = set_method(v)

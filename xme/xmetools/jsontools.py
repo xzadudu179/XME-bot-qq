@@ -13,7 +13,7 @@ def save_to_path(path, data, ensure_ascii=False, indent: int | str | None=None):
     with open(path, 'w', encoding='utf-8') as file:
         file.write(json.dumps(data, ensure_ascii=ensure_ascii, indent=indent))
 
-def change_json(path: str, *keys, set_method=lambda v: v):
+def change_json(path: str, *keys, set_method=lambda v: v, delete=False):
     """修改 json 内容
 
     Args:
@@ -21,7 +21,7 @@ def change_json(path: str, *keys, set_method=lambda v: v):
         set_method (function, optional): 设置修改方法. Defaults to lambdav:v.
     """
     c = read_from_path(path)
-    dicttools.set_value(*keys, search_dict=c, set_method=set_method)
+    dicttools.set_value(*keys, search_dict=c, set_method=set_method, delete=delete)
     save_to_path(path, c)
 
 def get_json_value(path: str, *keys, default=None):

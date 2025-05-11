@@ -83,7 +83,7 @@
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
         "anno_message": "{anno}",
         "no_permission": "权限不足哦 {negative}",
-        "anno_temp_suffix": "@ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}\n或者也可以私聊我{positive_punc}",
+        "anno_temp_suffix": "私聊或 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}",
         "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下...",
         "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"
     },
@@ -554,12 +554,12 @@
             "{at} 欢迎呀{positive_punc}"
         ],
         "welcome_self": [
-            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
-            "{happy}我来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
-            "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}",
-            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}",
-            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}",
-            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}"
+            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}",
+            "{happy}我来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
+            "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
+            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}",
+            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
+            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}"
         ],
         "other_recalled_info": [
             "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
@@ -995,7 +995,7 @@
         },
         "漂流瓶": {
             "desc": "漂流瓶相关指令",
-            "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc}\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
+            "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 20 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
             "throw_introduction": "扔一个漂流瓶",
             "pickup_introduction": "尝试捡一个漂流瓶",
             "cthulhu_introduction": "毁掉指定的漂流瓶",
@@ -1032,11 +1032,12 @@
             "no_like_message": "还没有任何赞 {neutral}",
             "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}{group_now}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}{sender_now}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
             "response_prompt": [
-                "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报。",
-                "可以马上发送 \"-like\" 点赞，或发送 \"-rep\" 举报哦。",
-                "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报哦。"
+                "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报 {neutral}"
             ],
-            "response_prompt_broken": "你[不]可以..发送 \"-li??\" 以点赞?，或.?发送 \"-??p\" 以...?。",
+            "can_do": [
+                "发送 \"-like\" 点赞\n发送 \"-rep\" 举报\n发送 \"-say 内容\" 留言"
+            ],
+            "response_prompt_broken": "你[不]可以..执行任何....操作..?..",
             "bottle_broken": [
                 "啊，你不小心把瓶子摔碎了...",
                 "{negative} 你不小心把瓶子摔碎了...",
@@ -1092,6 +1093,15 @@
                 "瓶子内容太长啦...最多 {max_lines} 行哦",
                 "瓶子塞不下啦！最多写 {max_lines} 行哦",
                 "{negative} 瓶子塞不下啦...最多写 {max_lines} 行哦"
+            ],
+            "pureing": [
+                "成功提名让这个瓶子变成纯洁无暇的啦，{positive}"
+            ],
+            "limited": [
+                "漠月已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",
+                "周围已经没有瓶子了...下一小时再来吧 {negative}",
+                "漠月找不到别的瓶子啦...下一小时再来吧 {negative}",
+                "{negative} 漠月已经找完你周围的所有瓶子啦，下一个小时再来吧..."
             ],
             "throwed": [
                 "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",

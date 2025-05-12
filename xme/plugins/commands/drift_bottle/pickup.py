@@ -40,7 +40,7 @@ async def report(session, bottle, index, user_id):
 
 @on_command(command_name, aliases=pickup_alias, only_to_me=False)
 @u.using_user(save_data=False)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=20)
+@u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=20)
 async def _(session: CommandSession, user: u.User):
     random.seed()
     user_id = session.event.user_id
@@ -144,8 +144,12 @@ async def _(session: CommandSession, user: u.User):
             print(reply)
             if get_cmd_by_alias(reply) != False:
                 print("执行指令")
+                # 手动计数
+                u.limit_count_tick(user, command_name)
+                user.save()
+                print("增加计数")
                 await send_cmd(reply, session)
-                return True
+                return False
             elif reply == '-like' and not operated["like"]:
                 operated["like"] = True
                 await like(session, bottles_dict, index)

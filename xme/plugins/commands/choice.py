@@ -115,6 +115,10 @@ def ends_is_or_not_choice(text):
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
             choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
+            if suffix[0] == "有":
+                choices[1] = f"{prefix}没{suffix}"
+            if suffix[0] in ["不", "没"]:
+                choices[1] = f"{prefix}{suffix[1:]}"
             return choices
             # return ("".join([t for t, _ in words[:i]]), text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]]))))
 
@@ -141,10 +145,12 @@ def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)
     print("numchoice " + s)
     def ra_int(match):
-        start, end = map(int, match.group().split("~"))
+
+        start, end = map(int, match.group().replace("-", "~").split("~"))
         result = random.randrange(start, end + 1)
-        return str(result), True
+        return str(result)
     try:
         return re.sub(r'-?\d+~-?\d+', ra_int, s), True
-    except:
+    except Exception as ex:
+        print(ex)
         return s, False

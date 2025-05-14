@@ -5,7 +5,8 @@ from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.listtools import split_list
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.xme_user import get_userhelp
-from nonebot import on_command, CommandSession
+from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
+from nonebot import on_command, CommandSession, MessageSegment
 from character import get_message
 from xme.xmetools.texttools import most_similarity_str
 
@@ -51,14 +52,9 @@ async def _(session: CommandSession):
     # 如果发了参数则发送相应命令的使用帮助
     curr_page_num = 1
     print("发送帮助")
-    if arg:
-        try:
-            curr_page_num = int(arg)
-        except:
-            # 如果不能成数字那就是功能
-            if await arg_help(arg, plugins, session) != False: return
+    if arg and await arg_help(arg, plugins, session) != False: return
     # help_list_str = ""
-    PAGE_LENGTH = 15
+    PAGE_LENGTH = 20
     # 分页
     pages = []
     index = 0
@@ -66,9 +62,9 @@ async def _(session: CommandSession):
     for p in plugins:
         index += 1
         try:
-            total_pages += "\n\t" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+            total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
         except:
-            total_pages += "\n\t" + f"[未知] {p.name}"
+            total_pages += "\n" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_cmds', prefix=prefix))
@@ -77,69 +73,67 @@ async def _(session: CommandSession):
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], PAGE_LENGTH)]
     # print(pages)
-    prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+    prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '""'.join(config.COMMAND_START) + '"', version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
     suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
     # suffix = f'帮助文档: http://docs.xme.xzadudu179.top/#/help\n使用 \"{config.COMMAND_START[0]}help 功能名\" 查看某功能的详细介绍哦\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 翻页'
-    curr_page_num = await verify_page(session, curr_page_num, pages)
+    # curr_page_num = await verify_page(session, curr_page_num, pages)
     if not curr_page_num:
         return
-    content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-    await send_session_msg(session, prefix + content + '\n' + suffix)
-    if len(pages) <= 1:
-        return
+    # content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
+    # await send_session_msg(session, prefix + content + '\n' + suffix)
+    # if len(pages) <= 1:
+        # return
+    new_messages: list[MessageSegment] = []
+    msg_dict = {
+        "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)
+    }
+    new_messages.append(change_group_message_content(msg_dict, prefix + '\n' + suffix))
+    for page in pages:
+        new_messages.append(change_group_message_content(msg_dict, page))
+    return await send_forward_msg(session.bot, session.event, new_messages)
     # 翻页
-    while True:
-        # 每次刷新前缀和后缀
-        prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
-        suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
-        reply: str = (await session.aget()).strip()
-        reply = reply.replace("》", ">").replace("《", "<")
-        more_page = 0
-        if not reply.startswith((">", "<", "翻页")):
-            await send_cmd(reply, session)
-            return
-        elif reply.startswith((">", "<")):
-            for c in reply:
-                if c == ">":
-                    more_page += 1
-                elif c == "<":
-                    more_page -= 1
-                else:
-                    # 不可以有除了那两个箭头之外的字符
-                    await send_cmd(reply, session)
-                    return
-        else:
-            try:
-                more_page += int(reply.split("翻页")[1])
-            except:
-                return
-        curr_page_num += more_page
-        curr_page_num = await verify_page(session, curr_page_num, pages)
-        if not curr_page_num:
-            return
-        # if curr_page_num < 1:
-        #     reply_message = get_message("plugins", __plugin_name__, 'page_too_small')
-        #     # reply_message = "页数不能小于 1 啦 xwx"
-        #     await send_msg(session, reply_message)
-        #     return
-        # elif curr_page_num > len(pages):
-        #     reply_message = get_message("plugins", __plugin_name__, 'page_too_big', curr_page_num=curr_page_num)
-        #     # reply_message = f"页数 {curr_page_num} 超过最大页数啦 xwx，我就给你展示最后一页吧~"
-        #     await send_msg(session, reply_message)
-        #     curr_page_num = len(pages)
-        content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
-        await send_session_msg(session, prefix + content + '\n' + suffix)
+#     while True:
+#         # 每次刷新前缀和后缀
+#         prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps=" ".join(config.COMMAND_START), version=config.VERSION)
+#         suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
+#         reply: str = (await session.aget()).strip()
+#         reply = reply.replace("》", ">").replace("《", "<")
+#         more_page = 0
+#         if not reply.startswith((">", "<", "翻页")):
+#             await send_cmd(reply, session)
+#             return
+#         elif reply.startswith((">", "<")):
+#             for c in reply:
+#                 if c == ">":
+#                     more_page += 1
+#                 elif c == "<":
+#                     more_page -= 1
+#                 else:
+#                     # 不可以有除了那两个箭头之外的字符
+#                     await send_cmd(reply, session)
+#                     return
+#         else:
+#             try:
+#                 more_page += int(reply.split("翻页")[1])
+#             except:
+#                 return
+#         curr_page_num += more_page
+#         curr_page_num = await verify_page(session, curr_page_num, pages)
+#         if not curr_page_num:
+#             return
+#         content = f"({curr_page_num} / {len(pages)}页)：\n" + pages[curr_page_num - 1]
+#         await send_session_msg(session, prefix + content + '\n' + suffix)
 
 
-async def verify_page(session, page_num: str, pages) -> bool | int:
-    if page_num < 1:
-        reply_message = get_message("plugins", __plugin_name__, 'page_too_small')
-        await send_session_msg(session, reply_message)
-        return False
-    elif page_num > len(pages):
-        reply_message = get_message("plugins", __plugin_name__, 'page_too_big', curr_page_num=page_num)
-        await send_session_msg(session, reply_message)
-        return len(pages)
-    return page_num
+# async def verify_page(session, page_num: str, pages) -> bool | int:
+#     if page_num < 1:
+#         reply_message = get_message("plugins", __plugin_name__, 'page_too_small')
+#         await send_session_msg(session, reply_message)
+#         return False
+#     elif page_num > len(pages):
+#         reply_message = get_message("plugins", __plugin_name__, 'page_too_big', curr_page_num=page_num)
+#         await send_session_msg(session, reply_message)
+#         return len(pages)
+#     return page_num

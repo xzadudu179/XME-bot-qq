@@ -1,7 +1,6 @@
 from nonebot import get_bot, NoneBot
 import aiocqhttp
 
-
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名
 

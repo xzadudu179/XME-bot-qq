@@ -669,13 +669,13 @@
                 "{prefix}\n指令列表里面好像什么都没有..."
             ],
             "prefix": [
-                "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~\n查看当前功能列表",
-                "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~\n现在有这些功能{positive_punc}"
+                "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~",
+                "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~"
             ],
             "suffix": [
-                "帮助文档在 {docs_link} 哦汪\n使用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
-                "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n下一句话发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦",
-                "帮助文档在 {docs_link} 哦\n用 \"{cmd_sep}help 功能名\" 可以看某功能的详细介绍{positive_punc}\n在下面发送 \">\" \"<\" 或 \"》\" \"《\" 就可以翻页啦"
+                "帮助文档在 {docs_link} 哦汪\n现在有这些功能{positive_punc}",
+                "帮助文档在 {docs_link} 哦\n当前功能列表：",
+                "帮助文档在 {docs_link} 哦{positive_punc}\n现在有这些功能{positive_punc}"
             ],
             "page_too_small": [
                 "页数不能小于 1 哦 {neutral}",

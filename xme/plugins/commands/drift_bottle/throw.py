@@ -15,7 +15,7 @@ command_name = 'throw'
 @u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'throw_limited'), unit=TimeUnit.HOUR, count_limit=5)
 async def _(session: CommandSession, user):
     MAX_LENGTH = 200
-    MAX_LINES = 15
+    MAX_LINES = 10
     # raw_arg_msg = session.current_arg.strip()
     # arg, images = text_tools.get_image_str(raw_arg_msg)
     arg = session.current_arg_text.strip()
@@ -27,7 +27,7 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(arg)))
         # await send_msg(session, f"瓶子的内容太多啦！要 200 字以内哦")
         return False
-    if arg.count('\n') > MAX_LINES or arg.count('\r') > MAX_LINES:
+    if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))
         # await send_msg(session, f"瓶子的行数太多啦！最多 MAX_LINES 行哦")
         return False
@@ -59,6 +59,8 @@ async def _(session: CommandSession, user):
         "from_group": group["group_name"],
         "send_time": datetime.now().strftime(format="%Y年%m月%d日 %H:%M:%S"),
         "sender_id": user['user_id'],
+        "comments": [],
+        "pure_vote_users": {},
         "group_id": user['group_id'],
     }
     bottles_dict["max_index"] = id

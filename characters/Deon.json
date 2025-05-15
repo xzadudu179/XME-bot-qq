@@ -1120,6 +1120,7 @@
                 "唔...大海里已经有类似的瓶子了哦：\n[#{id} 号漂流瓶]：{content}",
                 "大海里已经有类似的瓶子了哦...是第 #{id} 号：\n{content}"
             ],
+            "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
             "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
             "cthulhu_error_bottles": "其中这些 id 的瓶子有问题...:\n{ids}",
             "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",

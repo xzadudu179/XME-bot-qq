@@ -101,8 +101,9 @@ async def _(session: CommandSession, user: u.User):
         bottle_card = randtools.messy_string(bottle_card, 35)
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
-    print(f"混乱程度：{messy_rate}%")
-    broken = randtools.random_percent(min(100, 1 + messy_rate / 2) if messy_rate < 100 else 100)
+    broken_rate = min(100, 1 + messy_rate / 2.5) if messy_rate < 100 else 100
+    print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
+    broken = randtools.random_percent(broken_rate)
     if index_is_int and str(index) != "-179":
         # 普通瓶子会越来越混乱
         bottle_card = randtools.messy_string(bottle_card, messy_rate)
@@ -128,7 +129,7 @@ async def _(session: CommandSession, user: u.User):
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         await send_session_msg(session, content)
         return True
-    elif str(index) != "-179":
+    else:
         operated = {
             "like": False,
             "rep": False,
@@ -163,6 +164,3 @@ async def _(session: CommandSession, user: u.User):
             elif reply.split(" ")[0] == '-pure':
                 continue
             while_index += 1
-    else:
-        # 彩蛋瓶子直接返回
-        return True

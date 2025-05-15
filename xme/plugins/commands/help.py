@@ -73,7 +73,7 @@ async def _(session: CommandSession):
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], PAGE_LENGTH)]
     # print(pages)
-    prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '""'.join(config.COMMAND_START) + '"', version=config.VERSION)
+    prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '"、"'.join(config.COMMAND_START) + '"', version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     # 展示页数
     suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")

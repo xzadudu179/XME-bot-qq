@@ -9,7 +9,7 @@ random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 
-alias = ['答案之书', 'ans']
+alias = ['答案之书', 'ans', '550w']
 __plugin_name__ = 'answer'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

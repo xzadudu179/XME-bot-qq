@@ -12,7 +12,7 @@ plt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
 
 def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):
-    expr = sp.sympify(expr_str)
+    expr = sp.sympify(expr_str,  evaluate=False)
     free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
     print("free symbols", free_symbols)
     if len(free_symbols) == 1:
@@ -44,7 +44,7 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     print("绘制3D")
     # expr = sp.sympify(expr_str)
     # fig = plt.figure()
-    expr = sp.sympify(expr_str)
+    expr = sp.sympify(expr_str,  evaluate=False)
     free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
     print(free_symbols)
     if len(free_symbols) == 1:

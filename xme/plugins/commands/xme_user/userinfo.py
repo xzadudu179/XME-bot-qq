@@ -20,7 +20,8 @@ usage = {
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 @u.using_user(save_data=False)
 async def _(session: CommandSession, user: User):
-    arg = session.current_arg.strip()
+    arg = session.current_arg
+    print("arg", arg)
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])

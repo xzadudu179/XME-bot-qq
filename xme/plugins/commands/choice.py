@@ -33,20 +33,22 @@ async def _(session: CommandSession):
     # 只有一项选择
     if len(choices) <= 1:
         special_choices = [
-            has_or_not_choice(choices[0]),
-            is_or_not_choice(choices[0]),
-            ends_is_or_not_choice(choices[0]),
             another_or_choice(choices[0], "还是"),
             another_or_choice(choices[0], "或者"),
             another_or_choice(choices[0], "或"),
-            is_or_not_split_choice(choices[0])
+            is_or_not_choice(choices[0]),
+            is_or_not_split_choice(choices[0]),
+            ends_is_or_not_choice(choices[0]),
+            # has_or_not_choice(choices[0]),
         ]
         for c in special_choices:
+            print(c)
             if c:
                 if all(x == c[0] for x in c):
                     return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
                 choice = random.choice(c)
                 break
+    print("choice is", choice)
     if not choice:
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
@@ -56,23 +58,23 @@ async def _(session: CommandSession):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
 
 
-def has_or_not_choice(input_str):
-    # 有没有
-    # *没*
-    splits, split_str = texttools.try_split_left_right_equals(input_str, ["没", "不", "否"], True)
-    try:
-        print(splits, split_str)
-        split_str = split_str.replace("否", "不")
-        if len(splits) < 2: return False
-        # if splits[0][-1] != splits[1][0]:
-        #     return False
-        # choice = random.randint(0, 1)
-        choices = [texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[0] + splits[1]), texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[1:] + splits[1])]
-        # return texttools.merge_positive_negative(splits[0]) + ((split_str[0] + splits[1]) if choice else split_str[1:] + splits[1])
-        return choices
-    except Exception as ex:
-        print(ex)
-        return False
+# def has_or_not_choice(input_str):
+#     # 有没有
+#     # *没*
+#     splits, split_str = texttools.try_split_left_right_equals(input_str, ["没", "不", "否"], True)
+#     try:
+#         print(splits, split_str)
+#         split_str = split_str.replace("否", "不")
+#         if len(splits) < 2: return False
+#         # if splits[0][-1] != splits[1][0]:
+#         #     return False
+#         # choice = random.randint(0, 1)
+#         choices = [texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[0] + splits[1]), texttools.merge_positive_negative(splits[0]) + texttools.merge_positive_negative(split_str[1:] + splits[1])]
+#         # return texttools.merge_positive_negative(splits[0]) + ((split_str[0] + splits[1]) if choice else split_str[1:] + splits[1])
+#         return choices
+#     except Exception as ex:
+#         print(ex)
+#         return False
 
 def another_or_choice(input_str, another_text="还是"):
     # 还是
@@ -94,11 +96,17 @@ def another_or_choice(input_str, another_text="还是"):
     return [r.replace("?", "").replace("？", "") for r in result]
 
 def is_or_not_split_choice(text):
-    splits = [text.split("不")[0], "不".join(text.split("不")[1:])]
-    if splits[0] == splits[1]:
-        splits[0] = "不" + splits[0]
-        return splits
-    return False
+    print("isornot")
+    split_str, index = texttools.find_symmetric_around(text, "不")
+    print(split_str)
+    print(len(split_str))
+    if not split_str:
+        quit()
+    prefix = text[:index - len(split_str)]
+    suffix = text[index + 1 + len(split_str):]
+    print(prefix, suffix)
+    splits = [prefix + split_str + suffix, prefix + "不" + split_str + suffix]
+    return splits
 
 def ends_is_or_not_choice(text):
     question_strings = ("否", "吗", "嘛")
@@ -115,9 +123,9 @@ def ends_is_or_not_choice(text):
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
             choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
-            if suffix[0] == "有":
+            if suffix and suffix[0] == "有":
                 choices[1] = f"{prefix}没{suffix}"
-            if suffix[0] in ["不", "没"]:
+            if suffix and suffix[0] in ["不", "没"]:
                 choices[1] = f"{prefix}{suffix[1:]}"
             return choices
             # return ("".join([t for t, _ in words[:i]]), text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]]))))

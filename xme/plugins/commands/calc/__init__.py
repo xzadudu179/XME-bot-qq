@@ -1,12 +1,12 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
-import traceback
+from xme.xmetools.texttools import contains_blacklisted
 from xme.xmetools.functools import run_with_timeout
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, send_to_superusers
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
 
@@ -17,11 +17,11 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(算式)',
-    permissions=["是 SUPERUSER"],
+    permissions=[],
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: x.is_superuser)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: True)
 async def _(session: CommandSession):
     message = "uwu"
     arg = session.current_arg_text.strip()
@@ -33,17 +33,21 @@ async def _(session: CommandSession):
             message += f'{k}{v["body"]}: {v["info"] if v["info"] else "-"}\n'
         if len(funcs.items()) < 1:
             message += get_message("plugins", __plugin_name__, 'func_nothing') + '\n'
-        # message += get_message("plugins", __plugin_name__, 'func_builtin_intro') + "\n"
-        # for k, v in func.builtins.items():
-        #     message += f'{k}: {v if v else "-"}\n'
         return await send_session_msg(session, '\n' + message)
     if arg == 'builtins':
         message += get_message("plugins", __plugin_name__, 'func_builtin_intro') + "\n"
         for k, v in func.builtins.items():
             message += f'{k}: {v if v else "-"}\n'
         return await send_session_msg(session, '\n' + message)
+    if len(arg) > 100:
+        message = get_message("plugins", __plugin_name__, 'too_long')
+        return await send_session_msg(session, message)
+    if contains_blacklisted(arg):
+        message = get_message("plugins", __plugin_name__, 'have_risk')
+        await send_to_superusers(session.bot, f"警告：{session.event.user_id} 在 calc 指令里输入了有注入风险的表达式：{arg}")
+        return await send_session_msg(session, message)
     try:
-        TIMEOUT_SECS = 20
+        TIMEOUT_SECS = 15
         formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS / 2, f"计算超时 (>{TIMEOUT_SECS / 2}s)", arg)
         if is_image > 0:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'drawing'))
@@ -63,7 +67,6 @@ async def _(session: CommandSession):
             return
         else:
             message = get_message("plugins", __plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
-
         try:
             float_result = str(float(result.doit()))
         except Exception as ex:

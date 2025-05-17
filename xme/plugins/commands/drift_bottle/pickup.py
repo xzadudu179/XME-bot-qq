@@ -101,7 +101,7 @@ async def _(session: CommandSession, user: u.User):
         bottle_card = randtools.messy_string(bottle_card, 35)
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
-    broken_rate = min(100, 1 + messy_rate / 2.5) if messy_rate < 100 else 100
+    broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     if index_is_int and str(index) != "-179":

@@ -106,8 +106,6 @@ async def _(session: CommandSession, user: user.User):
         messages.append(game_to_play['meta']['award_message'].format(
             award=award,
             coins_left=user.coins,
-
-
         ))
     elif award == 0:
         messages.append(game_to_play['meta']['no_award_message'].format())

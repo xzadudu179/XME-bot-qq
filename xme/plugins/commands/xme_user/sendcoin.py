@@ -21,6 +21,7 @@ usage = {
 async def _(session: CommandSession, user: User):
     message = ''
     arg_text = session.current_arg.strip() if session.current_arg else ""
+    print(arg_text)
     args = arg_text.split(" ")
     coin_count = 0
     at_id = 0
@@ -75,9 +76,7 @@ async def _(session: CommandSession, user: User):
     send_to_user.save()
     message = get_message("plugins", __plugin_name__, cmd_name, 'success',
         target_user=f' {target_user} ({at_id})' if not at_bot_self else '我',
-
         coin_count=coin_count,
-
         coin_left=user.coins,
         received_coin_react=get_message("plugins", __plugin_name__, cmd_name, 'received_coin_react') if at_bot_self else '')
     await send_session_msg(session, message)

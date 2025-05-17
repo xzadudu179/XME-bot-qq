@@ -2,6 +2,7 @@ import re
 from xme.xmetools.texttools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
 from . import func
 from sympy import sympify, Integer
+import math
 
 def get_func(input_str):
     pattern = r"[a-zA-Z_][a-zA-Z0-9_]*\(.*"
@@ -38,6 +39,12 @@ def extract_function(expression):
             return result
     return result
 
+def detect_too_big(original_formula: str):
+    fors = original_formula.count("**")
+    if fors > 2:
+        return True
+    return False
+
 def parse_polynomial(formula):
     """处理多项式
 
@@ -49,6 +56,8 @@ def parse_polynomial(formula):
     formula = fullwidth_to_halfwidth(replace_chinese_punctuation(formula)).strip()
     formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r").replace("\n", '\r')
     original_formula = formula
+    if detect_too_big(original_formula):
+        raise ValueError("请不要使用超过 2 个乘方符号")
     # formula = parse_vars(formula, vars)
     print(formula)
     all_vars = get_vars(formula)
@@ -81,10 +90,10 @@ def parse_polynomial(formula):
     if not result_formula:
         result_formula = "0"
     try:
-        result = sympify(result_formula).subs({k: sympify(v) for k, v in all_vars.items()})
+        result = sympify(result_formula,  evaluate=False).subs({k: sympify(v,  evaluate=False) for k, v in all_vars.items()})
     except Exception as ex:
         if len(all_vars.items()) < 1:
-            result = sympify(result_formula)
+            result = sympify(result_formula,  evaluate=False)
         else:
             raise ex
 

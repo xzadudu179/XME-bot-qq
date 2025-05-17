@@ -58,9 +58,9 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
         if i + 1 >= needed_length:
             send = True
     # del groups_messages[event.group_id]
-    if get_cmd_by_alias(chain_msg, True):
-        print("忽略指令")
-        return
+    # if get_cmd_by_alias(chain_msg, True):
+    #     print("忽略指令")
+    #     return
     print(sending_msgs)
     if send and break_chain and not sending_msgs.get(chain_msg, False):
         print(f"打断 \"{chain_msg}\"")

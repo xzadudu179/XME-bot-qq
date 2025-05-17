@@ -1,5 +1,5 @@
 from nonebot import get_bot, NoneBot
-import aiocqhttp
+import json
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名
@@ -21,6 +21,11 @@ async def get_group_member_name(group_id, user_id, card=False, default=None):
     else:
         result = result['nickname']
     return result
+
+async def get_settings():
+    with open("./data/_botsettings.json", 'r', encoding='utf-8') as jsonfile:
+        settings = json.load(jsonfile)
+    return settings
 
 async def get_stranger_name(user_id, default=None):
     try:

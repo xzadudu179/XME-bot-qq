@@ -1566,6 +1566,8 @@
                 "计算出错啦，请确认格式正确哦 {negative} \n{ex}\n可以用 \"/help calc\" 来查看帮助"
             ],
             "func_builtin_intro": "以下是大部分自带内容及函数列表{positive_punc}",
+            "too_long": "你输入的表达式太长啦！要在 100 字以内哦",
+            "have_risk": "警告：你输入的表达式参数有注入风险，请检查表达式内容，以及一定不要尝试注入哦！",
             "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
             "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
             "drawing": "正在绘制图像{positive_punc} {positive} 请稍等哦",
@@ -1584,7 +1586,7 @@
         },
         "色号显示": {
             "desc": "显示颜色",
-            "introduction": "以 \"#\" 开头并且输入一个 Hex 颜色字符串即可返回一个这个颜色的图片~"
+            "introduction": "以 \"#\" 开头并且输入一个 6 位 Hex 颜色字符串即可返回一个这个颜色的图片~"
         },
         "notice": {
             "desc": "群发消息",

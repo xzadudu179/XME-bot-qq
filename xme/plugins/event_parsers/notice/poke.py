@@ -5,6 +5,7 @@ from ....xmetools import colortools as c
 from xme.xmetools.bottools import bot_call_action, get_group_name
 import asyncio
 import random
+from xme.xmetools.randtools import random_percent
 random.seed()
 
 @on_notice("notify")
@@ -28,6 +29,9 @@ async def _(session: RequestSession):
         print(session.event)
         print(c.gradient_text("#dda3f8","#66afff" ,text=f"[{(await get_group_name(session.event.group_id)) if session.event.group_id else '私聊'}] {operator} {session.event.get('action', '戳了戳')} {target} {session.event.get('suffix', '')}"))
     if session.event.sub_type == 'poke' and session.event['target_id'] == session.self_id:
+        if random_percent(20):
+            print("不戳")
+            return
         print("戳回去")
         # 随机等待一段时间
         await asyncio.sleep(random.random() * 3 + 0.2)

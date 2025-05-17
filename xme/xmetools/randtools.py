@@ -79,27 +79,7 @@ def messy_string(string_input, temperature: float=50, resample_times=0):
     Returns:
         str: 混乱字符串
     """
-    random_chars = [
-        "!",
-        "?",
-        "@",
-        "%",
-        "&",
-        "*",
-        "**",
-        "^",
-        ".",
-        "..",
-        "??",
-        "$",
-        "\"",
-        "¿",
-        "¡",
-        "=",
-        "<",
-        ">",
-        ",",
-    ]
+    random_chars = ["!", "?", "@", "%", "#", "&", "*", "**", "^", ".", "..", "??", "$", "\"", "¿", "¡", "=", "<", ">", ",",]
     result = ""
     for c in string_input:
         if c in ['\n', '\r', ' ']:

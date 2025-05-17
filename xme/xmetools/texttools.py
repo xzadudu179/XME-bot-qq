@@ -21,6 +21,28 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
 
+def find_symmetric_around(s: str, center: str) -> tuple[str, str]:
+    if center not in s:
+        return "", 0
+    idx = s.find(center)
+    max_len = min(idx, len(s) - idx - 1)
+    # print(max_len)
+    result_list = []
+    for l in range(max_len, 0, -1):
+        left = s[idx - l:idx]
+        right = s[idx + 1:idx + 1 + l]
+        if left == right:
+            result_list.append(left)
+    # print(result_list)
+    if result_list:
+        result = max(result_list, key=len)
+        return result, idx
+    re_detect, new_index = find_symmetric_around(s[idx + 1:], center)
+    # print(re_detect)
+    if not re_detect:
+        return "", 0
+    return re_detect, new_index + idx + 1
+
 def base64_encode(text):
     """将文本使用 base64 进行编码
 
@@ -34,6 +56,11 @@ def base64_encode(text):
     base64_encoded = base64.b64encode(text_bytes)
     base64_string = base64_encoded.decode('utf-8')
     return base64_string
+
+def contains_blacklisted(expr: str) -> bool:
+    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open']
+    blacklist_whitelist = ['cos']
+    return any(bad in expr for bad in blacklist) and not any(c in expr for c in blacklist_whitelist)
 
 def limit_str_len(s: str, max_len: int):
     """限制字符串长度

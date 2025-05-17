@@ -6,7 +6,7 @@ import config
 import signal
 import asyncio
 import copy
-
+multiprocessing.set_start_method('spawn', force=True)
 
 def thread_set_timeout(seconds=10, timeout_message="函数执行超时", callback=None):
     """设置超时装饰器（非大量计算）
@@ -77,10 +77,6 @@ def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", 
         Any: 函数结果
     """
     # 使用 multiprocessing.Pool 来执行长时间计算
-    try:
-        multiprocessing.set_start_method('spawn')
-    except RuntimeError:
-        pass
     print("running....")
     with multiprocessing.Pool(1) as pool:
         result = pool.apply_async(func, args=args, kwds=kwargs)
@@ -89,7 +85,6 @@ def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", 
         except multiprocessing.TimeoutError:
             pool.terminate()  # 超时后终止进程池
             raise TimeoutError(error_message)
-    return result_queue.get()
 
 def thread_run_with_timeout(func, timeout_seconds=2, *args, **kwargs):
     with ThreadPoolExecutor(max_workers=1) as executor:

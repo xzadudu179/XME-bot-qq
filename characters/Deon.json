@@ -561,6 +561,11 @@
             "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
             "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}"
         ],
+        "welcome_99": [
+            "{at} 好耶{positive_punc} 九九来啦{positive_punc} 欢迎欢迎 {happy}",
+            "{at} 九九来啦！ 欢迎 {happy}",
+            "{at} 是九九{positive_punc} 欢迎欢迎 {happy}"
+        ],
         "other_recalled_info": [
             "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
             "唔...刚刚 {operator} 撤回了一条{user}的消息{neutral}"

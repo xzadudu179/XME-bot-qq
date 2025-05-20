@@ -22,7 +22,8 @@ def change_group_message_content(message_dict, new_content, user_id=None, nickna
     if not user_id:
         user_id = message_dict["sender"]["user_id"]
     if not nickname:
-        nickname = message_dict["sender"]["card"] if message_dict["sender"]["card"] else message_dict["sender"]["nickname"]
+        card = message_dict["sender"].get("card", "")
+        nickname = message_dict["sender"]["card"] if card else message_dict["sender"]["nickname"]
     message = MessageSegment.node_custom(user_id=user_id, nickname=nickname, content=new_content)
     return message
 

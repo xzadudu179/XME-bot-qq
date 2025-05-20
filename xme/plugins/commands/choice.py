@@ -101,7 +101,7 @@ def is_or_not_split_choice(text):
     print(split_str)
     print(len(split_str))
     if not split_str:
-        quit()
+        return False
     prefix = text[:index - len(split_str)]
     suffix = text[index + 1 + len(split_str):]
     print(prefix, suffix)

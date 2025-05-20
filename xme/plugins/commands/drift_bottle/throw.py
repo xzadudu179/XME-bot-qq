@@ -1,5 +1,6 @@
 from xme.xmetools.timetools import *
 from xme.xmetools import jsontools
+from .pickup import report
 from xme.xmetools import texttools
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
@@ -50,7 +51,7 @@ async def _(session: CommandSession, user):
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
             # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
             return
-    bottles_dict['bottles'][id] = {
+    bottle_content = {
         "content": arg,
         # "images": list(images),
         "sender": user['nickname'],
@@ -63,10 +64,12 @@ async def _(session: CommandSession, user):
         "pure_vote_users": {},
         "group_id": user['group_id'],
     }
+    bottles_dict['bottles'][id] = bottle_content
     bottles_dict["max_index"] = id
     jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
+    await report(session, bottle_content, id, user['user_id'], "发送了一个漂流瓶", False)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=id))
     # await send_msg(session, f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")
     return True

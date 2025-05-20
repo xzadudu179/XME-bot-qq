@@ -32,11 +32,12 @@ async def like(session, bottles_dict, index):
     await send_session_msg(session, content)
     return
 
-async def report(session, bottle, index, user_id):
+async def report(session, bottle, index, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True):
     content = get_message("plugins", __plugin_name__, "reported")
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) 举报了一个漂流瓶，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nid: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
-    await send_session_msg(session, content)
+        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：\n内容：\n-----------\n{bottle['content']}\n-----------\nid: {index}\n发送者: {bottle['sender']} ({bottle['sender_id']})\n来自群：{bottle['from_group']} ({bottle['group_id']})")
+    if send_success_message:
+        await send_session_msg(session, content)
 
 @on_command(command_name, aliases=pickup_alias, only_to_me=False)
 @u.using_user(save_data=False)

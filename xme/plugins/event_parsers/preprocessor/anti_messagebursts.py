@@ -25,8 +25,8 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         key = f"{event['user_id']}{event['group_id']}"
     except:
         return
-    if event['user_id'] == event.self_id:
-        return
+    # if event['user_id'] == event.self_id:
+    #     return
     message = x if (x:=event['raw_message'].strip()) else event['raw_message']
     if message.strip():
         is_cmd = cmdtools.get_cmd_by_alias(message.split(" ")[0])
@@ -59,6 +59,9 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
 
     if last_messages[key][message]['count'] >= MSG_COUNT_THRESHOLD:
         # 刷屏了 禁言
+        if event['user_id'] == event.self_id:
+            await bot.delete_msg(message_id=event.message_id)
+            raise CanceledException(f"消息 \"{event.raw_message}\" 刷屏，不处理")
         rate = 2 if is_cmd else 1
         # 如果在 x 秒内发的消息超过这么多则算刷屏
         time_period = time.time() - last_messages[key][message]["start_time"]

@@ -18,7 +18,7 @@ async def _(session: CommandSession):
     if arg.startswith("[CQ:at,qq="):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
     # 如果是对 xme 说
-    if at_id == session.self_id:
+    elif at_id == session.self_id:
         # at_id = session.self_id
         at_name = "我"
     else:

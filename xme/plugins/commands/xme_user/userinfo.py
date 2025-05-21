@@ -1,10 +1,12 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.imgtools import image_msg
 from xme.xmetools import randtools
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
+from xme.xmetools.imgtools import get_qq_avatar
 
 
 alias = ['个人信息', '个人资料', 'uinfo', 'info']
@@ -34,7 +36,11 @@ async def _(session: CommandSession, user: User):
         await send_session_msg(session, message)
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
+    try:
+        avatar = await image_msg(get_qq_avatar(at_id), max_size=64, to_jpeg=False)
+    except:
+        avatar = ""
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
-    message = f'\n[用户] {target_user}\n' + str(user) + reaction
+    message = f'\n{avatar}[用户] {target_user}\n' + str(user) + reaction
     await send_session_msg(session, message)
     return True

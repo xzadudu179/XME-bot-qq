@@ -1,5 +1,10 @@
 from nonebot import get_bot, NoneBot
+from nonebot import SenderRoles
+from nonebot.typing import PermissionPolicy_T
+from nonebot.session import BaseSession
+from character import get_message
 import json
+from functools import wraps
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名
@@ -59,3 +64,20 @@ async def get_group_name(group_id, default=None):
     except:
         return default
     return result
+
+
+def permission(perm_func: PermissionPolicy_T, no_perm_message = get_message("config", "no_permission")):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(session: BaseSession, *args, **kwargs):
+            sender = await SenderRoles.create(session.bot, session.event)
+            print("perm func", perm_func(sender))
+            if perm_func(sender):
+                result = await func(session, *args, **kwargs)
+            else:
+                from xme.xmetools.msgtools import send_session_msg
+                await send_session_msg(session, no_perm_message)
+                result = None
+            return result
+        return wrapper
+    return decorator

@@ -1,5 +1,4 @@
 from nonebot import MessageSegment, Message, NoneBot
-from xme.xmetools.bottools import bot_call_action
 from aiocqhttp import Event
 import config
 import config
@@ -39,6 +38,7 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         event (Event): 消息事件
         messages (list[MessageSegment]): 消息列表
     """
+    from xme.xmetools.bottools import bot_call_action
     res_id = await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id)
     return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
 

@@ -8,7 +8,6 @@ random.seed()
 import os
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import image_msg
-import json
 
 alias = ["涩图", "setu", "色图" ]
 __plugin_name__ = 'setu'
@@ -26,22 +25,8 @@ __plugin_usage__= str(CommandDoc(
 PATH_179 = rf"./data/images/179"
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def setu(session: CommandSession):
-    # api_url = "https://api.lolicon.app/setu/v2?r18=0&excludeAI=true&size=small"
-    # result = await fetch_image_data(api_url)
-    # if result:
-    #     # await send_msg(session, "已找到图片，正在发送...")
-    #     print(result.url)
-    #     await send_msg(session, f"""
-    #     图片标题: {result.title}
-    #     图片pid: {result.pid}
-    #     作者: {result.author}
-    #     tags: {result.tags}
-    #     --------------------
-    #     [CQ:image,file={result.url}]""".strip())
-    # else:
-    #     await send_msg(session, "无法获取图片信息.")
     image_name = "彩虹蟑螂"
-    is_179 = random_percent(50)
+    is_179 = random_percent(30)
     if is_179:
         print("是 179，看看")
         image_name = "九九"

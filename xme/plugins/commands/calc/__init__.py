@@ -3,6 +3,7 @@ from xme.xmetools.doctools import CommandDoc
 from character import get_message
 from xme.xmetools.texttools import contains_blacklisted
 from xme.xmetools.functools import run_with_timeout
+from xme.xmetools.bottools import permission
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from .func import funcs
@@ -22,6 +23,7 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: True)
+@permission(lambda sender: sender.is_superuser)
 async def _(session: CommandSession):
     message = "uwu"
     arg = session.current_arg_text.strip()

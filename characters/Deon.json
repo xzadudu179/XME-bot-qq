@@ -82,7 +82,12 @@
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
         "anno_message": "{anno}",
-        "no_permission": "权限不足哦 {negative}",
+        "no_permission": [
+            "权限不足哦 {negative}",
+            "你的权限不足哦 {negative}",
+            "你没有足够的权限诶...{negative}",
+            "你没有足够的权限呢...{negative}"
+        ],
         "anno_temp_suffix": "私聊或 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}",
         "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下...",
         "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"

@@ -1,6 +1,7 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.bottools import permission
 from character import get_message
 
 alias = ['set_title', '设置头衔', '头衔']
@@ -14,7 +15,8 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda sender: (sender.is_admin or sender.is_superuser))
+@permission(lambda sender: (sender.is_admin or sender.is_superuser) and sender.is_groupchat)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     try:
         args = session.current_arg.strip()

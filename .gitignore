@@ -175,3 +175,4 @@ xme/plugins/schedulers/server_crash_report.py
 docs.md
 prohibited.json
 static/map/map.json
+static/img/jianmao/*

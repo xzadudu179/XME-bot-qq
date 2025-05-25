@@ -20,7 +20,7 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-PEEK_PATH = rf"./data/images/179"
+PEEK_PATH = rf"./static/img/179"
 images = os.listdir(PEEK_PATH)
 random.shuffle(images)
 index = 0

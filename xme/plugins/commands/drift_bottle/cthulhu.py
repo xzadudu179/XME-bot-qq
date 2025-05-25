@@ -4,10 +4,12 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from nonebot import on_command, CommandSession
+from xme.xmetools.bottools import permission
 
 cthulhu_alias = ["毁坏瓶子", "break", "break_bottle"]
 command_name = 'cthulhu'
-@on_command(command_name, aliases=cthulhu_alias, only_to_me=False, permission=lambda x: x.is_superuser)
+@on_command(command_name, aliases=cthulhu_alias, only_to_me=False, permission=lambda x: True)
+@permission(lambda sender: sender.is_superuser)
 async def _(session: CommandSession):
     message = ''
     arg_text = session.current_arg_text.strip()

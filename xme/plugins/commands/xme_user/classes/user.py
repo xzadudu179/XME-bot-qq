@@ -1,6 +1,8 @@
 from xme.xmetools import jsontools
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
+from .achievements import ACHIEVEMENTS
+from nonebot.session import BaseSession
 from functools import wraps
 import config
 from nonebot import get_bot
@@ -11,11 +13,8 @@ import math
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from .inventory import Inventory
-from .celestial import Celestial
-from .celestial.tools import load_celestial
 from .celestial.star import Star
 from .celestial.planet import Planet, PlanetType
-from .xme_map import StarfieldMap
 from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
 from ..tools import galaxy_date_tools
 
@@ -40,7 +39,8 @@ class User:
             desc: str = "",
             celestial_uid=None,
             xme_favorability=0,
-            counters: dict=0,
+            counters: dict={},
+            achievements: list=[],
         ):
         self.id = user_id
         self.desc = desc
@@ -49,6 +49,7 @@ class User:
         self.xme_favorability = xme_favorability
         self.talked_to_bot = talked_to_bot
         self.counters = counters
+        self.achievements = achievements
         # print(celestial)
         # 用户所在天体
         self.celestial = None
@@ -67,6 +68,22 @@ class User:
         if self.celestial is None:
             raise ValueError("星体未初始化")
         return get_starfield_map(self.celestial.galaxy_location)
+
+    async def achieve_achievement(self, session: BaseSession, achievement_name: str, achievement_message: str | None = None):
+        """达成成就
+
+        Args:
+            user (User): 用户
+            achievement_name (str): 成就名
+        """
+        achi = ACHIEVEMENTS.get(achievement_name, False)
+        if not achi:
+            raise ValueError(f"无该成就名 \"{achievement_name}\"")
+        self.achievements.append(achievement_name)
+        self.add_coins(achi["award"])
+        if achievement_message is None:
+            achievement_message = get_message("config", "achievement_message", achievement=achi["name"])
+        await send_session_msg(session, achievement_message)
 
     def gen_celestial(self):
         """随机获取出生星体

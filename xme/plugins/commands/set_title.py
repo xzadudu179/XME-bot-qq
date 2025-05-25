@@ -15,8 +15,8 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-@permission(lambda sender: (sender.is_admin or sender.is_superuser) and sender.is_groupchat)
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
+@permission(lambda sender: (sender.is_admin or sender.is_superuser) and sender.is_groupchat)
 async def _(session: CommandSession):
     try:
         args = session.current_arg.strip()

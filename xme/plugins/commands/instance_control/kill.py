@@ -3,10 +3,12 @@ from xme.xmetools.msgtools import send_session_msg
 import os
 import xme.plugins.commands.instance_control as ic
 from character import get_message
+from xme.xmetools.bottools import permission
 
 kill_alias = ['inst_关机', 'inst_shutdown']
 cmd_name = 'inst_kill'
-@on_command(cmd_name, aliases=kill_alias, only_to_me=True, permission=lambda x: x.is_superuser)
+@on_command(cmd_name, aliases=kill_alias, only_to_me=True, permission=lambda x: True)
+@permission(lambda sender: sender.is_superuser)
 async def _(session: CommandSession):
     reply = (await session.aget(prompt=f"{get_message(ic.__plugin_name__, 'kill_prompt')}"))
     if reply.strip() != "Y":

@@ -3,6 +3,7 @@ import json
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.doctools import CommandDoc
 from nonebot import on_command, CommandSession
+from xme.xmetools.bottools import permission
 from character import get_message
 
 alias = ['防撤回', "precall", "防撤", '防撤回功能']
@@ -18,7 +19,8 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda sender: (sender.is_groupchat and sender.is_superuser))
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
+@permission(lambda sender: (sender.is_groupchat and sender.is_superuser))
 async def _(session: CommandSession):
     group_id = str(session.event.group_id)
     settings = {}

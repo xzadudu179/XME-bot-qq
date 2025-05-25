@@ -88,6 +88,10 @@
             "你没有足够的权限诶...{negative}",
             "你没有足够的权限呢...{negative}"
         ],
+        "achievement_message": [
+            "你达成了成就 \"{achievement}\" {positive}",
+            "你达成了一个成就 \"{achievement}\"{positive_punc} {positive}"
+        ],
         "anno_temp_suffix": "私聊或 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}",
         "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下...",
         "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"

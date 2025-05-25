@@ -26,11 +26,11 @@ PATH_179 = rf"./data/images/179"
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def setu(session: CommandSession):
     image_name = "彩虹蟑螂"
-    is_179 = random_percent(30)
-    if is_179:
-        print("是 179，看看")
-        image_name = "九九"
-    image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]" if not is_179 else await image_msg(PATH_179 + "/" + random.choice(os.listdir(PATH_179)), 1200, False)
+    # is_179 = random_percent(30)
+    # if is_179:
+    #     print("是 179，看看")
+    #     image_name = "九九"
+    image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]"
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_setu_msg', image_name=image_name, image=image))
     # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 

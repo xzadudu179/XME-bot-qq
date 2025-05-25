@@ -12,13 +12,6 @@ command_properties = [
         # 'introduction': '杀死 bot 进程',
         'permission': ["需要 @ bot 或是呼叫 bot", "是 SUPERUSER"],
         'usage': ''
-    },
-    {
-        'name': 'inst_restart',
-        'introduction': get_message("plugins", __plugin_name__, 'restart_introduction'),
-        # 'introduction': '使机器人实例重新启动',
-        'permission': ["需要 @ bot 或是呼叫 bot", "是 SUPERUSER"],
-        'usage': ''
     }
 ]
 

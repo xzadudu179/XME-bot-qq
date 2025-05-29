@@ -563,12 +563,12 @@
             "{at} 欢迎呀{positive_punc}"
         ],
         "welcome_self": [
-            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}",
+            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
             "{happy}我来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
             "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
-            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}",
-            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
-            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}"
+            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
+            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
+            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}"
         ],
         "welcome_99": [
             "{at} 好耶{positive_punc} 九九来啦{positive_punc} 欢迎欢迎 {happy}",

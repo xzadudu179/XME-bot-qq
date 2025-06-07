@@ -1728,11 +1728,11 @@
         },
         "ai_helper": {
             "desc": "AI 助手",
-            "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 20 次",
+            "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次",
             "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
             "talk_result": "{positive}， AI 说：{talk}",
             "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
-            "too_long": "你输入的语句太长啦！要在 100 字以内哦"
+            "too_long": "你输入的语句太长啦！要在 300 字以内哦"
         }
     }
 }

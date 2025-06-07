@@ -61,7 +61,7 @@ history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True)
 @u.using_user(save_data=False)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=20)
+@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=15)
 async def _(session: CommandSession, user: u.User):
     parser = ArgumentParser(session=session, usage=arg_usage)
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)

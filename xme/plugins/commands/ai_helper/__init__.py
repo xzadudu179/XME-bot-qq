@@ -26,12 +26,13 @@ def get_command_list():
         cmd_list_str += f"{k} {v['args']}: {v['desc']}\n"
     return cmd_list_str
 
-def parse_control(session: CommandSession, text) -> str:
+def parse_control(session: CommandSession, text: str, user: u.User) -> str:
+    text, args = text.split(" ")[0], text.split(" ")[1:]
     parse_func = lambda text, **kwargs: f"没有这个指令 \"{text}\" 哦"
     cmd = cmds.get(text, None)
     if cmd is not None:
         parse_func = cmd["content"]
-    return parse_func(user_id=session.event.user_id, history=history, text=text)
+    return parse_func(session=session, user=user, text=text, args=args)
 
 arg_usage = shell_like_usage("OPTION", [
     {
@@ -57,12 +58,14 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
+# history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 
+TIMES_LIMIT = 15
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True)
-@u.using_user(save_data=False)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=15)
+@u.using_user(save_data=True)
+@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=15, fails=lambda x: x == "NO_LIMIT" or x == False)
 async def _(session: CommandSession, user: u.User):
+    times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
     parser = ArgumentParser(session=session, usage=arg_usage)
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)
     parser.add_argument('text', nargs='*')
@@ -77,41 +80,39 @@ async def _(session: CommandSession, user: u.User):
         return False
     if args.ctrl:
         await send_session_msg(session, parse_control(session, text))
-        return False
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text))))
+        return "NO_LIMIT"
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=times_left_now))
     return True
 
-def get_history(user_id):
-    user_id = str(user_id)
-    user_history = history.get(user_id, [])
+def get_history(user: u.User):
+    user_history = user.ai_history
     if not user_history:
         return ""
     build_str = "历史记录：\n"
     for i, item in enumerate(user_history):
-        build_str += f"{i + 1}. [用户{user_id}]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
+        build_str += f"{i + 1}. [用户{user.id}]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
     build_str += "=" * 15
     build_str += "\n当前对话："
     return build_str
 
-def build_history(user_id, ask, ans):
-    user_id = str(user_id)
-    user_history = history.get(user_id, None)
-    if user_history is None:
-        history[user_id] = []
-    history[user_id].append({
+def build_history(user: u.User, ask, ans):
+    user_history = user.ai_history
+    # if user_history is None:
+    #     user.ai_history = []
+    user.ai_history.append({
         "ask": ask,
         "ans": ans
     })
-    if len(history[user_id]) > 100:
-        del history[user_id][-1]
-    save_history()
+    if len(user.ai_history) > 20:
+        del user.ai_history[-1]
+#     save_history()
 
-def save_history():
-    ai_conf = read_from_path("./ai_configs.json")
-    ai_conf[__plugin_name__]["history"] = history
-    save_to_path("./ai_configs.json", ai_conf, indent=4)
+# def save_history():
+#     ai_conf = read_from_path("./ai_configs.json")
+#     ai_conf[__plugin_name__]["history"] = history
+#     save_to_path("./ai_configs.json", ai_conf, indent=4)
 
-async def talk(session: CommandSession, text):
+async def talk(session: CommandSession, text, user: u.User):
     client = ZhipuAI(api_key=GLM_API_KEY)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
@@ -125,7 +126,7 @@ async def talk(session: CommandSession, text):
     model="glm-4-plus",
     messages=[
             {"role": "system","content": role},
-            {"role": "user","content": f"{get_history(session.event.user_id)}\n{text}"}
+            {"role": "user","content": f"{get_history(user)}\n{text}"}
         ], temperature=0.3)
     task_id = response.id
     task_status = ''
@@ -137,5 +138,5 @@ async def talk(session: CommandSession, text):
         await asyncio.sleep(0.5)
         get_cnt += 1
     ans = result_response.choices[0].message.content
-    build_history(user_id=session.event.user_id, ask=text, ans=ans)
+    build_history(user=user, ask=text, ans=ans)
     return result_response.choices[0].message.content

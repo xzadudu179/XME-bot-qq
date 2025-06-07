@@ -39,8 +39,9 @@ class User:
             desc: str = "",
             celestial_uid=None,
             xme_favorability=0,
-            counters: dict={},
-            achievements: list=[],
+            counters: dict = {},
+            achievements: list = [],
+            ai_history: list[dict] = [],
         ):
         self.id = user_id
         self.desc = desc
@@ -50,6 +51,7 @@ class User:
         self.talked_to_bot = talked_to_bot
         self.counters = counters
         self.achievements = achievements
+        self.ai_history = ai_history
         # print(celestial)
         # 用户所在天体
         self.celestial = None
@@ -120,7 +122,7 @@ class User:
     def __str__(self):
         try:
             # last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
-            last_sign_time = galaxy_date_tools.get_galaxy_date(int(self.counters['sign']["time"]))
+            last_sign_time = galaxy_date_tools.get_galaxy_date(int(timetools.get_valuetime(self.counters['sign']["time"], timetools.TimeUnit.DAY)))
             sign_message = get_message("user", "sign_message", last_sign_time="星历" + last_sign_time)
         except:
             sign_message = get_message("user", "no_sign")
@@ -163,7 +165,8 @@ class User:
             "desc": self.desc,
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
-            "celestial": self.celestial.uid if self.celestial else ""
+            "celestial": self.celestial.uid if self.celestial else "",
+            "ai_history": self.ai_history,
         }
 
     def add_coins(self, amount: int) -> bool:
@@ -277,7 +280,7 @@ def reset_limit(user: User, name: str, unit: timetools.TimeUnit = timetools.Time
         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
         floor_float (bool, optional): 是否向下取整. Defaults to True.
     """
-    time_now = timetools.timenow() / unit.value
+    time_now = timetools.timenow()
     time_now = time_now if not floor_float else math.floor(time_now)
     user.counters[name]["time"] = time_now
     if user.counters[name]["count"] != 0:
@@ -338,14 +341,14 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     """
     verify_timers(user, name)
 
-    time_now = timetools.timenow() / unit.value
+    time_now = timetools.timenow()
     time_now = time_now if not floor_float else math.floor(time_now)
     # True 禁止继续使用指令 因为已受到限制
     time_limit, c_limit = False, False
     print(time_now)
     print(user.counters[name]["time"])
     print(limit)
-    if time_now - user.counters[name]["time"] < limit:
+    if time_now - user.counters[name]["time"] < limit * unit.value:
         print("时间受限制")
         time_limit = True
     else:
@@ -493,6 +496,7 @@ def load_from_dict(data: dict, id: int) -> User:
         celestial_uid=celestial,
         xme_favorability=data.get('xme_favorability', 0),
         counters=data.get('counters', {}),
+        ai_history=data.get('ai_history', [])
     )
     # user.counters = data.get('counters', {})
     # user.xme_favorability = data.get('xme_favorability', 0)

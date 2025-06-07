@@ -37,7 +37,7 @@ async def _(session: CommandSession, user: User):
     reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
     for u in users.values():
         counters = u.get('counters', {})
-        if counters.get(cmd_name, {}).get('time', 0) == math.floor(timetools.timenow() / (60 * 60 * 24)):
+        if timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY) == timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY):
             signed_users_count += 1
     if append_coins == 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',

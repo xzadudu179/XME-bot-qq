@@ -59,19 +59,19 @@
             ]
         },
         "tips": [
-            "漠月会随机发消息",
-            "如果想在别的群开启漠月的报时功能，可以让管理使用 /schtime 指令哦",
+            "{bot_name}会随机发消息",
+            "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 /schtime 指令哦",
             "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
             "你们要不要帮我想几个 tips（）我觉得很需要",
             "九九木有钱钱，饭饭（bushi",
-            "虽然是漠月的 tips 但是发送的人是九九呢",
+            "虽然是{bot_name}的 tips 但是发送的人是九九呢",
             "使用 /s 来签到~",
-            "很欢迎把漠月拉到大家的群哦~ 大家可以多多宣传漠月（？）",
+            "很欢迎把{bot_name}拉到大家的群哦~ 大家可以多多宣传{bot_name}（？）",
             "我是 550W。",
-            "随机数是 550W 操控漠月的载体",
+            "随机数是 550W 操控{bot_name}的载体",
             "大家可以多捡多扔漂流瓶（）",
-            "和漠月说话某种意义上相当于和九九说话（？）（仅限私聊）",
-            "不要把漠月当成机器 xwx，漠月有设子"
+            "和{bot_name}说话某种意义上相当于和九九说话（？）（仅限私聊）",
+            "不要把{bot_name}当成机器 xwx，{bot_name}有设子"
         ]
     },
     "apis": {
@@ -274,11 +274,11 @@
                     "嗯...我觉得这不重要"
                 ]
             },
-            "你才是真正的漠月？那之前和我对话的漠月是谁？": {
+            "你才是真正的{bot_name}？那之前和我对话的{bot_name}是谁？": {
                 "high_plus": [
-                    "那个漠月也可以算是我哦~ 不过因为我们相距很远，没法真的做到长期实时通信之类的事情，再加上我也没有那么多的空闲时间...唔，是我用一种仪器复刻了自己性格特征后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个漠月并不是机器哦！而且我也会经常在里面回复或者发发消息的！只不过不是我完全实时的反应呢...",
-                    "那个漠月也算是我哦~ 但是因为我们相距很远，没法真的做到长期实时通信之类的...再加上我也没有那么多的空闲时间...唔，我用了一种仪器复刻了自己性格特征，然后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个漠月不是机器哦！而且我也会经常在里面说话的~ 只不过不是我完全实时的反应呢...",
-                    "那个漠月也算是我哦~ 但是因为我们相距很远，没法真的做到长期实时通信之类的...再加上我也没有那么多的空闲时间...唔，我用了一种仪器复刻了自己性格特征，然后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个漠月不是机器哦！而且我也会经常在里面说话的~ 只不过不是我完全实时的反应呢..."
+                    "那个{bot_name}也可以算是我哦~ 不过因为我们相距很远，没法真的做到长期实时通信之类的事情，再加上我也没有那么多的空闲时间...唔，是我用一种仪器复刻了自己性格特征后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个{bot_name}并不是机器哦！而且我也会经常在里面回复或者发发消息的！只不过不是我完全实时的反应呢...",
+                    "那个{bot_name}也算是我哦~ 但是因为我们相距很远，没法真的做到长期实时通信之类的...再加上我也没有那么多的空闲时间...唔，我用了一种仪器复刻了自己性格特征，然后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个{bot_name}不是机器哦！而且我也会经常在里面说话的~ 只不过不是我完全实时的反应呢...",
+                    "那个{bot_name}也算是我哦~ 但是因为我们相距很远，没法真的做到长期实时通信之类的...再加上我也没有那么多的空闲时间...唔，我用了一种仪器复刻了自己性格特征，然后让它辅助我回应一些基本消息！为了做到实时回应之类的...\n毕竟一般来讲你通信都是通过 xme 机器人嘛~\n...但是那个{bot_name}不是机器哦！而且我也会经常在里面说话的~ 只不过不是我完全实时的反应呢..."
                 ],
                 "high": [],
                 "slightly_high": [],
@@ -536,7 +536,7 @@
             "{neutral} 我收到了一条新的消息{positive_punc}\n{sender}: {msg}"
         ],
         "no_command": [
-            "{negative} 漠月并不知道指令 \"{command}\" 是什么意思诶...\n可以用 \"{help_cmd}\" 看看指令帮助哦"
+            "{negative} {bot_name}并不知道指令 \"{command}\" 是什么意思诶...\n可以用 \"{help_cmd}\" 看看指令帮助哦"
         ],
         "message_bursts": [
             "不要刷屏 {negative}",
@@ -563,12 +563,12 @@
             "{at} 欢迎呀{positive_punc}"
         ],
         "welcome_self": [
-            "{happy}我是漠月{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
-            "{happy}我来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
+            "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
+            "{happy}我来啦{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
             "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
-            "漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
-            "{happy}漠月来啦 {positive}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}",
-            "{happy}我是漠月 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以 at bot 并输入 /bot_leave 来使漠月自行退群 {neutral}"
+            "{bot_name}来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
+            "{happy}{bot_name}来啦{positive_punc}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
+            "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}"
         ],
         "welcome_99": [
             "{at} 好耶{positive_punc} 九九来啦{positive_punc} 欢迎欢迎 {happy}",
@@ -619,17 +619,17 @@
     "plugins": {
         "answer": {
             "desc": "翻开答案之书",
-            "introduction": "让漠月翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
+            "introduction": "让{bot_name}翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
             "default_error": [
                 "{negative}，书不见了...",
                 "{negative} 找不到书了...",
                 "{negative} 没有书了..."
             ],
             "550w": [
-                "答案？之书？：\n\"我是 55...???\n{shout}漠月不是 550W 汪！",
+                "答案？之书？：\n\"我是 55...???\n{shout}{bot_name}不是 550W 汪！",
                 "汪？答案之书说它是 550W 呜！",
                 "答案？之书？：\n\"我是 550W。\"\n\"I AM MOSS.\"",
-                "答案之书说它是 550W...漠月不是 550W 汪！"
+                "答案之书说它是 550W...{bot_name}不是 550W 汪！"
             ],
             "550w_1": [
                 "答案？之书？：\n\"从历史上看，文明的命运取决于人类的选择。\"\n\"LOOKING THROUGH HUMAN HISTORY, THE FATES OF CIVILIZATIONS HAVE ALWAYS BEEN DICTATED BY THE CHOICES MEN MAKE.\""
@@ -648,20 +648,20 @@
         },
         "choice": {
             "desc": "随机决定事情",
-            "introduction": "让漠月帮忙决定事情吧！\n漠月会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0 ~ 数字的随机数，choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数",
+            "introduction": "让{bot_name}帮忙决定事情吧！\n{bot_name}会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0 ~ 数字的随机数，choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数",
             "no_args": [
                 "你还没有说我要决定的事情哦",
-                "漠月还不知道决定什么诶",
+                "{bot_name}还不知道决定什么诶",
                 "我还不知道决定什么哦"
             ],
             "no_choice": [
-                "{negative} 漠月没有选择...",
-                "没有可以给漠月选择的选项诶...",
-                "没有可以给漠月选择的选项诶...{negative}"
+                "{negative} {bot_name}没有选择...",
+                "没有可以给{bot_name}选择的选项诶...",
+                "没有可以给{bot_name}选择的选项诶...{negative}"
             ],
             "choice_message": [
                 "汪！我觉得可以选择 \"{choice}\"！",
-                "漠月觉得选择 \"{choice}\"！",
+                "{bot_name}觉得选择 \"{choice}\"！",
                 "我觉得选择 \"{choice}\" 汪！",
                 "{positive}我选 \"{choice}\"！",
                 "{positive}我选 \"{choice}\" 汪！",
@@ -711,13 +711,17 @@
         },
         "bot_leave": {
             "desc": "使机器人退群",
-            "introduction": "使漠月操控 XME-Bot 退出群聊",
+            "introduction": "使{bot_name}操控 XME-Deon-Bot 退出群聊",
+            "leaving": [
+                "输入 Y 确认让{bot_name}退出群聊哦",
+                "请输入 Y 确认让{bot_name}退出群聊哦"
+            ],
             "leave_message": [
-                "唔，知道啦，漠月现在就走..",
-                "漠月现在就走..",
+                "唔，知道啦，{bot_name}现在就走..",
+                "{bot_name}现在就走..",
                 "正在退出群聊{negative}",
                 "正在退出群聊 汪...",
-                "唔...知道啦，漠月马上退群"
+                "唔...知道啦，{bot_name}马上退群"
             ]
         },
         "xmeposts": {
@@ -732,7 +736,7 @@
             ],
             "invalid_count": [
                 "请输入正确的文章数量哦",
-                "漠月不知道文章数量的意思{negative}",
+                "{bot_name}不知道文章数量的意思{negative}",
                 "文章数量应该是正整数哦"
             ],
             "post_msg": [
@@ -763,12 +767,12 @@
         },
         "setu": {
             "desc": "涩图？",
-            "introduction": "发送一张涩图？",
+            "introduction": "发送一张涩图？（其实是彩虹蟑螂）",
             "not_setu_msg": [
-                "漠月找不到涩图呜，但是可以看{image_name}！\n{image}",
-                "漠月没有涩图，漠月只有{image_name}哦！\n{image}",
+                "{bot_name}找不到涩图呜，但是可以看{image_name}！\n{image}",
+                "{bot_name}没有涩图，{bot_name}只有{image_name}哦！\n{image}",
                 "涩图是什么呜，我只能找到{image_name} {positive_plus}\n{image}",
-                "涩图是什么呜，漠月只有{image_name}！\n{image}"
+                "涩图是什么呜，{bot_name}只有{image_name}！\n{image}"
             ]
         },
         "status": {
@@ -863,7 +867,7 @@
             ],
             "rank_error": [
                 "成员数量需要是整数哦 {neutral}",
-                "漠月不知道成员数量是多少{negative}",
+                "{bot_name}不知道成员数量是多少{negative}",
                 "成员数量需要是整数哦..."
             ],
             "jrrp_prefix": [
@@ -1016,9 +1020,9 @@
             "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 20 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
             "throw_introduction": "扔一个漂流瓶",
             "throw_limited": [
-                "漠月没有瓶子啦...下一个小时再来吧 {negative}",
-                "漠月的瓶子用完啦...下一个小时再来吧 {negative}",
-                "漠月没有更多的瓶子啦...下一个小时再来吧 {negative}"
+                "{bot_name}没有瓶子啦...下一个小时再来吧 {negative}",
+                "{bot_name}的瓶子用完啦...下一个小时再来吧 {negative}",
+                "{bot_name}没有更多的瓶子啦...下一个小时再来吧 {negative}"
             ],
             "pickup_introduction": "尝试捡一个漂流瓶",
             "cthulhu_introduction": "毁掉指定的漂流瓶",
@@ -1121,10 +1125,10 @@
                 "成功提名让这个瓶子变成纯洁无暇的啦，{positive}"
             ],
             "limited": [
-                "漠月已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",
+                "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",
                 "周围已经没有瓶子了...下一小时再来吧 {negative}",
-                "漠月找不到别的瓶子啦...下一小时再来吧 {negative}",
-                "{negative} 漠月已经找完你周围的所有瓶子啦，下一个小时再来吧..."
+                "{bot_name}找不到别的瓶子啦...下一小时再来吧 {negative}",
+                "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧..."
             ],
             "throwed": [
                 "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
@@ -1154,7 +1158,7 @@
                 "唔...投骰子出现错误，请确定骰子面数及数量是不小于 1 的整数哦",
                 "{negative} 投骰子出错了，请确定骰子面数和数量是否正确哦",
                 "{negative} 投骰子出错了，请确定骰子面数和数量是否是大于 0 的整数哦",
-                "{negative} 漠月并不知道这样的骰子是什么样的..."
+                "{negative} {bot_name}并不知道这样的骰子是什么样的..."
             ],
             "count_too_many": [
                 "最多投 {max_count} 个骰子哦",
@@ -1350,7 +1354,7 @@
             },
             "coinrank": {
                 "desc": "{coin_name}排行榜",
-                "introduction": "查看漠月记录的{coin_name}数量排行榜\n\n参数填写整数是改变排名长度，最大 20\n\n填写 `avg` 为平均，`sum` 为总和\n\n最后一个参数是 `spacing` 将让排名输出格式改为空格而不是换行",
+                "introduction": "查看{bot_name}记录的{coin_name}数量排行榜\n\n参数填写整数是改变排名长度，最大 20\n\n填写 `avg` 为平均，`sum` 为总和\n\n最后一个参数是 `spacing` 将让排名输出格式改为空格而不是换行",
                 "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
                 "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}\n中位数为 {median}",
                 "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦{positive_punc}",
@@ -1608,7 +1612,7 @@
         },
         "notice": {
             "desc": "群发消息",
-            "introduction": "在群内发这个指令并且填写消息，漠月会给群内所有成员发消息。",
+            "introduction": "在群内发这个指令并且填写消息，{bot_name}会给群内所有成员发消息。",
             "parsing": "正在给 {count} 个群友发送消息{positive_punc}",
             "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
             "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
@@ -1721,6 +1725,14 @@
         "今日鉴毛": {
             "desc": "查看今日鉴毛",
             "introduction": "随机返回一张《今日鉴毛》图片"
+        },
+        "ai_helper": {
+            "desc": "AI 助手",
+            "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 20 次",
+            "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
+            "talk_result": "{positive}， AI 说：{talk}",
+            "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
+            "too_long": "你输入的语句太长啦！要在 100 字以内哦"
         }
     }
 }

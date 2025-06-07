@@ -96,6 +96,7 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
             positive_punc=str_choice(feedbacks['positive_punc']),
             coin_name=get_character_item("user", "coin_name"),
             coin_pronoun=get_character_item("user", "coin_pronoun"),
+            bot_name=get_character_item("bot_info", "name"),
             cmd_sep=config.COMMAND_START[0]
         )
     except KeyError as ex:

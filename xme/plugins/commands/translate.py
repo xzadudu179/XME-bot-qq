@@ -15,18 +15,7 @@ import traceback
 import asyncio
 from zhipuai import ZhipuAI
 
-arg_usage = shell_like_usage("OPTION", [
-    {
-        "name": "help",
-        "abbr": "h",
-        "desc": "查看帮助"
-    },
-    {
-        "name": "language",
-        "abbr": "l",
-        "desc": "指定要翻译成的语言"
-    }
-])
+
 
 alias = ['trans']
 __plugin_name__ = 'translate'

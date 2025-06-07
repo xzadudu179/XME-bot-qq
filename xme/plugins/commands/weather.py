@@ -124,11 +124,16 @@ def ouptut_weather_now(weather, air, moon):
     moonrise = moon.get("moonrise", None)
     moonset = moon.get("moonset", None)
     print(moon)
+    print("moonrise", moonrise)
+    print("moonset", moonset)
     moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]])]["name"]
     moon_info = f"今日月相为{moon_phase}"
     if moonrise:
         rise_difference = -int(get_time_difference(iso_format_time(moonrise)))
-        set_difference = -int(get_time_difference(iso_format_time(moonset)))
+        if moonset:
+            set_difference = -int(get_time_difference(iso_format_time(moonset)))
+        else:
+            set_difference = 0
         # print("Rd", rise_difference, "sd", set_difference)
         if rise_difference > 0 and set_difference < 0:
             moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]

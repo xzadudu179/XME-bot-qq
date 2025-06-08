@@ -341,14 +341,14 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     """
     verify_timers(user, name)
 
-    time_now = timetools.timenow()
+    time_now = timetools.get_valuetime(timetools.timenow(), unit)
     time_now = time_now if not floor_float else math.floor(time_now)
     # True 禁止继续使用指令 因为已受到限制
     time_limit, c_limit = False, False
     print(time_now)
     print(user.counters[name]["time"])
     print(limit)
-    if time_now - user.counters[name]["time"] < limit * unit.value:
+    if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < limit:
         print("时间受限制")
         time_limit = True
     else:

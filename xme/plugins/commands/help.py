@@ -93,7 +93,7 @@ async def _(session: CommandSession, user: u.User):
     new_messages.append(change_group_message_content(msg_dict, prefix + '\n' + suffix))
     for page in pages:
         new_messages.append(change_group_message_content(msg_dict, page))
-    new_messages.append(change_group_message_content(msg_dict,  get_message("plugins", __plugin_name__, "other_help_2")))
+    # new_messages.append(change_group_message_content(msg_dict,  get_message("plugins", __plugin_name__, "other_help_2")))
     for page in pages_plugin:
         new_messages.append(change_group_message_content(msg_dict, page))
     # new_messages.append(change_group_message_content(msg_dict, get_message("plugins", __plugin_name__, "other_help_2")))

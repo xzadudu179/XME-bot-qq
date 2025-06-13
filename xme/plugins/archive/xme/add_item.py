@@ -4,11 +4,13 @@ from .classes.user import *
 from .classes.database import *
 import config
 from nonebot import on_command, CommandSession
+from xme.xmetools.bottools import permission
 from .tools.pre_checks import *
 from .tools.find_item import *
 
 additem_alias = ["添加物品"]
-@on_command('additem', aliases=additem_alias, only_to_me=True, permission=lambda x: x.from_group(config.GROUPS_WHITELIST) & x.is_superuser)
+@on_command('additem', aliases=additem_alias, only_to_me=True, permission=lambda _: True)
+@permission(lambda sender: sender.from_group(config.GROUPS_WHITELIST) or sender.is_superuser)
 @pre_check() # 执行前检查
 async def _(session: CommandSession, user: User):
     args = session.current_arg_text.strip().split(" ")

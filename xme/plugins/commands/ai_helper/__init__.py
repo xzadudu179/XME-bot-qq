@@ -63,7 +63,7 @@ __plugin_usage__ = str(CommandDoc(
 TIMES_LIMIT = 15
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True)
 @u.using_user(save_data=True)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=15, fails=lambda x: x == 1 or x == False)
+@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 1 or x == False)
 async def _(session: CommandSession, user: u.User):
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
     parser = ArgumentParser(session=session, usage=arg_usage)

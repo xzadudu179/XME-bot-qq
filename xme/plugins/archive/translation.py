@@ -5,6 +5,7 @@ import traceback
 from json import JSONDecodeError
 import keys
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.bottools import permission
 import xme.xmetools.texttools as t
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 import json
@@ -33,7 +34,8 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-@on_command('translate', aliases=alias, only_to_me=False, shell_like=True, permission=lambda x: x.is_groupchat)
+@on_command('translate', aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
+@permission(lambda sender: sender.is_groupchat)
 async def _(session: CommandSession):
     parser = ArgumentParser(session=session, usage=__plugin_usage__)
     parser.add_argument('-l', '--language')

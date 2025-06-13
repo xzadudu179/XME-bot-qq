@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(算式)',
-    permissions=[],
+    permissions=["是 SUPERUSER"],
     alias=alias
 ))
 

@@ -52,7 +52,7 @@ class User:
         self.counters = counters
         self.achievements = achievements
         self.ai_history = ai_history
-        # print(celestial)
+        # print(self.ai_history)
         # 用户所在天体
         self.celestial = None
         if celestial_uid is not None:

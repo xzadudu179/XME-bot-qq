@@ -9,7 +9,7 @@ from xme.xmetools.bottools import permission
 cthulhu_alias = ["毁坏瓶子", "break", "break_bottle"]
 command_name = 'cthulhu'
 @on_command(command_name, aliases=cthulhu_alias, only_to_me=False, permission=lambda x: True)
-@permission(lambda sender: sender.is_superuser)
+@permission(lambda sender: sender.is_superuser, permission_help="是 SUPERUSER")
 async def _(session: CommandSession):
     message = ''
     arg_text = session.current_arg_text.strip()

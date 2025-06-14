@@ -83,10 +83,10 @@
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
         "anno_message": "{anno}",
         "no_permission": [
-            "权限不足哦 {negative}",
-            "你的权限不足哦 {negative}",
-            "你没有足够的权限诶...{negative}",
-            "你没有足够的权限呢...{negative}"
+            "权限不足哦 {negative}\n以下是权限要求：{permission}",
+            "你的权限不足哦 {negative}\n这个指令需要这些权限：{permission}",
+            "你没有足够的权限诶...{negative}\n这是权限要求：{permission}",
+            "你没有足够的权限呢...{negative}\n以下是权限要求：{permission}"
         ],
         "achievement_message": [
             "你达成了成就 \"{achievement}\" {positive}",

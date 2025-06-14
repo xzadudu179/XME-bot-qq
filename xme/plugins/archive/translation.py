@@ -7,7 +7,7 @@ import keys
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import permission
 import xme.xmetools.texttools as t
-from xme.xmetools.doctools import CommandDoc, shell_like_usage
+from xme.xmetools.doctools import CommandDoc, shell_like_usage, DEFAULT_PERMISSIONS
 import json
 
 alias = ['翻译', 'trans']
@@ -24,18 +24,19 @@ arg_usage = shell_like_usage("OPTION", [
     }
 ])
 
+permissions = []
 __plugin_name__ = 'translate'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc='翻译内容',
     introduction='使用 ChatGLM-4 模型进行文本翻译，参数可填如英语 法语 俄语 中文等\n注意：该指令可能将会在不久后删除',
     usage=f'(需要翻译的文本内容) [OPTION]\n{arg_usage}',
-    permissions=[],
+    permissions=permissions,
     alias=alias
 ))
 
 @on_command('translate', aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
-@permission(lambda sender: sender.is_groupchat)
+@permission(lambda sender: sender.is_groupchat, permission_help=DEFAULT_PERMISSIONS)
 async def _(session: CommandSession):
     parser = ArgumentParser(session=session, usage=__plugin_usage__)
     parser.add_argument('-l', '--language')

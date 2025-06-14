@@ -13,7 +13,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zhipuai import ZhipuAI
 
 cmds = {
-        "hisclear": {
+        "clear": {
             "content": clear_history,
             "args": "",
             "desc": "清除你的所有对话历史"
@@ -53,7 +53,7 @@ __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(对话内容) [OPTION]',
+    usage=f'(对话内容) [OPTION]\n{arg_usage}',
     permissions=[],
     alias=alias
 ))
@@ -63,7 +63,7 @@ __plugin_usage__ = str(CommandDoc(
 TIMES_LIMIT = 15
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True)
 @u.using_user(save_data=True)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 1 or x == False)
+@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or x == False)
 async def _(session: CommandSession, user: u.User):
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
     parser = ArgumentParser(session=session, usage=arg_usage)
@@ -80,7 +80,7 @@ async def _(session: CommandSession, user: u.User):
         return False
     if args.ctrl:
         await send_session_msg(session, parse_control(session, text, user))
-        return 1
+        return 2
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=times_left_now))
     return True
 

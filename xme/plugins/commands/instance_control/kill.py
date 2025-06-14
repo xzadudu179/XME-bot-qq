@@ -8,7 +8,7 @@ from xme.xmetools.bottools import permission
 kill_alias = ['inst_关机', 'inst_shutdown']
 cmd_name = 'inst_kill'
 @on_command(cmd_name, aliases=kill_alias, only_to_me=True, permission=lambda x: True)
-@permission(lambda sender: sender.is_superuser)
+@permission(lambda sender: sender.is_superuser, permission_help="是 SUPERUSER")
 async def _(session: CommandSession):
     reply = (await session.aget(prompt=f"{get_message(ic.__plugin_name__, 'kill_prompt')}"))
     if reply.strip() != "Y":

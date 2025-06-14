@@ -7,6 +7,7 @@ from xme.xmetools.bottools import permission
 from character import get_message
 
 alias = ['防撤回', "precall", "防撤", '防撤回功能']
+permissions = ["在群内使用", "是 SUPERUSER"]
 __plugin_name__ = 'prevrecall'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
@@ -15,12 +16,12 @@ __plugin_usage__ = str(CommandDoc(
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     # introduction='防撤回功能相关',
     usage=f'<开|关|T|F>',
-    permissions=["在群聊内", "是 SUPERUSER"],
+    permissions=permissions,
     alias=alias
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
-@permission(lambda sender: (sender.is_groupchat and sender.is_superuser))
+@permission(lambda sender: (sender.is_groupchat and sender.is_superuser), permission_help=" & ".join(permissions))
 async def _(session: CommandSession):
     group_id = str(session.event.group_id)
     settings = {}

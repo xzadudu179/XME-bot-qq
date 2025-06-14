@@ -1,6 +1,7 @@
 from nonebot import CommandSession
 from xme.plugins.commands.games.play import cmd_name
 from .game import Game
+from xme.xmetools.bottools import permission
 from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.plugins.commands.xme_user.classes import user
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
@@ -106,6 +107,7 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
     return result
 
 @user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
+@permission(lambda sender: sender.is_privatechat, no_perm_result=return_state(f"{get_message('config', 'no_permission', permission='在私聊使用')}", "ERROR"), silent=True)
 async def play_game(session: CommandSession, u: user.User, args: dict):
     BASIC_AWARD = 10
     MAX_RANGE = 34359738368

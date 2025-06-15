@@ -34,10 +34,10 @@ def get_comment_html(messy_rate: int | float, comment_list: list[dict]):
 
 def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, views, likes, comments_list, custom_suffix=""):
     comments = get_comment_html(messy_rate, comments_list)
+    formated_content = [f'<p class="main_content">{messy_string(c, messy_rate).replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;")}</p>' for c in content.replace("\n", "\r").split("\r")]
     info_texts = [
         "{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,
-        '"{content}"'.format(content=content),
         'by "{sender}"'.format(sender=limit_str_len(sender, 15)),
         "拾取 {views} - 点赞 {likes}".format(views=views, likes=likes),
         "- 漂流瓶留言 -",
@@ -71,6 +71,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
         .main_content {
             font-size: 1.2em;
             font-weight: bold;
+            text-indent: 2em;
         }
 
         .small {
@@ -189,9 +190,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
                         style="color: #aaa; float: right; padding: 2px 5px;">{info1}</span>
                 </p>
                 <hr>
-                <p class="main_content" style="text-indent: 2em;">
-                    {info2}
-                </p>
+                {info2}
                 <hr>
                 <ul class="infoul">
                     <li>{info3}</li>
@@ -208,7 +207,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
         </body>
     </html>
     """
-    return html_style + html_text.format(info0=info_texts[0], info1=info_texts[1], info2=info_texts[2], info3=info_texts[3], info4=info_texts[4], info5=info_texts[5], comments=comments, suffix=default_suffix if not custom_suffix else custom_suffix)
+    return html_style + html_text.format(info0=info_texts[0], info1=info_texts[1], info2="\n".join(formated_content), info3=info_texts[2], info4=info_texts[3], info5=info_texts[4], comments=comments, suffix=default_suffix if not custom_suffix else custom_suffix)
 
 
 def get_card_image(html_str) -> Image.Image:

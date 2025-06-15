@@ -5,7 +5,7 @@ from xme.xmetools import filetools
 import asyncio
 from aiocqhttp import MessageSegment
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageChops
 import pyautogui
 from xme.xmetools.texttools import hash_byte
 import mss
@@ -13,6 +13,26 @@ import requests
 
 def read_image(path):
     image = Image.open(path)
+    return image
+
+def crop_transparent_area(input_path) -> Image.Image:
+    """将透明底 PNG 图片的外侧透明部分切除
+
+    Args:
+        input_path (str): 需要处理的图片路径
+
+    Returns:
+        Image.Image: 处理完成的图片
+    """
+    image = Image.open(input_path).convert("RGBA")
+    # image = image.convert("RGBA")
+    bg = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    diff = ImageChops.difference(image, bg)
+    bbox = diff.getbbox()
+
+    if bbox:
+        cropped = image.crop(bbox)
+        return cropped
     return image
 
 def screenshot(num=1):

@@ -5,15 +5,17 @@ from xme.xmetools import texttools
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
 import config
 from nonebot import on_command, CommandSession
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'
-@on_command(command_name, aliases=throw_alias, only_to_me=False, permission=lambda x: x.is_groupchat)
+@on_command(command_name, aliases=throw_alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
 @u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'throw_limited'), unit=TimeUnit.HOUR, count_limit=5)
+@permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user):
     MAX_LENGTH = 200
     MAX_LINES = 10

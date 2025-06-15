@@ -1057,6 +1057,11 @@
                 "获得了 {count} 个赞{positive_punc}"
             ],
             "no_like_message": "还没有任何赞 {neutral}",
+            "bottle_picked_prefix": [
+                "你捡到了一个漂流瓶{positive_punc}",
+                "你捡到了一个漂流瓶 {positive}",
+                "出现了一个漂流瓶{positive_punc}"
+            ],
             "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}{group_now}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}{sender_now}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
             "response_prompt": [
                 "你可以马上发送 \"-like\" 以点赞，或发送 \"-rep\" 以举报 {neutral}"
@@ -1098,6 +1103,31 @@
                 "点赞成功 {positive} 瓶子好像变得更稳定啦！",
                 "点赞成功啦{positive_punc} 瓶子似乎变得更稳定了！"
             ],
+            "commented": [
+                "成功向 \"{id}\" 号瓶子发送了一条留言{positive_punc}",
+                "成功留言了 \"{id}\" 号瓶子！{positive}"
+            ],
+            "comment_too_long": [
+                "留言字数太多啦！需要在 {count} 个字以内哦{positive_punc}，你的留言已经有 {input_len} 个字啦",
+                "留言字数太多啦！不能超过 {count} 个字哦，你的留言已经有 {input_len} 个字啦",
+                "留言字数太多啦 {neutral} 不能超过 {count} 个字哦，你的留言已经有 {input_len} 个字啦"
+            ],
+            "comment_too_many": [
+                "这里的留言板已经满啦 {neutral}",
+                "这里的留言板已经塞不下更多留言啦 {neutral}"
+            ],
+            "pured": [
+                "成功申请纯洁无暇{positive_punc} {positive}",
+                "申请纯洁无暇成功啦{positive_punc} {positive}",
+                "成功提名让这个瓶子变成纯洁无暇的啦，{positive}"
+            ],
+            "liked_comment": [
+                "成功给 #{id} 号留言点赞啦"
+            ],
+            "like_comment_failed": [
+                "找不到 #{id} 号的留言呢...确定是第 {bottle} 号瓶子的留言以及是整数嘛？",
+                "找不到 #{id} 号的留言诶...确定是第 {bottle} 号瓶子的留言以及是整数嘛？"
+            ],
             "reported": [
                 "举报成功",
                 "举报成功哦",
@@ -1120,9 +1150,6 @@
                 "瓶子内容太长啦...最多 {max_lines} 行哦",
                 "瓶子塞不下啦！最多写 {max_lines} 行哦",
                 "{negative} 瓶子塞不下啦...最多写 {max_lines} 行哦"
-            ],
-            "pureing": [
-                "成功提名让这个瓶子变成纯洁无暇的啦，{positive}"
             ],
             "limited": [
                 "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",

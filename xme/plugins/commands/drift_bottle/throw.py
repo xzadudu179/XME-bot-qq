@@ -63,7 +63,7 @@ async def _(session: CommandSession, user):
         "send_time": datetime.now().strftime(format="%Y年%m月%d日 %H:%M:%S"),
         "sender_id": user['user_id'],
         "comments": [],
-        "pure_vote_users": {},
+        # "pure_vote_users": {},
         "group_id": user['group_id'],
     }
     bottles_dict['bottles'][id] = bottle_content

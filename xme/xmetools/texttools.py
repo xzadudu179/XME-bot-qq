@@ -21,6 +21,93 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
         b = ''.join(lazy_pinyin(b))
     return SequenceMatcher(None, a, b).ratio()
 
+def dec_to_chinese(num):
+    """将数字转变为中文数字，例如 100 -> 一百
+
+    Args:
+        num (str | float | int): 数字
+
+    Raises:
+        ValueError: 输入不是数字类型
+
+    Returns:
+        str: 中文数字
+    """
+    if not isinstance(num, int) and not isinstance(num, float) and not str(num).isdigit():
+        raise ValueError(f"{num} 不是数字类型")
+    str_num = str(num)
+    num_left, num_right = str_num.split(".") if "." in str_num else (str_num, "")
+    # print(num_left, num_right)
+    digit_dict = {
+        1: "十",
+        2: "百",
+        3: "千",
+        4: "万",
+        8: "亿"
+    }
+    num_dict = {
+        "0": "零",
+        "1": "一",
+        "2": "二",
+        "3": "三",
+        "4": "四",
+        "5": "五",
+        "6": "六",
+        "7": "七",
+        "8": "八",
+        "9": "九",
+        ".": "点",
+    }
+    output = ""
+    last_0 = False
+    first_0 = False
+    for digit_num, s in enumerate(reversed(num_left)):
+        # print(s)
+        num_reversed = num_left[::-1]
+        digit_str = digit_dict.get(digit_num, None)
+        if digit_num == 0 and s == "0":
+            first_0 = True
+        if digit_num == 5:
+            # print(s, first_0)
+            if ((s == "0" and first_0) or (s == "1" and len(num_left) == digit_num + 1)) and len(num_left) < 9:
+                output += "万"
+            output += dec_to_chinese(num_reversed[4:8][::-1])[::-1]
+            continue
+        elif digit_num == 8:
+            # if s == "0" and first_0:
+            #     output += "亿"
+            output += digit_str + dec_to_chinese(num_reversed[8:][::-1])[::-1]
+            continue
+
+        if first_0 and s == "0":
+            continue
+
+        if digit_str is not None:
+            if s == "0" and not first_0 and digit_num != len(num_left) - 1 and not last_0:
+                last_0 = True
+                # print("0 continue")
+                output += num_dict.get(s, '')
+                continue
+            elif s != "0":
+                last_0 = False
+            if last_0:
+                continue
+            if s == "1" and digit_str == "十" and len(num_left) == digit_num + 1:
+                output += digit_str
+            elif digit_str in ("万", "亿") and len(num_left) > digit_num + 1:
+                output += digit_str
+            else:
+                output += f"{digit_str}{num_dict.get(s, '')}"
+            # print(num_dict.get(s, ""), digit_str)
+        elif digit_num == 0 and s != "0":
+            output += f"{num_dict.get(s, '')}"
+
+    output_right = ""
+    for s in num_right:
+        output_right += num_dict.get(s, '')
+    return "".join(list(reversed(output))) + ("点" + output_right if num_right else "")
+
+
 def find_symmetric_around(s: str, center: str) -> tuple[str, str]:
     if center not in s:
         return "", 0

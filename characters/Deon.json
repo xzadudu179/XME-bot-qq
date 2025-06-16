@@ -1316,9 +1316,9 @@
                     "你是今天第一个签到的哦 {positive_plus}给你 {first_award} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
                 ],
                 "sign_rank": [
-                    "你是今天第 {count} 个签到的哦 {neutral}",
-                    "你是今天第 {count} 个签到的哦{positive_punc}",
-                    "你是今天第 {count} 位签到的{positive_punc}"
+                    "你是今天第{count}个签到的哦 {neutral}",
+                    "你是今天第{count}个签到的哦{positive_punc}",
+                    "你是今天第{count}位签到的{positive_punc}"
                 ]
             },
             "lottery": {
@@ -1360,9 +1360,9 @@
                     "但是没有任何{coin_name}出来...{negative}"
                 ],
                 "result": [
-                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
-                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
-                    "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机{times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times}！{result_content}\n你还剩下 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}，{positive}",
+                    "你将 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name} {neutral}",
+                    "你把 {count} {coin_pronoun}{coin_name}放入了抽奖机 {times}！{result_content}\n你还剩 {times_left} 次抽奖机会和 {coins_left} {coin_pronoun}{coin_name}"
                 ],
                 "too_many_coins": [
                     "{count} {coin_pronoun}{coin_name}太多啦！不能多于 {count_max} 呢...",
@@ -1762,7 +1762,8 @@
             "desc": "AI 助手",
             "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次",
             "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
-            "talk_result": "{positive}， AI 说：{talk}\n=======================\n你这小时还剩下 {times_left_now} 次对话机会哦 {neutral}",
+            "talking_to_ai": "正在询问 AI！ {positive}",
+            "talk_result": "{positive}， AI 说：{talk}\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}",
             "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
             "too_long": "你输入的语句太长啦！要在 300 字以内哦"
         }

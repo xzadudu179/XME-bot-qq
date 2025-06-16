@@ -32,22 +32,23 @@ def get_comment_html(messy_rate: int | float, comment_list: list[dict]):
         comment_htmls.append(comment_html_content)
     return "\n".join(comment_htmls)
 
-def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, views, likes, comments_list, custom_suffix=""):
+def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_suffix=""):
+    content = f'"{content}"'
     comments = get_comment_html(messy_rate, comments_list)
     formated_content = [f'<p class="main_content">{messy_string(c, messy_rate).replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;")}</p>' for c in content.replace("\n", "\r").split("\r")]
     info_texts = [
-        "{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
+        "#{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,
-        'by "{sender}"'.format(sender=limit_str_len(sender, 15)),
+        'by "{sender}"（"{group}"）'.format(sender=limit_str_len(sender, 10), group=limit_str_len(group, 10)),
         "拾取 {views} - 点赞 {likes}".format(views=views, likes=likes),
         "- 漂流瓶留言 -",
     ]
     info_texts = [messy_string(i, messy_rate).replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;") for i in info_texts]
-    print(info_texts)
+    # print(info_texts)
     default_suffix = """<p class="colored">- 发送下面的消息来执行对应操作 -</p>
                 <ul class="operateul">
                     <li><p><span class="code">-like</span> / <span class="code">-rep</span> / <span class="code">-pure</span></p><p>点赞 / 举报 / 申请纯净</p></li>
-                    <li><p><span class="code">-say</span> / <span class="code">-likesay <span style="color: #3cd3d8;">(留言编号)</span></span></p><p>留言 / 点赞留言</p></li>
+                    <li><p><span class="code">-say <span style="color: #3cd3d8;">(留言内容)</span></span> / <span class="code">-likesay <span style="color: #3cd3d8;">(留言编号)</span></span></p><p>留言 / 点赞留言</p></li>
                 </ul>"""
     html_style = """<style>
                 body {

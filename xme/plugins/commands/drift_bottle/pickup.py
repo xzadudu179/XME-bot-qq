@@ -53,11 +53,12 @@ async def comment(session, bottle, index, user_id, comment_content):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "comment_too_many", count=MAX_COMMENT_COUNT))
         return False
     # 评论成功
-    jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'comments', set_method=lambda v: v.append({
+    jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'comments', set_method=lambda v: v + [{
         "sender": sender,
+        "sender_id": user_id,
         "content": comment_content,
         "likes": 0
-    }))
+    }])
     print("评论了")
     for superuser in config.SUPERUSERS:
         await session.bot.send_private_msg(user_id=superuser,message=f"{sender} ({user_id}) 评论了 {index} 号漂流瓶：{comment_content}")
@@ -87,28 +88,35 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle"))
         # await send_msg(session, "海里一个瓶子里都没有...")
         return False
-    pickedup = randtools.random_percent(90)
+    pickedup = randtools.random_percent(100)
     if not pickedup:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
         return False
-    index, bottle = random.choice(list(bottles.items()))
-    print("捡到了瓶子")
-    index_is_int = True
-    try:
-        int(index)
-    except Exception as ex:
-        print(f"因为 {ex} 所以瓶子 id 不是整数")
-        index_is_int = False
+    is_special_bottle = randtools.random_percent(0.5)
+    special_bottles = [(i, b) for i, b in list(bottles.items()) if (not i.isdigit() or i == "-179") and not "PURE" in i]
+    # print(special_bottles)
+    if is_special_bottle and len(special_bottles) >= 1:
+        index, bottle = random.choice(special_bottles)
+        print("捡到了彩蛋瓶子")
+    else:
+        index, bottle = random.choice(list(bottles.items()))
+        print("捡到了瓶子")
+    index_is_int = index.isdigit()
+    # try:
+    #     int(index)
+    # except Exception as ex:
+    #     print(f"因为 {ex} 所以瓶子 id 不是整数")
+    #     index_is_int = False
     # 混乱值根据浏览量计算
-    messy_rate: float = min(100, max(0, bottle['views'] * 2 - bottle['likes'] * 3)) if index_is_int or str(index) != '-179' else 0
+    messy_rate: float = min(100, max(0, bottle['views'] * 2 - bottle['likes'] * 3)) if index_is_int or index != '-179' else 0
     # 增加浏览量以及构造卡片
     # ----------------------------
     # view_message = get_message("plugins", __plugin_name__, "view_message", times=bottle['views'] + 1) if (bottle['views'] + 1) > 1 else get_message("plugins", __plugin_name__, "no_view_message", times=bottle['views'] + 1)
     jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'views', set_method=lambda v: v + 1)
     # like_message = get_message("plugins", __plugin_name__, "like_message", count=bottle['likes']) if bottle['likes'] > 0 else get_message("plugins", __plugin_name__, "no_like_message", count=bottle['likes'])
     messy_rate_string = ""
-    if str(index) == '-179':
+    if index == '-179':
         messy_rate_string = "##未知##"
         messy_rate = random.randint(0, 100)
     elif not index_is_int:
@@ -158,6 +166,7 @@ async def _(session: CommandSession, user: u.User):
         date=bottle['send_time'],
         content=bottle['content'],
         sender=bottle['sender'],
+        group=bottle['from_group'],
         views=bottle['views'] + 1,
         likes=bottle['likes'],
         comments_list=bottle['comments'],

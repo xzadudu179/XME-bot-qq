@@ -1134,9 +1134,9 @@
                 "唔...举报成功"
             ],
             "nothing_to_throw": [
-                "漂流瓶似乎没有内容呢 {neutral}\n格式：\n{command_name} (漂流瓶内容)",
-                "漂流瓶里面好像什么都没有诶...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦",
-                "漂流瓶里面好像什么都没有...要用\n{command_name} (漂流瓶内容)\n来扔漂流瓶哦"
+                "漂流瓶似乎没有内容呢 {neutral}\n格式：\n{command_name} 漂流瓶内容",
+                "漂流瓶里面好像什么都没有诶...要用\n{command_name} 漂流瓶内容\n来扔漂流瓶哦",
+                "漂流瓶里面好像什么都没有...要用\n{command_name} 漂流瓶内容\n来扔漂流瓶哦"
             ],
             "content_too_many": [
                 "瓶子的内容太多啦 ({text_len}字)！要 {max_length} 字以内哦",
@@ -1171,10 +1171,15 @@
             ],
             "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
             "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
-            "cthulhu_error_bottles": "其中这些 id 的瓶子有问题...:\n{ids}",
+            "error_bottles": "其中这些 id 的瓶子有问题...:\n{ids}",
             "cthulhu_success": "成功将 {ids} 号的瓶子混乱了！",
+            "bottle_not_exist": "瓶子不存在",
+            "pure_success": "成功将 {ids} 号的瓶子净化了！",
+            "bottle_special": "这个瓶子比较奇怪...无法对它进行任何操作呢",
+            "already_pure": "这个瓶子已经是纯洁无暇的了 {neutral}",
             "cthulhu_bottle_already_broken": "已经被混乱了",
-            "cthulhu_fail": "混乱瓶子失败了..."
+            "cthulhu_fail": "混乱瓶子失败了...",
+            "pure_fail": "净化瓶子失败了..."
         },
         "骰子": {
             "desc": "骰子相关指令",

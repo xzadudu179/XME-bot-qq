@@ -2,6 +2,7 @@ __plugin_name__ = '漂流瓶'
 from .throw import *
 from .pickup import *
 from .cthulhu import *
+from .pure import *
 from xme.xmetools.doctools import PluginDoc
 from character import get_message
 

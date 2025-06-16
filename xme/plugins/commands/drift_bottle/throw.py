@@ -17,7 +17,7 @@ command_name = 'throw'
 @u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'throw_limited'), unit=TimeUnit.HOUR, count_limit=5)
 @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user):
-    MAX_LENGTH = 200
+    MAX_LENGTH = 300
     MAX_LINES = 10
     # raw_arg_msg = session.current_arg.strip()
     # arg, images = text_tools.get_image_str(raw_arg_msg)

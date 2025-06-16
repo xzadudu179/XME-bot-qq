@@ -22,8 +22,8 @@ async def _(session: CommandSession):
     error_args = []
     for arg in args:
         bottle = bottles.get(arg, None)
-        if not bottles.get(arg, None):
-            error_args.append((arg, get_message("plugins", __plugin_name__, 'cthulhu_bottle_not_exist')))
+        if bottle is None:
+            error_args.append((arg, get_message("plugins", __plugin_name__, 'bottle_not_exist')))
             # await send_msg(session, get_message("plugins", __plugin_name__, 'cthulhu_bottle_not_exist', id=arg))
             # return
             continue
@@ -35,7 +35,7 @@ async def _(session: CommandSession):
         except ValueError:
             is_special = True
         if is_special:
-            error_args.append((arg, get_message("plugins", __plugin_name__, 'cthulhu_bottle_special')))
+            error_args.append((arg, get_message("plugins", __plugin_name__, 'bottle_special')))
             continue
         if bottle['views'] == 114514:
             error_args.append((arg, get_message("plugins", __plugin_name__, 'cthulhu_bottle_already_broken')))
@@ -44,7 +44,7 @@ async def _(session: CommandSession):
     for error_arg in error_args:
         args.remove(error_arg[0])
     if len(error_args) > 0:
-        message += get_message("plugins", __plugin_name__, 'cthulhu_error_bottles', ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
+        message += get_message("plugins", __plugin_name__, 'error_bottles', ids='\n'.join([f'{i + 1}. #{item} {info}' for i, (item, info) in enumerate(error_args)]))
     prefix = get_message("plugins", __plugin_name__, 'cthulhu_fail')
     if args:
         prefix = get_message("plugins", __plugin_name__, 'cthulhu_success', ids=', '.join([f'#{arg}' for arg in args]))

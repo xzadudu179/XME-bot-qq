@@ -3,7 +3,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 import math
 from xme.xmetools import timetools
-from xme.xmetools.texttools import dec_to_chinese
+# from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools import randtools
 from nonebot.permission import SenderRoles
 import random
@@ -57,7 +57,7 @@ async def _(session: CommandSession, user: User):
         user.add_coins(FIRST_AWARD)
         sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD,  )
     else:
-        sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=dec_to_chinese(signed_users_count + 1))
+        sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=signed_users_count + 1)
     message += "\n" + sign_message + reaction
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()

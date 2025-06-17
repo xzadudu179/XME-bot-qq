@@ -3,6 +3,7 @@ from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from nonebot.argparse import ArgumentParser
 from .commands import clear_history
+import cn2an
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
@@ -83,7 +84,7 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, parse_control(session, text, user))
         return 2
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=times_left_now))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)))
     return True
 
 def get_history(user: u.User):

@@ -90,7 +90,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
     location_id = location_info["id"]
     warns_output = "======※预警信息※======\n"
     weather = ouptut_weather_now(await get_weather(location_id), await get_air(location_id), await get_moon(location_id))
-    warns_output += warnings[0]
+    warns_output += warnings[0] + "\n" + get_message("plugins", __plugin_name__, 'warning_tips')
     output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
     tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
     if user_location_info:

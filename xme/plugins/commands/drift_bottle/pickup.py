@@ -43,6 +43,10 @@ async def likesay(session, bottle, index, comment_index: str):
 
 async def comment(session, bottle, index, user_id, comment_content):
     content = get_message("plugins", __plugin_name__, "commented", id=index)
+    comment_content = comment_content.strip()
+    if not comment_content:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "no_content"))
+        return False
     sender = (await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']
     MAX_COMMENT_LEN = 35
     if len(comment_content) > MAX_COMMENT_LEN:

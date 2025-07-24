@@ -1768,6 +1768,20 @@
             "talk_result": "{positive}， AI 说：{talk}\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}",
             "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
             "too_long": "你输入的语句太长啦！要在 300 字以内哦"
+        },
+        "essence": {
+            "desc": "随机精华消息",
+            "introduction": "让漠月输出一个随机精华消息（如果群里的精华消息数大于 2）。",
+            "result": [
+                "找到了一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\"",
+                "这是一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\""
+            ],
+            "no_essence": [
+                "群里的精华消息太少啦 {neutral}",
+                "群里的精华消息至少要有两条呢... {neutral}",
+                "群里的精华消息不太够呢... {neutral}",
+                "群里的精华消息有点少呢... {neutral}"
+            ]
         }
     }
 }

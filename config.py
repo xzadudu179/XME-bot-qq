@@ -5,8 +5,8 @@ import keys
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
 SUPERUSERS = {1795886524}
-COMMAND_START = ['/', '!', '！', '.', '。']
-ACCESS_TOKEN = keys.ACCESS_TOKEN
+COMMAND_START = ['/', '.', '。']
+# ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'
 PORT = 18980
 DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default_validation_failure_expression')

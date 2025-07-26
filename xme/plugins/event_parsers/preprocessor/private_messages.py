@@ -16,11 +16,11 @@ async def private_message_copy(bot: NoneBot, event: aiocqhttp.Event, plugin_mana
     if event.user_id in config.SUPERUSERS:
         # 不处理 SUPERUSERS 消息
         return
-    if "[CQ:at,qq=" in raw_msg and raw_msg.split("[CQ:at,qq=")[1].split(",")[0] == str(event.self_id):
-        return await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f"[{await get_group_name(event.group_id)}] {await get_stranger_name(event.user_id)}({event.user_id})"))
+    # if "[CQ:at,qq=" in raw_msg and raw_msg.split("[CQ:at,qq=")[1].split(",")[0] == str(event.self_id):
+        # return await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f"[{await get_group_name(event.group_id)}] {await get_stranger_name(event.user_id)}({event.user_id})"))
     if event.group_id:
         return
     if not cmdtools.get_cmd_by_alias(raw_msg.split(" ")[0]):
-        await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f'{await get_stranger_name(event.user_id)}({event.user_id})'))
+        # await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f'{await get_stranger_name(event.user_id)}({event.user_id})'))
         return
     print("被私聊发送了指令")

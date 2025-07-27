@@ -19,7 +19,7 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
-@permission(lambda sender: sender.is_superuser or sender.is_admin and sender.is_groupchat, permission_help=" & ".join(permissions))
+@permission(lambda sender: (sender.is_superuser or sender.is_admin) and sender.is_groupchat, permission_help=" & ".join(permissions))
 async def _(session: CommandSession):
 
     result = (await session.aget(prompt=get_message("plugins", __plugin_name__, 'leaving')))

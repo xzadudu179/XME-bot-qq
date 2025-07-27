@@ -74,8 +74,11 @@
             "使用 \"/ai 询问内容\" 指令可以问 ai 问题，包括指令问题等也可以问哦",
             "\"/alias 指令名\" 指令可以查询指令的别名~",
             "大家可以多捡多扔漂流瓶（）",
+            "拉漠月进群前一定要和群里的管理/群主沟通好~",
             "和{bot_name}说话某种意义上相当于和九九说话（？）（仅限私聊）",
-            "不要把{bot_name}当成机器 xwx，{bot_name}有设子"
+            "非好友私聊{bot_name}是收不到消息的哦~",
+            "不要把{bot_name}当成机器 xwx，{bot_name}有设子",
+            "{bot_name} 会给好友点赞哦~"
         ]
     },
     "apis": {
@@ -1780,7 +1783,7 @@
         },
         "essence": {
             "desc": "随机精华消息",
-            "introduction": "让漠月输出一个随机精华消息（如果群里的精华消息数大于 2）。",
+            "introduction": "让{bot_name}输出一个随机精华消息（如果群里的精华消息数大于 2）。",
             "result": [
                 "找到了一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\"",
                 "这是一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\""

@@ -67,19 +67,22 @@ async def get_group_name(group_id, default=None):
 
 
 def permission(perm_func: PermissionPolicy_T, permission_help: str = "未知", no_perm_message: str = "", no_perm_result=None, silent=False):
-    if not no_perm_message:
-        no_perm_message = get_message("config", "no_permission", permission=permission_help)
+    # no_perm_message = no_perm_message
+    # global no_perm_message
     def decorator(func):
         @wraps(func)
         async def wrapper(session: BaseSession, *args, **kwargs):
             sender = await SenderRoles.create(session.bot, session.event)
+            msg = no_perm_message
+            if not msg:
+                msg = get_message("config", "no_permission", permission=permission_help)
             print("perm func", perm_func(sender))
             if perm_func(sender):
                 result = await func(session, *args, **kwargs)
             else:
                 from xme.xmetools.msgtools import send_session_msg
                 if not silent:
-                    await send_session_msg(session, no_perm_message)
+                    await send_session_msg(session, msg)
                 result = no_perm_result
             return result
         return wrapper

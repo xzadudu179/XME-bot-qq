@@ -27,13 +27,15 @@ __plugin_usage__= str(CommandDoc(
 
 
 
-@on_command(__plugin_name__, aliases=alias, only_to_me=False)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def jrrp(session: CommandSession):
     args = session.current_arg_text.strip()
     # print()
     qq = session.event.user_id
     max_rank_length = 15
     if args:
+        if session.event.group_id is None:
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_in_group'))
         members = await jrrp_rank(session)
         if args == 'avg':
             avg = int(sum([member['jrrp'] for member in members]) / len(members))

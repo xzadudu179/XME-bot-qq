@@ -1,13 +1,15 @@
 from nonebot import on_command, CommandSession
 import traceback
 import xme.plugins.commands.wife as w
+from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import *
-import character
+from xme.xmetools.bottools import permission
 from xme.xmetools.msgtools import send_session_msg
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
-@on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: sender.is_groupchat)
+@on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: True)
+@permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(command_properties[0]['permission']))
 async def _(session: CommandSession):
     # user_id = session.event.user_id
     group_id = str(session.event.group_id)

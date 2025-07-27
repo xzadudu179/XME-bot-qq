@@ -1,11 +1,5 @@
 __plugin_name__ = '今日老婆'
-
-from .wife import *
-# from .cancanneedwife import *
 from character import get_message
-from xme.xmetools.doctools import PluginDoc
-
-commands = ['wife']
 command_properties = [
     {
         'name': 'wife',
@@ -14,6 +8,13 @@ command_properties = [
         'permission': ['在群内使用']
     },
 ]
+
+from .wife import *
+# from .cancanneedwife import *
+from xme.xmetools.doctools import PluginDoc
+
+commands = ['wife']
+
 aliases = [
     wife_alias,
 ]

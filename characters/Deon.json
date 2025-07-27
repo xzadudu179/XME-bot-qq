@@ -87,10 +87,10 @@
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
         "anno_message": "{anno}",
         "no_permission": [
-            "权限不足哦 {negative}\n以下是权限要求：{permission}",
-            "你的权限不足哦 {negative}\n这个指令需要这些权限：{permission}",
-            "你没有足够的权限诶...{negative}\n这是权限要求：{permission}",
-            "你没有足够的权限呢...{negative}\n以下是权限要求：{permission}"
+            "无法执行哦 {negative}\n以下是执行指令要求：{permission}",
+            "条件不足以执行这个指令呢 {negative}\n这个指令需要这些要求：{permission}",
+            "无法执行这条指令诶...{negative}\n这是执行要求：{permission}",
+            "你没办法执行这条指令呢...{negative}\n以下是执行要求：{permission}"
         ],
         "achievement_message": [
             "你达成了成就 \"{achievement}\" {positive}",
@@ -874,6 +874,11 @@
                 "成员数量需要是整数哦 {neutral}",
                 "{bot_name}不知道成员数量是多少{negative}",
                 "成员数量需要是整数哦..."
+            ],
+            "not_in_group": [
+                "你不在群里呢，没法查看其他人的 jrrp {neutral}",
+                "你不在群里没法查看其他人的 jrrp 哦 {neutral}",
+                "你不在群里哦，没法查看其他人的 jrrp {neutral}"
             ],
             "jrrp_prefix": [
                 "你的今日人品为",

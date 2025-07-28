@@ -30,12 +30,12 @@ async def _(session: CommandSession, user: User):
         at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_arg')
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     # 是否 at 自己
     if at_id == session.event.user_id:
         message = get_message("plugins", __plugin_name__, cmd_name, 'send_to_self', )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     # 是否设置了金币数量
     if len(args) >= 2:
@@ -45,11 +45,11 @@ async def _(session: CommandSession, user: User):
             coin_count = 0
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_coin_count')
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     if coin_count <= 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_coin_count', )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     # 验证用户是否存在
     is_real_user = False
@@ -63,14 +63,14 @@ async def _(session: CommandSession, user: User):
         send_to_user: u.User = u.User.load(at_id, True)
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_user')
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     curr_coins = user.coins
     user.coins -= coin_count
     # 是否有足够金币
     if user.coins < 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'not_enough_coin',  coin_total=curr_coins, )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     send_to_user.add_coins(coin_count)
     send_to_user.save()
@@ -79,5 +79,5 @@ async def _(session: CommandSession, user: User):
         coin_count=coin_count,
         coin_left=user.coins,
         received_coin_react=get_message("plugins", __plugin_name__, cmd_name, 'received_coin_react') if at_bot_self else '')
-    await send_session_msg(session, message)
+    await send_session_msg(session, message, tips=True)
     return True

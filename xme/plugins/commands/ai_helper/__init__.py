@@ -84,7 +84,7 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, parse_control(session, text, user))
         return 2
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     return True
 
 def get_history(user: u.User):

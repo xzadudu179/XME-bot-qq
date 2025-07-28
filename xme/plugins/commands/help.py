@@ -45,8 +45,8 @@ async def arg_help(arg, plugins, session):
         if pl.name.lower() != ask_for_help: continue
         if pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
             print("发送用户帮助")
-            return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"))
-        return await send_session_msg(session, pl.usage.split("/////OUTER/////")[0].replace("\n\n", "\n") if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True)
+            return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
+        return await send_session_msg(session, pl.usage.split("/////OUTER/////")[0].replace("\n\n", "\n") if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)

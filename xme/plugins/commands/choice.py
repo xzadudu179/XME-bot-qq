@@ -45,7 +45,7 @@ async def _(session: CommandSession):
             print(c)
             if c:
                 if all(x == c[0] for x in c):
-                    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
+                    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
                 choice = random.choice(c)
                 break
     print("choice is", choice)
@@ -54,8 +54,8 @@ async def _(session: CommandSession):
         # choice = x if (x:=num_choice(item)) else item
         choice, can_choice = parse_num_choice(item)
         if all(x == choices[0] for x in choices) and not can_choice:
-            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))))
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'choice_message', choice=texttools.me_to_you(str(choice))), tips=True, tips_percent=20)
 
 
 # def has_or_not_choice(input_str):

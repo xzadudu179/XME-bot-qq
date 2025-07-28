@@ -33,4 +33,4 @@ async def _(session: CommandSession):
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
         # return await send_msg(session, f"请输入正确的文章数量哦")
     print("rss" + show_rss(catch_179rss(), count))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'post_msg', count=count, posts=show_rss(catch_179rss(), count).replace("xzadudu179.github.io", "blog.xzadudu179.top")))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'post_msg', count=count, posts=show_rss(catch_179rss(), count).replace("xzadudu179.github.io", "blog.xzadudu179.top")), tips=True, tips_percent=20)

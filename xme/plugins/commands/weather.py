@@ -58,10 +58,10 @@ async def _(session: CommandSession, user: u.User):
     locations, user_location_info = await get_user_location(session.event.user_id, location_text)
     # print(len(locations), user_location_info)
     if not user_location_info and not location_text:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_location'), tips=True)
         return False
     if len(locations) < 1 and location_text:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=location_text))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=location_text), tips=True)
         return False
     user_search = bool(location_text)
     try:
@@ -73,7 +73,7 @@ async def _(session: CommandSession, user: u.User):
         return await get_weather_now(session, location_info, user_location_info, user_search, warnings)
     except Exception as ex:
         traceback.print_exc()
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"), tips=True)
         return False
 
 async def get_warnings_now(session, location_info, warnings):
@@ -95,7 +95,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
     tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
     if user_location_info:
         tips_message =  get_message("plugins", __plugin_name__, 'bound_tips') if user_location_info["id"] == location_id and user_search else tips_message
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message)
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'output', output=output) + "\n" + tips_message, tips=True, tips_percent=20)
     if user_location_info:
         # 启用了用户位置信息不会增加计时器
         return False

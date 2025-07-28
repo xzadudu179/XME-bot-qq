@@ -21,4 +21,4 @@ async def _(session: CommandSession):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping_message'), at=False)
     end = time.time()
     ping = end - start
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping', ping=f"{ping:.3f}"))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping', ping=f"{ping:.3f}"), tips=True, linebreak=False)

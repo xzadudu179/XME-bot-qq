@@ -31,7 +31,7 @@ async def setu(session: CommandSession):
     #     print("是 179，看看")
     #     image_name = "九九"
     image = "[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]"
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_setu_msg', image_name=image_name, image=image))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_setu_msg', image_name=image_name, image=image), tips=True)
     # await send_msg(session, "哪有涩图，XME找不到涩图呜，但是有彩虹蟑螂！\n[CQ:image,file=https://image.179.life/images/rainbow_cockroach.gif]")
 
 

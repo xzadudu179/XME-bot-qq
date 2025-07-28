@@ -58,8 +58,8 @@ async def _(session: CommandSession):
         random.seed()
         data = random.choice(ans_json)
         # data = REPLACE_STR_ZH.get(ans_json['data']['zh'], ans_json['data']['zh'])
-        message = f"\n{get_message('plugins', __plugin_name__, 'answer')}\n\"{data['zh']}\"\n\"{data['en']}\""
+        message = f"{get_message('plugins', __plugin_name__, 'answer')}\n\"{data['zh']}\"\n\"{data['en']}\""
     except Exception as ex:
         print(ex)
     finally:
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True, tips_percent=20)

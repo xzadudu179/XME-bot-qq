@@ -48,5 +48,6 @@ async def _(session: CommandSession):
     await send_session_msg(
         session, message + "=== 当前 bot 状态 ===\n" +
         info +
-        f"\n===============\nBOT 自始以来被调用了 {call_sum:,} 次，记录了 {user_count:,} 位用户。以下是 3 个最常被调用的指令：\n{top_k_str}"
+        f"\n===============\nBOT 自始以来被调用了 {call_sum:,} 次，记录了 {user_count:,} 位用户。以下是 3 个最常被调用的指令：\n{top_k_str}",
+        tips=True
     )

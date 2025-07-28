@@ -24,14 +24,14 @@ async def _(session: CommandSession):
     if not loc:
         user_loc = data["locations"].get(str(session.event.user_id), None)
         if user_loc:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'curr_loc', loc=f'{user_loc["adm1"]} {user_loc["adm2"]} {user_loc["name"]}'))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'curr_loc', loc=f'{user_loc["adm1"]} {user_loc["adm2"]} {user_loc["name"]}'), tips=True, tips_percent=10)
             return
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_curr_loc'))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_curr_loc'), tips=True)
         return
     elif loc in ["clear", "unbind"]:
         del data["locations"][str(session.event.user_id)]
         save_to_path(config.BOT_SETTINGS_PATH, data)
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'unbind_loc'))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'unbind_loc'), tips=True)
         return
     search = await search_location(loc, dict_output=False)
     if isinstance(search, str):
@@ -42,17 +42,17 @@ async def _(session: CommandSession):
     if len(locations) > 1:
         target: str = await session.aget(prompt=get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))
         if not target.isdigit() or (int(target) - 1) < 0 or int(target) > len(locations):
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_choose', num=target))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_choose', num=target), tips=True)
             return False
         choose = locations[int(target) - 1]
     elif len(locations) == 1:
         choose = locations[0]
     else:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=loc))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=loc), tips=True)
         return False
 
     data = read_from_path(config.BOT_SETTINGS_PATH)
     data["locations"][str(session.event.user_id)] = choose
     save_to_path(config.BOT_SETTINGS_PATH, data)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'success', loc=f'{choose["adm1"]} {choose["adm2"]} {choose["name"]}'))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'success', loc=f'{choose["adm1"]} {choose["adm2"]} {choose["name"]}'), tips=True, tips_percent=10)
     return True

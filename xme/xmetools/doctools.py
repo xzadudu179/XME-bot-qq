@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 import config
 
-DEFAULT_PERMISSIONS = "在群内使用"
+DEFAULT_PERMISSIONS = "无/未标注"
 
 class Doc():
     def __init__(self, name: str, desc: str, introduction: str) -> None:

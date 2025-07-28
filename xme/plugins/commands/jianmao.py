@@ -25,4 +25,4 @@ async def _(session: CommandSession):
     images = os.listdir(JIANMAO_PATH)
     img = random.choice(images)
     path = JIANMAO_PATH + "/" + img
-    return await send_session_msg(session, await image_msg(path))
+    return await send_session_msg(session, await image_msg(path), tips=True)

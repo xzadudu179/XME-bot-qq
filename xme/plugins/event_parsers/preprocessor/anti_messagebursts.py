@@ -20,7 +20,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
     global last_messages
     # recalls = json_tools.read_from_path('./recalls.json')['recalls']
     MSG_COUNT_THRESHOLD = 3
-    SEC_AVG_MSGS = 0.8
+    SEC_AVG_MSGS = 1
     try:
         key = f"{event['user_id']}{event['group_id']}"
     except:

@@ -25,11 +25,11 @@ async def _(session: CommandSession, user: User):
     arg = session.current_arg_text
     if not arg:
         if not user.desc:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_arg'))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_arg'), tips=True)
             return False
         ans = await session.aget(prompt=f"[CQ:at,qq={session.event.user_id}] " + get_message("plugins", __plugin_name__, cmd_name, 'desc_info', desc=user.desc))
         if ans == "delete-desc":
-            await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'deleted', desc=user.desc))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'deleted', desc=user.desc), tips=True)
             user.desc = ""
             return True
         # await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'canceled_delete'))
@@ -37,10 +37,10 @@ async def _(session: CommandSession, user: User):
     desc = arg.strip()
     line_count = max(desc.count("\r"), desc.count("\n"))
     if len(desc) > 500:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_long_desc', count=len(desc)))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_long_desc', count=len(desc)), tips=True)
         return False
     if line_count > 15:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_many_lines', count=line_count))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_many_lines', count=line_count), tips=True)
         return False
     user.desc = desc
     await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'success'))

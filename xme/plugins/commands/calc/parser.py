@@ -56,8 +56,8 @@ def parse_polynomial(formula):
     formula = fullwidth_to_halfwidth(replace_chinese_punctuation(formula)).strip()
     formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r").replace("\n", '\r')
     original_formula = formula
-    if detect_too_big(original_formula):
-        raise ValueError("请不要使用超过 2 个乘方符号")
+    # if detect_too_big(original_formula):
+    #     raise ValueError("请不要使用超过 2 个乘方符号")
     # formula = parse_vars(formula, vars)
     print(formula)
     all_vars = get_vars(formula)

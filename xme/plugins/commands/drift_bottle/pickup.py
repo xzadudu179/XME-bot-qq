@@ -12,7 +12,7 @@ from xme.xmetools import randtools
 import random
 random.seed()
 from nonebot import on_command, CommandSession
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, send_to_superusers
 import config
 
 BOTTLE_PATH = './data/drift_bottles.json'
@@ -77,10 +77,10 @@ async def report(session, bottle, index, user_id, message_prefix="举报了一�
     if send_success_message:
         await send_session_msg(session, content)
 
-@on_command(command_name, aliases=pickup_alias, only_to_me=False)
+@on_command(command_name, aliases=pickup_alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
 @u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=20)
-@permission(lambda x: x.is_groupchat, permission_help="在群聊内")
+# @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user: u.User):
     random.seed()
     user_id = session.event.user_id
@@ -103,6 +103,7 @@ async def _(session: CommandSession, user: u.User):
     if is_special_bottle and len(special_bottles) >= 1:
         index, bottle = random.choice(special_bottles)
         print("捡到了彩蛋瓶子")
+        await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
         index, bottle = random.choice(list(bottles.items()))
         print("捡到了瓶子")
@@ -177,7 +178,7 @@ async def _(session: CommandSession, user: u.User):
         custom_suffix=suffix,
     ))
     # await send_session_msg(session, bottle_card)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), tips=True)
     content = ""
     if broken:
         content = get_message("plugins", __plugin_name__, "bottle_broken")

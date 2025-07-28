@@ -42,4 +42,4 @@ async def _(session: CommandSession):
             message = get_message("plugins", __plugin_name__, 'code_found', search=search, stat=stat, image=f"[CQ:image,file=https://http.cat/{search}]")
             # message = f"状态码 {search} 的意思是: {stat}\n[CQ:image,file=https://http.cat/{search}]"
 
-    await send_session_msg(session, message)
+    await send_session_msg(session, message, tips=True, tips_percent=20)

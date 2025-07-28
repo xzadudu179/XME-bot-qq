@@ -7,7 +7,7 @@ async def check(session, user, arg):
     inv_item = await inv_get.get_inv_item_by_index(session, user, arg)
     if not inv_item:
         return False
-    await send_session_msg(session, '\n' + inv_item.recorded_item.info())
+    await send_session_msg(session, '\n' + inv_item.recorded_item.info(), tips=True, tips_percent=10)
     return False
 
 

@@ -72,6 +72,6 @@ async def _(session: CommandSession, user):
     # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
     #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
     await report(session, bottle_content, id, user['user_id'], "发送了一个漂流瓶", False)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=id))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=id), tips=True)
     # await send_msg(session, f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")
     return True

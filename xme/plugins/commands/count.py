@@ -19,6 +19,6 @@ __plugin_usage__ = str(CommandDoc(
 async def _(session: CommandSession):
     input_str = session.current_arg_text.strip()
     if not input_str:
-        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_str'))
-    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', length=len(input_str)))
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_str'), tips=True)
+    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', length=len(input_str)), tips=True)
 

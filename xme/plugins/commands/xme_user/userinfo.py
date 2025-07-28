@@ -33,7 +33,7 @@ async def _(session: CommandSession, user: User):
         at_id = session.event.user_id
     if not user:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_user')
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
     try:
@@ -42,5 +42,5 @@ async def _(session: CommandSession, user: User):
         avatar = ""
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
     message = f'\n{avatar}[用户] {target_user}\n' + str(user) + reaction
-    await send_session_msg(session, message)
+    await send_session_msg(session, message, tips=True)
     return True

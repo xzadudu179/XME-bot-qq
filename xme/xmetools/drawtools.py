@@ -3,12 +3,16 @@ from xme.xmetools.colortools import hex_to_rgb, gradient_hex_color
 from xme.xmetools.texttools import limit_str_len, hash_text
 from xme.xmetools.filetools import has_file
 import matplotlib.pyplot as plt
+import matplotlib as mpt
 from matplotlib import font_manager
 import numpy as np
 
 bg_color = (4 / 255, 23 / 255, 32 / 255)
-prop = font_manager.FontProperties(fname=rf"static/fonts/Cubic_11.ttf")
-plt.rcParams['font.family'] = prop.get_name()
+path = rf"./static/fonts/Cubic_11.ttf"
+prop = font_manager.FontProperties(fname=path)
+font_manager.fontManager.addfont(path)
+print("字体名:", prop.get_name())
+mpt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
 
 def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):

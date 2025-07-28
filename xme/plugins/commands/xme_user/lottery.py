@@ -32,7 +32,7 @@ async def _(session: CommandSession, user: User):
     arg = remove_punctuation(session.current_arg_text.strip())
     if not arg:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_arg', )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     all_in = False
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, cmd_name)[1]
@@ -60,27 +60,27 @@ async def _(session: CommandSession, user: User):
             count = int(arg_list[1])
         else:
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_count')
-            await send_session_msg(session, message)
+            await send_session_msg(session, message, tips=True)
             return False
     elif all_in and arg < 1:
         message = get_message("plugins", __plugin_name__, cmd_name, 'all_in_no_coins')
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     if times_left_now - count < 0:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'count_limited', times_left=times_left_now, times=count))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'count_limited', times_left=times_left_now, times=count), tips=True)
         return False
     if not all_in:
         try:
             arg = int(arg)
             if arg <= 0:
                 message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', )
-                await send_session_msg(session, message)
+                await send_session_msg(session, message, tips=True)
                 return False
         except ValueError as ex:
             print(ex)
             print(traceback.format_exc())
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', )
-            await send_session_msg(session, message)
+            await send_session_msg(session, message, tips=True)
             return False
 
     calc_count = arg * count
@@ -91,14 +91,14 @@ async def _(session: CommandSession, user: User):
 
             count_max=MAX_COIN_COUNT
         )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     elif user.coins - calc_count < 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'not_enough_coins',
             count=calc_count,
             coins_left=user.coins,
         )
-        await send_session_msg(session, message)
+        await send_session_msg(session, message, tips=True)
         return False
     vars = read_from_path("data/bot_vars.json")
     user.coins -= calc_count
@@ -123,5 +123,5 @@ async def _(session: CommandSession, user: User):
         times_left=times_left
     )
 
-    await send_session_msg(session, message)
+    await send_session_msg(session, message, tips=True)
     return True

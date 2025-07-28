@@ -2,6 +2,7 @@ from nonebot import MessageSegment, Message, NoneBot
 from aiocqhttp import Event
 import config
 import config
+from xme.xmetools.randtools import random_percent
 from xme.xmetools import colortools as c
 from nonebot.session import BaseSession
 from character import get_message
@@ -74,13 +75,14 @@ async def msg_preprocesser(session, message, send_time=-1):
             message = result
     return message
 
-async def send_session_msg(session: BaseSession, message, at=True, **kwargs):
+async def send_session_msg(session: BaseSession, message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, **kwargs):
     message_result = message
     message_result = await msg_preprocesser(session, message)
     if not message_result and message_result != "":
         print(f"bot 要发送的消息 {message} 已被阻止/没东西")
         return
-    await session.send(str(message_result), at_sender=at, **kwargs)
+    has_tips = random_percent(tips_percent) and tips
+    await session.send(("\n" if str(message_result)[0] != "\n" and at and linebreak else "") + str(message_result) + ("" if not has_tips else "\n-------------------\ntips：" + get_message("bot_info", "tips")), at_sender=at, **kwargs)
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

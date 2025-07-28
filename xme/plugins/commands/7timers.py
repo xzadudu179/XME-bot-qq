@@ -46,7 +46,7 @@ async def _(session: CommandSession):
         # meteo_image_url = f"https://www.7timer.info/bin/meteo.php?{location_info}&ac=0&lang=zh-CN&unit=metric&tzshift=0"
         print(location_info)
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'outputing'))
-        await send_session_msg(session, f"[CQ:image,file={astro_image_url}]" + get_message("plugins", __plugin_name__, 'output_suffix'))
+        await send_session_msg(session, f"[CQ:image,file={astro_image_url}]" + get_message("plugins", __plugin_name__, 'output_suffix'), tips=True)
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"{type(ex)} {ex}"))
 

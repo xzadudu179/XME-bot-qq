@@ -9,7 +9,7 @@ random.seed()
 
 dicealias = ["d"]
 command_name = 'dice'
-@on_command('dice', aliases=dicealias, only_to_me=False)
+@on_command('dice', aliases=dicealias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     MAX_FACES = 100_000_000
     MAX_COUNT = 50

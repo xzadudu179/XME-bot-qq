@@ -1,6 +1,7 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.bottools import permission
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools import randtools
 from .classes import user as u
@@ -19,8 +20,9 @@ usage = {
     "permissions": [],
     "alias": alias
 }
-@on_command(cmd_name, aliases=alias, only_to_me=False)
+@on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
+@permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     arg = session.current_arg
     print("arg", arg)

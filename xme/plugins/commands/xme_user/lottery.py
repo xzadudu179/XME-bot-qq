@@ -24,7 +24,7 @@ usage = {
     "alias": alias
 }
 
-@on_command(cmd_name, aliases=alias, only_to_me=False)
+@on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=True)
 @u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited', ), TIMES_LIMIT)
 async def _(session: CommandSession, user: User):

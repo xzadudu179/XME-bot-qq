@@ -82,7 +82,10 @@ async def send_session_msg(session: BaseSession, message, at=True, linebreak=Tru
         print(f"bot 要发送的消息 {message} 已被阻止/没东西")
         return
     has_tips = random_percent(tips_percent) and tips
-    await session.send(("\n" if str(message_result)[0] != "\n" and at and linebreak else "") + str(message_result) + ("" if not has_tips else "\n-------------------\ntips：" + get_message("bot_info", "tips")), at_sender=at, **kwargs)
+    msg = str(message_result)
+    if msg[-1] in ["\n", "\r"]:
+        msg = msg[:-1]
+    await session.send(("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntips：" + get_message("bot_info", "tips")), at_sender=at, **kwargs)
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

@@ -63,7 +63,7 @@ __plugin_usage__ = str(CommandDoc(
 # history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 
 TIMES_LIMIT = 15
-@on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True)
+@on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=True)
 @u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or x == False)
 async def _(session: CommandSession, user: u.User):

@@ -62,6 +62,7 @@
             "{bot_name}会随机发消息",
             "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
             "使用 \"/stats\" 指令可以查看{bot_name}的状态哦",
+            "1049755354 是漠月 BOT 和漠星 BOT 的交流群哦！有什么想聊的或者问的都可以去聊聊呢",
             "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
             "你们要不要帮我想几个 tips（）我觉得很需要",
             "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2087865718 哦，是漠星的 qq。",
@@ -88,6 +89,7 @@
             "问 \"xxx是不是质数\" 漠月会告诉你哦！",
             "前往扬州能够抓到九九（？",
             "有关瓶子的污染尚不明确...但或许和一位形似章鱼的东西有关。",
+            "{bot_name}是开源的哦！ Github 仓库在 https://github.com/xzadudu179/XME-bot-qq",
             "大家喜欢{bot_name}的话可以放心大胆地到处宣传（？",
             "{bot_name}有些时候会重启调试 / 更新，如果发现{bot_name}没有回复，可以过一会再发一遍指令试试哦~",
             "为了{bot_name}的安全~ 请不要把{bot_name}拉到有违规内容的群哦",
@@ -564,7 +566,7 @@
             "看看九九",
             "看看九九~"
         ],
-        "time": "{period}好呀{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
+        "time": "{period}好呀{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntip: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
         "lottery_info": "昨天通过大家在抽奖机的抽奖，使我{get_lose_pron}了 {lottery_total} {coin_pronoun}{coin_name} {neutral} (+{lottery_get}, -{lottery_lose})",
         "new_year": "新年好哇~！{positive_plus}"

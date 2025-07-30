@@ -156,7 +156,7 @@
             "看看九九",
             "看看九九~"
         ],
-        "time": "{period}好呀{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntips: {tips}",
+        "time": "{period}好呀{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntip: {tips}",
         "hitokoto_error": "xwx 获取消息发生错误",
         "lottery_info": "昨天通过大家在抽奖机的抽奖，使我{get_lose_pron}了 {lottery_total} {coin_pronoun}{coin_name} {neutral} (+{lottery_get}, -{lottery_lose})",
         "new_year": "新年好哇~！{positive_plus}"

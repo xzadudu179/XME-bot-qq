@@ -70,7 +70,7 @@ async def _(session: CommandSession, user: u.User):
         warnings = output_warning(await get_warnings(location_id))
         if args.warn:
             return await get_warnings_now(session, location_info, warnings)
-        return await get_weather_now(session, location_info, user_location_info, user_search, warnings)
+        return await get_weather_now(session, location_info, user_location_info, user_search, warnings, args.text[0] if len(args.text) > 0 else "")
     except Exception as ex:
         traceback.print_exc()
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"), tips=True)
@@ -85,12 +85,12 @@ async def get_warnings_now(session, location_info, warnings):
     return True
 
 
-async def get_weather_now(session, location_info, user_location_info, user_search, warnings):
+async def get_weather_now(session, location_info, user_location_info, user_search, warnings, arg):
     location_name = f"{location_info['adm1']} {location_info['adm2']} {location_info['name']}"
     location_id = location_info["id"]
     warns_output = "======※预警信息※======\n"
     weather = ouptut_weather_now(await get_weather(location_id), await get_air(location_id), await get_moon(location_id))
-    warns_output += warnings[0] + "\n" + get_message("plugins", __plugin_name__, 'warning_tips')
+    warns_output += warnings[0] + "\n" + get_message("plugins", __plugin_name__, 'warning_tips', arg=arg)
     output = f"\n======※现在天气：{location_name}※======" + f"{weather}" + (f"\n{warns_output}" if warnings[0] else "")
     tips_message = get_message("plugins", __plugin_name__, 'tips') if user_search and not user_location_info else ""
     if user_location_info:

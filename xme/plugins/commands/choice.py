@@ -28,6 +28,9 @@ async def _(session: CommandSession):
     if not args:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_args"),)
         return
+    elif len(args) > 300:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "args_too_long", count=len(args)),)
+        return
     choices = args.split(" ")
     choice = ""
     # 只有一项选择

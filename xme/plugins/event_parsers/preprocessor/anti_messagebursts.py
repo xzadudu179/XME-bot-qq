@@ -57,7 +57,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         last_messages[key][message]["banned"] = False
     # print(last_messages)
 
-    if last_messages[key][message]['count'] >= MSG_COUNT_THRESHOLD:
+    if last_messages[key][message]['count'] >= MSG_COUNT_THRESHOLD or (event['user_id'] == event.self_id and last_messages[key][message]['count'] >= 2):
         # 刷屏了
         if event['user_id'] == event.self_id:
             await bot.delete_msg(message_id=event.message_id)

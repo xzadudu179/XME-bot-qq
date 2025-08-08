@@ -612,9 +612,9 @@
             "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}"
         ],
         "welcome_99": [
-            "{at} 好耶{positive_punc} 九九来啦{positive_punc} 欢迎欢迎 {happy}",
-            "{at} 九九来啦！ 欢迎 {happy}",
-            "{at} 是九九{positive_punc} 欢迎欢迎 {happy}"
+            "欢迎九九~",
+            "九九来啦~ 欢迎 {happy}",
+            "是九九~ 欢迎哦"
         ],
         "other_recalled_info": [
             "刚刚 {operator} 撤回了一条{user}的消息{neutral}",
@@ -861,11 +861,11 @@
         },
         "今日老婆": {
             "desc": "今日老婆相关指令",
-            "introduction": "查看自己的今日老婆，或者是别人的今日老婆\n注意：这个功能仅供娱乐 {negative}",
-            "wife_introduction": "查看自己或别人的今日老婆，参数填写 at 会同时 at 你今日的老婆{positive_punc}",
+            "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n注意：这个功能仅供娱乐 {negative}",
+            "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
             "wife_message": [
-                "{who}今日的老婆是:\n{avatar}\n{name} ({user_id})",
-                "{who}今天的老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
+                "{who}今日的群老婆是:\n{avatar}\n{name} ({user_id})",
+                "{who}今天的群老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
             ],
             "no_wife": [
                 "{name}今天并没有老婆 {neutral}",
@@ -1758,6 +1758,10 @@
                 "{negative} 好像没有 \"{num}\" 序号对应的地区诶...",
                 "{negative} \"{num}\" 序号没有对应的地区...",
                 "{negative} 好像没有 \"{num}\" 序号对应的地区..."
+            ],
+            "no_choose": [
+                "{negative} 你好像并没有发送序号呢...",
+                "{negative} 你好像没有发送任何序号出来..."
             ],
             "no_result": "找不到 \"{loc}\" 对应的地区结果...",
             "success": [

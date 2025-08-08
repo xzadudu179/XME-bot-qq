@@ -89,7 +89,7 @@ async def jrrp(session: CommandSession):
     # key = base64_encode("嘿嘿嘿...179....嘿嘿嘿")
     # result = get_luck(qq, key)
     # random.seed(int(str(curr_days()) + str(qq)))
-    result = jrrp_gen(qq)
+    result = jrrp_gen(qq, session.self_id)
     content = get_message("plugins", __plugin_name__, 'jrrp_prefix')
     if result < 0:
         await send_session_msg(session, content + get_message("plugins", __plugin_name__, 'jrrp<0', result=result), tips=True, tips_percent=10)
@@ -108,12 +108,12 @@ async def jrrp(session: CommandSession):
         # await send_msg(session, content + f"{result} ovo")
 
 @randtools.change_seed()
-def jrrp_gen(id):
-    random.seed(int(str(curr_days()) + str(id)))
+def jrrp_gen(id, bot_id):
+    random.seed(int(str(bot_id) + str(curr_days()) + str(id)))
     return random.randint(-1, 101)
 
 async def jrrp_rank(session: CommandSession):
     members_full = await nonebot.get_bot().get_group_member_list(group_id=session.event.group_id)
-    members = [{"id": member['user_id'], "card": member['card'] if member['card'] else member['nickname'], "jrrp": jrrp_gen(member['user_id'])} for member in members_full]
+    members = [{"id": member['user_id'], "card": member['card'] if member['card'] else member['nickname'], "jrrp": jrrp_gen(member['user_id'], session.self_id)} for member in members_full]
     members.sort(key=lambda x: (x['jrrp'], x['id']), reverse=True)
     return members

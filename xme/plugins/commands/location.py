@@ -4,6 +4,7 @@ from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 import config
 from xme.xmetools.loctools import search_location
+import re
 from xme.xmetools.jsontools import read_from_path, save_to_path
 
 alias = ['绑定位置', '设置位置', '定位', 'loc']
@@ -40,8 +41,19 @@ async def _(session: CommandSession):
     locations = search.get("location", [])
     choose = {}
     if len(locations) > 1:
-        target: str = await session.aget(prompt=get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))
-        if not target.isdigit() or (int(target) - 1) < 0 or int(target) > len(locations):
+        has_target = False
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))
+        times = 0
+        while not has_target and times < 3:
+            target: str = await session.aget()
+            target = target.replace(".", "").strip()
+            if target.isdigit():
+                has_target = True
+            times += 1
+        if times >= 3:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choose', num=target), tips=True)
+            return False
+        elif (int(target) - 1) < 0 or int(target) > len(locations):
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_choose', num=target), tips=True)
             return False
         choose = locations[int(target) - 1]

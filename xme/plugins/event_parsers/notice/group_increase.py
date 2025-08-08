@@ -20,7 +20,7 @@ async def _(session: NoticeSession):
     if session.event.user_id != 1795886524:
         increase_people[group].append(f"[CQ:at,qq={session.event.user_id}]")
     else:
-        return await send_session_msg(session, get_message("event_parsers", "welcome_99", at=at), False)
+        return await send_session_msg(session, get_message("event_parsers", "welcome_99"), at=False)
     # print(increase_people)
     # print(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
     people = increase_people[group]

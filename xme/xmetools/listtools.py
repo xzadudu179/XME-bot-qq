@@ -1,7 +1,6 @@
 import heapq
 from typing import Any
 import random
-random.seed()
 from . import texttools as sim
 
 
@@ -71,6 +70,7 @@ def split_list(lst, chunk_size=10):
 
 def create_pairs(lst: list[int]) -> list[tuple[int,int]]:
     # print(f"seed: {random.seed}")
+    random.seed()
     random.shuffle(lst)  # 打乱顺序
     pairs = []
 

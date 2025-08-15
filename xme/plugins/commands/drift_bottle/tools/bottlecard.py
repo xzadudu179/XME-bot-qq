@@ -39,7 +39,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
     info_texts = [
         "#{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,
-        'by "{sender}"（"{group}"）'.format(sender=limit_str_len(sender, 10), group=limit_str_len(group, 10)),
+        'by "{sender}"（来自群 "{group}"）'.format(sender=limit_str_len(sender, 10), group=limit_str_len(group, 10)),
         "拾取 {views} - 点赞 {likes}".format(views=views, likes=likes),
         "- 漂流瓶留言 -",
     ]

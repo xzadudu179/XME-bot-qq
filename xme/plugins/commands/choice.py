@@ -100,7 +100,11 @@ def another_or_choice(input_str, another_text="还是"):
 
 def is_or_not_split_choice(text):
     print("isornot")
+    pn = "不"
     split_str, index = texttools.find_symmetric_around(text, "不")
+    if not split_str:
+        split_str, index = texttools.find_symmetric_around(text, "没")
+        pn = "没"
     print(split_str)
     print(len(split_str))
     if not split_str:
@@ -108,7 +112,7 @@ def is_or_not_split_choice(text):
     prefix = text[:index - len(split_str)]
     suffix = text[index + 1 + len(split_str):]
     print(prefix, suffix)
-    splits = [prefix + split_str + suffix, prefix + "不" + split_str + suffix]
+    splits = [prefix + split_str + suffix, prefix + pn + split_str + suffix]
     return splits
 
 def ends_is_or_not_choice(text):

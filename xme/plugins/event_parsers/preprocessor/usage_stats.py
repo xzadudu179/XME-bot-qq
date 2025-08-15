@@ -25,6 +25,7 @@ async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: P
     })
     cmd_usage['calls'].append({
         "hour": timetools.get_curr_hour(),
-        "by": event.user_id
+        "by": event.user_id,
+        "time": timetools.get_time_now()
     })
     save_usage(cmd_usage, cmd_name)

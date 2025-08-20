@@ -39,7 +39,7 @@ def get_closest_time(times: list, target_time="NOW", format="%Y-%m-%d %H:%M:%S")
         min_index = i
     return min_index
 
-def secs_to_ymdh(secs):
+def secs_to_ymdh(secs, format=("年", "个月", "天", "小时", "分钟", "秒")):
     """将秒数转换为年月天小时分钟秒
 
     Args:
@@ -49,15 +49,11 @@ def secs_to_ymdh(secs):
         str: 转换成的时间格式
     """
     days = secs / 86400
-    # 计算年数
     years = days // 365
     # 计算剩余天数
     remaining_days = days % 365
-    # 计算月数
     months = remaining_days // 30
-    # 计算剩余天数
     remaining_days = remaining_days % 30
-    # 计算小时数
     hours = 24 * (remaining_days % 1)
 
     mins = 24 * 60 * (remaining_days % 1) % 60
@@ -65,12 +61,12 @@ def secs_to_ymdh(secs):
     remaining_secs = secs % 60 % 60
 
     # 返回格式化后的字符串z
-    formatted_string = "" if years < 1 else str(int(years)) + "年"
-    formatted_string += "" if months < 1 else str(int(months)) + "个月"
-    formatted_string += "" if remaining_days < 1 else str(int(remaining_days)) + "天"
-    formatted_string += str(int(hours)) + "小时"
-    formatted_string += str(int(mins)) + "分钟"
-    formatted_string += str(int(remaining_secs)) + "秒"
+    formatted_string = "" if years < 1 else str(int(years)) + format[0]
+    formatted_string += "" if months < 1 else str(int(months)) + format[1]
+    formatted_string += "" if remaining_days < 1 else str(int(remaining_days)) + format[2]
+    formatted_string += str(int(hours)) + format[3]
+    formatted_string += str(int(mins)) + format[4]
+    formatted_string += str(int(remaining_secs)) + format[5]
     return formatted_string
 
 def curr_days():

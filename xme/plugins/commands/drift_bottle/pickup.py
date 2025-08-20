@@ -16,7 +16,7 @@ from xme.xmetools.msgtools import send_session_msg, send_to_superusers
 import config
 
 BOTTLE_PATH = './data/drift_bottles.json'
-pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick"]
+pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
 command_name = "pickup"
 
 async def like(session, bottles_dict, index):
@@ -133,23 +133,6 @@ async def _(session: CommandSession, user: u.User):
     # group_now = await get_group_name(bottle['group_id'])
     suffix = ""
 
-    # bottle_card = get_message("plugins", __plugin_name__, "bottle_card_content",
-    #     index=index,
-    #     messy_rate=messy_rate_string,
-    #     from_group=bottle['from_group'],
-    #     group_now=f" (现 '{group_now}')" if group_now != bottle['from_group'] and group_now else "" ,
-    #     content=bottle['content'],
-    #     sender=bottle['sender'],
-    #     sender_now=f" (现 '{sender_now}')" if sender_now != bottle['sender'] and sender_now else "",
-    #     send_time=bottle['send_time'],
-    #     view_message=view_message,
-    #     like_message=like_message,
-    #     comment_message="" if bottle['comments'] else "\n" + "", # TODO
-    # )
-    # 彩蛋瓶子
-    # if str(index) == "-179":
-    #     # bottle_card = randtools.messy_string(bottle_card, 35)
-    #     messy_rate = 35
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100

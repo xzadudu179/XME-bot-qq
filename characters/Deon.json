@@ -1306,6 +1306,7 @@
             ],
             "pickup_introduction": "尝试捡一个漂流瓶",
             "cthulhu_introduction": "毁掉指定的漂流瓶",
+            "check_introduction": "查看指定的漂流瓶",
             "no_bottle": [
                 "海里一个瓶子里都没有...",
                 "大海里完全没有瓶子...",

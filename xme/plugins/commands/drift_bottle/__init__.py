@@ -2,6 +2,7 @@ __plugin_name__ = '漂流瓶'
 from .throw import *
 from .pickup import *
 from .cthulhu import *
+from .check import *
 from .pure import *
 from xme.xmetools.doctools import PluginDoc
 from character import get_message
@@ -11,22 +12,25 @@ command_properties = [
     {
         'name': 'throw',
         'introduction': get_message("plugins", __plugin_name__, 'throw_introduction'),
-        # 'introduction': '扔一个漂流瓶',
         'usage': '(瓶子内容)',
         'permission': ['在群内使用']
     },
     {
         'name': 'pickup',
         'introduction': get_message("plugins", __plugin_name__, 'pickup_introduction'),
-        # 'introduction': '尝试捡一个漂流瓶',
         'usage': '',
         'permission': []
     },
     {
         'name': 'cthulhu',
         'introduction': get_message("plugins", __plugin_name__, 'cthulhu_introduction'),
-        # 'introduction': '尝试捡一个漂流瓶',
         'usage': '(瓶子id 以空格分隔)',
+        'permission': ['是 SUPERUSER']
+    },
+    {
+        'name': 'check',
+        'introduction': get_message("plugins", __plugin_name__, 'check_introduction'),
+        'usage': '(瓶子id)',
         'permission': ['是 SUPERUSER']
     }
 ]

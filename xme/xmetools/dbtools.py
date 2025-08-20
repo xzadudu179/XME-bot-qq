@@ -2,7 +2,12 @@ import sqlite3
 import traceback
 from nonebot import log
 from functools import wraps
-import pickle
+from typing import Protocol
+
+class DbReadable(Protocol):
+    def to_dict(self) -> dict: ...
+    @classmethod
+    def form_dict(cls, data: dict): ...
 
 class Xme_database:
     """XME 数据库相关类
@@ -34,22 +39,7 @@ class Xme_database:
                 return result
         return wrapper
 
-    def init_faction_info(self):
-        """初始化阵营信息
-        """
-        self.exec_query('''
-            CREATE TABLE IF NOT EXISTS factions (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                desc TEXT,
-                relations TEXT,
-                users TEXT,
-                prices TEXT,
-                creator INTEGER,
-            )
-        ''')
-
-    def save_to_db(self, obj, name=''):
+    def save_to_db(self, obj: type[DbReadable], name=''):
         """将类存储至表
 
         Args:
@@ -60,12 +50,14 @@ class Xme_database:
         if not name:
             name = type(obj).__name__.lower()
         # 获取类的字段和值
+
         fields = [field for field in obj.__dict__.keys() if field != 'database']  # 获取所有字段名 除了 database
-        values = [value if isinstance(value, (str, int)) else pickle.dumps(value) for key, value in obj.__dict__.items() if key != 'database' and not callable(value)]
+        # values = [value if isinstance(value, (str, int)) else pickle.dumps(value) for key, value in obj.__dict__.items() if key != 'database' and not callable(value)]
+
         columns = ', '.join(fields)
         placeholders = ', '.join(['?'] * len(fields))
         sql = f"INSERT OR REPLACE INTO {name} ({columns}) VALUES ({placeholders})"
-        self.exec_query(sql, tuple(values))
+        # self.exec_query(sql, tuple(values))
 
     @database_connect
     def load_from_db(self, cursor, id, table_name='', type=None) -> dict:
@@ -90,11 +82,11 @@ class Xme_database:
         # 获取列信息
         columns = [column[0] for column in cursor.description]
         data_dict = dict(zip(columns, row))
-        # 寻找 BLOB 数据并且反序列化
-        for column in columns:
-            if isinstance(data_dict[column], bytes):
-                print(f"反序列化字段 {column}\n{data_dict[column]}")
-                data_dict[column] = pickle.loads(data_dict[column])  # 反序列化
+        # # 寻找 BLOB 数据并且反序列化
+        # for column in columns:
+        #     if isinstance(data_dict[column], bytes):
+        #         print(f"反序列化字段 {column}\n{data_dict[column]}")
+        #         data_dict[column] = pickle.loads(data_dict[column])  # 反序列化
         # print(data_dict)
         data_dict['database'] = self
         return data_dict

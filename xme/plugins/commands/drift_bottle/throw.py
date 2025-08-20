@@ -18,7 +18,7 @@ command_name = 'throw'
 @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user):
     MAX_LENGTH = 300
-    MAX_LINES = 10
+    MAX_LINES = 20
     # raw_arg_msg = session.current_arg.strip()
     # arg, images = text_tools.get_image_str(raw_arg_msg)
     arg = session.current_arg_text.strip()

@@ -73,6 +73,9 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
+            word-wrap: normal;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .small {

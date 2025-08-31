@@ -106,7 +106,7 @@ async def _(session: CommandSession, user: User):
     result = 0
     for _ in range(count):
         random.seed()
-        result += random.randint(0, int(arg * (random.random() * 4)))
+        result += random.randint(0, int(arg * (random.random() * 1.035 * 4)))
     vars["lottery_lose_coins"] += result
     save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)

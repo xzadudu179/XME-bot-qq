@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
 from xme.xmetools.texttools import contains_blacklisted
-from xme.xmetools.functools import run_with_timeout
+from xme.xmetools.xmefunctools import run_with_timeout
 from xme.xmetools.bottools import permission
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial

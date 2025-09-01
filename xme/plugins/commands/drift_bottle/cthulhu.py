@@ -5,6 +5,7 @@ from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from nonebot import on_command, CommandSession
 from xme.xmetools.bottools import permission
+from . import DriftBottle
 
 cthulhu_alias = ["毁坏瓶子", "break", "break_bottle"]
 command_name = 'cthulhu'
@@ -17,11 +18,12 @@ async def _(session: CommandSession):
     if not arg_text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'cthulhu_no_arg'))
         return
-    bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
-    bottles = bottles_dict['bottles']
+    # bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
+    # bottles = bottles_dict['bottles']
     error_args = []
     for arg in args:
-        bottle = bottles.get(arg, None)
+        # bottle = bottles.get(arg, None)
+        bottle: DriftBottle = DriftBottle.get(arg)
         if bottle is None:
             error_args.append((arg, get_message("plugins", __plugin_name__, 'bottle_not_exist')))
             # await send_msg(session, get_message("plugins", __plugin_name__, 'cthulhu_bottle_not_exist', id=arg))
@@ -37,10 +39,11 @@ async def _(session: CommandSession):
         if is_special:
             error_args.append((arg, get_message("plugins", __plugin_name__, 'bottle_special')))
             continue
-        if bottle['views'] == 114514:
+        if bottle.views == 114514:
             error_args.append((arg, get_message("plugins", __plugin_name__, 'cthulhu_bottle_already_broken')))
             continue
-        bottle['views'] = 114514
+        bottle.views = 114514
+        bottle.save()
     for error_arg in error_args:
         args.remove(error_arg[0])
     if len(error_args) > 0:
@@ -48,6 +51,6 @@ async def _(session: CommandSession):
     prefix = get_message("plugins", __plugin_name__, 'cthulhu_fail')
     if args:
         prefix = get_message("plugins", __plugin_name__, 'cthulhu_success', ids=', '.join([f'#{arg}' for arg in args]))
-    jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
+    # jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
     message = prefix + '\n' + message
     await send_session_msg(session, message)

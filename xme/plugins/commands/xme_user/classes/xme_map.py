@@ -1,7 +1,7 @@
 
 from ..tools.map_tools import *
 from .faction import Faction, FACTIONS
-from xme.xmetools.functools import run_with_timeout
+from xme.xmetools.xmefunctools import run_with_timeout
 from .celestial.station import Station
 from .celestial.planet import Planet
 from .celestial import Celestial, planet_type_color, star_type_color, PlanetType

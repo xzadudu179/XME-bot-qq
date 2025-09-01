@@ -9,6 +9,7 @@ from xme.xmetools import randtools
 import random
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
+from . import DriftBottle
 
 check_alias = ["检查"]
 command_name = "check"
@@ -19,22 +20,23 @@ BOTTLE_PATH = './data/drift_bottles.json'
 @permission(lambda sender: sender.is_superuser, permission_help="是 SUPERUSER")
 async def _(session: CommandSession):
     random.seed()
-    user_id = session.event.user_id
+    # user_id = session.event.user_id
     bottle_id = session.current_arg_text.strip()
-    bottles_dict = jsontools.read_from_path(BOTTLE_PATH)
-    bottles = bottles_dict['bottles']
-    is_special_bottle = randtools.random_percent(0.5)
-    index, bottle = None, None
-    for i, b in bottles.items():
-        if i == bottle_id:
-            index, bottle = i, b
+    # bottles_dict = jsontools.read_from_path(BOTTLE_PATH)
+    # bottles = bottles_dict['bottles']
+    # is_special_bottle = randtools.random_percent(0.5)
+    bottle: DriftBottle = DriftBottle.get(bottle_id)
+    # for i, b in bottles.items():
+        # if i == bottle_id:
+            # index, bottle = i, b
     # index, bottle = [i, b for i, b in bottles.items() if b['']]
-    if not index:
+    if not bottle:
         return await send_session_msg(session, "这个编号没有瓶子哦")
+    index = bottle.bottle_id
     print("捡到了瓶子")
     index_is_int = index.isdigit()
     # 混乱值根据浏览量计算
-    messy_rate: float = min(100, max(0, bottle['views'] * 2 - bottle['likes'] * 3)) if index_is_int or index != '-179' else 0
+    messy_rate: float = min(100, max(0, bottle.views * 2 - bottle.likes * 3)) if index_is_int or index != '-179' else 0
     # 增加浏览量以及构造卡片
     # ----------------------------
     # view_message = get_message("plugins", __plugin_name__, "view_message", times=bottle['views'] + 1) if (bottle['views'] + 1) > 1 else get_message("plugins", __plugin_name__, "no_view_message", times=bottle['views'] + 1)
@@ -68,13 +70,13 @@ async def _(session: CommandSession):
         id=index,
         messy_rate_str=messy_rate_string,
         messy_rate=messy_rate,
-        date=bottle['send_time'],
-        content=bottle['content'],
-        sender=bottle['sender'],
-        group=bottle['from_group'],
-        views=bottle['views'] + 1,
-        likes=bottle['likes'],
-        comments_list=bottle['comments'],
+        date=bottle.send_time,
+        content=bottle.content,
+        sender=bottle.sender,
+        group=bottle.from_group,
+        views=bottle.views + 1,
+        likes=bottle.likes,
+        comments_list=bottle.comments,
         custom_suffix=suffix,
     ))
     # await send_session_msg(session, bottle_card)

@@ -4,6 +4,7 @@ import json
 
 async def get_weather(city: str) -> dict:
     response = await fetch_data(f"https://restapi.amap.com/v3/weather/weatherInfo?key=***&city={city}&extensions=all")
+    # print(response)
     json_dict = json.loads(response)
     return json_dict
 

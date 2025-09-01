@@ -1,11 +1,97 @@
 __plugin_name__ = '漂流瓶'
-from .throw import *
-from .pickup import *
-from .cthulhu import *
-from .check import *
-from .pure import *
+from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from character import get_message
+from xme.xmetools.dbtools import DATABASE, XmeDatabase
+import json
+
+class DriftBottle:
+    def __init__(self, bottle_id: str="我是妖妻酒", content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0):
+        self.bottle_id: str = bottle_id
+        self.content: str = content
+        self.sender = sender
+        self.likes = likes
+        self.views = views
+        self.from_group = from_group
+        self.send_time = send_time
+        self.sender_id = sender_id
+        self.comments = comments
+        self.group_id = group_id
+
+    def get_table_name():
+        return DriftBottle.__name__
+
+    def to_dict(self) -> dict:
+        return {
+            "bottle_id": self.bottle_id,
+            "content": self.content,
+            "sender": self.sender,
+            "likes": self.likes,
+            "views": self.views,
+            "from_group": self.from_group,
+            "send_time": self.send_time,
+            "sender_id": self.sender_id,
+            "comments": json.dumps(self.comments),
+            "group_id": self.group_id,
+        }
+
+    def exec_query(query: str, params=(), dict_data=False):
+        DATABASE.create_class_table(DriftBottle())
+        return DATABASE.exec_query(query=query, params=params, dict_data=dict_data)
+
+    def check_duplicate_bottle(content: str):
+        bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
+        for bottle in bottles:
+            if not bottle.bottle_id.isdigit():
+                continue
+            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2):
+                return {
+                    "status": False,
+                    "content": bottle.content,
+                    "duplicate_bottle_id": bottle.bottle_id
+                }
+        return {
+            "status": True,
+            "content": '',
+            "duplicate_bottle_id": None,
+        }
+
+    def remove_self(self):
+        """从数据表里移除自己并保存
+        """
+        DATABASE.remove(DriftBottle.get_table_name(), f"bottle_id = '{self.bottle_id}'")
+        self.save()
+
+    def get_max_bottle_id():
+        query = f"""SELECT COALESCE(MAX(CAST(bottle_id AS REAL)), 0)
+                    FROM {DriftBottle.__name__}
+                    WHERE bottle_id GLOB '[0-9]*';"""
+        result = DriftBottle.exec_query(query=query, dict_data=True)[0]
+        print(result)
+        return int(result['COALESCE(MAX(CAST(bottle_id AS REAL)), 0)'])
+
+    def get(bottle_id: str) -> 'DriftBottle':
+        result = DATABASE.load_class(select_keys=(bottle_id,), query="SELECT * FROM {table_name} WHERE bottle_id = ?", table_name=DriftBottle.get_table_name(), cl=DriftBottle)
+        if result is None:
+            return None
+        return result
+
+    def save(self):
+        DATABASE.save_to_db(self)
+
+    def form_dict(data: dict) -> 'DriftBottle':
+        return DriftBottle(
+            bottle_id=data["bottle_id"],
+            content=data["content"],
+            sender=data['sender'],
+            likes=data['likes'],
+            views=data['views'],
+            from_group=data['from_group'],
+            send_time=data['send_time'],
+            sender_id=data['sender_id'],
+            comments=json.loads(data['comments']),
+            group_id=data['group_id'],
+        )
 
 commands = ['throw', 'pickup']
 command_properties = [
@@ -34,6 +120,13 @@ command_properties = [
         'permission': ['是 SUPERUSER']
     }
 ]
+
+from .throw import *
+from .pickup import *
+from .cthulhu import *
+from .check import *
+from .pure import *
+
 aliases = [
     throw_alias,
     pickup_alias,

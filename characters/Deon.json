@@ -1299,6 +1299,11 @@
             "desc": "漂流瓶相关指令",
             "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 20 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
             "throw_introduction": "扔一个漂流瓶",
+            "reject_injection": [
+                "请不要尝试注入{bot_name}的数据库哦... {negative}",
+                "请不要尝试攻击{bot_name}的数据库哦... {negative}",
+                "你的消息里包含危险的字符呢... {negative}"
+            ],
             "throw_limited": [
                 "{bot_name}没有瓶子啦...下一个小时再来吧 {negative}",
                 "{bot_name}的瓶子用完啦...下一个小时再来吧 {negative}",

@@ -13,6 +13,8 @@ class Xme_database:
         """初始化数据库
         """
 
+
+
     def database_connect(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):

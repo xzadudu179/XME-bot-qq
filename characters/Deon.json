@@ -347,6 +347,7 @@
         "search_location_error": "搜索地区出现错误 {negative}\n错误码：{code}\n错误消息：{msg}"
     },
     "config": {
+        "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
         "busy": "我还在处理指令哦...呜呜",
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",

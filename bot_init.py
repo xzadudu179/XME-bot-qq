@@ -21,11 +21,11 @@ USAGE_STATS = {
     "start_time": datetime.now().strftime("%Y年%m月%d日 %H:%M:%S"),
     "datas": [] # datas 字典列表, key 为群号
 }
-DRIFT_BOTTLES_INFO = {
-    "max_index": 0,
-    "bottles": [
-    ]
-}
+# DRIFT_BOTTLES_INFO = {
+#     "max_index": 0,
+#     "bottles": [
+#     ]
+# }
 
 BOT_VARS = {
     "lottery_get_coins": 0,
@@ -154,8 +154,8 @@ def bot_init():
     botsettings_path = "./data/_botsettings.json"
     init_json(botsettings_path, BOT_SETTINGS)
 
-    bottles_path = "./data/drift_bottles.json"
-    init_json(bottles_path, DRIFT_BOTTLES_INFO)
+    # bottles_path = "./data/drift_bottles.json"
+    # init_json(bottles_path, DRIFT_BOTTLES_INFO)
 
     usage_path = "./data/usage_stats.json"
     init_json(usage_path, USAGE_STATS)

@@ -2,9 +2,40 @@ from nonebot import get_bot, NoneBot
 from nonebot import SenderRoles
 from nonebot.typing import PermissionPolicy_T
 from nonebot.session import BaseSession
+from nonebot.command import CommandSession
+from argparse import ArgumentParser
+from nonebot.argparse import ParserExit
 from character import get_message
 import json
 from functools import wraps
+
+class XmeArgumentParser(ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        self.session = kwargs.pop('session', None)
+        self.exit_mssage = "参数不足或不正确，请使用 --help 参数查询使用帮助"
+        super().__init__(*args, **kwargs)
+
+    def _session_finish(self, message):
+        if self.session and isinstance(self.session, CommandSession):
+            self.session.finish(message)
+
+    def _print_message(self, message, file=None):
+        # do nothing
+        pass
+
+    def exit(self, status=0, message=None):
+        raise ParserExit(status=status, message=message)
+
+
+    def parse_args(self, args=None, namespace=None):
+        try:
+            return super().parse_args(args=args, namespace=namespace)
+        except ParserExit as e:
+            if e.status == 0:
+                # --help
+                self._session_finish(self.usage or self.format_help())
+            else:
+                self._session_finish(self.exit_mssage)
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名

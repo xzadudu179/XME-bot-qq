@@ -1,7 +1,8 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
-from nonebot.argparse import ArgumentParser
+# from nonebot.argparse import ArgumentParser
+from xme.xmetools.bottools import XmeArgumentParser
 from .commands import clear_history
 import cn2an
 # from xme.xmetools.texttools import dec_to_chinese
@@ -43,10 +44,16 @@ arg_usage = shell_like_usage("OPTION", [
         "desc": "查看帮助"
     },
     {
+        "name": "raw",
+        "abbr": "r",
+        "desc": "会把之后的文本全都解析为单纯的文本（注：这个参数优先级最大）"
+    },
+    {
         "name": "ctrl",
         "abbr": "c",
         "desc": f"只需要在任意地方输入 -c 即可将原本输入给 AI 的内容变为指令\n{get_command_list()}"
     }
+
 ])
 
 alias = ['ai', 'aih']
@@ -68,21 +75,30 @@ TIMES_LIMIT = 15
 @u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or x == False)
 async def _(session: CommandSession, user: u.User):
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
-    parser = ArgumentParser(session=session, usage=arg_usage)
-    parser.add_argument('-c', '--ctrl', action='store_true', default=False)
-    parser.add_argument('text', nargs='*')
-    # print(session.argv)
-    args = parser.parse_args(session.argv)
-    text =  ' '.join(args.text).strip()
+    intext = ""
+    if "-r " in session.current_arg_text:
+        intext = "-r"
+    elif "--raw " in session.current_arg_text:
+        intext = '--raw'
+    if intext:
+        text = intext.join(session.current_arg_text.split(intext)[1:])
+    else:
+        parser = XmeArgumentParser(session=session, usage=arg_usage)
+        parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
+        parser.add_argument('-c', '--ctrl', action='store_true', default=False)
+        parser.add_argument('text', nargs='*')
+        args = parser.parse_args(session.argv)
+        # print(session.argv)
+        text =  ' '.join(args.text).strip()
+        if args.ctrl and text and len(text) <= 300:
+            await send_session_msg(session, parse_control(session, text, user))
+            return 2
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False
     if len(text) > 300:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long'))
         return False
-    if args.ctrl:
-        await send_session_msg(session, parse_control(session, text, user))
-        return 2
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     return True

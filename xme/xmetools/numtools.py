@@ -1,5 +1,6 @@
 import re
 import math
+from decimal import Decimal, getcontext
 
 def is_prime(n: int) -> bool:
     """检查是否为质数
@@ -10,13 +11,11 @@ def is_prime(n: int) -> bool:
     Returns:
         bool: 是否为质数
     """
-    # 处理小于2的情况（0, 1不是质数）
     if n <= 1:
         return False
     # 2 和 3 是质数
     if n <= 3:
         return True
-    # 排除能被2或3整除的数
     if n % 2 == 0 or n % 3 == 0:
         return False
     # 从5开始检查，跳过偶数（步长为6）
@@ -27,7 +26,8 @@ def is_prime(n: int) -> bool:
 
 def divs(n):
     ds = []
-    for i in range(2, int(math.sqrt(n)) + 1):
+    n = Decimal(n)
+    for i in range(2, int(Decimal(math.sqrt(n))) + 1):
         if n % i == 0:
             ds.append(f"{i} * {n // i} = {n}")
         if len(ds) >= 20:

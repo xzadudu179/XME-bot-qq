@@ -348,6 +348,7 @@
     },
     "config": {
         "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
+        "unknown_error": "指令执行出错了... {negative}\n以下是错误内容：{ex}",
         "busy": "我还在处理指令哦...呜呜",
         "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
         "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
@@ -369,7 +370,7 @@
     "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {positive}\n{sign_message}",
+        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
         "empty_inventory": "什么也没有呢...",
@@ -1670,7 +1671,7 @@
                     "我没记录过这个人的信息哦...",
                     "唔...我没有记录过这个人的信息哦"
                 ],
-                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {neutral}"
+                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {neutral}"
             },
             "coinrank": {
                 "desc": "{coin_name}排行榜",

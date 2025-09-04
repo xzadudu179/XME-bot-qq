@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         for k, v in func.builtins.items():
             message += f'{k}: {v if v else "-"}\n'
         return await send_session_msg(session, '\n' + message)
-    if len(arg) > 100:
+    if len(arg) > 1000:
         message = get_message("plugins", __plugin_name__, 'too_long')
         return await send_session_msg(session, message)
     if contains_blacklisted(arg):

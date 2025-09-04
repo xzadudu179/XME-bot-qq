@@ -20,6 +20,7 @@ usage = {
     "permissions": [],
     "alias": alias
 }
+
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
 @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
@@ -44,5 +45,7 @@ async def _(session: CommandSession, user: User):
         avatar = ""
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
     message = f'\n{avatar}[用户] {target_user}\n' + str(user) + reaction
+
+
     await send_session_msg(session, message, tips=True)
     return True

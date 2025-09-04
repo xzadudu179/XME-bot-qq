@@ -4,6 +4,7 @@ from xme.xmetools import dicttools
 from .achievements import ACHIEVEMENTS
 from nonebot.session import BaseSession
 from functools import wraps
+import json
 import config
 from nonebot import get_bot
 from ..tools.map_tools import *
@@ -17,6 +18,7 @@ from .celestial.star import Star
 from .celestial.planet import Planet, PlanetType
 from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
 from ..tools import galaxy_date_tools
+from xme.xmetools.dbtools import DATABASE
 
 coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
@@ -30,9 +32,16 @@ def is_galaxy_loaded():
 #     return galaxy_initing
 
 class User:
+    def form_dict(data: dict):
+        return load_from_dict(data, id=data["user_id"])
+
+    def get_table_name():
+        return User.__name__
+
     def __init__(
             self,
             user_id: int,
+            id: int = -1,
             coins: int = 0,
             inventory: Inventory = Inventory(),
             talked_to_bot: list = [],
@@ -42,7 +51,9 @@ class User:
             counters: dict = {},
             achievements: list = [],
             ai_history: list[dict] = [],
+            gen_starfield = True,
         ):
+        self.db_id = id
         self.id = user_id
         self.desc = desc
         self.inventory = inventory
@@ -54,22 +65,30 @@ class User:
         self.ai_history = ai_history
         # print(self.ai_history)
         # 用户所在天体
+        print("dbid", self.db_id)
+        self.celestial_uid = celestial_uid
         self.celestial = None
-        if celestial_uid is not None:
-            self.celestial = get_celestial_from_uid(celestial_uid)
+        if not gen_starfield:
+            return
+        # if celestial_uid is not None:
+
+        # if self.celestial is None:
+        #     self.gen_celestial()
+        # if self.celestial is not None:
+        #     starfield = self.get_starfield()
+        #     if starfield is None:
+        #         print("用户星域坐标无效")
+        #         self.celestial = None
+        #         self.gen_celestial()
+    def get_celestial(self):
+        if self.celestial_uid is not None:
+            self.celestial = get_celestial_from_uid(self.celestial_uid)
         if self.celestial is None:
             self.gen_celestial()
-        if self.celestial is not None:
-            starfield = self.get_starfield()
-            if starfield is None:
-                print("用户星域坐标无效")
-                self.celestial = None
-                self.gen_celestial()
+        return self.celestial
 
     def get_starfield(self):
-        if self.celestial is None:
-            raise ValueError("星体未初始化")
-        return get_starfield_map(self.celestial.galaxy_location)
+        return get_starfield_map(self.get_celestial().galaxy_location)
 
     async def achieve_achievement(self, session: BaseSession, achievement_name: str, achievement_message: str | None = None):
         """达成成就
@@ -157,8 +176,23 @@ class User:
         self.coins -= amount
         return True
 
+    def to_dict(self) -> dict:
+        return {
+            "id": self.db_id,
+            "user_id": self.id,
+            "coins": self.coins,
+            "counters": self.counters,
+            "xme_favorability": self.xme_favorability,
+            "desc": self.desc,
+            "inventory": self.inventory.__list__(),
+            "talked_to_bot": self.talked_to_bot,
+            "celestial": self.celestial.uid if self.celestial else "",
+            "ai_history": self.ai_history,
+        }
+
     def __dict__(self):
         return {
+            "id": self.id,
             "coins": self.coins,
             "counters": self.counters,
             "xme_favorability": self.xme_favorability,
@@ -175,35 +209,47 @@ class User:
         self.coins += amount
         return True
 
+    def exec_query(query, params=(), dict_data=True):
+        # DATABASE.create_class_table(User(0))
+        return DATABASE.exec_query(query=query, params=params, dict_data=dict_data)
+
     @staticmethod
-    def get_users():
-        return jsontools.read_from_path(config.USER_PATH)['users']
+    def get_users() -> list[dict]:
+        # return jsontools.read_from_path(config.USER_PATH)['users']
+        return [load_dict_user(u) for u in User.exec_query(f"SELECT * FROM {User.get_table_name()}")]
 
     @staticmethod
     def load(id: int, create_default_user=True):
-        user_dict = jsontools.read_from_path(config.USER_PATH)['users'].get(str(id), None)
-        if user_dict is None and create_default_user:
-            user_dict = {}
-        elif user_dict is None:
-            return None
-        return load_from_dict(user_dict, id)
+        # user_dict = jsontools.read_from_path(config.USER_PATH)['users'].get(str(id), None)
+        # if user_dict is None and create_default_user:
+        #     user_dict = {}
+        # elif user_dict is None:
+        #     return None
+        # return load_from_dict(user_dict, id)
+
+        c = DATABASE.load_class(select_keys=(id,), query='SELECT * FROM {table_name} WHERE user_id = ?', cl=User)
+        if c is None and create_default_user:
+            print("创建一个新用户")
+            return User(user_id=id)
+        return c
 
     def save(self):
-        data_to_save = self.__dict__()
-        users = jsontools.read_from_path(config.USER_PATH)
-        users['users'][str(self.id)] = data_to_save
-        jsontools.save_to_path(config.USER_PATH, users)
+        # data_to_save = self.__dict__()
+        # users = jsontools.read_from_path(config.USER_PATH)
+        # users['users'][str(self.id)] = data_to_save
+        # jsontools.save_to_path(config.USER_PATH, users)
+        self.db_id = DATABASE.save_to_db(obj=self)
 
     async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-        print(self.celestial )
-        if self.celestial is None:
-            return "static/img/no-signal.png"
-        center = self.celestial.location
+        # print(self.celestial )
+        celestial = self.get_celestial()
+        # if self.celestial is None:
+        #     return "static/img/no-signal.png"
+        center = celestial.location
         starfield = self.get_starfield()
         if starfield is None:
             raise ValueError("用户星域坐标无效")
         #     print("用户星域坐标无效")
-        #     self.celestial = None
         #     self.get_celestial()
         map_img = starfield.draw_starfield_map(
             img_zoom=img_zoom,
@@ -216,14 +262,14 @@ class User:
             grid_color=grid_color
         )
         map_size = starfield.max_size
-        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=self.celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
+        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
 
     async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-        if not self.celestial:
-            center = (0, 0)
-        else:
-            center = self.celestial.galaxy_location
+        celestial = self.get_celestial()
+        # if not self.celestial:
+        #     center = (0, 0)
+        center = celestial.galaxy_location
         # center = (0, 0)
         if not get_galaxymap():
             return None
@@ -256,12 +302,15 @@ class User:
         # 显示图片
         # map_img.show()
 
+DATABASE.create_class_table(User(0))
 
 def try_load(id):
     u = User.load(id)
     if u is None:
+        print("USER IS NONE")
         u = User(id)
-    return  u
+    return u
+
 def verify_timers(user: User, name: str):
     if not name in user.counters or type(user.counters[name]) != dict:
         user.counters[name] = {}
@@ -320,7 +369,7 @@ def get_user_rank(user):
         sender_index = index
     rank_ratio = 0
     if sender_coins_count is not None:
-        rank_ratio = max(len(rank_items[sender_index:]) - 1, 0) / len(rank_items) * 100
+        rank_ratio = (len(rank_items[sender_index:]) - 1)/ (len(rank_items) - 1) * 100 if len(rank_items[sender_index:]) > 1 else 100
     return sender_coins_count, rank_ratio
 
 
@@ -391,12 +440,13 @@ def get_rank(*rank_item_key, key=None, excluding_zero=False):
         list[tuple]: 用户: 键对应值
     """
     rank = {}
-    users: dict = jsontools.read_from_path(config.USER_PATH)['users']
-    for k, v in users.items():
+    # users: dict = jsontools.read_from_path(config.USER_PATH)['users']
+    users = User.get_users()
+    for v in users:
         # print(f"item: {v}")
         value = dicttools.get_value(*rank_item_key, search_dict=v)
         if value == None: continue
-        rank[k] = value
+        rank[v["user_id"]] = value
     if excluding_zero:
         rank_values = [r for r in rank.items() if r[1] > 0]
     else:
@@ -478,16 +528,75 @@ def using_user(save_data=False, id=0):
 
     return decorator
 
-def load_from_dict(data: dict, id: int) -> User:
-    inventory_data = data.get('inventory', None)
+def load_dict_user(data: dict):
+    inventory_data = json.loads(data.get('inventory', None))
     inventory = Inventory()
+    # print(inventory_data)
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
     # print(data)
     celestial = data.get('celestial', None)
     # print(celestial)
     # print(celestial)
+    counters = json.loads(data.get('counters', "{}"))
+    # print(counters)
+    return {
+            "id": data.get('id', -1),
+            "user_id": data["user_id"],
+            "coins": data.get('coins', 0),
+            "counters": counters,
+            "xme_favorability": data.get('xme_favorability', 0),
+            "desc": data.get('desc', ""),
+            "inventory": inventory,
+            "talked_to_bot": data.get('talked_to_bot', []),
+            "celestial": celestial,
+            "ai_history": json.loads(data.get('ai_history', "[]")),
+    }
+
+def load_from_raw_dict(data):
+    inventory_data = data.get('inventory', None)
+    inventory = Inventory()
+    # print(inventory_data)
+    if inventory_data:
+        inventory = Inventory.get_inventory(inventory_data)
+    # print(data)
+    celestial = data.get('celestial', None)
+    # print(celestial)
+    # print(celestial)
+    counters = data.get('counters', "{}")
+    # print(counters)
     user = User(
+        id=data.get('id', -1),
+        user_id=data["user_id"],
+        coins=data.get('coins', 0),
+        inventory=inventory,
+        talked_to_bot=data.get('talked_to_bot', []),
+        desc=data.get('desc', ""),
+        celestial_uid=celestial,
+        xme_favorability=data.get('xme_favorability', 0),
+        counters=counters,
+        ai_history=data.get('ai_history', "[]"),
+        gen_starfield=False,
+    )
+    # user.counters = data.get('counters', {})
+    # user.xme_favorability = data.get('xme_favorability', 0)
+    # user.desc = data.get('desc', "")
+    return user
+
+def load_from_dict(data: dict, id: int) -> User:
+    inventory_data = json.loads(data.get('inventory', None))
+    inventory = Inventory()
+    # print(inventory_data)
+    if inventory_data:
+        inventory = Inventory.get_inventory(inventory_data)
+    # print(data)
+    celestial = data.get('celestial', None)
+    # print(celestial)
+    # print(celestial)
+    counters = json.loads(data.get('counters', "{}"))
+    # print(counters)
+    user = User(
+        id=data.get('id', -1),
         user_id=id,
         coins=data.get('coins', 0),
         inventory=inventory,
@@ -495,8 +604,8 @@ def load_from_dict(data: dict, id: int) -> User:
         desc=data.get('desc', ""),
         celestial_uid=celestial,
         xme_favorability=data.get('xme_favorability', 0),
-        counters=data.get('counters', {}),
-        ai_history=data.get('ai_history', [])
+        counters=counters,
+        ai_history=json.loads(data.get('ai_history', "[]")),
     )
     # user.counters = data.get('counters', {})
     # user.xme_favorability = data.get('xme_favorability', 0)

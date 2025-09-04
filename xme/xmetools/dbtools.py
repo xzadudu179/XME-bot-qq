@@ -2,12 +2,14 @@ import sqlite3
 import traceback
 from nonebot import log
 from functools import wraps
-from typing import Protocol, TypeVar, Type, Union
+from typing import Protocol, TypeVar, Type, Union, runtime_checkable
 from typing import Any, get_type_hints
 from typing import get_origin, get_args
 import json
 
 T_DbReadWriteable = TypeVar("T", bound="DbReadWriteable")
+
+@runtime_checkable
 class DbReadWriteable(Protocol):
     @classmethod
     def form_dict(data: dict) -> T_DbReadWriteable:
@@ -148,16 +150,17 @@ class XmeDatabase:
         Returns:
             Any: 能够直接存入数据库的类型
         """
+        # print("数据是", value)
         if value is None: return None
         if isinstance(value, (str, int, float, bytes, bytearray)): return value
         if isinstance(value, bool): return int(value)
         if isinstance(value, (list, dict)): return json.dumps(value)
-        if isinstance(value, T_DbReadWriteable): return self.save_to_db(value)
+        if isinstance(value, DbReadWriteable): return self.save_to_db(value)
         if hasattr(value, "isoformat"): return value.isoformat()
         raise ValueError(f"无法解析类型 {type(value).__name__}")
 
     @database_connect
-    def save_to_db(self, cursor, obj: T_DbReadWriteable) -> int | None:
+    def save_to_db(self, cursor, obj: T_DbReadWriteable, update=False) -> int | None:
         """将类实例存储至数据库
 
         Args:
@@ -172,20 +175,26 @@ class XmeDatabase:
         # 获取类的字段和值
         print("save to DBDBDBDBDBDBDDBDBDBDBDBDB")
         data = obj.to_dict()
-        fields = [field for field in data.keys() if field not in ('id', 'database')]  # 获取所有字段名
-        values = [self.adapt_value(data[k]) for k in fields]
+        # 获取所有字段名
+        fields = [
+            field for field in data.keys()
+            if field != 'database' and not (field == 'id' and data[field] == -1)
+        ]
+        # for k in fields:
+        #     print("value", k, data[k])
+        values = [self.adapt_value(data[k]) for k in fields if not (k == 'id' and data[k] == -1)]
         # 顺便新建表（如果没有的话）
         table_name = self.create_class_table(obj)
         columns = ', '.join(fields)
         placeholders = ', '.join(['?'] * len(fields))
 
-        sql = f"""INSERT OR REPLACE INTO {table_name} ({columns}) VALUES ({placeholders}) ON CONFLICT(id) DO UPDATE SET name = excluded.name, value = excluded.value;"""
+        sql = f"""INSERT OR REPLACE INTO {table_name} ({columns}) VALUES ({placeholders})"""
         cursor.execute(sql, tuple(values))
         return cursor.lastrowid
         # self.exec_query(sql, tuple(values))
 
-    def load_class(self, select_keys, query, table_name='', cl: Type[T_DbReadWriteable]=None) -> T_DbReadWriteable:
-        d = self.load_from_db(select_keys=select_keys, table_name=table_name, type=cl, query=query)
+    def load_class(self, select_keys, query, cl: Type[T_DbReadWriteable]=None) -> T_DbReadWriteable:
+        d = self.load_from_db(select_keys=select_keys, table_name=cl.get_table_name(), type=cl, query=query)
         if d is None:
             return None
         return cl.form_dict(d)

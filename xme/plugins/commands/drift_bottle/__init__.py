@@ -6,7 +6,8 @@ from xme.xmetools.dbtools import DATABASE, XmeDatabase
 import json
 
 class DriftBottle:
-    def __init__(self, bottle_id: str="我是妖妻酒", content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0):
+    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0):
+        self.id = id
         self.bottle_id: str = bottle_id
         self.content: str = content
         self.sender = sender
@@ -18,11 +19,13 @@ class DriftBottle:
         self.comments = comments
         self.group_id = group_id
 
+
     def get_table_name():
         return DriftBottle.__name__
 
     def to_dict(self) -> dict:
         return {
+            "id": self.id,
             "bottle_id": self.bottle_id,
             "content": self.content,
             "sender": self.sender,
@@ -71,16 +74,17 @@ class DriftBottle:
         return int(result['COALESCE(MAX(CAST(bottle_id AS REAL)), 0)'])
 
     def get(bottle_id: str) -> 'DriftBottle':
-        result = DATABASE.load_class(select_keys=(bottle_id,), query="SELECT * FROM {table_name} WHERE bottle_id = ?", table_name=DriftBottle.get_table_name(), cl=DriftBottle)
+        result = DATABASE.load_class(select_keys=(bottle_id,), query="SELECT * FROM {table_name} WHERE bottle_id = ?", cl=DriftBottle)
         if result is None:
             return None
         return result
 
     def save(self):
-        DATABASE.save_to_db(self)
+        self.id = DATABASE.save_to_db(self)
 
     def form_dict(data: dict) -> 'DriftBottle':
         return DriftBottle(
+            id=data["id"],
             bottle_id=data["bottle_id"],
             content=data["content"],
             sender=data['sender'],

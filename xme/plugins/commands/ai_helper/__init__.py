@@ -100,7 +100,10 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long'))
         return False
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
+    try:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
+    except Exception as ex:
+        await send_session_msg(session, get_message("unknown_error", ex=ex.with_traceback()))
     return True
 
 def get_history(user: u.User):

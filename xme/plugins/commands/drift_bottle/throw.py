@@ -60,6 +60,7 @@ async def _(session: CommandSession, user):
     bottle_id = DriftBottle.get_max_bottle_id() + 1
     print(bottle_id)
     bottle_content = {
+        "id": -1,
         "bottle_id": bottle_id,
         "content": arg,
         # "images": list(images),

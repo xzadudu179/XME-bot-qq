@@ -40,6 +40,7 @@ def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), ran
             plt.text(10, 11 - 0.8 * len(labels), "警告：函数有无效值", color=color, fontsize=8)
         z = np.nan_to_num(z, nan=0.0)
         plt.contour(X, Y, z, levels=[0], colors=color, linewidths=2)
+        plt.axis("equal")
         # plt.clabel(cs, inline=True, fontsize=16)
     labels.append(expr_str)
     return labels

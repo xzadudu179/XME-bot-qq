@@ -166,7 +166,7 @@ def bot_init():
     time_limit_path = "./data/bot_vars.json"
     init_json(time_limit_path, BOT_VARS)
 
-    init_json(config.USER_PATH, USERS)
+    # init_json(config.USER_PATH, USERS)
 
     gen_doc_md()
 

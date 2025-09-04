@@ -6,6 +6,7 @@ import heapq
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import bot_call_action
+from xme.plugins.commands.xme_user.classes import user
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
@@ -42,8 +43,8 @@ async def _(session: CommandSession):
     top_k_usage = heapq.nlargest(3, usage, key=lambda k: len(usage[k]["calls"]))
     top_k_str = '\n'.join([f'{i + 1}、' + u + f"\t 被调用了 {len(usage[u]['calls']):,} 次。" for i, u in enumerate(top_k_usage)])
     save_to_path("data/bot_vars.json", vars)
-    user_datas = read_from_path("./data/users.json")
-    user_count = len(user_datas["users"])
+    # user_datas = read_from_path("./data/users.json")
+    user_count = len(user.User.get_users())
 
     await send_session_msg(
         session, message + "=== 当前 bot 状态 ===\n" +

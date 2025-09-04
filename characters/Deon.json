@@ -359,6 +359,10 @@
             "无法执行这条指令诶...{negative}\n这是执行要求：{permission}",
             "你没办法执行这条指令呢...{negative}\n以下是执行要求：{permission}"
         ],
+        "fuzzy_cmd": [
+            "你好像打错了指令哦 {neutral}，是不是想输入 \"{new_cmd}\" 哇, 是的话直接发送 \"ye\" 就好啦~",
+            "你好像打错了指令了诶 {neutral}，是不是想输入 \"{new_cmd}\" 哦, 是的话就在下面发送 \"ye\" 啦~"
+        ],
         "achievement_message": [
             "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n可以使用 \"/achi\" 来查看自己的所有成就哦",
             "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦",
@@ -1580,7 +1584,7 @@
             },
             "achievement": {
                 "desc": "查看成就列表",
-                "introduction": "查看所有成就，使用 \"achi 序号\" 可以查看指定序号的成就详情。",
+                "introduction": "查看所有成就，使用 \"/achi 成就名\" 可以查看指定名称的成就详情。",
                 "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就名\" 来查看指定成就的详情{positive_punc}\n",
                 "turn_page_tips": "你可以发送 \"<\" \">\" 来向前/向后翻页哦",
                 "achievement_item": "- {achi_name} (奖励 {award} {coin_pronoun}{coin_name})\n  {achi_desc}",
@@ -1738,12 +1742,12 @@
                 ],
                 "success": "成功将 {coin_count} {coin_pronoun}{coin_name}传递给了{target_user}！{received_coin_react}\n你还剩下 {coin_left} {coin_pronoun}{coin_name}哦",
                 "no_coin_count": [
-                    "请指定饼干数量哦",
-                    "唔...请指定饼干数量哦",
-                    "请指定饼干数量哦 {neutral}",
-                    "需要指定饼干数量呢...",
-                    "唔...需要指定饼干数量哦",
-                    "需要指定饼干数量哦"
+                    "请指定{coin_name}数量哦",
+                    "唔...请指定{coin_name}数量哦",
+                    "请指定{coin_name}数量哦 {neutral}",
+                    "需要指定{coin_name}数量呢...",
+                    "唔...需要指定{coin_name}数量哦",
+                    "需要指定{coin_name}数量哦"
                 ]
             },
             "inventory": {

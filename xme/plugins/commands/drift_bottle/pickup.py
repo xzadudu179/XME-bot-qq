@@ -172,7 +172,7 @@ async def _(session: CommandSession, user: u.User):
         content=bottle.content,
         sender=bottle.sender,
         group=bottle.from_group,
-        views=bottle.views + 1,
+        views=bottle.views,
         likes=bottle.likes,
         comments_list=bottle.comments,
         custom_suffix=suffix,

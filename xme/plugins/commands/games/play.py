@@ -10,7 +10,7 @@ from xme.xmetools.msgtools import send_session_msg
 from . import game_commands as games
 
 # introduction = "各种小游戏"
-alias = ["游戏", "小游戏", "play", "玩"]
+alias = ["游戏", "小游戏", "play", "玩", 'gm']
 desc = get_message("plugins", cmd_name, 'desc')
 
 arg_usage = shell_like_usage("OPTIONS", [

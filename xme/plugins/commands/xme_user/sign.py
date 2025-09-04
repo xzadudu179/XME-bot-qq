@@ -36,7 +36,6 @@ async def _(session: CommandSession, user: User):
     append_coins = random.randint(0, 50)
     user.add_coins(append_coins)
     users: list[dict] = User.get_users()
-    print("USERS:::", users)
     signed_users_count = 0
     reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
     for u in users:

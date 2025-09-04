@@ -6,3 +6,4 @@ from .is_it_command import *
 from .is_prime import *
 from .message_chain import *
 from .private_messages import *
+from .fuzzy_command import *

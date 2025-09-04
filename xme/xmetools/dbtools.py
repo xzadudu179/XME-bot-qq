@@ -171,8 +171,9 @@ class XmeDatabase:
         placeholders_msg = ", ".join(placeholders)
         values.append(id)
         sql = f"UPDATE {obj.__class__.get_table_name()} SET {placeholders_msg} WHERE id = ?"
-        print(sql)
+        print(sql, values)
         cursor.execute(sql, tuple(values))
+        return cursor.rowcount
 
     @database_connect
     def save_to_db(self, cursor, obj: T_DbReadWriteable) -> int | None:

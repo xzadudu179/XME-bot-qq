@@ -5,7 +5,8 @@ from .achievements import get_achievements
 from nonebot.session import BaseSession
 from functools import wraps
 import json
-import config
+from xme.xmetools.msgtools import send_to_superusers
+from xme.xmetools.bottools import bot_call_action
 from nonebot import get_bot
 from ..tools.map_tools import *
 import inspect
@@ -125,8 +126,11 @@ class User:
                 achievement_message = get_message("config", "achievement_message", achievement=achievement_name, award=achi["award"])
             else:
                 achievement_message = get_message("config", "hidden_achievement_message", achievement=achievement_name, award=achi["award"])
+        await send_to_superusers(session.bot, f"用户 {(await session.bot.api.get_stranger_info(user_id=self.id))['nickname']} ({self.id}) 在 {(await get_bot().api.get_group_info(group_id=session.event.group_id))['group_name']} 得到了一个成就 \"{achievement_name}\"")
         if self.id != -1:
-            DATABASE.update_db(obj=self, id=self.id, coins=self.coins, achievements=json.dumps(self.achievements))
+            print("更新database")
+            rows = DATABASE.update_db(obj=self, id=self.db_id, coins=self.coins, achievements=json.dumps(self.achievements))
+            print("受影响的行数:", rows)
         await send_session_msg(session, achievement_message)
 
     def gen_celestial(self):

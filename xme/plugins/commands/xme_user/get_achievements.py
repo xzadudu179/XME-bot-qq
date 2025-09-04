@@ -78,7 +78,7 @@ async def _(session: CommandSession, user: User):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "no_arg", text=arg), tips=True)
         return await send_session_msg(session, details)
     while True:
-        PAGE_ITEM_COUNT = 10
+        PAGE_ITEM_COUNT = 15
         pages = [achi_items_total[i : i+PAGE_ITEM_COUNT] for i in range(0, len(achi_items_total), PAGE_ITEM_COUNT)]
         total_pages = len(pages)
 

@@ -78,6 +78,46 @@ def use_args(arg_len: int, split_str: str = None, default: str = ""):
 
     return decorator
 
+def get_cmds():
+    """得到指令列表
+    """
+    return CommandManager._commands
+
+def get_cmds_alias_strings():
+    """得到指令与别名列表
+    """
+    cmds =  [k[0] for k in get_cmds().keys()] + [k for k in get_alias().keys()]
+    return cmds
+    # alias_cmds = []
+    # for c in cmds:
+    #     alias = get_alias_by_cmd(c)
+    #     alias_cmds.append(c)
+    #     if alias is not False:
+    #         alias_cmds += alias
+    # return alias_cmds
+
+def get_alias():
+    return CommandManager._aliases
+
+def is_it_command(text):
+    """检测一个文本是否属于指令
+
+    Args:
+        text (str): 文本
+
+    Returns:
+        bool: 是否
+    """
+    # print("111")
+    # print(event)
+    # if raw_msg[0] not in config.COMMAND_START or not raw_msg[1:] or not raw_msg.replace(raw_msg[0], ""):
+    if not text.startswith(config.COMMAND_START[0]) or not text[1:] or not text.replace(text[0], ""):
+        return False
+
+    if not get_cmd_by_alias(text.split(" ")[0]):
+        return False
+    return True
+
 def get_cmd_by_alias(input_string, need_cmd_start=True):
     """尝试通过别名获得指令
 

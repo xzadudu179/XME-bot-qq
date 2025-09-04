@@ -29,8 +29,8 @@ def get_current_days_550w_percent():
     percent = (random.random() * 17.4) + 0.5
     return percent
 
-@using_user(False)
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
+@using_user(False)
 async def _(session: CommandSession, u: User):
     message = get_message("plugins", __plugin_name__, "default_error")
     # message = "呜呜，书突然找不到了"

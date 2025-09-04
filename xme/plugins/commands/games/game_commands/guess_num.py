@@ -54,7 +54,6 @@ class GuessNum(Game):
             max_guessing_times=self.max_guessing_times,
             number_min=self.number_range[0],
             number_max=self.number_range[1])
-        # return f"游戏开始~ 你需要在 {self.max_guessing_times} 次尝试内猜出一个范围 {self.number_range[0]} ~ {self.number_range[1]} 的整数！"
 
     def parse_game_step(self, guess):
         """处理游戏的每一步的方法
@@ -70,15 +69,6 @@ class GuessNum(Game):
         elif guess < self.answer_num:
             return -1
         return 0
-
-    # def determine_win(self, step_state) -> bool:
-    #     """判断游戏状态
-    #     """
-    #     if step_state == 0:
-    #         self.start = False
-    #         return True
-    #     return False
-
 
 def return_state(message: str="", state: str="OK", data: dict={}) -> str:
     return {
@@ -115,35 +105,30 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     MAX_LIMIT = 35
     start_guessing = False
     get_award_times_left = TIMES_LIMIT - user.get_limit_info(u, f"game_{name}")[1] - 1
-    # print(TIMES_LIMIT, xme_user.get_limit_info(user, f"game_{name}")[1])
     settings: dict = args
+
     try:
         num_range = (int(settings.get("r", "0~100").split("~")[0]), int(settings.get("r", "0~100").split("~")[1]))
     except Exception as ex:
         return return_state(f"{get_message('plugins', cmd_name, name, 'range_error', ex=ex)}", "ERROR")
-        # return return_state(f" 数字范围解析出现错误，请确定你写的符合格式 (r=范围开始(整数)~范围结束(整数)) 哦 uwu\n{ex}", "ERROR")
+
     default_times_limit = min(int(math.log2(sum([abs(num) for num in num_range])) + 2), MAX_LIMIT)
+
     try:
         times_limit = x if (x:=int(settings.get("t", default_times_limit))) > 0 else default_times_limit
     except Exception as ex:
         return return_state(f"{get_message('plugins', cmd_name, name, 'times_limit_error', ex=ex)}", "ERROR")
-        # return return_state(f" 猜测次数限制解析出现错误，请确定你写的是整数哦 uwu\n{ex}", "ERROR")
 
     if abs(num_range[0]) > MAX_RANGE or abs(num_range[1]) > MAX_RANGE:
         return return_state(f"{get_message('plugins', cmd_name, name, 'range_out_of_range', max_range=format(MAX_RANGE, ','))}", "ERROR")
-        # return return_state(f" 数字范围不能大于或小于 {MAX_RANGE} 哦 uwu", "ERROR")
     elif num_range[0] > num_range[1]:
-        # 交换一下
         num_range[0], num_range[1] = num_range[1], num_range[0]
-        # return return_state(f" 数字范围开始不能比结束大或相同哦 uwu", "ERROR")
     elif num_range[0] == num_range[1]:
         return return_state(f"{get_message('plugins', cmd_name, name, 'range_equals')}", "ERROR")
-        # return return_state(f" 数字范围不能是相同的哦 uwu", "ERROR")
     if times_limit > MAX_LIMIT:
         return return_state(f"{get_message('plugins', cmd_name, name, 'times_out_of_range', max_limit=format(MAX_LIMIT, ','))}", "ERROR")
-        # return return_state(f" 猜测次数不能大于 {MAX_LIMIT} 哦 uwu", "ERROR")
+
     guess = GuessNum(num_range, times_limit)
-    # await send_msg(session, guess.start())
     prefix = get_message("plugins", cmd_name, name, 'guess_prompt_prefix_default',
         start=get_message("plugins", cmd_name, name, 'cost_message', cost=game_meta['cost'],  ) + guess.start(),
     )
@@ -199,8 +184,6 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
                 await u.achieve_achievement(session, "One Shot")
             break
         message += f"\n" + get_message("plugins", cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
-        # message += f"\n你还可以猜 {guess.max_guessing_times - guess.guessing_times} 次数字ovo"
-        # await send_msg(session, message)
         prefix = get_message("plugins", cmd_name, name, 'guess_prompt_prefix_default',
             start=message,
         )

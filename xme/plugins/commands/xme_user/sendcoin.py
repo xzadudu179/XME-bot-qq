@@ -3,6 +3,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.bottools import permission
 from xme.xmetools.msgtools import send_session_msg
 from .classes import user as u
+from datetime import datetime
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 
@@ -82,4 +83,7 @@ async def _(session: CommandSession, user: User):
         coin_left=user.coins,
         received_coin_react=get_message("plugins", __plugin_name__, cmd_name, 'received_coin_react') if at_bot_self else '')
     await send_session_msg(session, message, tips=True)
+    # print(datetime.today().weekday(), at_bot_self, coin_count)
+    if at_bot_self and coin_count == 50 and datetime.today().weekday() == 3:
+        await user.achieve_achievement(session, "V我50")
     return True

@@ -106,15 +106,15 @@ class Item:
             return False
         return True
 
-    def info(self) -> str:
+    def info(self, count=1) -> str:
         """返回物品信息
 
         Returns:
             str: 物品信息字符串
         """
-        price = '\n基准价格: ' + str(self.price) if self.has_tag(Tag.SALEABLE) else ''
+        price = '\n总价值: ' + str(self.price * count) if self.has_tag(Tag.SALEABLE) else ''
         return f"""
-[{self.rarity.value}] {self.name}
+[{self.rarity.value}] {self.name} {'*' + count if count > 1 else ''}
 标签：{(', '.join([tag.value for tag in self.tags])) if self.tags else '无'}{price}
 -------------------------
 {self.desc}
@@ -272,5 +272,65 @@ item_table = {
             }
         },
         use=item_methods.use_ticket
+    ),
+    12: Item(
+        id=12,
+        name="飞船补给",
+        desc="用于舰船维护的生活补给品，需要消耗一定数量用于远征。",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=225,
+        price=22,
+        pronoun="箱",
+        action_args={
+        },
+    ),
+    13: Item(
+        id=13,
+        name="废旧金属",
+        desc="生锈与破损的金属外壳，或许可以拿去回收？",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=100,
+        price=8,
+        pronoun="块",
+        action_args={
+        },
+    ),
+    14: Item(
+        id=14,
+        name="矿石",
+        desc="高纯度的各类矿石，蕴含很高的商业与加工价值。",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=250,
+        price=15,
+        pronoun="块",
+        action_args={
+        },
+    ),
+    15: Item(
+        id=15,
+        name="坭能电池",
+        desc="相比于传统电池不同，这类电池存储坭能，且体积较大，拥有足够的能量供于飞船。",
+        rarity=Rarity.UNCOMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=10,
+        price=500,
+        pronoun="块",
+        action_args={
+        },
+    ),
+    16: Item(
+        id=16,
+        name="零件",
+        desc="加工所用的工业零件，在制作或维修物品方面会有需要。当然，也是很不错的交易材料。",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=200,
+        price=10,
+        pronoun="盒",
+        action_args={
+        },
     ),
 }

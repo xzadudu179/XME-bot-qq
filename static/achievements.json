@@ -1,0 +1,47 @@
+{
+    "MOSS": {
+        "desc": "在漂流瓶里发现 550W 彩蛋...",
+        "award": 550,
+        "hidden": false
+    },
+    "彩蛋瓶": {
+        "desc": "捡到了一个神秘的瓶子？",
+        "award": 70,
+        "hidden": false
+    },
+    "550W": {
+        "desc": "答案之书说他是谁...？",
+        "award": 50,
+        "hidden": false
+    },
+    "One Shot": {
+        "desc": "只花了一次机会就猜对了猜数字游戏的答案（默认规则，且能得到奖励）",
+        "award": 140,
+        "hidden": false
+    },
+    "土块": {
+        "desc": "使用一次 \"lot\" 指令赚到的星币是投入的 2 倍以上（投入 ≥ 100）",
+        "award": 99,
+        "hidden": false
+    },
+    "回旋瓶": {
+        "desc": "第一个捡到你的漂流瓶的人是你自己。",
+        "award": 50,
+        "hidden": false
+    },
+    "想注入漠月": {
+        "desc": "你想注入漠月（的数据库）？",
+        "award": 1,
+        "hidden": true
+    },
+    "章鱼的诅咒...": {
+        "desc": "捡到一个无比混乱的漂流瓶",
+        "award": 666,
+        "hidden": false
+    },
+    "纯洁无暇！": {
+        "desc": "真的摔碎了一个瓶子嘛？",
+        "award": 501,
+        "hidden": false
+    }
+}

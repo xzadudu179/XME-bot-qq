@@ -360,8 +360,13 @@
             "你没办法执行这条指令呢...{negative}\n以下是执行要求：{permission}"
         ],
         "achievement_message": [
-            "你达成了成就 \"{achievement}\" {positive}",
-            "你达成了一个成就 \"{achievement}\"{positive_punc} {positive}"
+            "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n可以使用 \"/achi\" 来查看自己的所有成就哦",
+            "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦",
+            "你达成了一个成就 \"{achievement}\"{positive_punc} {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦"
+        ],
+        "hidden_achievement_message": [
+            "你达成了一个隐藏成就 \"{achievement}\"！{positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦",
+            "{positive} 你达成了一个隐藏成就 \"{achievement}\"！给你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦"
         ],
         "anno_temp_suffix": "私聊或 @ 我后输入消息以将你的消息发送给九九（开发者）哦{positive_punc}",
         "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下...",
@@ -370,12 +375,12 @@
     "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
-        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
+        "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
         "empty_inventory": "什么也没有呢...",
         "inventory_prefix": "物品栏占用 ({space})",
-        "inventory_item": "{num}. {name} x{count}",
+        "inventory_item": "{num}. {name} *{count}",
         "galaxy_initing": "银河系还未初始化完成哦 {neutral}",
         "no_galaxy": "还没有生成银河系哦"
     },
@@ -1572,6 +1577,21 @@
                 "desc": "XME 宇宙用户功能帮助",
                 "introduction": "查看某一用户功能指令的详细帮助",
                 "no_cmd": "没有名为 \"{cmd}\" 的用户指令诶..."
+            },
+            "achievement": {
+                "desc": "查看成就列表",
+                "introduction": "查看所有成就，使用 \"achi 序号\" 可以查看指定序号的成就详情。",
+                "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就名\" 来查看指定成就的详情{positive_punc}\n",
+                "turn_page_tips": "你可以发送 \"<\" \">\" 来向前/向后翻页哦",
+                "achievement_item": "- {achi_name} (奖励 {award} {coin_pronoun}{coin_name})\n  {achi_desc}",
+                "too_large_page": "你指定的页数 {page} 太大啦，超过了总页数 {total_pages} 呢...",
+                "nothing_here": [
+                    "什么也没有呢...",
+                    "这里空空的..."
+                ],
+                "too_small_page": "指定的页数不能小于 0 哦 {neutral}",
+                "error_arg": "你输入的详情参数不是整数呢... {neutral}",
+                "no_arg": "找不到你指定的关键字 \"{text}\" 所对应的成就呢..."
             },
             "sign": {
                 "desc": "签到",

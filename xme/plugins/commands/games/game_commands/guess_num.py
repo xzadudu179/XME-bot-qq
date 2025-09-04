@@ -48,6 +48,7 @@ class GuessNum(Game):
         """
         # self.starting = True
         self.answer_num = random.randint(self.number_range[0], self.number_range[1])
+        # print("答案:", self.answer_num)
         self.guessing_times = 0
         return get_message("plugins", cmd_name, name, 'guess_start',
             max_guessing_times=self.max_guessing_times,
@@ -154,6 +155,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
             prefix=prefix,
             quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
         # user_input = (await session.aget(prompt=f" {prefix}输入你要猜的数字吧~ 或输入 quit 退出" if ask_to_guess else "")).strip()
+        # 退出游戏
         if user_input.lower().strip() in quit_inputs:
             await send_session_msg(session, get_message("plugins", cmd_name, name, 'quit_message') if start_guessing else get_message("plugins", cmd_name, name, 'quit_message_not_start', ))
             # await send_msg(session, f" 退出游戏啦 ovo")
@@ -163,17 +165,15 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
                     "times_left": get_award_times_left,
                 })
             return return_state(state="EXITED")
+        # ----------------
         try:
             num = int(user_input)
             ask_to_guess = True
         except:
-            # prefix = f"转换整数出错，请确定你输入的是整数哦 uwu\n"
-            # prefix += "请重新"
             print("忽略")
             ask_to_guess = False
             if get_cmd_by_alias(user_input) != False:
                 await send_session_msg(session, get_message("plugins", cmd_name, name, 'cmd_in_game'))
-                # await send_msg(session, f" 你还在游戏中哦，不能执行指令 uwu")
             continue
         result = guess.parse_game_step(num)
         start_guessing = True
@@ -195,6 +195,8 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
         # message = f"{num} {'大啦' if result == 1 else '小啦' if result == -1 else '正确~'}"
         if result == 0:
             await send_session_msg(session, message)
+            if times_limit == default_times_limit and num_range == (0, 100) and guess.guessing_times == 1 and get_award_times_left >= 0:
+                await u.achieve_achievement(session, "One Shot")
             break
         message += f"\n" + get_message("plugins", cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
         # message += f"\n你还可以猜 {guess.max_guessing_times - guess.guessing_times} 次数字ovo"

@@ -1,7 +1,7 @@
 from xme.xmetools import jsontools
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
-from .achievements import ACHIEVEMENTS
+from .achievements import get_achievements
 from nonebot.session import BaseSession
 from functools import wraps
 import json
@@ -90,6 +90,16 @@ class User:
     def get_starfield(self):
         return get_starfield_map(self.get_celestial().galaxy_location)
 
+    def get_achievement(self, achievement_name) -> dict | bool:
+        print("achievement_name:", achievement_name)
+        achi = get_achievements().get(achievement_name, False)
+        if not achi:
+            raise ValueError(f"无该成就名 \"{achievement_name}\"")
+        for a in self.achievements:
+            if achievement_name in a["name"]:
+                return a
+        return None
+
     async def achieve_achievement(self, session: BaseSession, achievement_name: str, achievement_message: str | None = None):
         """达成成就
 
@@ -97,13 +107,26 @@ class User:
             user (User): 用户
             achievement_name (str): 成就名
         """
-        achi = ACHIEVEMENTS.get(achievement_name, False)
+        achi = get_achievements().get(achievement_name, False)
         if not achi:
             raise ValueError(f"无该成就名 \"{achievement_name}\"")
-        self.achievements.append(achievement_name)
+        if achievement_name in [a["name"] for a in self.achievements]:
+            # 已经有成就就不管了
+            print("已达成成就，不执行")
+            return
+        self.achievements.append({
+            "name": achievement_name,
+            "achieve_time": timetools.get_time_now(),
+            "from": str(session.event.group_id) if session.event.group_id is not None else "私聊"
+        })
         self.add_coins(achi["award"])
         if achievement_message is None:
-            achievement_message = get_message("config", "achievement_message", achievement=achi["name"])
+            if not achi["hidden"]:
+                achievement_message = get_message("config", "achievement_message", achievement=achievement_name, award=achi["award"])
+            else:
+                achievement_message = get_message("config", "hidden_achievement_message", achievement=achievement_name, award=achi["award"])
+        if self.id != -1:
+            DATABASE.update_db(obj=self, id=self.id, coins=self.coins, achievements=json.dumps(self.achievements))
         await send_session_msg(session, achievement_message)
 
     def gen_celestial(self):
@@ -149,8 +172,8 @@ class User:
         return get_message("user", "user_info_str",
             id=str(self.id),
             coins_count=self.coins,
-
-
+            achievements_count=len(self.achievements),
+            get_achievements_total=len(get_achievements().items()),
             sign_message=sign_message,
             rank_ratio=f"{rank_ratio:.2f}",
             space=self.inventory.get_space_left(),
@@ -186,22 +209,13 @@ class User:
             "desc": self.desc,
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
+            "achievements": self.achievements,
             "celestial": self.celestial.uid if self.celestial else "",
             "ai_history": self.ai_history,
         }
 
     def __dict__(self):
-        return {
-            "id": self.id,
-            "coins": self.coins,
-            "counters": self.counters,
-            "xme_favorability": self.xme_favorability,
-            "desc": self.desc,
-            "inventory": self.inventory.__list__(),
-            "talked_to_bot": self.talked_to_bot,
-            "celestial": self.celestial.uid if self.celestial else "",
-            "ai_history": self.ai_history,
-        }
+        return self.to_dict()
 
     def add_coins(self, amount: int) -> bool:
         if amount < 0:
@@ -553,36 +567,6 @@ def load_dict_user(data: dict):
             "ai_history": json.loads(data.get('ai_history', "[]")),
     }
 
-def load_from_raw_dict(data):
-    inventory_data = data.get('inventory', None)
-    inventory = Inventory()
-    # print(inventory_data)
-    if inventory_data:
-        inventory = Inventory.get_inventory(inventory_data)
-    # print(data)
-    celestial = data.get('celestial', None)
-    # print(celestial)
-    # print(celestial)
-    counters = data.get('counters', "{}")
-    # print(counters)
-    user = User(
-        id=data.get('id', -1),
-        user_id=data["user_id"],
-        coins=data.get('coins', 0),
-        inventory=inventory,
-        talked_to_bot=data.get('talked_to_bot', []),
-        desc=data.get('desc', ""),
-        celestial_uid=celestial,
-        xme_favorability=data.get('xme_favorability', 0),
-        counters=counters,
-        ai_history=data.get('ai_history', "[]"),
-        gen_starfield=False,
-    )
-    # user.counters = data.get('counters', {})
-    # user.xme_favorability = data.get('xme_favorability', 0)
-    # user.desc = data.get('desc', "")
-    return user
-
 def load_from_dict(data: dict, id: int) -> User:
     inventory_data = json.loads(data.get('inventory', None))
     inventory = Inventory()
@@ -595,14 +579,18 @@ def load_from_dict(data: dict, id: int) -> User:
     # print(celestial)
     counters = json.loads(data.get('counters', "{}"))
     # print(counters)
+    achis = data.get('achievements', "[]")
+    if not achis:
+        achis = "[]"
     user = User(
         id=data.get('id', -1),
         user_id=id,
         coins=data.get('coins', 0),
         inventory=inventory,
-        talked_to_bot=data.get('talked_to_bot', []),
+        talked_to_bot=json.loads(data.get('talked_to_bot', "[]")),
         desc=data.get('desc', ""),
         celestial_uid=celestial,
+        achievements=json.loads(achis),
         xme_favorability=data.get('xme_favorability', 0),
         counters=counters,
         ai_history=json.loads(data.get('ai_history', "[]")),

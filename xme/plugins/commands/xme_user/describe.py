@@ -6,6 +6,7 @@ from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 from xme.xmetools.cmdtools import use_args
+from xme.xmetools.texttools import is_danger_sql
 
 
 alias = ['bio', 'intro', 'desc']
@@ -44,4 +45,6 @@ async def _(session: CommandSession, user: User):
         return False
     user.desc = desc
     await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'success'))
+    if is_danger_sql(user.desc):
+        await user.achieve_achievement(session, "想注入漠月")
     return True

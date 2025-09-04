@@ -6,7 +6,53 @@ import string
 import hashlib
 from difflib import SequenceMatcher
 
-def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
+
+class SQLInjectionDetector:
+    """
+    一个简化版的 SQL 注入检测器
+    """
+    # 常见的 SQL 注入关键字 / 操作符
+    SQL_PATTERNS = [
+        r"(?i)['|\"]\s+\bunion\b\s+\bselect\b",   # UNION SELECT
+        r"(?i)['|\"]\s+\bor\b\s+1\s*=\s*1",       # OR 1=1
+        r"(?i)['|\"]\s+\bor\b\s+'1'\s*=\s*'1",       # OR 1=1
+        r"(?i)['|\"]\s+\band\b\s+1\s*=\s*1",      # AND 1=1
+        r"(?i)['|\"]\s+\band\b\s+'1'\s*=\s*'1",      # AND 1=1
+        r"(?i)['|\"]\s+\bdrop\b\s+\btable\b",     # DROP TABLE
+        r"(?i)['|\"]\s+\binsert\b\s+\binto\b",    # INSERT INTO
+        r"(?i)['|\"]\s+\bupdate\b\s+\b.*\bset\b", # UPDATE ... SET
+        r"(?i)['|\"]\s+\bdelete\b\s+\bfrom\b",    # DELETE FROM
+        r"(?i)['|\"]\s+\bsleep\s*\(",             # SLEEP()
+        r"(?i)['|\"]\s+@@",                       # @@version, @@user 等
+        r"(?i)['|\"]\s+\bxp_cmdshell\b",          # SQL Server 特有
+        r"(?i)['|\"]\s+\bexec\b\s+\b",            # EXEC 调用
+    ]
+
+    def is_suspect(self, value: str) -> bool:
+        """检测单个输入值是否疑似 SQL 注入"""
+        if not isinstance(value, str):
+            return False
+
+        for pattern in self.SQL_PATTERNS:
+            if re.search(pattern, value):
+                return True
+        return False
+
+    def scan_params(self, param_input: str) -> dict:
+        """
+        检查参数字典 {param: value} 是否包含注入
+        """
+        status = False
+        if self.is_suspect(param_input):
+            status = True
+
+        return status
+
+def is_danger_sql(text):
+    detector = SQLInjectionDetector()
+    return detector.scan_params(text)
+
+def difflib_similar(a: str, b: str, get_pinyin=True, ignore_case=False) -> float:
     """使用 difflib 判断字符串相似度
 
     Args:
@@ -19,7 +65,22 @@ def difflib_similar(a: str, b: str, get_pinyin=True) -> float:
     if get_pinyin:
         a = ''.join(lazy_pinyin(a))
         b = ''.join(lazy_pinyin(b))
+    if ignore_case:
+        a = a.lower()
+        b = b.lower()
     return SequenceMatcher(None, a, b).ratio()
+
+def fuzzy_search(text, contents, ratio=0.65):
+    """模糊搜索一个内容
+
+    Args:
+        text (str): 搜索文本
+        contents (list[str]): 文本列表
+
+    Returns:
+        str: 搜索到的文本（来自文本列表）
+    """
+    return x[-1][0] if (x:=most_similarity_str_diff(text, [c for c in contents], ratio)) else None
 
 # def dec_to_chinese(num):
 #     """将数字转变为中文数字，例如 100 -> 一百
@@ -432,7 +493,7 @@ def remove_punctuation(text: str) -> str:
     return text.translate(str.maketrans('', '', string.punctuation))
 
 
-def jaccard_similarity(str1: str, str2: str, get_pinyin=True) -> float:
+def jaccard_similarity(str1: str, str2: str, get_pinyin=True, ignore_case=False) -> float:
     """计算字符串集合的交集与并集的比例相似度（中文会被转换为拼音）
 
     Args:
@@ -486,6 +547,13 @@ def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0)
     for s in str_list:
         similarities.append((s, jaccard_similarity(input_str, s)))
     return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
+
+def most_similarity_str_diff(input_str: str, str_list: list[str], threshold: float=0) -> list[tuple[str, int]]:
+    similarities = []
+    for s in str_list:
+        similarities.append((s, difflib_similar(input_str, s, ignore_case=True)))
+    return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
+
 
 # def is_question_product(question, question_of):
 #     # 加载中文模型

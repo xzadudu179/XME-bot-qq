@@ -124,4 +124,6 @@ async def _(session: CommandSession, user: User):
     )
 
     await send_session_msg(session, message, tips=True)
+    if result >= calc_count * 5 and calc_count >= 100:
+        await user.achieve_achievement(session, "土块")
     return True

@@ -119,10 +119,15 @@ async def _(session: CommandSession, user: u.User):
         print(special[0])
         bottle: DriftBottle = DriftBottle.form_dict(special[0])
         print("捡到了彩蛋瓶子")
+        await user.achieve_achievement(session, "彩蛋瓶")
+        if bottle.bottle_id == "550W":
+            await user.achieve_achievement(session, "MOSS")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
         bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
         print(bottle)
+        if bottle.sender_id == session.event.user_id and bottle.views == 0:
+            await user.achieve_achievement(session, "回旋瓶")
         print("捡到了瓶子")
     index = bottle.bottle_id
     index_is_int = index.isdigit()
@@ -179,6 +184,7 @@ async def _(session: CommandSession, user: u.User):
         content = get_message("plugins", __plugin_name__, "bottle_broken")
         if messy_rate >= 100:
             content = get_message("plugins", __plugin_name__, "bottle_broken_messy")
+            await user.achieve_achievement(session, "章鱼的诅咒...")
         if index != "-179":
             broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
             broken_bottles[index] = bottle
@@ -188,6 +194,7 @@ async def _(session: CommandSession, user: u.User):
             print("瓶子碎了")
         elif str(index) == "-179" or not index_is_int:
             print("瓶子碎了？")
+            await user.achieve_achievement(session, "纯洁无暇！")
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         await send_session_msg(session, content)
         return True
@@ -208,7 +215,7 @@ async def _(session: CommandSession, user: u.User):
             print(reply)
             if get_cmd_by_alias(reply) != False:
                 print("执行指令")
-                # 手动计数
+                # 手动计数，防止递归调用不计数问题
                 u.limit_count_tick(user, command_name)
                 user.save()
                 print("增加计数")

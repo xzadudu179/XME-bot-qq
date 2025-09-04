@@ -80,6 +80,7 @@ async def send_session_msg(session: BaseSession, message, at=True, linebreak=Tru
     message_result = await msg_preprocesser(session, message)
     if not message_result and message_result != "":
         print(f"bot 要发送的消息 {message} 已被阻止/没东西")
+        await session.send(f"[ERRORo] BOT 即将发送的消息已被阻止/为空")
         return
     has_tips = random_percent(tips_percent) and tips
     msg = str(message_result)

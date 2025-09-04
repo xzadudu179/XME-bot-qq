@@ -160,7 +160,22 @@ class XmeDatabase:
         raise ValueError(f"无法解析类型 {type(value).__name__}")
 
     @database_connect
-    def save_to_db(self, cursor, obj: T_DbReadWriteable, update=False) -> int | None:
+    def update_db(self, cursor, obj: T_DbReadWriteable, id, **kwargs):
+        if id == -1:
+            raise ValueError("id 不可以是 -1")
+        placeholders = []
+        values = []
+        for k, v in kwargs.items():
+            placeholders.append(f"{k} = ?")
+            values.append(v)
+        placeholders_msg = ", ".join(placeholders)
+        values.append(id)
+        sql = f"UPDATE {obj.__class__.get_table_name()} SET {placeholders_msg} WHERE id = ?"
+        print(sql)
+        cursor.execute(sql, tuple(values))
+
+    @database_connect
+    def save_to_db(self, cursor, obj: T_DbReadWriteable) -> int | None:
         """将类实例存储至数据库
 
         Args:

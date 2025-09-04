@@ -3,6 +3,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import texttools
 from xme.xmetools import randtools
 from xme.xmetools import jsontools
+from xme.plugins.commands.xme_user.classes.user import User, using_user
 from xme.xmetools.timetools import curr_days
 import random
 random.seed()
@@ -28,8 +29,9 @@ def get_current_days_550w_percent():
     percent = (random.random() * 17.4) + 0.5
     return percent
 
+@using_user(False)
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
-async def _(session: CommandSession):
+async def _(session: CommandSession, u: User):
     message = get_message("plugins", __plugin_name__, "default_error")
     # message = "呜呜，书突然找不到了"
     args = session.current_arg_text.strip()
@@ -45,6 +47,7 @@ async def _(session: CommandSession):
         if randtools.random_percent(percent):
             print("没错，我是 550W")
             await send_session_msg(session, f"\n" + get_message("plugins", __plugin_name__, "550w"))
+            await u.achieve_achievement(session, "550W")
             return
         else:
             print("550W 还没来")
@@ -52,6 +55,7 @@ async def _(session: CommandSession):
         if randtools.random_percent(25):
             print("触发 550W 彩蛋 01")
             await send_session_msg(session, randtools.messy_string(f"\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
+            await u.achieve_achievement(session, "550W")
             return
     try:
         ans_json = jsontools.read_from_path("./static/answers.json")

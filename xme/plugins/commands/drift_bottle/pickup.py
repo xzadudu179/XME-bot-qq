@@ -77,10 +77,10 @@ async def comment(session, bottle: DriftBottle, user_id, comment_content):
     await send_session_msg(session, content)
     return True
 
-async def report(session, bottle: DriftBottle, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True):
+async def report(session, bottle: DriftBottle, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True, report_content=""):
     content = get_message("plugins", __plugin_name__, "reported")
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：\n内容：\n-----------\n{bottle.content}\n-----------\nid: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})")
+        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：\n内容：\n-----------\n{bottle.content}\n-----------\nid: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
     if send_success_message:
         await send_session_msg(session, content)
 
@@ -106,25 +106,31 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
         return False
-    is_special_bottle = randtools.random_percent(0.5)
+    is_special_bottle = randtools.random_percent(0.9)
     # special_bottles = [(i, b) for i, b in list(bottles.items()) if (not i.isdigit() or i == "-179") and not "PURE" in i]
 
     # print(special_bottles)
     special = DriftBottle.exec_query(query=
     f"""SELECT * FROM {table_name}
     WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179")
-    AND bottle_id NOT LIKE '%PURE%'
-    LIMIT 100""", dict_data=True)
-    if is_special_bottle and special:
-        print(special[0])
-        bottle: DriftBottle = DriftBottle.form_dict(special[0])
+    AND bottle_id NOT LIKE '%PURE%'""", dict_data=True)
+    print(random.choice(special))
+    have_special_bottle = False
+    bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    if not bottle.bottle_id.isdigit() or bottle.bottle_id == '-179':
+        is_special_bottle = True
+        have_special_bottle
+    if is_special_bottle and special or have_special_bottle:
+        if not have_special_bottle:
+            # print(random.choice(special))
+            bottle: DriftBottle = DriftBottle.form_dict(random.choice(special))
         print("捡到了彩蛋瓶子")
         await user.achieve_achievement(session, "彩蛋瓶")
         if bottle.bottle_id == "550W":
             await user.achieve_achievement(session, "MOSS")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
-        bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+        # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
         print(bottle)
         if bottle.sender_id == session.event.user_id and bottle.views == 0:
             await user.achieve_achievement(session, "回旋瓶")
@@ -142,7 +148,7 @@ async def _(session: CommandSession, user: u.User):
     messy_rate_string = ""
     if index == '-179':
         messy_rate_string = "##未知##"
-        messy_rate = random.randint(0, 100)
+        messy_rate = random.randint(30, 100)
     elif not index_is_int:
         messy_rate_string = "##纯洁无暇##"
         messy_rate = 0
@@ -154,7 +160,7 @@ async def _(session: CommandSession, user: u.User):
 
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
-    broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100
+    broken_rate = min(100, 1 + messy_rate / 2.5) if messy_rate < 100 else 100
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
@@ -181,13 +187,14 @@ async def _(session: CommandSession, user: u.User):
     await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), tips=True)
     content = ""
     if broken:
+        await user.achieve_achievement(session, "混乱不堪")
         content = get_message("plugins", __plugin_name__, "bottle_broken")
         if messy_rate >= 100:
             content = get_message("plugins", __plugin_name__, "bottle_broken_messy")
             await user.achieve_achievement(session, "章鱼的诅咒...")
         if index != "-179":
             broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
-            broken_bottles[index] = bottle
+            broken_bottles[index] = bottle.to_dict()
             jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
             # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()
@@ -225,9 +232,9 @@ async def _(session: CommandSession, user: u.User):
                 operated["like"] = True
                 await like(session, bottle)
                 continue
-            elif reply == '-rep' and not operated["rep"]:
+            elif reply.split(" ")[0] == '-rep' and not operated["rep"]:
                 operated["rep"] = True
-                await report(session, bottle, user_id)
+                await report(session, bottle, user_id, report_content=reply.split(" ")[1])
                 continue
             elif reply.split(" ")[0] == '-say' and not operated["say"]:
                 result = await comment(session, bottle, user_id, " ".join(reply.split(" ")[1:]))

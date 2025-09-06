@@ -5,7 +5,11 @@ import base64
 import string
 import hashlib
 from difflib import SequenceMatcher
+import enchant
 
+d = enchant.Dict("en_US")
+def is_valid_english_word(word: str) -> bool:
+    return d.check(word)
 
 class SQLInjectionDetector:
     """

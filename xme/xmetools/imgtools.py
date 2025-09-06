@@ -191,7 +191,7 @@ async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
         return MessageSegment.text(f"[图片加载失败]")
 
 def create_image_message(b64: str):
-    """同步发送图片消息（避免阻塞主线程）"""
+    """同步发送图片消息"""
     try:
         return MessageSegment.image(f'base64://{b64}', cache=True, timeout=10)
     except Exception as e:

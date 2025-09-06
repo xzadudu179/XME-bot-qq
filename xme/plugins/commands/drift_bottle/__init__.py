@@ -34,7 +34,7 @@ class DriftBottle:
             "from_group": self.from_group,
             "send_time": self.send_time,
             "sender_id": self.sender_id,
-            "comments": json.dumps(self.comments),
+            "comments": json.dumps(self.comments, ensure_ascii=False),
             "group_id": self.group_id,
         }
 
@@ -122,6 +122,12 @@ command_properties = [
         'introduction': get_message("plugins", __plugin_name__, 'check_introduction'),
         'usage': '(瓶子id)',
         'permission': ['是 SUPERUSER']
+    },
+    {
+        'name': 'seek',
+        'introduction': get_message('plugins', __plugin_name__, 'seek_introduction'),
+        'usage': '',
+        'permission': ''
     }
 ]
 
@@ -130,6 +136,7 @@ from .pickup import *
 from .cthulhu import *
 from .check import *
 from .pure import *
+from .seek import *
 
 aliases = [
     throw_alias,

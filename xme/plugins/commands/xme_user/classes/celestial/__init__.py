@@ -11,7 +11,7 @@ class Celestial:
     """天体地点 可被雷达显示
     """
     # 天体会有 uid 所属星域地图 所属银河系地图位置 所属星域地图位置 名称 介绍 位置坐标
-    def __init__(self, galaxy_location: tuple[int, int], location: tuple[int, int], name: str = "", desc: str = "", faction_id: int = 0, uid=None) -> None:
+    def __init__(self, galaxy_location: tuple[int, int], name: str = "", desc: str = "", faction_id: int = 0, uid=None) -> None:
         # from ..xme_map import get_starfield_map
         if not uid:
             self.uid: str = str(uuid.uuid4())
@@ -20,7 +20,7 @@ class Celestial:
         self.name = name
         self.desc = desc
         self.galaxy_location = galaxy_location
-        self.location = location
+        # self.location = location
         self.faction = FACTIONS.get(faction_id, FACTIONS[0])
         self.img_path = None
 
@@ -72,7 +72,7 @@ class Celestial:
             name=celestial_dict["name"],
             desc=celestial_dict["desc"],
             galaxy_location=tuple(celestial_dict["galaxy_location"]),
-            location=tuple([x for x in celestial_dict["location"].split(",")]),
+            # location=tuple([x for x in celestial_dict["location"].split(",")]),
             faction_id=celestial_dict["faction"],
         )
 

@@ -41,12 +41,17 @@
     },
     "纯洁无暇！": {
         "desc": "真的摔碎了一个瓶子嘛？",
-        "award": 501,
-        "hidden": false
+        "award": 2501,
+        "hidden": true
     },
     "V我50": {
         "desc": "在星期四给漠月 50 枚星币",
         "award": 51,
+        "hidden": false
+    },
+    "混乱不堪": {
+        "desc": "你摔碎了一个漂流瓶",
+        "award": 66,
         "hidden": false
     }
 }

@@ -154,7 +154,7 @@ class XmeDatabase:
         if value is None: return None
         if isinstance(value, (str, int, float, bytes, bytearray)): return value
         if isinstance(value, bool): return int(value)
-        if isinstance(value, (list, dict)): return json.dumps(value)
+        if isinstance(value, (list, dict)): return json.dumps(value, ensure_ascii=False)
         if isinstance(value, DbReadWriteable): return self.save_to_db(value)
         if hasattr(value, "isoformat"): return value.isoformat()
         raise ValueError(f"无法解析类型 {type(value).__name__}")

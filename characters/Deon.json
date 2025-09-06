@@ -360,8 +360,8 @@
             "你没办法执行这条指令呢...{negative}\n以下是执行要求：{permission}"
         ],
         "fuzzy_cmd": [
-            "你好像打错了指令哦 {neutral}，是不是想输入 \"{new_cmd}\" 哇, 是的话直接发送 \"ye\" 就好啦~",
-            "你好像打错了指令了诶 {neutral}，是不是想输入 \"{new_cmd}\" 哦, 是的话就在下面发送 \"ye\" 啦~"
+            "你好像打错了指令哦 {neutral}，是不是想输入 \"{new_cmd}\" 哇, 是的话在下一句话发送 \"y\" 就好啦~",
+            "你好像打错了指令了诶 {neutral}，是不是想输入 \"{new_cmd}\" 哦, 是的话就在下一句话发送 \"y\" 啦~"
         ],
         "achievement_message": [
             "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n可以使用 \"/achi\" 来查看自己的所有成就哦",
@@ -379,6 +379,8 @@
     "user": {
         "coin_name": "星币",
         "coin_pronoun": "枚",
+        "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
+        "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
         "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
@@ -1310,6 +1312,10 @@
             "desc": "漂流瓶相关指令",
             "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 20 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
             "throw_introduction": "扔一个漂流瓶",
+            "seek_introduction": "在海中寻宝",
+            "seek": {
+                "limited": "每小时只能进行一次寻宝哦"
+            },
             "reject_injection": [
                 "请不要尝试注入{bot_name}的数据库哦... {negative}",
                 "请不要尝试攻击{bot_name}的数据库哦... {negative}",
@@ -2097,6 +2103,12 @@
                 "群里的精华消息不太够呢... {neutral}",
                 "群里的精华消息有点少呢... {neutral}"
             ]
+        },
+        "lotluck": {
+            "desc": "求签",
+            "introduction": "花费 5 {coin_pronoun}{coin_name}抽取一个来自东京浅草寺的签。",
+            "hint": "确定要花费 5 {coin_pronoun}{coin_name}来抽取一个代表运势的签嘛 {neutral}。确定请回复 \"y\" 哦",
+            "canceled": "取消抽签了哦，{neutral}"
         }
     }
 }

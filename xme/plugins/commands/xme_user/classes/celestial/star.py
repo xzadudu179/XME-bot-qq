@@ -7,8 +7,8 @@ random.seed()
 
 class Star(Celestial, CanDevelop):
     """恒星类型"""
-    def __init__(self, name: str, desc: str, galaxy_location, location: tuple[int, int], star_type: StarType = None, buildings=[], faction_id = 0, thermal_luminosity=-1, uid=None) -> None:
-        Celestial.__init__(self, galaxy_location=galaxy_location, location=location, name=name, desc=desc, faction_id=faction_id, uid=uid)
+    def __init__(self, name: str, desc: str, galaxy_location, star_type: StarType = None, buildings=[], faction_id = 0, thermal_luminosity=-1, uid=None) -> None:
+        Celestial.__init__(self, galaxy_location=galaxy_location, name=name, desc=desc, faction_id=faction_id, uid=uid)
         CanDevelop.__init__(self, buildings)
         # 恒星类型
         self.star_type = star_type

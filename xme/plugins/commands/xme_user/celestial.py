@@ -3,7 +3,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import gif_msg
 from .classes import user as u
-from xme.plugins.commands.xme_user.classes.xme_map import StarfieldMap, get_starfield_map
+from xme.plugins.commands.xme_user.classes.xme_map import Starfield, get_starfield_map
 from xme.xmetools.cmdtools import use_args
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded
 from character import get_message
@@ -27,7 +27,7 @@ async def _(session: CommandSession, user: User, arg_list: list[str]):
         # await send_session_msg(session, get_message("user", "galaxy_initing"))
     if not is_galaxy_loaded():
         await send_session_msg(session, get_message("user", "no_galaxy"))
-    starfield: StarfieldMap = user.get_starfield()
+    starfield: Starfield = user.get_starfield()
     if arg_list[0].isdigit() and arg_list[1].isdigit():
         celestial = starfield.get_celestial(tuple([int(a) for a in arg_list]))
         if not celestial:

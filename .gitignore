@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+!venv/lib/python3.11/site-packages/nonebot/
 
 # Spyder project settings
 .spyderproject

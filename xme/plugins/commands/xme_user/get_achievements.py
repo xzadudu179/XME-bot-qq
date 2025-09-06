@@ -26,16 +26,18 @@ usage = {
 def get_achievement_items(achievements: list):
     total_achievements: dict = get_achievements()
     messages = []
-    for i, (k, achi) in enumerate(total_achievements.items()):
+    current_index = 0
+    for k, achi in total_achievements.items():
         achieved = False
         suffix = ""
         if k in achievements:
-            suffix = " (已完成)"
+            suffix = "\t(已完成)"
             achieved = True
         if achi["hidden"] and not achieved:
             continue
+        current_index += 1
         # messages.append(get_message("plugins", __plugin_name__, cmd_name, "achievement_item", achi_name=achi_dict["name"], achi_desc=achi_dict["desc"], award=achi_dict["award"]))
-        messages.append(f'{i + 1}. {k}{suffix}')
+        messages.append(f'{current_index + 1}. {k}{suffix}')
     if messages == []:
         messages = [get_message("plugins", __plugin_name__, cmd_name, "nothing_here")]
     return messages
@@ -46,8 +48,6 @@ def get_details(text: str, user: User):
     print(search)
     if search is None:
         return None
-    # print(achievement_messages, index)
-    # achievement_name = ".".join(a.split(".")[1:]).split(" (已完成)")[0].strip()
     achievement = user.get_achievement(search)
     # achievement = achievements[search]
     achieved = False

@@ -29,5 +29,5 @@ async def _(session: CommandSession, user: User):
     zoom_fac = 3
     path = await user.draw_user_galaxy_map(zoom_fac=zoom_fac)
     zoom_fac = 1
-    path2 = await user.draw_user_starfield_map(zoom_fac=zoom_fac)
-    await send_session_msg(session, f"{await image_msg(path, to_jpeg=False)}{await image_msg(path2, to_jpeg=False)}")
+    # path2 = await user.draw_user_starfield_map(zoom_fac=zoom_fac)
+    await send_session_msg(session, f"{await image_msg(path, to_jpeg=False)}")

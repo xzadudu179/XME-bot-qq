@@ -39,6 +39,18 @@ class User:
     def get_table_name():
         return User.__name__
 
+    async def try_spend(self, session: BaseSession, count, message="", spent_message=""):
+        if count < 0:
+            raise ValueError("花费的星币不能小于 0")
+        if self.coins < count:
+            await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
+            return False
+        r = self.spend_coins(count)
+        if r:
+            await send_session_msg(session, (get_message("user", "spent_coin", count=count) if not spent_message else spent_message))
+            return True
+        return False
+
     def __init__(
             self,
             user_id: int,
@@ -50,6 +62,7 @@ class User:
             celestial_uid=None,
             xme_favorability=0,
             counters: dict = {},
+            # timers: dict = {},
             achievements: list = [],
             ai_history: list[dict] = [],
             gen_starfield = True,
@@ -62,6 +75,7 @@ class User:
         self.xme_favorability = xme_favorability
         self.talked_to_bot = talked_to_bot
         self.counters = counters
+        # self.timers = timers
         self.achievements = achievements
         self.ai_history = ai_history
         # print(self.ai_history)
@@ -81,9 +95,12 @@ class User:
         #         print("用户星域坐标无效")
         #         self.celestial = None
         #         self.gen_celestial()
+
     def get_celestial(self):
+        # print("uid:", self.celestial_uid)
         if self.celestial_uid is not None:
             self.celestial = get_celestial_from_uid(self.celestial_uid)
+        # print("uid:", self.celestial_uid)
         if self.celestial is None:
             self.gen_celestial()
         return self.celestial
@@ -129,7 +146,7 @@ class User:
         await send_to_superusers(session.bot, f"用户 {(await session.bot.api.get_stranger_info(user_id=self.id))['nickname']} ({self.id}) 在 {(await get_bot().api.get_group_info(group_id=session.event.group_id))['group_name']} 得到了一个成就 \"{achievement_name}\"")
         if self.id != -1:
             print("更新database")
-            rows = DATABASE.update_db(obj=self, id=self.db_id, coins=self.coins, achievements=json.dumps(self.achievements))
+            rows = DATABASE.update_db(obj=self, id=self.db_id, coins=self.coins, achievements=json.dumps(self.achievements, ensure_ascii=False))
             print("受影响的行数:", rows)
         await send_session_msg(session, achievement_message)
 
@@ -209,6 +226,7 @@ class User:
             "user_id": self.id,
             "coins": self.coins,
             "counters": self.counters,
+            # "timers": self.timers,
             "xme_favorability": self.xme_favorability,
             "desc": self.desc,
             "inventory": self.inventory.__list__(),
@@ -258,29 +276,29 @@ class User:
         # jsontools.save_to_path(config.USER_PATH, users)
         self.db_id = DATABASE.save_to_db(obj=self)
 
-    async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-        # print(self.celestial )
-        celestial = self.get_celestial()
-        # if self.celestial is None:
-        #     return "static/img/no-signal.png"
-        center = celestial.location
-        starfield = self.get_starfield()
-        if starfield is None:
-            raise ValueError("用户星域坐标无效")
-        #     print("用户星域坐标无效")
-        #     self.get_celestial()
-        map_img = starfield.draw_starfield_map(
-            img_zoom=img_zoom,
-            zoom_fac=zoom_fac,
-            ui_zoom_fac=ui_zoom_fac,
-            center=center,
-            padding=padding,
-            background_color=background_color,
-            line_width=line_width,
-            grid_color=grid_color
-        )
-        map_size = starfield.max_size
-        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
+    # async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
+    #     # print(self.celestial )
+    #     celestial = self.get_celestial()
+    #     # if self.celestial is None:
+    #     #     return "static/img/no-signal.png"
+    #     center = celestial.location
+    #     starfield = self.get_starfield()
+    #     if starfield is None:
+    #         raise ValueError("用户星域坐标无效")
+    #     #     print("用户星域坐标无效")
+    #     #     self.get_celestial()
+    #     map_img = starfield.draw_starfield_map(
+    #         img_zoom=img_zoom,
+    #         zoom_fac=zoom_fac,
+    #         ui_zoom_fac=ui_zoom_fac,
+    #         center=center,
+    #         padding=padding,
+    #         background_color=background_color,
+    #         line_width=line_width,
+    #         grid_color=grid_color
+    #     )
+    #     map_size = starfield.max_size
+    #     return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
 
     async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
@@ -329,7 +347,7 @@ def try_load(id):
         u = User(id)
     return u
 
-def verify_timers(user: User, name: str):
+def verify_counters(user: User, name: str):
     if not name in user.counters or type(user.counters[name]) != dict:
         user.counters[name] = {}
         user.save()
@@ -406,7 +424,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     Returns:
         tuple[bool, bool]: (是否在时间限制内, 是否在数量限制内)
     """
-    verify_timers(user, name)
+    verify_counters(user, name)
 
     time_now = timetools.get_valuetime(timetools.timenow(), unit)
     time_now = time_now if not floor_float else math.floor(time_now)
@@ -526,6 +544,70 @@ def limit(limit_name: str,
     return decorator
 
 
+
+# def timer_tick(user: User, name: str, count=1):
+#     """计时器减少
+
+#     Args:
+#         user (User): 用户
+#         name (str): 时间限制名
+#         count (int): 次数. Defaults to 1.
+#     """
+#     user.counters[name]["count"] += count
+#     # user.save()
+
+# def timer_limit(limit_name: str,
+#           limit: float | int,
+#           limit_message: str,
+#           count_limit: int = 1,
+#           unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
+#           floor_float: bool = True,
+#           fails=lambda x: x == False,
+#           limit_func=None, ):
+#     """对函数进行限制时间内只能执行数次
+
+#     Args:
+#         limit_name (str): 限制名
+#         limit (float | int): 多少时间单位后刷新限制
+#         limit_message (str): 限制时返回的消息
+#         count_limit (int, optional): 时间内限制次数. Defaults to 1.
+#         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
+#         floor_float (bool, optional): 是否向下取整时间. Defaults to True.
+#         fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: x == False.
+#         limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
+#     """
+
+#     def decorator(func):
+#         @wraps(func)
+#         async def wrapper(session, user: User, *args, **kwargs):
+#             print(user.counters)
+#             if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
+#                               floor_float=floor_float):
+#                 if not limit_func:
+#                     return await send_session_msg(session, limit_message)
+#                 # 有自定义函数传入情况
+#                 elif inspect.iscoroutinefunction(limit_func):
+#                     return await limit_func(func, session, user, *args, **kwargs)
+#                 else:
+#                     return limit_func(func, session, user, *args, **kwargs)
+#             # user = try_load(session.event.user_id, User(session.event.user_id))
+#             print(user.counters)
+#             result = await func(session, user, *args, **kwargs)
+#             print(f"result: {result}")
+#             if not fails(result):
+#                 print("保存用户数据, 增加计数")
+#                 limit_count_tick(user, limit_name)
+#                 user.save()
+#             if isinstance(result, str):
+#                 await send_session_msg(session, result)
+#             return result
+
+#         return wrapper
+
+#     return decorator
+
+
+
 def using_user(save_data=False, id=0):
     def decorator(func):
         @wraps(func)
@@ -579,9 +661,10 @@ def load_from_dict(data: dict, id: int) -> User:
         inventory = Inventory.get_inventory(inventory_data)
     # print(data)
     celestial = data.get('celestial', None)
-    # print(celestial)
+    print("celestial", celestial)
     # print(celestial)
     counters = json.loads(data.get('counters', "{}"))
+    # timers = json.loads(data.get('timers', "{}"))
     # print(counters)
     achis = data.get('achievements', "[]")
     if not achis:
@@ -597,6 +680,7 @@ def load_from_dict(data: dict, id: int) -> User:
         achievements=json.loads(achis),
         xme_favorability=data.get('xme_favorability', 0),
         counters=counters,
+        # timers=timers,
         ai_history=json.loads(data.get('ai_history', "[]")),
     )
     # user.counters = data.get('counters', {})

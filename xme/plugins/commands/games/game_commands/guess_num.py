@@ -72,10 +72,10 @@ class GuessNum(Game):
 
 def return_state(message: str="", state: str="OK", data: dict={}) -> str:
     return {
-            "state": state,
-            "message": message,
-            "data": data
-        }
+        "state": state,
+        "message": message,
+        "data": data
+    }
 
 def calc_award(basic, game: GuessNum):
     range_len = game.number_range[1] - game.number_range[0]

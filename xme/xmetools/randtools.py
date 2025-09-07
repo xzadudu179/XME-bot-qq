@@ -68,6 +68,12 @@ def character_message(character, message_name) -> str | bool:
     result = message[character].get(message_name, False)
     return result
 
+def html_messy_string(string_input, temperature: float=50, resample_times=0, html=True):
+    result = messy_string(string_input, temperature, resample_times)
+    if not html:
+        return result
+    return result.replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;")
+
 def messy_string(string_input, temperature: float=50, resample_times=0):
     """返回一个混乱的字符串
 

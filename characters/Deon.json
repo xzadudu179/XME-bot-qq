@@ -1315,11 +1315,13 @@
             "throw_introduction": "扔一个漂流瓶",
             "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
             "seek": {
-                "introduction": "--------海中寻宝--------\n使用 \"/seek start\" 来开始一轮寻宝\n注：一个群只能同时有一个人寻宝哦。",
+                "introduction": "--------海中寻宝--------\n使用 \"/sk st\" 来开始一轮寻宝\n注：一个群只能同时有一个人寻宝哦。",
                 "limited": "每两小时只能进行一次寻宝哦",
                 "seek_start": "出发寻宝！{positive}（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n当前玩家属性：\n{attrs}\n当前使用道具: {tools}\n—↓—开始下潜—↓—",
-                "dice_event": "[掷骰事件] {event_desc} [正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}] {result_message} {attr_change}",
-                "normal_event": "[事件] {event_desc} {attr_change} {region_ch}",
+                "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change}</div>",
+                "dice_event_no_html": "[掷骰事件] {event_desc} [正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message} {attr_change}",
+                "normal_event": "<span class=\"ev\">[事件]</span> {event_desc}</div> <div class=\"effect\">{attr_change} {region_ch}</div>",
+                "normal_event_no_html": "[事件] {event_desc} {attr_change} {region_ch}",
                 "decision_event": "{event_desc}\n{decision_descs}",
                 "get_decision": [
                     "发送序号来决策哦{positive_punc} 或者发送 \"stop\" 尝试放弃事件",
@@ -1334,6 +1336,10 @@
                 "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
                 "continue_step_tip": [
                     "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结束探险 {neutral}"
+                ],
+                "in_decision": [
+                    "你正在决策事件中哦，请先进行决策吧 {neutral}",
+                    "你还在决策事件中哦，需要先进行决策{positive_punc} {neutral}"
                 ],
                 "invalid_step": "探险步数需要保持在 1~20 以内哦，你指定的步数 {count} 太大啦",
                 "quit_success": [
@@ -1742,7 +1748,7 @@
                 "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
                 "invalid_arg": "不明白指定的排名长度意思呢...",
                 "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
-                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 拥有{coin_name}的用户 {neutral}"
+                "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {neutral}"
             },
             "sendcoin": {
                 "desc": "给人{coin_name}",

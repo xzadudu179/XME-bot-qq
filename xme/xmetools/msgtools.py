@@ -41,7 +41,10 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         messages (list[MessageSegment]): 消息列表
     """
     from xme.xmetools.bottools import bot_call_action
-    res_id = await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id)
+    if event.group_id is not None:
+        res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
+    else:
+        res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
     return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
 
 def get_pure_text_message(message: dict) -> str:

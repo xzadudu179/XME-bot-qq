@@ -18,6 +18,8 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     global receiving
     global last_cmd
     raw_msg = event.raw_message.strip()
+    if not raw_msg:
+        return
     # 排除 at 漠月的情况
     if raw_msg.startswith(f"[CQ:at,qq={event.self_id}"):
         raw_msg = ("]".join(raw_msg.split("]")[1:])).strip()

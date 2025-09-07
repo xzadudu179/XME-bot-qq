@@ -381,6 +381,7 @@
         "coin_pronoun": "枚",
         "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
         "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
+        "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
         "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
         "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
         "no_sign": "没有签过到呢...",
@@ -1312,9 +1313,37 @@
             "desc": "漂流瓶相关指令",
             "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 20 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
             "throw_introduction": "扔一个漂流瓶",
-            "seek_introduction": "在海中寻宝",
+            "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
             "seek": {
-                "limited": "每小时只能进行一次寻宝哦"
+                "introduction": "--------海中寻宝--------\n使用 \"/seek start\" 来开始一轮寻宝\n注：一个群只能同时有一个人寻宝哦。",
+                "limited": "每两小时只能进行一次寻宝哦",
+                "seek_start": "出发寻宝！{positive}（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n当前玩家属性：\n{attrs}\n当前使用道具: {tools}\n—↓—开始下潜—↓—",
+                "dice_event": "[掷骰事件] {event_desc} [正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}] {result_message} {attr_change}",
+                "normal_event": "[事件] {event_desc} {attr_change} {region_ch}",
+                "decision_event": "{event_desc}\n{decision_descs}",
+                "get_decision": [
+                    "发送序号来决策哦{positive_punc} 或者发送 \"stop\" 尝试放弃事件",
+                    "发送序号来选择吧{positive_punc} 也可以发送 \"stop\" 尝试放弃事件",
+                    "发送序号来决策吧{positive_punc} 或者发送 \"stop\" 尝试放弃事件",
+                    "发送序号进行决策吧{positive_punc} 也可以发送 \"stop\" 尝试放弃事件~"
+                ],
+                "on_seeking": [
+                    "正在探险中，不能执行指令哦 {neutral}",
+                    "你还在探险中哦，不能执行指令 {neutral}"
+                ],
+                "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
+                "continue_step_tip": [
+                    "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结束探险 {neutral}"
+                ],
+                "invalid_step": "探险步数需要保持在 1~20 以内哦，你指定的步数 {count} 太大啦",
+                "quit_success": [
+                    "成功退出了事件决策 {neutral}",
+                    "你放弃了决策 {neutral}"
+                ],
+                "quit_fail": [
+                    "你无法放弃这个决策... {negative}",
+                    "你不能放弃这个决策哦 {negative}"
+                ]
             },
             "reject_injection": [
                 "请不要尝试注入{bot_name}的数据库哦... {negative}",

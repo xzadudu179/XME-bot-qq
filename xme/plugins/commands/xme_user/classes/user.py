@@ -51,6 +51,18 @@ class User:
             return True
         return False
 
+    async def get_coins(self, session: BaseSession, count, _get_message=""):
+        if count < 0:
+            raise ValueError("获得的星币不能小于 0")
+        # if self.coins < count:
+        #     await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
+        #     return False
+        r = self.add_coins(count)
+        if r:
+            await send_session_msg(session, (get_message("user", "get_coin", count=count) if not _get_message else _get_message))
+            return True
+        return False
+
     def __init__(
             self,
             user_id: int,

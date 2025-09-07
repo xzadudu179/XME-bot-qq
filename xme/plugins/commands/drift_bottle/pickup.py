@@ -9,7 +9,7 @@ from .tools.bottlecard import get_bottle_card_html, get_card_image
 from xme.xmetools.imgtools import image_msg
 from character import get_message
 from xme.xmetools import randtools
-from . import DriftBottle
+from . import DriftBottle, get_random_bottle
 import random
 random.seed()
 from nonebot import on_command, CommandSession
@@ -116,7 +116,8 @@ async def _(session: CommandSession, user: u.User):
     AND bottle_id NOT LIKE '%PURE%'""", dict_data=True)
     print(random.choice(special))
     have_special_bottle = False
-    bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    bottle: DriftBottle = get_random_bottle()
     if not bottle.bottle_id.isdigit() or bottle.bottle_id == '-179':
         is_special_bottle = True
         have_special_bottle
@@ -234,7 +235,7 @@ async def _(session: CommandSession, user: u.User):
                 continue
             elif reply.split(" ")[0] == '-rep' and not operated["rep"]:
                 operated["rep"] = True
-                await report(session, bottle, user_id, report_content=reply.split(" ")[1])
+                await report(session, bottle, user_id, report_content=reply.split(" ")[1] if len(reply.split(" ")) > 1 else "")
                 continue
             elif reply.split(" ")[0] == '-say' and not operated["say"]:
                 result = await comment(session, bottle, user_id, " ".join(reply.split(" ")[1:]))

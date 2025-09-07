@@ -97,6 +97,11 @@ class DriftBottle:
             group_id=data['group_id'],
         )
 
+
+def get_random_bottle() -> DriftBottle:
+    table_name = DriftBottle.get_table_name()
+    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+
 commands = ['throw', 'pickup']
 command_properties = [
     {

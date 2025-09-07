@@ -39,6 +39,8 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     chain_msg = ''
     chain_msg = msgs[0]["raw_msg"]
     needed_length = 3
+    if sending_msgs.get(chain_msg, False):
+        sent = True
     for i, m in enumerate(msgs):
         if m["sender"] == event.self_id and i == 0:
             break_chain = True

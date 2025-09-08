@@ -9,7 +9,7 @@ random.seed()
 from pathlib import Path
 from datetime import datetime
 
-alias = ['看看179', '看看九九', '看看九镹', 'peek99', '看看99', 'kk99', 'kk179']
+alias = ['peek99', 'kk99', 'kk179']
 __plugin_name__ = 'peek179'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

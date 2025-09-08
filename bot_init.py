@@ -43,6 +43,7 @@ BOT_SETTINGS = {
     "latest_update": [],
     "locations": {
     },
+    "seek_enable_groups": [],
     "deburst_groups": [
     ],
     "schtime_groups": []

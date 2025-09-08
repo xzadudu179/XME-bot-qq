@@ -52,6 +52,7 @@ class User:
         return False
 
     async def get_coins(self, session: BaseSession, count, _get_message=""):
+        count = int(count)
         if count < 0:
             raise ValueError("获得的星币不能小于 0")
         # if self.coins < count:
@@ -226,10 +227,14 @@ class User:
         else:
             self.xme_favorability += count
 
-    def spend_coins(self, amount: int) -> bool:
-        if amount > self.coins:
+    def spend_coins(self, amount: int, out_of_range_zero: bool= False) -> bool:
+        # out of range zero 如果付不起就算扣到 0
+        amount = int(amount)
+        if amount > self.coins and not out_of_range_zero:
             return False
         self.coins -= amount
+        if self.coins < 0:
+            self.coins = 0
         return True
 
     def to_dict(self) -> dict:
@@ -252,6 +257,8 @@ class User:
         return self.to_dict()
 
     def add_coins(self, amount: int) -> bool:
+        amount = int(amount)
+        print("amount", amount)
         if amount < 0:
             return False
         self.coins += amount
@@ -434,7 +441,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
         floor_float (bool, optional): 是否向下取整. Defaults to True.
 
     Returns:
-        tuple[bool, bool]: (是否在时间限制内, 是否在数量限制内)
+        bool: 是否在限制内
     """
     verify_counters(user, name)
 
@@ -545,6 +552,7 @@ def limit(limit_name: str,
             print(f"result: {result}")
             if not fails(result):
                 print("保存用户数据, 增加计数")
+                print("coins", user.coins)
                 limit_count_tick(user, limit_name)
                 user.save()
             if isinstance(result, str):
@@ -555,6 +563,53 @@ def limit(limit_name: str,
 
     return decorator
 
+def custom_limit(limit_name: str,
+          limit: float | int,
+          count_limit: int = 1,
+          unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
+          floor_float: bool = True,):
+    """对函数进行限制时间内只能执行数次，其中判断限制和增加计数由函数自己决定
+
+    Args:
+        limit_name (str): 限制名
+        limit (float | int): 多少时间单位后刷新限制
+        limit_message (str): 限制时返回的消息
+        count_limit (int, optional): 时间内限制次数. Defaults to 1.
+        unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
+        floor_float (bool, optional): 是否向下取整时间. Defaults to True.
+        limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(session, user: User, *args, **kwargs):
+            print(user.counters)
+            def count_tick():
+                print("保存用户数据, 增加计数")
+                limit_count_tick(user, limit_name)
+                user.save()
+            async def validate():
+                if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
+                              floor_float=floor_float):
+                    # 已受限
+                    print("受到限制")
+                    return True
+                # 未受限
+                print("无限制")
+                return False
+            # user = try_load(session.event.user_id, User(session.event.user_id))
+            print(user.counters)
+            result = await func(session, user, validate, count_tick, *args, **kwargs)
+            print(f"result: {result}")
+            # if not fails(result):
+
+            # if isinstance(result, str):
+            #     await send_session_msg(session, result)
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 # def timer_tick(user: User, name: str, count=1):

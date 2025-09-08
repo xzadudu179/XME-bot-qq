@@ -17,7 +17,7 @@ usage = {
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'<at人>',
-    "permissions": [],
+    "permissions": ["在群聊内"],
     "alias": alias
 }
 

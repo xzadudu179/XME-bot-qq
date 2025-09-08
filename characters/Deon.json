@@ -975,7 +975,7 @@
                 "{prefix}\n指令列表里面好像什么都没有..."
             ],
             "prefix": [
-                "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~",
+                "[XME-Bot v{version}]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~",
                 "[XME-Bot v{version} 测试中]\n指令可用 {command_seps} 中的任意字符开头哦\n功能前的[xxx]代表功能类型，若非指令，建议使用 \"{cmd_sep}help 功能名\" 详细查看哦~"
             ],
             "suffix": [
@@ -1315,14 +1315,28 @@
             "throw_introduction": "扔一个漂流瓶",
             "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
             "seek": {
-                "introduction": "--------海中寻宝--------\n使用 \"/sk st\" 来开始一轮寻宝\n注：一个群只能同时有一个人寻宝哦。",
-                "limited": "每两小时只能进行一次寻宝哦",
-                "seek_start": "出发寻宝！{positive}（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n当前玩家属性：\n{attrs}\n当前使用道具: {tools}\n—↓—开始下潜—↓—",
-                "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change}</div>",
-                "dice_event_no_html": "[掷骰事件] {event_desc} [正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message} {attr_change}",
+                "introduction": "--------海中寻宝[早期测试ing]--------\n使用 \"/seek start\" 来开始一轮寻宝（每日限制两次）\n寻宝时，使用\"s 步数\" 来前进，使用 \"b 步数\" 来返回，当结束时深度小于 20，寻宝成功，你会拿到你所有的奖励{positive_punc}，如果没有成功的话，会扣除{coin_name}惩罚\n注：一个群只能同时有一个人寻宝哦。而且每天只能寻宝两次。\n或者你也可以在私聊使用 \"/seek sim\" 来模拟寻宝（每日不限次数）~\n其他功能：\n(管理使用) \"/seek swi\" 在本群启用/禁用寻宝功能（默认禁用）",
+                "not_enable": "这个群里没有开启寻宝功能哦，可以尝试联系管理开启 {neutral}",
+                "not_enable_admin": "这个群里没有开启寻宝功能哦，可以尝试使用 \"/seek swi\" 开关 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦。",
+                "not_group": "你不在群聊里，不能执行这个操作哦 {neutral}",
+                "enable_warning": "请发送 \"y\" 确定开启群聊的寻宝功能 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦",
+                "disable": "群里的寻宝功能已关闭 {neutral}",
+                "not_private": "你需要在私聊里使用 \"/seek sim\" 哦（注意：{bot_name}无法接收到临时会话的消息哦）",
+                "cancel_enable": "取消开启寻宝功能了哦 {neutral}",
+                "enable": "在本群开启寻宝功能啦 {positive}",
+                "limit": "你今天不能再寻宝啦，明天再来试试吧~\n不过你可以尝试在私聊使用 \"/seek sim\" 来模拟寻宝哦！",
+                "seek_start": "出发寻宝！{positive}\n> 欢迎使用 SeekingOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成?&.???<\n> 系统初始化成功\n（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n——↓—开始下潜—↓——",
+                "not_admin": "你不是管理员哦，无法执行这个功能 {neutral}",
+                "seek_simulation": "开始模拟寻宝！{positive}\n> 欢迎使用 SeekingOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成?&.???<\n> 系统初始化成功\n当前为模拟环境，开始下潜。",
+                "group_seeking": "这个群还有人在探险哦，可以试试私聊使用或者换一个群使用呢 {neutral}",
+                "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change} {region_ch}</div>",
+                "dice_event_no_html": "[掷骰事件] {event_desc}\n[正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message}\n{attr_change} {region_ch}",
                 "normal_event": "<span class=\"ev\">[事件]</span> {event_desc}</div> <div class=\"effect\">{attr_change} {region_ch}</div>",
                 "normal_event_no_html": "[事件] {event_desc} {attr_change} {region_ch}",
                 "decision_event": "{event_desc}\n{decision_descs}",
+                "result_msg": "探险结束啦{positive_punc}\n收益统计：{gain}\n（你一阵恍惚，感觉自己的记忆正在快速消失……你在探险机器旁醒来了，好像什么事都没发生过…除了一篇你完全没有印象的探险报告...）",
+                "result_msg_with_coins": "探险结束啦{positive_punc}\n收益统计：{gain}\n（你一阵恍惚，感觉自己的记忆正在快速消失……你在探险机器旁醒来了，好像什么事都没发生过…除了一篇你完全没有印象的探险报告，和你账户多出的 {coins} {coin_pronoun}{coin_name}",
+                "result_msg_simulation": "模拟探险结束啦 {positive}\n你这次理论的收益是: {gain}\n> 本次模拟结束，正在退出 SeekingOS，欢迎再次使用。",
                 "get_decision": [
                     "发送序号来决策哦{positive_punc} 或者发送 \"stop\" 尝试放弃事件",
                     "发送序号来选择吧{positive_punc} 也可以发送 \"stop\" 尝试放弃事件",
@@ -1335,7 +1349,10 @@
                 ],
                 "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
                 "continue_step_tip": [
-                    "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结束探险 {neutral}"
+                    "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~20\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。"
+                ],
+                "continue_step_tip_onsea": [
+                    "你回到海面啦{positive_punc} 可以发送 \"s 1~20\" 以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结算这次探险。"
                 ],
                 "in_decision": [
                     "你正在决策事件中哦，请先进行决策吧 {neutral}",

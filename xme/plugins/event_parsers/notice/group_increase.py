@@ -1,4 +1,5 @@
 from nonebot import on_notice, NoticeSession
+from aiocqhttp import MessageSegment
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 import asyncio
@@ -18,7 +19,7 @@ async def _(session: NoticeSession):
     group = session.event.group_id
     increase_people[group] = increase_people.get(group, [])
     if session.event.user_id != 1795886524:
-        increase_people[group].append(f"[CQ:at,qq={session.event.user_id}]")
+        increase_people[group].append(MessageSegment.at(session.event.user_id))
     else:
         return await send_session_msg(session, get_message("event_parsers", "welcome_99"), at=False)
     # print(increase_people)

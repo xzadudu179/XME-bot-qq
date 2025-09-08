@@ -80,6 +80,7 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     feedbacks = get_character_item("bot_info", "feedbacks")
     # print(feedbacks)
     try:
+        # print(str(result))
         return str(result).format(
             **kwargs,
             neutral=str_choice(feedbacks['neutral']),
@@ -102,4 +103,8 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     except KeyError as ex:
         print(f"keyerror: {ex}")
         return str(result)
+    except ValueError as ex:
+        print(f"ValueError: {ex}")
+        return str(result)
+
 

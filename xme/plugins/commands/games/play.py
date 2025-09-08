@@ -59,7 +59,7 @@ def get_game_help(game_name) -> str | bool:
 # {args_str}
 # """.strip()
 
-@on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda x: True, shell_like=True)
+@on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
 @user.using_user(True)
 async def _(session: CommandSession, user: user.User):
     parser = ArgumentParser(session=session, usage=docs)
@@ -91,7 +91,9 @@ async def _(session: CommandSession, user: user.User):
     if not user.spend_coins(cost):
         return await send_session_msg(session, get_message("plugins", cmd_name, 'not_enough_coins', cost=cost,  ))
     # 游戏以后会返回东西
+    # print("游玩前coin", user.coins)
     game_return = await game_to_play['func'](session, user, game_args)
+    # print("游玩后coin", user.coins)
     print(game_return)
     if game_return['message']:
         await send_session_msg(session, game_return['message'])
@@ -114,6 +116,7 @@ async def _(session: CommandSession, user: user.User):
     elif limited or times_left <= 0:
         messages.append(game_to_play['meta']['limited_message'])
     message = '\n'.join(messages)
+    print("结束时coin", user.coins)
     print(messages)
     if message:
         await send_session_msg(session, message)

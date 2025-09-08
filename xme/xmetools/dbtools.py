@@ -189,7 +189,6 @@ class XmeDatabase:
         # if not name:
             # name = XmeDatabase.get_instance_class_table_name(obj)
         # 获取类的字段和值
-        print("save to DBDBDBDBDBDBDDBDBDBDBDBDB")
         data = obj.to_dict()
         # 获取所有字段名
         fields = [

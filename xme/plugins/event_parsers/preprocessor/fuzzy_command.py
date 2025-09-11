@@ -25,16 +25,18 @@ async def fuzzy_cmd(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plugin
     # 排除 at 漠月的情况
     if raw_msg.startswith(f"[CQ:at,qq={event.self_id}"):
         raw_msg = ("]".join(raw_msg.split("]")[1:])).strip()
+    # print(last_cmd, receiving, receiving_id)
     if receiving and raw_msg == "y" and event.user_id == receiving_id:
         await event_send_cmd(last_cmd, bot, event)
         receiving = False
         last_cmd = ""
         receiving_id = 0
         raise CanceledException(f"消息已被作为指令")
-    # 忽略
-    receiving = False
-    last_cmd = ""
-    receiving_id = 0
+    # 忽略不是用户说的话
+    if event.user_id == receiving_id:
+        receiving = False
+        last_cmd = ""
+        receiving_id = 0
     cmds = get_cmds_alias_strings()
     # print(raw_msg)
     # 没加指令开头字符的指令？

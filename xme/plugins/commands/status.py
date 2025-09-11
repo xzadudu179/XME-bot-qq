@@ -28,7 +28,7 @@ async def _(session: CommandSession):
     info = await bot_call_action(session.bot, "get_version_info", error_action=lambda _: no_info)
     print(info)
     if info != no_info and isinstance(info, dict):
-        info = f'- bot 实例 APP: {info["app_name"]} v{info["app_version"]}\n- 协议: {info["nt_protocol"]} {info["protocol_version"]}'
+        info = f'- bot 实例 APP: {info["app_name"]} v{info["app_version"]}'
     try:
         message = st.system_info()
     except:

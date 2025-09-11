@@ -110,7 +110,10 @@ class Player:
         self.chance = PlayerAttr(f"剩余机会", 10, show=False)
 
         # 遇到过的事件（存uid）
-        self.events_encountered: list[str] = []
+        self.events_encountered: dict[bool] = {}
+
+        # 得到的成就
+        self.achieved_achievements: list[str] = []
 
     def post_process(self, custom_func: None):
         # 事件后执行的一些方法
@@ -139,25 +142,25 @@ class Player:
 
     def get_card_color(self) -> dict:
         text_color = "#E2EBFF"
-        card_border_color = "#54D4D8"
-        card_background_color = "#181831"
+        card_border_color = "#3ba3f8"
+        card_background_color = "#141430"
         fail_color = "#FC5959"
         win_color = "#7FFF7F"
         ident_color = "#59CEFC"
         dice_color = "#BBD0FF"
         region_color = "#8DFFCA"
         effect_color = "#8DBEFF"
-        event_color = "#ADFFFB"
-        attr_color = "#ADFFFB"
+        event_color = "#addaff"
+        attr_color = "#addaff"
         line_color = "#a9b2ff4b"
         match self.region.value:
             # 默认深海
             case SeekRegion.SHALLOW_SEA:
                 text_color = "#FFFFFF"
-                card_border_color = "#88E2F1"
-                card_background_color = "#202D41"
+                card_border_color = "#9efcff"
+                card_background_color = "#121c2b"
                 fail_color = "#FC5959"
-                win_color = "#AEFFAE"
+                win_color = "#8aff8a"
                 ident_color = "#59CEFC"
                 dice_color = "#BBD0FF"
                 region_color = "#8DFFCA"
@@ -179,18 +182,70 @@ class Player:
                 attr_color = "#FFD9BA"
                 line_color = "#ffdda94b"
             case SeekRegion.UNDERSEA_CITY:
-                text_color = "#ddefff"
-                card_border_color = "#416ab6"
-                card_background_color = "#0b0d25"
-                fail_color = "#fc5982"
-                win_color = "#86ffae"
-                ident_color = "#7bffde"
-                dice_color = "#abebff"
-                region_color = "#8dffff"
-                effect_color = "#e7c2ff"
-                event_color = "#a2cbff"
-                attr_color = "#a2cbff"
-                line_color = "#aaa9ff4b"
+                text_color = "#e9edff"
+                card_border_color = "#535368"
+                card_background_color = "#171a22"
+                fail_color = "#ff6161"
+                win_color = "#93dd91"
+                ident_color = "#76ade0"
+                dice_color = "#9bacbd"
+                region_color = "#94c6cc"
+                effect_color = "#decaff"
+                event_color = "#b5bce7"
+                attr_color = "#b5bce7"
+                line_color = "#c2c2c24b"
+            case SeekRegion.TRENCH:
+                text_color = "#cfdeff"
+                card_border_color = "#212396"
+                card_background_color = "#020205"
+                fail_color = "#ee516b"
+                win_color = "#72ffbd"
+                ident_color = "#54e5ff"
+                dice_color = "#89bcff"
+                region_color = "#59afff"
+                effect_color = "#c9c3ff"
+                event_color = "#a4b2ff5"
+                attr_color = "#a4b2ff"
+                line_color = "#817eff4b"
+            case SeekRegion.ABYSS:
+                text_color = "#ffd4e8"
+                card_border_color = "#7c1414"
+                card_background_color = "#050202"
+                fail_color = "#ee5151"
+                win_color = "#8eff72"
+                ident_color = "#ffd752"
+                dice_color = "#ff89a3"
+                region_color = "#ff8d41"
+                effect_color = "#ffeaae"
+                event_color = "#ffaeab"
+                attr_color = "#ffaeab"
+                line_color = "#817eff4b"
+            case SeekRegion.FOREST:
+                text_color = "#d4ffe4"
+                card_border_color = "#136e53"
+                card_background_color = "#070e06"
+                fail_color = "#ee7051"
+                win_color = "#6bff58"
+                ident_color = "#52ff78"
+                dice_color = "#d6ff89"
+                region_color = "#bdff41"
+                effect_color = "#84ffe4"
+                event_color = "#95ffa9"
+                attr_color = "#95ffa9"
+                line_color = "#89ff7e4b"
+            case SeekRegion.UNDERSEA_CAVE:
+                text_color = "#d4ffe4"
+                card_border_color = "#136e53"
+                card_background_color = "#070e06"
+                fail_color = "#ee7051"
+                win_color = "#6bff58"
+                ident_color = "#52ff78"
+                dice_color = "#d6ff89"
+                region_color = "#bdff41"
+                effect_color = "#84ffe4"
+                event_color = "#95ffa9"
+                attr_color = "#95ffa9"
+                line_color = "#89ff7e4b"
 
         return {
             "text_color": text_color,
@@ -225,7 +280,7 @@ class Player:
 
 
     def change_attr(self, changes: dict, html=True):
-        print("changes", changes)
+        # print("changes", changes)
         result_strs = []
         for k, v in changes.items():
             change_value: PlayerAttr = use_attribute(self, k)
@@ -253,7 +308,7 @@ class Player:
                 # 此时需要保证是字典类型
                 if not isinstance(v, dict):
                     raise ValueError(f"自定义修改类型 \"{v}\" 不是字典")
-                print("getgetget", v.get("assign", True), v)
+                # print("getgetget", v.get("assign", True), v)
                 result_strs.append(self.custom_change_attr(v["change_func"], v["return_func"], change_value, v.get("return_msg", "{name}: {value}"), assign=v.get("assign", True)))
                 continue
             value_diff = new_value - old_value

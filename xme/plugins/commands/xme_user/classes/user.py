@@ -39,15 +39,15 @@ class User:
     def get_table_name():
         return User.__name__
 
-    async def try_spend(self, session: BaseSession, count, message="", spent_message=""):
+    async def try_spend(self, session: BaseSession, count, out_of_range_zero=False, message="", spent_message=""):
         if count < 0:
             raise ValueError("花费的星币不能小于 0")
         if self.coins < count:
             await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
             return False
-        r = self.spend_coins(count)
+        r, spend = self.spend_coins(count, out_of_range_zero)
         if r:
-            await send_session_msg(session, (get_message("user", "spent_coin", count=count) if not spent_message else spent_message))
+            await send_session_msg(session, (get_message("user", "spent_coin", count=spend) if not spent_message else spent_message))
             return True
         return False
 
@@ -227,15 +227,25 @@ class User:
         else:
             self.xme_favorability += count
 
-    def spend_coins(self, amount: int, out_of_range_zero: bool= False) -> bool:
+    def spend_coins(self, amount: int, out_of_range_zero: bool= False) -> tuple[bool, int]:
+        """尝试花费星币
+
+        Args:
+            amount (int): 花费数量
+            out_of_range_zero (bool, optional): 是否如果付不起，就归零. Defaults to False.
+
+        Returns:
+            tuple[bool, int]: 是否花费成功, 当前剩余星币
+        """
         # out of range zero 如果付不起就算扣到 0
         amount = int(amount)
         if amount > self.coins and not out_of_range_zero:
-            return False
+            return (False, 0)
+        coins_now = self.coins
         self.coins -= amount
         if self.coins < 0:
             self.coins = 0
-        return True
+        return (True, coins_now - self.coins)
 
     def to_dict(self) -> dict:
         return {
@@ -588,7 +598,7 @@ def custom_limit(limit_name: str,
                 print("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
                 user.save()
-            async def validate():
+            def validate():
                 if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                     # 已受限

@@ -192,7 +192,7 @@ def output_warning(warning):
 async def get_air(location: str):
     city_info = await search_location(location)
     lat, lon = city_info["location"][0]["lat"], city_info["location"][0]["lon"]
-    air = await fetch_data(f"https://devapi.qweather.com/airquality/v1/current/{lat}/{lon}", headers=headers)
+    air = await fetch_data(f"https://mb3h2ky7r9.re.qweatherapi.com/airquality/v1/current/{lat}/{lon}", headers=headers)
     return air
 
 async def get_city_id_from_location(location: str, loc_id=""):
@@ -204,17 +204,17 @@ async def get_city_id_from_location(location: str, loc_id=""):
 
 async def get_moon(location: str, loc_id=""):
     city_id = await get_city_id_from_location(location, loc_id)
-    moon = await fetch_data(f'https://devapi.qweather.com/v7/astronomy/moon?location={city_id}&date={get_time_now("%Y%m%d")}', headers=headers)
+    moon = await fetch_data(f'https://mb3h2ky7r9.re.qweatherapi.com/v7/astronomy/moon?location={city_id}&date={get_time_now("%Y%m%d")}', headers=headers)
     return moon
 
 async def get_weather(location: str, loc_id=""):
     # city_info = await search_location(location)
     # city_id = city_info["location"][0]["id"]
     city_id = await get_city_id_from_location(location, loc_id)
-    weather = await fetch_data(f'https://devapi.qweather.com/v7/weather/now?location={city_id}', headers=headers)
+    weather = await fetch_data(f'https://mb3h2ky7r9.re.qweatherapi.com/v7/weather/now?location={city_id}', headers=headers)
     return weather
 
 async def get_warnings(location: str, loc_id=""):
     city_id = await get_city_id_from_location(location, loc_id)
-    warnings = await fetch_data(f'https://devapi.qweather.com/v7/warning/now?location={city_id}', headers=headers)
+    warnings = await fetch_data(f'https://mb3h2ky7r9.re.qweatherapi.com/v7/warning/now?location={city_id}', headers=headers)
     return warnings

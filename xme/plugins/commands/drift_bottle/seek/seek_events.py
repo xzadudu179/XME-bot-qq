@@ -1,12 +1,16 @@
-from .classes.player import SeekRegion
+from .classes.player import SeekRegion, Player
 import random
 import uuid
+
+def shark_post(p: Player):
+    if p.is_die()[0] and p.region.value == SeekRegion.SHALLOW_SEA:
+        p.achieved_achievements.append("你需要一艘更大的船"),
 
 EVENTS = [
 
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         "prob": 20,
         "post_func": None,
         "descs": ["你收集到了一些资源", "你找到了一些散落的星币", "你发现了一些资源", "你抓到了几只小鱼", "你发现了一些零件", "你找到了一些被遗弃的物品"],
@@ -22,10 +26,10 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         "prob": 10,
         "post_func": None,
-        "descs": ["你收集到了一些珍珠", "你找到了一些散落的星币", "你发现了一些漂亮的石头", "你抓到了几只深海鱼类", "你发现了一些发光的物品", "你找到了一些挂饰"],
+        "descs": ["你收集到了一些珍珠", "你发现了一些漂亮的石头", "你抓到了几只深海鱼类", "你发现了一些发光的物品", "你找到了一些挂饰"],
         "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.SHALLOW_SEA],
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 300,
         "changes": {
@@ -38,13 +42,30 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
         "descs": ["什么都没有发生...", "你没发现任何东西...", "周围空空如也...", "这里什么都没有...", "好像没有任何东西..."],
+        "regions": [SeekRegion.ABYSS, SeekRegion.FOREST, SeekRegion.SHIPWRECK, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CITY, SeekRegion.UNDERSEA_CAVE],
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, *args: san.value >= 80,
+        "changes": {
+            "oxygen": {
+                "change": lambda: random.randint(0, 1),
+                "type": "-",
+                "custom": False,
+            }
+        }
+    },
+    {
+        "type": "normal",
+        "tags": [],
+        # 概率 -1 为默认事件
+        "prob": 10,
+        "post_func": None,
+        "descs": ["什么都没有发生...", "你没发现任何东西...", "周围空空如也...", "这里什么都没有...", "好像没有任何东西..."],
         "regions": [],
-        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, this_event, *args: san.value >= 80,
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, *args: san.value >= 80,
         "changes": {
             "oxygen": {
                 "change": lambda: random.randint(0, 1),
@@ -56,7 +77,7 @@ EVENTS = [
     {
         # 下潜事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -68,13 +89,41 @@ EVENTS = [
                 "change": lambda: random.randint(2, 10),
                 "type": "+",
                 "custom": False,
-            }
+            },
+            "oxygen": {
+               "change": lambda: random.randint(0, 2),
+                "type": "-",
+                "custom": False,
+            },
         }
     },
     {
         # 下潜事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
+        # 概率 -1 为默认事件
+        "prob": 5,
+        "post_func": None,
+        "descs": ["你徘徊了一阵子...", "你想要回头看看有没有东西错过。", "你觉得你下潜的有点太快了。"],
+        "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False and depth.value > 70,
+        "changes": {
+            "depth": {
+                "change": lambda: random.randint(1, 7),
+                "type": "-",
+                "custom": False,
+            },
+            "oxygen": {
+               "change": lambda: random.randint(0, 1),
+                "type": "-",
+                "custom": False,
+            },
+        }
+    },
+    {
+        # 下潜事件
+        "type": "normal",
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -83,7 +132,7 @@ EVENTS = [
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
         "changes": {
             "depth": {
-                "change": lambda: random.randint(2, 10),
+                "change": lambda: random.randint(2, 14),
                 "type": "+",
                 "custom": False,
             },
@@ -97,7 +146,7 @@ EVENTS = [
     {
         # 返回事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -106,12 +155,12 @@ EVENTS = [
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
         "changes": {
             "depth": {
-                "change": lambda: random.randint(7, 15),
+                "change": lambda: random.randint(7, 20),
                 "type": "-",
                 "custom": False,
             },
             "oxygen": {
-                "change": lambda: random.randint(2, 4),
+                "change": lambda: random.randint(0, 4),
                 "type": "-",
                 "custom": False,
             }
@@ -120,7 +169,7 @@ EVENTS = [
     {
         # 返回事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 100,
         "post_func": None,
@@ -144,7 +193,7 @@ EVENTS = [
     {
         # 返回事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -158,9 +207,10 @@ EVENTS = [
     {
         # 切换深渊事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["你似乎感受到了一阵热量...但你知道，这绝对不是来自太阳的热量...", "你大概是来到了一片没有尽头的无底深渊..."],
         "regions": [SeekRegion.TRENCH],
@@ -177,9 +227,10 @@ EVENTS = [
     {
         # ↑切换海沟事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["你感到四周变寒冷了，但是你知道太阳光离你更近了...", "你终于离开了无底的深渊..."],
         "regions": [SeekRegion.ABYSS],
@@ -196,9 +247,10 @@ EVENTS = [
     {
         # ↓切换海沟事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["即便是探照灯也完全无法看清现在的环境了...", "太阳已经完全消失了...", ],
         "regions": [SeekRegion.DEEP_SEA],
@@ -215,9 +267,10 @@ EVENTS = [
     {
         # 切换深海事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["四周的小生物渐渐多了起来..", "海水总算有了颜色...和亮度", "四周不再是黑乎乎的一片了..."],
         "regions": [SeekRegion.TRENCH, SeekRegion.FOREST],
@@ -234,9 +287,10 @@ EVENTS = [
     {
         # 切换深海事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["周围一片寂静...与漆黑", "太阳的光芒要消失了...", ],
         "regions": [SeekRegion.SHALLOW_SEA],
@@ -253,9 +307,10 @@ EVENTS = [
     {
         # 切换浅海事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": -1,
+        "prob": 100,
+        "top": True,
         "post_func": None,
         "descs": ["你逐渐看到了太阳的光芒...", "海水总算有了颜色...和亮度", "四周不再是黑乎乎的一片了..."],
         "regions": [SeekRegion.DEEP_SEA],
@@ -270,15 +325,14 @@ EVENTS = [
         "region_change": lambda last: SeekRegion.SHALLOW_SEA,
     },
     {
-        # 切换浅海事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": 3,
+        "prob": 2,
         "post_func": None,
         "descs": ["你似乎充满了力量", "你现在精神勃发", "你现在充满决心", "你现在精神亢奋"],
         "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
-        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= 90 and oxygen.value >= 65 and san.value >= 80 and depth.value > 75 and coins.value > 100,
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.8 and oxygen.value >= oxygen.max_value * 0.8 and san.value >= san.max_value * 0.8 and depth.value > 75 and coins.value > 100,
         "changes": {
             "chance": {
                 "change": lambda: random.randint(1, 2),
@@ -288,15 +342,14 @@ EVENTS = [
         },
     },
     {
-        # 切换浅海事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 7,
         "post_func": None,
         "descs": ["你觉得这一切还不应该结束", "你觉得你还有精力继续探险", "你下定了探索的决心", "你知道你这次探险一定能成功"],
         "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA, SeekRegion.TRENCH],
-        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= 100 and oxygen.value >= 90 and san.value >= 90 and depth.value > 125 and coins.value > 240 and chance.value <= 3,
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.9 and oxygen.value >= oxygen.max_value * 0.9 and san.value >= san.max_value * 0.9 and depth.value > 150 and coins.value > 240 and chance.value <= 3,
         "changes": {
             "chance": {
                 "change": lambda: random.randint(2, 5),
@@ -307,7 +360,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -324,7 +377,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -345,7 +398,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 20,
         "post_func": None,
@@ -362,7 +415,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 12,
         "post_func": None,
@@ -379,7 +432,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 10,
         "post_func": None,
@@ -396,7 +449,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 15,
         "post_func": None,
@@ -413,7 +466,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 4,
         "post_func": None,
@@ -430,16 +483,21 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": 4,
+        "prob": 5,
         "post_func": None,
-        "descs": ["出现了一只海豚，助你前往了更深的地方...", "你发现了一只海豚，跟着它，你前往了更深的水域...", ""],
-        "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA, SeekRegion.UNDERSEA_CITY, SeekRegion.UNDERSEA_CAVE],
-        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: san.value > 80 and health.value > 50 and san.value < san.max_value,
+        "descs": ["出现了一只海豚，助你前往了更深的地方...", "你发现了一只海豚，跟着它，你前往了更深的水域...", "有一群小鱼带着你游到了更深的水域...", "出现了一片鱼群，它们对水流的扰动使你更快地下潜..."],
+        "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA],
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: san.value > 80 and not back,
         "changes": {
+            "depth": {
+                "change": lambda: random.randint(9, 20),
+                "type": "+",
+                "custom": False,
+            },
             "san": {
-                "change": lambda: random.randint(2, 5),
+                "change": lambda: random.randint(0, 3),
                 "type": "+",
                 "custom": False,
             }
@@ -447,7 +505,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 15,
         "post_func": None,
@@ -464,7 +522,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 5,
         "post_func": None,
@@ -481,9 +539,9 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": 6,
+        "prob": 3,
         "post_func": None,
         "descs": ["沉船里没有任何东西了...", "这个沉船已经没有可以探索的了。", "这个沉船里没什么东西了。", "这个沉船已经被探索完了"],
         "regions": [SeekRegion.SHIPWRECK],
@@ -494,9 +552,9 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": 0.5,
+        "prob": 0.3,
         "post_func": None,
         "descs": ["你觉得你对这个城市的搜刮差不多就到这了。", "这块城区已经没什么东西了。", "这里差不多被探索完了。", "这个城市里没什么东西了。"],
         "regions": [SeekRegion.UNDERSEA_CITY],
@@ -508,7 +566,7 @@ EVENTS = [
     {
         # 返回事件
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": -1,
         "post_func": None,
@@ -521,7 +579,8 @@ EVENTS = [
     },
     {
         "type": "decision",
-        "prob": 0.3,
+        "tags": [],
+        "prob": 0.5,
         "post_func": None,
         "descs": ["你发现一个海底城市...要不要探索一下？", "你发现一片神秘的海底城市...要不要去探索一下？", "黑暗中出现了一片城市的轮廓...要去探索吗？"],
         "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
@@ -530,7 +589,7 @@ EVENTS = [
         "decisions": [
             {
                 "type": "normal",
-                "uid": str(uuid.uuid4()),
+                "tags": [],
                 "names": ["进入城市", "探索城市"],
                 "descs": ["你进入了这座城市...", "你来到了这座城市...", "你开始对这座城市进行探险...", "你进入了这个城市..."],
                 "tip": "[区域→]",
@@ -540,7 +599,7 @@ EVENTS = [
             },
             {
                 "type": "normal",
-                "uid": str(uuid.uuid4()),
+                "tags": [],
                 "tip": "",
                 "names": ["离开", "放弃", "放弃探索"],
                 "descs": ["你觉得探索这座城市太危险了", "你觉得自己还不适合来这里探索", "你觉得城市太危险了"],
@@ -550,8 +609,44 @@ EVENTS = [
         ]
     },
     {
+        "type": "decision",
+        "tags": [],
+        "prob": 0.5,
+        "post_func": None,
+        "descs": ["城市旁出现了一道峡谷，要不要离开城市去往更深处探险？", "你发现了一块悬崖，要不要离开城市去探索？", "这里有一块悬崖，要不要离开城市往更深处探索？"],
+        "regions": [SeekRegion.UNDERSEA_CITY],
+        "can_quit": True,
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 230,
+        "decisions": [
+            {
+                "type": "normal",
+                "tags": [],
+                "names": ["离开城市", "深入探索"],
+                "descs": ["你离开了这座城市，并往更深处下潜...", "你来到了这座城市...", "你开始对这座城市进行探险...", "你进入了这个城市..."],
+                "tip": "[深度+][区域+]",
+                "changes": {
+                    "depth": {
+                        "change": lambda: random.randint(10, 20),
+                        "type": "+",
+                        "custom": False,
+                    }
+                },
+                "region_change": lambda last: last,
+            },
+            {
+                "type": "normal",
+                "tags": [],
+                "tip": "",
+                "names": ["留在城市", "放弃探索", "继续探索城市"],
+                "descs": ["你觉得这座城市还有东西没被发现", "你觉得这座城市还适合继续探索", "你觉得这座城市应该多探索一下"],
+                "changes": {
+                }
+            },
+        ]
+    },
+    {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 5,
         "post_func": None,
@@ -568,7 +663,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 10,
         "post_func": None,
@@ -577,7 +672,7 @@ EVENTS = [
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 100,
         "changes": {
             "oxygen": {
-                "change": lambda: random.randint(1, 10),
+                "change": lambda: random.randint(2, 12),
                 "type": "+",
                 "custom": False,
             }
@@ -585,7 +680,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 15,
         "post_func": None,
@@ -602,7 +697,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 10,
         "post_func": None,
@@ -619,7 +714,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 0.07,
         "post_func": None,
@@ -647,7 +742,7 @@ EVENTS = [
     },
     {
         "type": "normal",
-        "uid": str(uuid.uuid4()),
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 5,
         "post_func": None,
@@ -671,16 +766,17 @@ EVENTS = [
     },
     {
         "type": "decision",
-        "prob": 3,
+        "tags": [],
+        "prob": 2,
         "post_func": None,
         "descs": ["你发现了一艘沉船...要不要探索一下？", "出现了一艘沉船...要不要去探索一下？", "你看到了一艘沉船...要去探索吗？"],
         "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
         "can_quit": True,
-        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 20,
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 60,
         "decisions": [
             {
                 "type": "normal",
-                "uid": str(uuid.uuid4()),
+                "tags": [],
                 "names": ["进入沉船", "探索沉船"],
                 "descs": ["你进入了沉船...", "你来到了沉船的内部...", "你走进了沉船...", "你走进了这艘沉船..."],
                 "tip": "[区域→]",
@@ -690,7 +786,7 @@ EVENTS = [
             },
             {
                 "type": "normal",
-                "uid": str(uuid.uuid4()),
+                "tags": [],
                 "tip": "",
                 "names": ["离开", "放弃", "放弃探索"],
                 "descs": ["你不打算探索这艘沉船。", "你放弃了对沉船的探索。", "你没有尝试探索这艘沉船。"],
@@ -701,9 +797,10 @@ EVENTS = [
     },
     {
         "type": "dice",
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 5,
-        "post_func": None,
+        "post_func": shark_post,
         "event_messages": [
             {
                 # 什么都没有是所有地区都可
@@ -806,8 +903,9 @@ EVENTS = [
     },
     {
         "type": "dice",
+        "tags": [],
         # 概率 -1 为默认事件
-        "prob": 5,
+        "prob": 4,
         "post_func": None,
         "event_messages": [
             {
@@ -888,6 +986,7 @@ EVENTS = [
     },
     {
         "type": "dice",
+        "tags": [],
         # 概率 -1 为默认事件
         "prob": 2,
         "post_func": None,
@@ -959,7 +1058,8 @@ EVENTS = [
     },
     {
         "type": "decision",
-        "prob": 3,
+        "tags": [],
+        "prob": 1,
         "post_func": None,
         "descs": ["这里似乎有一些日志...要不要看看？", "你发现了一些笔记...或许可以查看一下？", "你发现了一些保存完好的手稿...要打开看看吗？"],
         "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY],
@@ -968,6 +1068,7 @@ EVENTS = [
         "decisions": [
             {
                 "type": "dice",
+                "tags": [],
                 "names": ["阅读", "翻阅", "查看"],
                 "tip": "[???]",
                 "event_messages": [
@@ -988,7 +1089,7 @@ EVENTS = [
                 "ok": {
                     "changes": {
                         "insight": {
-                            "change": lambda: random.randint(1, 3),
+                            "change": lambda: random.randint(0, 1),
                             "type": "+",
                             "custom": False,
                         },
@@ -1005,6 +1106,13 @@ EVENTS = [
                             "change": lambda: random.randint(2, 4),
                             "type": "+",
                             "custom": False,
+                        },
+                        "insight": {
+                            "change": lambda v: v.change_max(lambda x: x + random.randint(1, 3)),
+                            "return": lambda v: v.max_value,
+                            "return_msg": "最大{name} = {value}",
+                            "custom": True,
+                            "assign": False,
                         },
                     },
                 },
@@ -1035,7 +1143,7 @@ EVENTS = [
 
             {
                 "type": "normal",
-                "uid": str(uuid.uuid4()),
+                "tags": [],
                 "tip": "",
                 "names": ["算了", "放弃", "无视", "离开"],
                 "descs": ["你不打算翻阅这些没用的文件。", "你觉得这些文件没必要翻阅。", "你觉得这些手稿没什么帮助。", "你觉得对于这些东西还是不要太过于好奇。"],

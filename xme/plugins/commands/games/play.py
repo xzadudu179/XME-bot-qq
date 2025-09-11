@@ -88,7 +88,7 @@ async def _(session: CommandSession, user: user.User):
         return
     # 玩游戏
     cost = game_to_play['meta'].get('cost', 0)
-    if not user.spend_coins(cost):
+    if not user.spend_coins(cost)[0]:
         return await send_session_msg(session, get_message("plugins", cmd_name, 'not_enough_coins', cost=cost,  ))
     # 游戏以后会返回东西
     # print("游玩前coin", user.coins)

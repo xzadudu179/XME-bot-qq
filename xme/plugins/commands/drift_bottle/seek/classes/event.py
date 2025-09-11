@@ -18,14 +18,19 @@ class Event:
         region_events = Event.get_region_event_list(event_list, self.player.region.value)
         # 符合条件的事件
         # print("region_events", region_events)
-        eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered, e)]
+        eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered)]
         # print("eligible_events", eligible_events)
         chosen_event = Event.choose_event(eligible_events)
         result = self.build_event(
             event_dict=chosen_event,
             current_region=current_region
         )
-        self.player.events_encountered.append(chosen_event["uid"])
+        # print("event", chosen_event)
+        # 事件标签，用来保存发生了哪类事件，用于特殊事件链
+        ev_tags: list = chosen_event.get("tags", None)
+        if ev_tags is not None:
+            for t in ev_tags:
+                self.player.events_encountered[t] = True
         self.player.post_process(chosen_event.get("post_func", None))
         return result
 

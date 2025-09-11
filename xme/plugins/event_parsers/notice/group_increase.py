@@ -30,6 +30,6 @@ async def _(session: NoticeSession):
     if len(people) == len(increase_people[group]):
         at = " ".join(increase_people[group])
         increase_people[group] = []
-        print(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
+        print(get_message("event_parsers", "welcome", at=" ".join(str(s) for s in increase_people[group])))
         await send_session_msg(session, get_message("event_parsers", "welcome", at=at), False)
         return

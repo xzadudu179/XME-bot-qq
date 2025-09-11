@@ -3,7 +3,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 
-alias = ['你是谁', 'who', 'chac']
+alias = ['whoareuy']
 __plugin_name__ = 'whoru'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,

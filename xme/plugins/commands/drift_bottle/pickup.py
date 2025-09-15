@@ -40,7 +40,7 @@ async def likesay(session, bottle: DriftBottle, comment_index: str):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
         return False
     # jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'comments', set_method=lambda v: v[comment_index - 1]['likes'] + 1)
-    bottle.likes += 1
+    bottle.comments[comment_index - 1]["likes"] += 1
     bottle.save()
     print("点赞了评论")
     print(bottle)
@@ -70,6 +70,7 @@ async def comment(session, bottle: DriftBottle, user_id, comment_content):
         "content": comment_content,
         "likes": 0
     })
+    bottle.save()
     print("评论了")
     for superuser in config.SUPERUSERS:
         await session.bot.send_private_msg(user_id=superuser,message=f"{sender} ({user_id}) 评论了 {index} 号漂流瓶：{comment_content}")

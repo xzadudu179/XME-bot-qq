@@ -14,7 +14,7 @@ class TimeUnit(Enum):
     YEAR = 60 * 60 * 24 * 365
 
 def get_valuetime(time_float, unit: TimeUnit):
-    return math.floor(time_float / unit.value)
+    return math.ceil(time_float / unit.value)
 
 def get_closest_time(times: list, target_time="NOW", format="%Y-%m-%d %H:%M:%S"):
     """获得与目标时间最接近的时间索引

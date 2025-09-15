@@ -84,6 +84,8 @@ class Seek:
                     "over": self.player.back and self.player.depth.value <= 0,
             }
             msgs.append(msg)
+        if self.player.depth.value <= 0 and self.player.oxygen.value < self.player.oxygen.max_value:
+            self.player.oxygen.change(lambda v: v + 100000)
         return {
             "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
             "count": count,
@@ -322,7 +324,7 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
 @on_command(command_name, aliases=seek_alias, only_to_me=False, permission=lambda _: True)
 @user.using_user(save_data=True)
 # @permission(lambda sender: sender.from_group(727949269) or sender.is_superuser, permission_help="在 179 的主群使用 或 是 SUPERUSER")
-@user.custom_limit(command_name, 2, TIMES_LIMIT, TimeUnit.DAY)
+@user.custom_limit(command_name, 1, TIMES_LIMIT, TimeUnit.DAY)
 async def _(session: CommandSession, u: user.User, validate, count_tick):
     try:
         global seeking_groups

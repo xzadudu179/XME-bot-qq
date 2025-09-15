@@ -137,7 +137,7 @@ EVENTS = [
                 "custom": False,
             },
             "oxygen": {
-                "change": lambda: random.randint(0, 3),
+                "change": lambda: random.randint(0, 2),
                 "type": "-",
                 "custom": False,
             }
@@ -160,7 +160,7 @@ EVENTS = [
                 "custom": False,
             },
             "oxygen": {
-                "change": lambda: random.randint(0, 4),
+                "change": lambda: random.randint(0, 3),
                 "type": "-",
                 "custom": False,
             }
@@ -507,6 +507,23 @@ EVENTS = [
         "type": "normal",
         "tags": [],
         # 概率 -1 为默认事件
+        "prob": 4,
+        "post_func": None,
+        "descs": ["一阵乱流让你下潜地更深了...", "忽然出现了一阵乱流，把你带到了更深的地方"],
+        "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+        "changes": {
+            "depth": {
+                "change": lambda: random.randint(10, 30),
+                "type": "+",
+                "custom": False,
+            },
+        }
+    },
+    {
+        "type": "normal",
+        "tags": [],
+        # 概率 -1 为默认事件
         "prob": 15,
         "post_func": None,
         "descs": ["周围的墙面似乎正在收缩...这让你感到不安...", "你好像听到了一阵低语...", "楼房在移动吗？", "你似乎知道...你不应该来这里", "你被迷雾包围了...", "你好像听到了什么声音...", "你似乎听到了不属于这个世界的声音...", "你似乎看到了不应该看到的东西..."],
@@ -672,7 +689,7 @@ EVENTS = [
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 100,
         "changes": {
             "oxygen": {
-                "change": lambda: random.randint(2, 12),
+                "change": lambda: random.randint(3, 15),
                 "type": "+",
                 "custom": False,
             }
@@ -716,24 +733,29 @@ EVENTS = [
         "type": "normal",
         "tags": [],
         # 概率 -1 为默认事件
-        "prob": 0.07,
+        "prob": 0.1,
         "post_func": None,
         "descs": ["你忽然晕了过去...随后醒来在了一个奇怪的地方...", "你好像感觉到了一阵温暖...但你知道...你很快就要死了。", "你晕了过去...但是你一定不会想知道发生了什么的..."],
         "regions": [SeekRegion.SHALLOW_SEA],
         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
         "changes": {
             "oxygen": {
-                "change": lambda: random.randint(1, 15),
+                "change": lambda: random.randint(1, 25),
                 "type": "-",
                 "custom": False,
             },
             "san": {
-                "change": lambda: random.randint(30, 50),
+                "change": lambda: random.randint(20, 50),
                 "type": "-",
                 "custom": False,
             },
             "depth": {
                 "change": lambda: random.randint(1100, 1300),
+                "type": "+",
+                "custom": False,
+            },
+            "coins": {
+                "change": lambda: 666,
                 "type": "+",
                 "custom": False,
             },
@@ -837,7 +859,7 @@ EVENTS = [
         "ok": {
             "changes": {
                 "coins": {
-                    "change": lambda: random.randint(15, 50),
+                    "change": lambda: random.randint(5, 28),
                     "type": "+",
                     "custom": False,
                 },
@@ -851,7 +873,7 @@ EVENTS = [
         "big_win": {
             "changes": {
                 "coins": {
-                    "change": lambda: random.randint(30, 70),
+                    "change": lambda: random.randint(10, 50),
                     "type": "+",
                     "custom": False,
                 },
@@ -875,7 +897,7 @@ EVENTS = [
                     "custom": False,
                 },
                 "coins": {
-                    "change": lambda: random.randint(0, 50),
+                    "change": lambda: random.randint(0, 30),
                     "type": "-",
                     "custom": False,
                 }
@@ -894,7 +916,7 @@ EVENTS = [
                     "custom": False,
                 },
                 "coins": {
-                    "change": lambda: random.randint(10, 70),
+                    "change": lambda: random.randint(10, 50),
                     "type": "-",
                     "custom": False,
                 }
@@ -1020,7 +1042,7 @@ EVENTS = [
                 },
                 "health": {
                     "change": lambda: random.randint(5, 10),
-                    "type": "-",
+                    "type": "+",
                     "custom": False,
                 },
                 "oxygen": {

@@ -72,6 +72,9 @@ async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: Base
     if pair == "":
         user = None
     else:
-        pair_user = await session.bot.get_group_member_info(group_id=group_id, user_id=pair)
+        try:
+            pair_user = await session.bot.get_group_member_info(group_id=group_id, user_id=pair)
+        except:
+            pair_user = await session.bot.get_stranger_info(user_id=pair)
         user = pair_user
     return user

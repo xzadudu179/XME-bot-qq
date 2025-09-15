@@ -70,7 +70,7 @@ async def get_stranger_name(user_id, default=None):
         return default
     return result
 
-async def bot_call_action(bot: NoneBot, action: str, error_action=None, *error_action_args, **kwargs):
+async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs):
     """bot 调用方法
 
     Args:
@@ -82,12 +82,14 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, *error_a
         Any: 调用结束返回的值
     """
     try:
+        # print("call action")
         return await bot.api.call_action(action=action, **kwargs)
     except Exception as ex:
         print(f"bot 调用接口出现错误： {ex}")
-        if not error_action:
+        if error_action is None:
             raise ex
-        return error_action(bot, *error_action_args)
+        print("error action")
+        return error_action
 
 async def get_group_name(group_id, default=None):
     try:

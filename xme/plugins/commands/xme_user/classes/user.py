@@ -461,6 +461,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     time_limit, c_limit = False, False
     print(time_now)
     print(user.counters[name]["time"])
+    print(timetools.get_valuetime(user.counters[name]["time"], unit))
     print(limit)
     if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < limit:
         print("时间受限制")

@@ -208,18 +208,18 @@ class Player:
                 attr_color = "#a4b2ff"
                 line_color = "#817eff4b"
             case SeekRegion.ABYSS:
-                text_color = "#ffd4e8"
+                text_color = "#ffccc8"
                 card_border_color = "#7c1414"
                 card_background_color = "#050202"
                 fail_color = "#ee5151"
-                win_color = "#8eff72"
-                ident_color = "#ffd752"
+                win_color = "#a5f591"
+                ident_color = "#f7d35e"
                 dice_color = "#ff89a3"
-                region_color = "#ff8d41"
-                effect_color = "#ffeaae"
-                event_color = "#ffaeab"
-                attr_color = "#ffaeab"
-                line_color = "#817eff4b"
+                region_color = "#ff8045"
+                effect_color = "#ffb17c"
+                event_color = "#ff8884"
+                attr_color = "#ff8884"
+                line_color = "#ff7e7e4b"
             case SeekRegion.FOREST:
                 text_color = "#d4ffe4"
                 card_border_color = "#136e53"
@@ -265,10 +265,16 @@ class Player:
     def get_depth_tip(count):
         # 深度改变时 1~5 是 单箭头，5~15 是双箭头 15 以上是三箭头
         arrow_count = 1
-        if abs(count) > 5:
-            arrow_count = 2
+        if abs(count) > 1000:
+            arrow_count = 6
+        elif abs(count) > 300:
+            arrow_count = 5
+        elif abs(count) > 60:
+            arrow_count = 4
         elif abs(count) > 15:
             arrow_count = 3
+        elif abs(count) > 5:
+            arrow_count = 2
         arrow = "↓" if count > 0 else "↑"
         if count == 0:
             arrow = "-"
@@ -279,7 +285,7 @@ class Player:
         return (100 - (self.san.value / self.san.max_value) * 100) * 0.5
 
 
-    def change_attr(self, changes: dict, html=True):
+    def change_attr(self, changes: dict, html=True, blank=True):
         # print("changes", changes)
         result_strs = []
         for k, v in changes.items():
@@ -319,13 +325,17 @@ class Player:
             # 深度单独计算
             if k == "depth":
                 result_strs.append(Player.get_depth_tip(value_diff))
+                # if self.depth.value <= 0 and self.oxygen.value < self.oxygen.max_value:
+                #     result_strs.append(self.change_attr({
+                #         "oxygen": "+100000"
+                #     }, blank=False))
                 continue
             result_strs.append(f"{change_value.name} {'+' + str(value_diff) if value_diff >= 0 else str(value_diff)}")
         content = ', '.join(result_strs)
         content = html_messy_string(content, self.get_messy_rate(), html=html)
         # c = f"<div class=\"effect\">({content})</div>" if html else f"({content})"
         c = f"({content})"
-        return c if content else ""
+        return (c if blank else content) if content else ""
 
     # 玩家是否还活着
     def is_die(self) -> tuple[bool, str]:

@@ -35,13 +35,13 @@ async def _(session: CommandSession):
         message = get_message("plugins", __plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
     vars = read_from_path("data/bot_vars.json")
-    usage: dict = read_from_path("data/usage_stats.json")["usages"]
-    call_sum = 0
-    for k, v in usage.items():
+    # usage: dict = read_from_path("data/usage_stats.json")["usages"]
+    # call_sum = 0
+    # for k, v in usage.items():
         # print(k, len(v["calls"]))
-        call_sum += len(v["calls"])
-    top_k_usage = heapq.nlargest(3, usage, key=lambda k: len(usage[k]["calls"]))
-    top_k_str = '\n'.join([f'{i + 1}、' + u + f"\t 被调用了 {len(usage[u]['calls']):,} 次。" for i, u in enumerate(top_k_usage)])
+        # call_sum += len(v["calls"])
+    # top_k_usage = heapq.nlargest(3, usage, key=lambda k: len(usage[k]["calls"]))
+    # top_k_str = '\n'.join([f'{i + 1}、' + u + f"\t 被调用了 {len(usage[u]['calls']):,} 次。" for i, u in enumerate(top_k_usage)])
     save_to_path("data/bot_vars.json", vars)
     # user_datas = read_from_path("./data/users.json")
     user_count = len(user.User.get_users())
@@ -49,6 +49,6 @@ async def _(session: CommandSession):
     await send_session_msg(
         session, message + "=== 当前 bot 状态 ===\n" +
         info +
-        f"\n===============\nBOT 自始以来被调用了 {call_sum:,} 次，记录了 {user_count:,} 位用户。以下是 3 个最常被调用的指令：\n{top_k_str}",
+        f"\n===============\nBOT 记录了 {user_count:,} 位用户。",
         tips=True
     )

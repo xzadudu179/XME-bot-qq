@@ -4,7 +4,7 @@ import xme.plugins.commands.wife as w
 from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import *
-from xme.xmetools.bottools import permission
+from xme.xmetools.bottools import permission, bot_call_action
 from xme.xmetools.msgtools import send_session_msg
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆']
@@ -28,13 +28,16 @@ async def _(session: CommandSession):
         at_name = "你"
         at_id = session.event.user_id
         # return
-    try:
         print(at_id, session.self_id, group_id)
         wife = await search_wife(wifeinfo, group_id, at_id, session)
         # print(wife)
 
+    try:
         if at_id != session.self_id and at_id != session.event.user_id:
-            at = await session.bot.get_group_member_info(group_id=group_id, user_id=at_id)
+            try:
+                at = await session.bot.get_group_member_info(group_id=group_id, user_id=at_id,)
+            except:
+                at = session.bot.get_stranger_info(user_id=at_id, self_id=session.self_id)
             at_name = f"{x if (x:=at['card']) else at['nickname']} ({at_id}) "
         elif at_id == session.event.user_id:
             at_name = "你"
@@ -43,7 +46,7 @@ async def _(session: CommandSession):
         # message = f"{at_name}今天并没有老婆ovo"
         if wife:
             # print(pair_user)
-            name = (x if (x:=wife['card']) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
+            name = (x if (x:=wife.get('card', None)) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
             who = f"{at_name}"
             message = get_message("plugins", w.__plugin_name__, "wife_message",
                 who=who,

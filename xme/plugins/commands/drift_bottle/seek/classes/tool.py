@@ -1,5 +1,6 @@
 from .event import Event
 from typing import Callable
+import random
 
 # 道具
 class Tool:
@@ -8,6 +9,7 @@ class Tool:
         self.name = name
         self.desc = desc
         self.apply_message = apply_message
+        self.cost
         self.player = player
         self.changes = changes
         self.region_change = region_change
@@ -31,4 +33,14 @@ class Tool:
     def apply_event(self, e: Event) -> str:
         if self.apply_times > 0:
             self.apply_times -= 1
-        return e.normal_event(f"道具 [{self.name}] 激活：{self.apply_message}", self.changes, self.region_change, html=True)
+            # f"道具 [{self.name}] 激活：{self.apply_message}", self.changes, self.region_change
+        return e.build_normal_event({
+            "descs": [self.apply_message],
+            "changes": {
+                "coins": {
+                    "change": lambda: 100,
+                    "type": "+",
+                    "custom": False,
+                }
+            }
+        }, html=True)

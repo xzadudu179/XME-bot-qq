@@ -7,7 +7,7 @@ from .wife_tools import *
 from xme.xmetools.bottools import permission, bot_call_action
 from xme.xmetools.msgtools import send_session_msg
 
-wife_alias = ['今日老婆', 'kklp', '看看老婆']
+wife_alias = ['今日老婆', 'kklp', '看看老婆', 'w']
 @on_command('wife', aliases=wife_alias, only_to_me=False, permission=lambda sender: True)
 @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(command_properties[0]['permission']))
 async def _(session: CommandSession):
@@ -19,10 +19,9 @@ async def _(session: CommandSession):
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
         at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
+        wife = await search_wife(wifeinfo, group_id, at_id, session)
     # 如果是对 xme 说
-    elif at_id == session.self_id:
-        # at_id = session.self_id
-        at_name = "我"
+
     else:
         # await send_msg(session, "请 at 你要看的人哦")
         at_name = "你"
@@ -31,6 +30,9 @@ async def _(session: CommandSession):
         print(at_id, session.self_id, group_id)
         wife = await search_wife(wifeinfo, group_id, at_id, session)
         # print(wife)
+    if at_id == session.self_id:
+        # at_id = session.self_id
+        at_name = "我"
 
     try:
         if at_id != session.self_id and at_id != session.event.user_id:

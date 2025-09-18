@@ -71,7 +71,7 @@ async def _(session: CommandSession, user: u.User):
             if p.usage.split(']')[0] in '[指令':
                 total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
             else:
-                plugin_pages += "\n" + f"{p.usage.split(']')[0]}]{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+                plugin_pages += "\n" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
         except:
             plugin_pages += "\n" + f"[未知] {p.name}"
 

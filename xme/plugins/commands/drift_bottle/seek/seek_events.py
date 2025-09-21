@@ -643,7 +643,7 @@ EVENTS = [
                 "tip": "[深度+][区域+]",
                 "changes": {
                     "depth": {
-                        "change": lambda: random.randint(10, 20),
+                        "change": lambda: random.randint(80, 200),
                         "type": "+",
                         "custom": False,
                     }
@@ -1099,7 +1099,7 @@ EVENTS = [
     {
         "type": "decision",
         "tags": [],
-        "prob": 1,
+        "prob": 2,
         "post_func": None,
         "descs": ["这里似乎有一些日志...要不要看看？", "你发现了一些笔记...或许可以查看一下？", "你发现了一些保存完好的手稿...要打开看看吗？"],
         "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY],

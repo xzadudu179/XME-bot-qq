@@ -5,7 +5,7 @@ from character import get_message, CHARACTER
 from xme.xmetools.bottools import permission
 
 alias = [f'{get_message("bot_info", "name")}退群', f'{get_message("bot_info", "name")}退出群聊', f'{CHARACTER}_exit']
-permissions = ["是管理 或 是 SUPERUSER", "在群聊内"]
+permissions = ["是管理 或 是群主 或 是 SUPERUSER", "在群聊内"]
 __plugin_name__ = 'bot_leave'
 __plugin_usage__ = str(CommandDoc(
     name=__plugin_name__,
@@ -19,7 +19,7 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
-@permission(lambda sender: (sender.is_superuser or sender.is_admin) and sender.is_groupchat, permission_help=" & ".join(permissions))
+@permission(lambda sender: (sender.is_superuser or sender.is_admin or sender.is_owner) and sender.is_groupchat, permission_help=" & ".join(permissions))
 async def _(session: CommandSession):
 
     result = (await session.aget(prompt=get_message("plugins", __plugin_name__, 'leaving')))

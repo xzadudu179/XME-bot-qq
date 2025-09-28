@@ -98,7 +98,7 @@ async def _(session: CommandSession, user: u.User):
     table_name = DriftBottle.get_table_name()
     print("捡瓶子中")
     # 没捡到瓶子
-    if not DriftBottle.exec_query(query=f"SELECT 1 FROM {table_name} LIMIT 1", dict_data=True):
+    if not DriftBottle.exec_query(query=f"SELECT 1 FROM {table_name} WHERE is_broken != TRUE LIMIT 1", dict_data=True):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle"), linebreak=False)
         # await send_msg(session, "海里一个瓶子里都没有...")
         return False
@@ -113,7 +113,7 @@ async def _(session: CommandSession, user: u.User):
     # print(special_bottles)
     special = DriftBottle.exec_query(query=
     f"""SELECT * FROM {table_name}
-    WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179")
+    WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179") AND is_broken != TRUE
     AND bottle_id NOT LIKE '%PURE%'""", dict_data=True)
     print(random.choice(special))
     have_special_bottle = False

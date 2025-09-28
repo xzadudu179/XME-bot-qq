@@ -6,7 +6,7 @@ from xme.xmetools.dbtools import DATABASE, XmeDatabase
 import json
 
 class DriftBottle:
-    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0):
+    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False):
         self.id = id
         self.bottle_id: str = bottle_id
         self.content: str = content
@@ -18,6 +18,7 @@ class DriftBottle:
         self.sender_id = sender_id
         self.comments = comments
         self.group_id = group_id
+        self.is_broken = is_broken
 
 
     def get_table_name():
@@ -36,6 +37,7 @@ class DriftBottle:
             "sender_id": self.sender_id,
             "comments": json.dumps(self.comments, ensure_ascii=False),
             "group_id": self.group_id,
+            "is_broken": self.is_broken,
         }
 
     def exec_query(query: str, params=(), dict_data=False):
@@ -60,9 +62,10 @@ class DriftBottle:
         }
 
     def remove_self(self):
-        """从数据表里移除自己并保存
+        """从数据表里移除自己并保存（改为 标记为broken）
         """
-        DATABASE.remove(DriftBottle.get_table_name(), f"bottle_id = '{self.bottle_id}'")
+        # DATABASE.remove(DriftBottle.get_table_name(), f"bottle_id = '{self.bottle_id}'")
+        self.is_broken = True
         self.save()
 
     def get_max_bottle_id():
@@ -95,6 +98,7 @@ class DriftBottle:
             sender_id=data['sender_id'],
             comments=json.loads(data['comments']),
             group_id=data['group_id'],
+            is_broken=data.get('is_broken', False),
         )
 
 

@@ -21,6 +21,7 @@ random.seed()
 from .. import DriftBottle, get_random_bottle
 from nonebot import on_command, CommandSession, MessageSegment
 from xme.xmetools.msgtools import send_session_msg, send_forward_msg, change_group_message_content
+from uuid import uuid4
 from enum import Enum
 hti = Html2Image()
 
@@ -284,9 +285,10 @@ def get_img_msg(
     </body>
 </html>
     """
-    hti.screenshot(html_str=html_content, save_as="seekcard.png", size=(1920, 10000))
-    image = crop_transparent_area("seekcard.png")
-    os.remove("seekcard.png")
+    uid = str(uuid4())
+    hti.screenshot(html_str=html_content, save_as=f"seekcard{uid}.png", size=(1920, 10000))
+    image = crop_transparent_area(f"seekcard{uid}.png")
+    os.remove(f"seekcard{uid}.png")
     return image
     # return markdown.markdown(md_text)
 

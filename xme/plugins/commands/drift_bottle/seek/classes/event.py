@@ -72,7 +72,7 @@ class Event:
         random_events = top_events + random_events
         # random_events.sort(key=lambda x: x["prob"])
         # random_events.reverse()
-        print(random_events)
+        # print(random_events)
         for e in random_events:
             if not random_percent(e["prob"]):
                 continue

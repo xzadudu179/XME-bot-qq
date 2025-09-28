@@ -20,6 +20,7 @@ usage = {
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=True)
+@u.limit(cmd_name, 2, get_message("plugins", __plugin_name__, cmd_name, 'limited'))
 @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     message = ''
@@ -52,6 +53,10 @@ async def _(session: CommandSession, user: User):
         return False
     if coin_count <= 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_coin_count', )
+        await send_session_msg(session, message, tips=True)
+        return False
+    if coin_count > 100:
+        message = get_message("plugins", __plugin_name__, cmd_name, 'coin_too_many', )
         await send_session_msg(session, message, tips=True)
         return False
     # 验证用户是否存在

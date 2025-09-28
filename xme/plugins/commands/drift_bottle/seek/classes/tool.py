@@ -44,3 +44,13 @@ class Tool:
                 }
             }
         }, html=True)
+
+    def build_tool(tool_dict: dict):
+        return Tool(
+            name=tool_dict["name"],
+            desc=tool_dict["desc"],
+            apply_message=tool_dict["desc"],
+            apply_condition=tool_dict["apply_condition"],
+            apply_times=tool_dict["apply_times"],
+            region_change=tool_dict.get("region_change", None)
+        )

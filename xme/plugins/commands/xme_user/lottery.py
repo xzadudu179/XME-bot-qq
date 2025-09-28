@@ -13,7 +13,7 @@ import traceback
 
 alias = ['抽奖', 'lot']
 TIMES_LIMIT = 5
-MAX_COIN_COUNT = 50
+MAX_COIN_COUNT = 100
 cmd_name = 'lottery'
 usage = {
     "name": cmd_name,
@@ -106,7 +106,7 @@ async def _(session: CommandSession, user: User):
     result = 0
     for _ in range(count):
         random.seed()
-        result += random.randint(0, int(arg * (random.random() * 1.035 * 4)))
+        result += random.randint(0, int(arg * (random.random() * 1.034 * 4)))
     vars["lottery_lose_coins"] += result
     save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)
@@ -125,6 +125,6 @@ async def _(session: CommandSession, user: User):
 
     await send_session_msg(session, message, tips=True)
     print("result", result, calc_count * 2, calc_count)
-    if result >= calc_count * 2 and calc_count >= 100:
+    if result >= calc_count * 2 and calc_count >= 200:
         await user.achieve_achievement(session, "土块")
     return True

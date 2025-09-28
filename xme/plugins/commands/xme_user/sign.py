@@ -29,11 +29,11 @@ usage = {
 @u.using_user(save_data=False)
 @u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
-    FIRST_AWARD = 10
+    FIRST_AWARD = 20
     message = ""
     # message = get_message("plugins", __plugin_name__, cmd_name, 'failed')
     print("USER IS", user)
-    append_coins = random.randint(0, 50)
+    append_coins = random.randint(0, 100)
     user.add_coins(append_coins)
     users: list[dict] = User.get_users()
     signed_users_count = 0

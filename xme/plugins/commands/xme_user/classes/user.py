@@ -77,6 +77,7 @@ class User:
             xme_favorability=0,
             counters: dict = {},
             # timers: dict = {},
+            plugin_datas = {}, # 插件数据，比如 weather 保存用户位置之类的
             achievements: list = [],
             ai_history: list[dict] = [],
             gen_starfield = True,
@@ -89,6 +90,7 @@ class User:
         self.xme_favorability = xme_favorability
         self.talked_to_bot = talked_to_bot
         self.counters = counters
+        self.plugin_datas = plugin_datas
         # self.timers = timers
         self.achievements = achievements
         self.ai_history = ai_history
@@ -266,6 +268,7 @@ class User:
             # "timers": self.timers,
             "xme_favorability": self.xme_favorability,
             "desc": self.desc,
+            "plugin_datas": self.plugin_datas,
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
             "achievements": self.achievements,
@@ -735,6 +738,7 @@ def load_dict_user(data: dict):
             "counters": counters,
             "xme_favorability": data.get('xme_favorability', 0),
             "desc": data.get('desc', ""),
+            "plugin_datas": json.loads(data.get('plugin_datas', "{}")),
             "inventory": inventory,
             "talked_to_bot": data.get('talked_to_bot', []),
             "celestial": celestial,
@@ -755,6 +759,7 @@ def load_from_dict(data: dict, id: int) -> User:
     # timers = json.loads(data.get('timers', "{}"))
     # print(counters)
     achis = data.get('achievements', "[]")
+    plugin_datas = json.loads(data.get('plugin_datas', "{}"))
     if not achis:
         achis = "[]"
     user = User(
@@ -765,6 +770,7 @@ def load_from_dict(data: dict, id: int) -> User:
         talked_to_bot=json.loads(data.get('talked_to_bot', "[]")),
         desc=data.get('desc', ""),
         celestial_uid=celestial,
+        plugin_datas=plugin_datas,
         achievements=json.loads(achis),
         xme_favorability=data.get('xme_favorability', 0),
         counters=counters,

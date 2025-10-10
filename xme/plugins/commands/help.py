@@ -97,7 +97,7 @@ async def _(session: CommandSession, user: u.User):
     for page in pages_plugin:
         new_messages.append(change_group_message_content(msg_dict, page))
     # new_messages.append(change_group_message_content(msg_dict, get_message("plugins", __plugin_name__, "other_help_2")))
-    await send_session_msg(session, await image_msg(IMG_PATH + "/other_help.png"), at=False)
-    # await send_session_msg(session, "注：如果没有看到即将发送的聊天记录，可以尝试私聊发送 /help", at=False)
+    # await send_session_msg(session, await image_msg(IMG_PATH + "/other_help.png"), at=False)
+    await send_session_msg(session, "注：如果没有看到即将发送的聊天记录，可以尝试私聊发送 /help", at=False)
     await send_forward_msg(session.bot, session.event, new_messages)
     return True

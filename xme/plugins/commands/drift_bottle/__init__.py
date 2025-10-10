@@ -49,7 +49,7 @@ class DriftBottle:
         for bottle in bottles:
             if not bottle.bottle_id.isdigit():
                 continue
-            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2):
+            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2) and not bottle.is_broken:
                 return {
                     "status": False,
                     "content": bottle.content,

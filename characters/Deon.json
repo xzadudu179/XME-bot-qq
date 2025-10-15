@@ -2171,7 +2171,12 @@
     },
     "今日鉴毛": {
       "desc": "查看今日鉴毛",
-      "introduction": "随机返回一张《今日鉴毛》图片"
+      "introduction": "随机返回一张《今日鉴毛》图片",
+      "error": "无法获取今日鉴毛图片... {negative}",
+      "result": [
+        "{positive}这次的鉴毛图片是一只来自{city}的{type}——{name}{positive_punc}\nAPI 由筱翯提供 {positive}",
+        "{positive}这张鉴毛图片是来自{city}的{type}——{name} 的{positive_punc}\nAPI 由筱翯提供 {positive}"
+      ]
     },
     "ai_helper": {
       "desc": "AI 助手",

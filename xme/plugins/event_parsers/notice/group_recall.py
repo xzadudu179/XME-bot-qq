@@ -41,6 +41,7 @@ async def _(session: NoticeSession):
         sender_qq_level = "无法获取"
 
     # 输出内容
+    print(recalled_message)
     recall_info = f"群 \"{group['group_name']}[{session.event.group_id}]\": 来自 {sender['nickname']}[{sender['user_id']}] 的消息被 {user['nickname']}[{session.event.user_id}]撤回，内容为：{recalled_message['message']}"
     recall_detail = f"消息发送者信息:\n\tQQ号: {sender['user_id']}\n\tQQ等级: {sender_qq_level}\n\t昵称: {sender['nickname']}\n\t群名片/备注: {sender['card']}\n\t群活跃等级: {sender['level']}\n\t加群时间: {datetime.fromtimestamp(sender['join_time'])}\n\t是否有不良记录: {sender['unfriendly']}\n消息撤回者信息:\n\tQQ号: {user['user_id']}\n\tQQ等级: {user_qq_level}\n\t昵称: {user['nickname']}\n\t群名片/备注: {user['card']}\n\t群活跃等级: {user['level']}\n\t加群时间: {datetime.fromtimestamp(user['join_time'])}\n\t是否有不良记录: {user['unfriendly']}\n消息信息:\n\t内容: {recalled_message['message']}\n\t被撤回时间: {datetime.fromtimestamp(session.event['time'])}\n\t消息ID: {recalled_message['message_id']}\n\t消息真实ID: {recalled_message['real_id']}"
     log.logger.info(recall_info)

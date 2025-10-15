@@ -7,8 +7,8 @@ from xme.xmetools.msgtools import send_session_msg
 import traceback
 from PIL import Image
 
-def gen_maifriend(qq, size=640):
-    avatar = imgtools.get_qq_avatar(qq, size).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
+async def gen_maifriend(qq, size=640):
+    avatar = await imgtools.get_qq_avatar(qq, size).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
     frame = Image.open("./static/img/frame.png").resize((size, size))
     # 创建一个新的空白画布，大小为最大图片的尺寸
     new_image = Image.new("RGB", (frame.width, frame.height))
@@ -42,7 +42,7 @@ async def _(session: CommandSession):
     try:
         if arg.startswith("[CQ:at,qq="):
             qq_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
-        image = gen_maifriend(qq_id)
+        image = await gen_maifriend(qq_id)
     except:
         traceback.print_exc()
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'), tips=True)

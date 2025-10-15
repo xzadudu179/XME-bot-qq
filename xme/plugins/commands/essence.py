@@ -26,4 +26,4 @@ async def _(session: CommandSession):
     essence = random.choice(essences)
     if len(essences) < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', avatar=image_msg(get_qq_avatar(essence["sender_id"], size=50)), sender=essence["sender_nick"] ,essence=essence["data"]["content"]))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', avatar=await image_msg(await get_qq_avatar(essence["sender_id"], size=50)), sender=essence["sender_nick"] ,essence=essence["data"]["content"]))

@@ -6,6 +6,7 @@ import asyncio
 from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops
+from xme.xmetools.reqtools import fetch_data
 import pyautogui
 from xme.xmetools.texttools import hash_byte
 import mss
@@ -62,18 +63,15 @@ def screenshot(num=1):
         # img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
         return img, state
 
-def get_url_image(url):
-    response = requests.get(url)
+async def get_url_image(url):
+    response = await fetch_data(url, 'byte')
+    # 将图片数据转换为二进制流
+    img_data = BytesIO(response)
 
-    if response.status_code == 200:
-        # 将图片数据转换为二进制流
-        img_data = BytesIO(response.content)
+    # 打开图片
+    img = Image.open(img_data)
+    return img
 
-        # 打开图片
-        img = Image.open(img_data)
-        return img
-    else:
-        raise Exception("获取图片失败")
 
 def hash_image(img):
     buffer = BytesIO()
@@ -81,8 +79,8 @@ def hash_image(img):
     img_bytes = buffer.getvalue()
     return hash_byte(img_bytes)
 
-def get_qq_avatar(qq, size=640):
-    return get_url_image(f"https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}")
+async def get_qq_avatar(qq, size=640):
+    return await get_url_image(f"https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}")
 
 def take_screenshot(screen_num=1):
     os.makedirs("./data/images/screenshots", exist_ok=True)
@@ -173,7 +171,10 @@ async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
     if not isinstance(path_or_image, str):
         is_image = True
     print(is_image)
-    image = path_or_image if is_image else Image.open(path_or_image)
+    try:
+        image = path_or_image if is_image else Image.open(path_or_image)
+    except:
+        image = await get_url_image(path_or_image)
     # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
     if max_size > 0:
         print("重新缩放")

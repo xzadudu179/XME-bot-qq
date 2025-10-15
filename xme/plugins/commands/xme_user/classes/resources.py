@@ -10,3 +10,5 @@ class Resource(Enum):
     RARE_GAS = "稀有气体资源"
     RARE_MINERAL = "稀有矿产资源"
     SPECIAL = "特殊资源"
+
+

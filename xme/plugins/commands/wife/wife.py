@@ -18,7 +18,7 @@ async def _(session: CommandSession):
     arg = session.current_arg.strip()
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
-        at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
+        at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
         wife = await search_wife(wifeinfo, group_id, at_id, session)
     # 如果是对 xme 说
 

@@ -40,7 +40,7 @@ async def _(session: CommandSession, user: User):
         return False
     target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
     try:
-        avatar = await image_msg(get_qq_avatar(at_id), max_size=64, to_jpeg=False)
+        avatar = await image_msg(await get_qq_avatar(at_id), max_size=64, to_jpeg=False)
     except:
         avatar = ""
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""

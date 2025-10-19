@@ -8,7 +8,7 @@ from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 from xme.xmetools.imgtools import get_qq_avatar
-
+from xme.xmetools.texttools import get_at_id
 
 alias = ['个人信息', '个人资料', 'uinfo', 'info']
 cmd_name = 'userinfo'
@@ -29,7 +29,8 @@ async def _(session: CommandSession, user: User):
     print("arg", arg)
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
-        at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
+        # at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
+        at_id = get_at_id(arg)
     if at_id != 0:
         user = u.User.load(at_id, False)
     else:

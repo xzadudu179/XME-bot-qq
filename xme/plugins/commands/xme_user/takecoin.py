@@ -7,7 +7,7 @@ from nonebot import get_bot
 from datetime import datetime
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
-
+from xme.xmetools.texttools import get_at_id
 
 alias = [f'拿取{coin_name}', 'bv']
 cmd_name = 'takecoin'
@@ -31,7 +31,8 @@ async def _(session: CommandSession, user: User):
     at_id = 0
     # 是否有参数并且 at 了用户
     if arg_text and args[0].startswith("[CQ:at,qq="):
-        at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
+        # at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
+        at_id = get_at_id(args[0])
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_arg')
         await send_session_msg(session, message, tips=True)

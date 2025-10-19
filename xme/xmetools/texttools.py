@@ -223,6 +223,9 @@ def calc_len(text):
     return length
 
 
+def get_at_id(at_str) -> int:
+    return int(at_str.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
+
 def get_image_str(raw_message):
     """仅保留并获取 qq 原消息中的图片
 

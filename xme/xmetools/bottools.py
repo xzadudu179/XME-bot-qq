@@ -98,7 +98,6 @@ async def get_group_name(group_id, default=None):
         return default
     return result
 
-
 def permission(perm_func: PermissionPolicy_T, permission_help: str = "未知", no_perm_message: str = "", no_perm_result=None, silent=False):
     # no_perm_message = no_perm_message
     # global no_perm_message

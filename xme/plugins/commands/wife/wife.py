@@ -4,6 +4,7 @@ import xme.plugins.commands.wife as w
 from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import *
+from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission, bot_call_action
 from xme.xmetools.msgtools import send_session_msg
 
@@ -18,7 +19,8 @@ async def _(session: CommandSession):
     arg = session.current_arg.strip()
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
-        at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
+        # at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
+        at_id = get_at_id(arg)
         wife = await search_wife(wifeinfo, group_id, at_id, session)
     # 如果是对 xme 说
 

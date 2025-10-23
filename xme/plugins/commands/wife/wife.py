@@ -18,13 +18,14 @@ async def _(session: CommandSession):
     print(session.current_key)
     arg = session.current_arg.strip()
     at_id = 0
+    prefix = ""
     if arg.startswith("[CQ:at,qq="):
         # at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
         at_id = get_at_id(arg)
         wife = await search_wife(wifeinfo, group_id, at_id, session)
-    # 如果是对 xme 说
-
     else:
+        if arg.startswith("@"):
+            prefix = get_message("plugins", w.__plugin_name__, "no_at_hint")
         # await send_msg(session, "请 at 你要看的人哦")
         at_name = "你"
         at_id = session.event.user_id
@@ -52,7 +53,7 @@ async def _(session: CommandSession):
             # print(pair_user)
             name = (x if (x:=wife.get('card', None)) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
             who = f"{at_name}"
-            message = get_message("plugins", w.__plugin_name__, "wife_message",
+            message = prefix + get_message("plugins", w.__plugin_name__, "wife_message",
                 who=who,
                 avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={wife['user_id']}&s=640]",
                 # avatar=image_msg(get_qq_avatar(wife['user_id'])),

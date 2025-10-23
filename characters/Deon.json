@@ -1113,6 +1113,7 @@
         "{who}今日的群老婆是:\n{avatar}\n{name} ({user_id})",
         "{who}今天的群老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
       ],
+      "no_at_hint": "你的参数里有 @ 符号，但是解析不到 at 的 QQ，可能没 at 上哦 {neutral}，",
       "no_wife": [
         "{name}今天并没有老婆 {neutral}",
         "{name}今天没有老婆...",

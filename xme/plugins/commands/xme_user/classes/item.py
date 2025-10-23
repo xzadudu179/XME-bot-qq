@@ -114,7 +114,7 @@ class Item:
         """
         price = '\n总价值: ' + str(self.price * count) if self.has_tag(Tag.SALEABLE) else ''
         return f"""
-[{self.rarity.value}] {self.name} {'*' + count if count > 1 else ''}
+[{self.rarity.value}] {self.name} {'*' + str(count) if count > 1 else ''}
 标签：{(', '.join([tag.value for tag in self.tags])) if self.tags else '无'}{price}
 -------------------------
 {self.desc}

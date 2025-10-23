@@ -139,7 +139,7 @@ def ouptut_weather_now(weather, air, moon):
             moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]
             moon_info = f"将在{secs_to_ymdh(rise_difference)}后升起{moon_phase}"
         else:
-            moon_info = f"现在抬头可见{moon_phase}"
+            moon_info = f"当前天空上有{moon_phase}"
 
     return textwrap.dedent(f"""
         - 天气：{weather_stats}，{wind_dir} {wind_scale} 级

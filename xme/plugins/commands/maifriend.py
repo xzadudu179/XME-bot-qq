@@ -8,7 +8,7 @@ import traceback
 from PIL import Image
 
 async def gen_maifriend(qq, size=640):
-    avatar = await imgtools.get_qq_avatar(qq, size).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
+    avatar = (await imgtools.get_qq_avatar(qq, size)).resize((int(size * 0.8), int(size * 0.8))).convert("RGBA")
     frame = Image.open("./static/img/frame.png").resize((size, size))
     # 创建一个新的空白画布，大小为最大图片的尺寸
     new_image = Image.new("RGB", (frame.width, frame.height))

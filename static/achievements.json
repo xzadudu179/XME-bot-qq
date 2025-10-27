@@ -20,7 +20,7 @@
         "hidden": false
     },
     "土块": {
-        "desc": "使用一次 \"lot\" 指令赚到的星币是投入的 2 倍以上（投入 ≥ 200（例如 \"/lot 50 2\"））",
+        "desc": "使用一次 \"lot\" 指令赚到的{coin_name}是投入的 2 倍以上（投入 ≥ 200（例如 \"/lot 50 2\"））",
         "award": 199,
         "hidden": false
     },
@@ -45,7 +45,7 @@
         "hidden": true
     },
     "V我50": {
-        "desc": "在星期四给漠月 50 枚星币",
+        "desc": "在星期四给漠月 50 {coin_pronoun}{coin_name}",
         "award": 51,
         "hidden": false
     },
@@ -65,7 +65,7 @@
         "hidden": false
     },
     "满载无归": {
-        "desc": "(/seek) 你本可以收益超过 1000 枚星币...但是什么也不剩了。",
+        "desc": "(/seek) 你本可以收益超过 1000 {coin_pronoun}{coin_name}...但是什么也不剩了。",
         "award": 1,
         "hidden": true
     }

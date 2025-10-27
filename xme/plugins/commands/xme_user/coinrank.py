@@ -39,8 +39,6 @@ async def _(session: CommandSession):
         # 平均值消息
         rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_avg',
-
-
             avg=int(rank_avg),
             median=int(rank_operation(lambda x: statistics.median(x), rank_items))
         )
@@ -56,6 +54,9 @@ async def _(session: CommandSession):
         )
         await send_session_msg(session, message)
         return True
+    elif arg and arg == 'me':
+        # 显示自己在排行榜的位置
+        ...
     elif arg:
         try:
             rank_count = int(arg)

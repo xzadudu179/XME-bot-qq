@@ -1,6 +1,7 @@
 from enum import Enum
 import inspect
 from . import item_methods
+from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools import listtools
 
 class Rarity(Enum):
@@ -260,7 +261,7 @@ item_table = {
     11: Item(
         id=11,
         name="刮奖彩票（20）",
-        desc="一张价值 20 星币的刮奖彩票，刮一刮尝试一下？",
+        desc=f"一张价值 20 {coin_name}的刮奖彩票，刮一刮尝试一下？",
         rarity=Rarity.COMMON,
         tags=[Tag.SALEABLE],
         maxcount=10,

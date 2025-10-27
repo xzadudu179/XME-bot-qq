@@ -268,7 +268,7 @@
         "tags": []
       },
       {
-        "content": "使用 \"/lot xxx\" 指令抽取的星币是漠月发给你的哦！会从漠月的星币数里扣除或增加，每天统计一次。",
+        "content": "使用 \"/lot xxx\" 指令抽取的{coin_name}是漠月发给你的哦！会从漠月的{coin_name}数里扣除或增加，每天统计一次。",
         "tags": []
       },
       {
@@ -337,7 +337,7 @@
       "使用 \"/h 指令或功能名\" 来查看指令/功能的完整帮助~",
       "不要把{bot_name}当成（完全的）机器哦，{bot_name}有设子",
       "你们可以帮九九想点 tips~ 想好了就发过来（？）",
-      "使用 \"/lot xxx\" 指令抽取的星币是漠月发给你的哦！会从漠月的星币数里扣除或增加，每天统计一次。",
+      "使用 \"/lot xxx\" 指令抽取的{coin_name}是漠月发给你的哦！会从漠月的{coin_name}数里扣除或增加，每天统计一次。",
       "help 里被 \"<>\" 括起来的参数是可选参数哦~ 使用时也不需要加上括号",
       "help 里被 \"()\" 括起来的参数是必要参数哦，但是使用的时候不需要加上括号呢",
       "{bot_name}会给好友点赞哦~",
@@ -381,8 +381,8 @@
     "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"
   },
   "user": {
-    "coin_name": "星币",
-    "coin_pronoun": "枚",
+    "coin_name": "糖果",
+    "coin_pronoun": "颗",
     "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
@@ -1700,7 +1700,7 @@
       },
       "lottery": {
         "desc": "抽奖",
-        "introduction": "花费指定量的{coin_name}，抽取最多 4 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大星币值。",
+        "introduction": "花费指定量的{coin_name}，抽取最多 4 倍量的{coin_name}\n每日可以抽取 5 次，在第二个参数里输入大于 0 的整数可以多次抽取，或使用 `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` 来快速投入 5 次最大{coin_name}值。",
         "limited": [
           "你今天的抽奖次数用完啦{positive_punc}",
           "诶...你今天的抽奖次数用完啦",
@@ -1710,10 +1710,10 @@
           "你今天没有更多抽奖次数啦..."
         ],
         "all_in_no_coins": [
-          "你没有可用的星币来抽奖了哦...",
-          "你没有足够的星币来抽奖了哦...",
-          "你没有可用的星币来抽奖了哦...{neutral}",
-          "你没有足够的星币来抽奖了哦...{neutral}"
+          "你没有可用的{coin_name}来抽奖了哦...",
+          "你没有足够的{coin_name}来抽奖了哦...",
+          "你没有可用的{coin_name}来抽奖了哦...{neutral}",
+          "你没有足够的{coin_name}来抽奖了哦...{neutral}"
         ],
         "no_arg": "请指定投入{coin_name}的数量哦{positive_punc}",
         "invalid_arg": "{coin_name}的数量需要是大于零的整数哦 {neutral}",
@@ -1824,7 +1824,7 @@
           "指定的{coin_name}太少啦，要大于 0 哦 {neutral}",
           "指定的{coin_name}太少啦，要大于 0 哦{positive_punc}"
         ],
-        "coin_too_many": "你要发送的星币太多啦 {neutral}，最多只能发送 100 {coin_pronoun}{coin_name} 呢...",
+        "coin_too_many": "你要发送的{coin_name}太多啦 {neutral}，最多只能发送 100 {coin_pronoun}{coin_name} 呢...",
         "not_enough_coin": [
           "{coin_name}数量不足诶，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
           "诶...你只有 {coin_total} {coin_pronoun}{coin_name}，没法给这么多呢...",

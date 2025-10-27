@@ -1,4 +1,5 @@
 from .classes.player import SeekRegion, Player
+from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 import random
 import uuid
 
@@ -12,7 +13,7 @@ EVENTS = [
     "tags": [],
     "prob": 20,
     "post_func": None,
-    "descs": ["你收集到了一些资源", "你找到了一些散落的星币", "你发现了一些资源", "你抓到了几只小鱼", "你发现了一些零件", "你找到了一些被遗弃的物品"],
+    "descs": ["你收集到了一些资源", f"你找到了一些散落的{coin_name}", "你发现了一些资源", "你抓到了几只小鱼", "你发现了一些零件", "你找到了一些被遗弃的物品"],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.SHALLOW_SEA],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 30 and depth.value < 300,
     "changes": {
@@ -880,7 +881,7 @@ EVENTS = [
         "regions": [SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST],
         "descs": ["一个黑影逼近...", "你看到了一道黑影...", "你发现了一个不寻常的黑影...", "忽然闪过一团黑影..."],
         "ok_msgs": ["黑影突然冲了过来！但是你反应过来，干掉了它。", "黑影忽然把你包围了！但是在你的反击下，黑影逐渐消失了...", "黑影将你团团包围...但是被你反击开了。"],
-        "bigwin_msgs": ["你顺势攻击，黑影忽然消散了，变成了一堆星币...？", "你似乎察觉到了什么，瞬间朝黑影攻击！它即刻飘散了...", "黑影消失了...但是你的身边似乎多了一点东西...", "黑影突然冲来！但是你早有准备，一击挡住了它！它忽然消散了。"],
+        "bigwin_msgs": [f"你顺势攻击，黑影忽然消散了，变成了一堆{coin_name}...？", "你似乎察觉到了什么，瞬间朝黑影攻击！它即刻飘散了...", "黑影消失了...但是你的身边似乎多了一点东西...", "黑影突然冲来！但是你早有准备，一击挡住了它！它忽然消散了。"],
         "fail_msgs": ["黑影将你团团包围！你突然两眼一黑，随后在一块石头旁醒来..."," 黑影突然冲了过来！你没反应过来，遭到了一阵强烈的撞击...",],
         "bigfail_msgs": ["你被黑影包围，随后失去了知觉...", "黑影忽然冲向了你！你完全没有反应过来，被强烈的冲击撞晕了..."],
       },

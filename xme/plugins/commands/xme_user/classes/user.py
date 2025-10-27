@@ -1,3 +1,7 @@
+from character import get_message
+coin_name = get_message("user", "coin_name")
+coin_pronoun = get_message("user", "coin_pronoun")
+
 from xme.xmetools import jsontools
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
@@ -13,7 +17,6 @@ from ..tools.map_tools import *
 import inspect
 from xme.xmetools.imgtools import hash_image
 import math
-from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from .inventory import Inventory
 from .celestial.star import Star
@@ -22,8 +25,6 @@ from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
 from ..tools import galaxy_date_tools
 from xme.xmetools.dbtools import DATABASE
 
-coin_name = get_message("user", "coin_name")
-coin_pronoun = get_message("user", "coin_pronoun")
 
 def is_galaxy_loaded():
     if get_galaxymap():
@@ -42,7 +43,7 @@ class User:
 
     async def try_spend(self, session: BaseSession, count, out_of_range_zero=False, message="", spent_message=""):
         if count < 0:
-            raise ValueError("花费的星币不能小于 0")
+            raise ValueError(f"花费的{coin_name}不能小于 0")
         if self.coins < count:
             await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
             return False
@@ -55,7 +56,7 @@ class User:
     async def get_coins(self, session: BaseSession, count, _get_message=""):
         count = int(count)
         if count < 0:
-            raise ValueError("获得的星币不能小于 0")
+            raise ValueError(f"获得的{coin_name}不能小于 0")
         # if self.coins < count:
         #     await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
         #     return False

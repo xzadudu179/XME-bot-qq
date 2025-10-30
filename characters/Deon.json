@@ -311,8 +311,8 @@
       "漠星和漠月是朋友哦！",
       "漠月生活在一颗遥远星球的沙漠中...",
       "使用 \"/help\" 查看{bot_name}的总体帮助~",
-      "{bot_name}保存着大家的消息记录！请不要让漠月输出不好的消息哦",
-      "问 \"xxx是不是质数\" 漠月会告诉你哦！",
+      "{bot_name}保存着大家的消息记录！请不要让{bot_name}输出不好的消息哦",
+      "问 \"xxx是不是质数\" {bot_name}会告诉你哦！",
       "前往扬州能够抓到九九（？",
       "有关瓶子的污染尚不明确...但或许和一位形似章鱼的东西有关。",
       "{bot_name}是开源的哦！ Github 仓库在 https://github.com/xzadudu179/XME-bot-qq",
@@ -324,7 +324,7 @@
       "如果对{bot_name}有什么建议的话，可以私发给{bot_name}哦！",
       "awmc",
       "如果发现{bot_name}不回话了的话，可以尝试 \"/ping\" 指令",
-      "喜欢漠月的话，可以推荐给其他人！",
+      "喜欢{bot_name}的话，可以推荐给其他人！",
       "大家可以向{bot_name}申请以把{bot_name}拉进别的群哦",
       "使用 \"/ai 询问内容\" 指令可以问 ai 问题，包括指令问题等也可以问哦",
       "\"/alias 指令名\" 指令可以查询指令的别名~",
@@ -337,7 +337,7 @@
       "使用 \"/h 指令或功能名\" 来查看指令/功能的完整帮助~",
       "不要把{bot_name}当成（完全的）机器哦，{bot_name}有设子",
       "你们可以帮九九想点 tips~ 想好了就发过来（？）",
-      "使用 \"/lot xxx\" 指令抽取的{coin_name}是漠月发给你的哦！会从漠月的{coin_name}数里扣除或增加，每天统计一次。",
+      "使用 \"/lot xxx\" 指令抽取的{coin_name}是{bot_name}发给你的哦！会从{bot_name}的{coin_name}数里扣除或增加，每天统计一次。",
       "help 里被 \"<>\" 括起来的参数是可选参数哦~ 使用时也不需要加上括号",
       "help 里被 \"()\" 括起来的参数是必要参数哦，但是使用的时候不需要加上括号呢",
       "{bot_name}会给好友点赞哦~",
@@ -1763,13 +1763,14 @@
       },
       "coinrank": {
         "desc": "{coin_name}排行榜",
-        "introduction": "查看{bot_name}记录的{coin_name}数量排行榜\n\n参数填写整数是改变排名长度，最大 20\n\n填写 `avg` 为平均，`sum` 为总和\n\n最后一个参数是 `spacing` 将让排名输出格式改为空格而不是换行",
+        "introduction": "查看你周边人的{coin_name}数量排行榜\n\n参数填写整数是改变排名长度，最大 20\n\n填写 `avg` 为平均，`sum` 为总和。添加 `top` 参数为显示总榜（从 1 开始）。\n\n最后一个参数是 `spacing` 将让排名输出格式改为空格而不是换行",
         "rank_msg_prefix": "以下是我记录的{coin_name}排行哦{positive_punc}",
         "rank_msg_avg": "大家平均拥有 {avg} {coin_pronoun}{coin_name}呢 {positive}\n中位数为 {median}",
         "rank_msg_sum": "大家一共拥有 {sum} {coin_pronoun}{coin_name}哦{positive_punc}",
         "count_too_small": "指定的排名长度太短啦，至少大于 0 哦",
         "count_too_large": "指定的排名长度太长啦，不能大于 {count_max} 哦",
         "invalid_arg": "不明白指定的排名长度意思呢...",
+        "no_coin": "你没有任何{coin_name}哦...所以没有排名 {neutral}",
         "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
         "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {neutral}"
       },
@@ -2189,17 +2190,20 @@
       "too_long": "你输入的语句太长啦！要在 300 字以内哦"
     },
     "essence": {
-      "desc": "随机精华消息（未使用）",
+      "desc": "随机精华消息",
       "introduction": "让{bot_name}输出一个随机精华消息（如果群里的精华消息数大于 2）。",
       "result": [
-        "找到了一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\"",
-        "这是一条精华消息{positive_punc} {positive}：\n\"{avatar}{sender}：{essence}\""
+        "找到了一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。",
+        "这是一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。"
+      ],
+      "searching": [
+        "正在寻找群内的精华消息{positive_punc}",
+        "正在寻找群内的精华消息 {positive}"
       ],
       "no_essence": [
-        "群里的精华消息太少啦 {neutral}",
-        "群里的精华消息至少要有两条呢... {neutral}",
-        "群里的精华消息不太够呢... {neutral}",
-        "群里的精华消息有点少呢... {neutral}"
+        "群里的精华消息太少或无法获取哦... {negative}",
+        "群里的精华消息不太够或无法获取呢... {neutral}",
+        "群里的精华消息有点少或无法获取呢... {neutral}"
       ]
     },
     "lotluck": {

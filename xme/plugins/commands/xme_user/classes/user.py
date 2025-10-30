@@ -215,7 +215,7 @@ class User:
             sign_message = get_message("user", "sign_message", last_sign_time="星历" + last_sign_time)
         except:
             sign_message = get_message("user", "no_sign")
-        _, rank_ratio = get_user_rank(self.id)
+        _, rank_ratio, _ = get_user_rank(self.id)
         return get_message("user", "user_info_str",
             id=str(self.id),
             coins_count=self.coins,
@@ -430,7 +430,7 @@ def limit_count_tick(user: User, name: str, count=1):
     # user.save()
 
 def get_user_rank(user):
-    """获取指定用户 id 的金币排名百分比以及数量
+    """获取指定用户 id 的金币排名百分比以及数量和位置
 
     Args:
         user (int): 用户 id
@@ -449,7 +449,7 @@ def get_user_rank(user):
     rank_ratio = 0
     if sender_coins_count is not None:
         rank_ratio = (len(rank_items[sender_index:]) - 1)/ (len(rank_items) - 1) * 100 if len(rank_items[sender_index:]) > 1 else 100
-    return sender_coins_count, rank_ratio
+    return sender_coins_count, rank_ratio, sender_index
 
 
 def validate_limit(user: User, name: str, limit: float | int, count_limit: int = 1,

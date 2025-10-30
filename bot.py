@@ -9,7 +9,8 @@
 import nonebot
 from os import path
 from xme.xmetools import colortools as c
-from xme.xmetools import jsontools
+# from xme.xmetools import jsontools
+# from xme.plugins.commands.xme_user.classes.user import User, try_load
 import random
 random.seed()
 import os
@@ -17,9 +18,9 @@ from nonebot.log import logger
 import bot_variables
 import config
 import bot_init
-from xme.xmetools.msgtools import send_to_superusers
+# from xme.xmetools.msgtools import send_to_superusers
 import asyncio
-import traceback
+# from config import BOT_SETTINGS_PATH
 
 # def handle_exception(loop, context):
 #     exception = context.get("exception")
@@ -56,6 +57,7 @@ if __name__ == '__main__':
 
     bot_init.bot_init()
     # 初始化银河系地图
+    # locations = jsontools.read_from_path(BOT_SETTINGS_PATH)["locations"]
     # GalaxyMap()
     bot_variables.currentpid = os.getpid()
     print(c.gradient_text("#dda3f8", "#66afff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))

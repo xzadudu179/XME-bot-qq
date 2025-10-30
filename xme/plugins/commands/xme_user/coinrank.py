@@ -16,7 +16,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', ),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'<参数>',
+    "usage": f'<排名长度/avg sum> <top> <spacing>',
     "permissions": [],
     "alias": alias
 }
@@ -28,13 +28,18 @@ async def _(session: CommandSession):
     sender = session.event.user_id
     message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_prefix',  )
     arg = session.current_arg_text.strip().lower()
+    index_addtion = 0
+    rank_items = user.get_rank('coins')
     spacing = False
+    top = False
     if arg:
         spacing = arg.split(" ")[-1] == 'spacing'
-        arg = arg.split(" ")[0].replace('spacing', '')
-    print(spacing)
+        top = arg.split(" ")[-2] == 'top' if spacing else arg.split(" ")[-1] == 'top'
+        arg = arg.split(" ")[0].replace('spacing', '').replace('top', '')
+    # print(spacing)
     rank_count = 10
-    rank_items = user.get_rank('coins')
+
+
     if arg and arg == 'avg':
         # 平均值消息
         rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
@@ -48,15 +53,10 @@ async def _(session: CommandSession):
         # 总和消息
         rank_sum = rank_operation(lambda x: sum(x), rank_items)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_sum',
-
-
             sum=rank_sum
         )
         await send_session_msg(session, message)
         return True
-    elif arg and arg == 'me':
-        # 显示自己在排行榜的位置
-        ...
     elif arg:
         try:
             rank_count = int(arg)
@@ -70,24 +70,46 @@ async def _(session: CommandSession):
             await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg'))
             return False
     # rank_items = rank.items()[:10]
-    print(rank_items)
-    rank_items_short = rank_items[:rank_count]
-    print("查询中")
+    if not top:
+        # 显示自己在排行榜的位置
+        if user.try_load(sender).coins <= 0:
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_coin'))
+        sender_coins_count, rank_ratio, user_index = user.get_user_rank(sender)
+        start_index = user_index - rank_count // 2
+        end_index = user_index - rank_count // 2 + rank_count
+        if start_index <= 0:
+            end_index += -start_index
+            start_index = 0
+        if end_index >= len(rank_items):
+            start_index -= -(len(rank_items) - end_index - 1)
+            if start_index <= 0:
+                start_index = 0
+            end_index = len(rank_items) - 1
+
+        rank_items_short = rank_items[start_index:end_index]
+        # print(rank_items_short, user_index, rank_count)
+        index_addtion = start_index
+    else:
+        # print(rank_items)
+        rank_items_short = rank_items[:rank_count]
+        # 关于发送者的金币数超过了多少人
+        sender_coins_count, rank_ratio, _ = user.get_user_rank(sender)
+        index_addtion = 0
+
+    # print("查询中")
     u_names = {k: v for k, v in [(id, (await session.bot.api.get_stranger_info(user_id=id))['nickname']) for id, _ in rank_items_short]}
     # print(u_names)
     for i, (id, v) in enumerate(rank_items_short):
         # u_name = (await session.bot.api.get_stranger_info(user_id=id))['nickname']
         nickname = u_names[id]
+        if nickname == u_names.get(sender, "获取名称失败"):
+            nickname += "（你）"
         message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'ranking_row',
-            rank=i + 1,
+            rank=i + 1 + index_addtion,
             nickname=str(nickname),
             coins_count=v,
-
-
-            spacing=" " * texttools.calc_spacing([f'{i + 1}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
+            spacing=" " * texttools.calc_spacing([f'{i + 1 + index_addtion}. {name}: ' for name in u_names.values()], nickname, 2) if spacing else '\n\t'
         )
-    # 关于发送者的金币数超过了多少人
-    sender_coins_count, rank_ratio = user.get_user_rank(sender)
     message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'rank_info',
         count=sender_coins_count,
         rank_ratio=f"{rank_ratio:.2f}",

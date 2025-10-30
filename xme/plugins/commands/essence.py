@@ -1,12 +1,14 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
-from ...xmetools import systools as st
+from datetime import datetime
 from character import get_message
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools.msgtools import send_session_msg
 import random
+from aiocqhttp import ActionFailed
 from xme.xmetools.imgtools import get_qq_avatar
 from xme.xmetools.bottools import bot_call_action
+from nonebot import Message
 
 alias = ['ess']
 __plugin_name__ = 'essence'
@@ -21,9 +23,24 @@ __plugin_usage__ = str(CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
-    essences = await session.bot.api.call_action("get_essence_msg_list", group_id=session.event.group_id)
-    print(essences, len(essences))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'searching'))
+    try:
+        essences = await session.bot.api.call_action("get_essence_msg_list", group_id=session.event.group_id)
+    except ActionFailed:
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
     essence = random.choice(essences)
     if len(essences) < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', avatar=await image_msg(await get_qq_avatar(essence["sender_id"], size=50)), sender=essence["sender_nick"] ,essence=essence["data"]["content"]))
+    print("ESSENCE", essence)
+    await send_session_msg(session, get_message(
+        "plugins",
+        __plugin_name__,
+        'result',
+        avatar=await image_msg(await get_qq_avatar(essence["sender_id"]), max_size=64, to_jpeg=False),
+        sender=essence["sender_nick"],
+        operator=essence["operator_nick"],
+        operator_id=f'{essence["operator_id"]}',
+        date=datetime.fromtimestamp(essence['operator_time']),
+        sender_id=f'{essence["sender_id"]}',
+        essence=Message(essence["content"])
+    ))

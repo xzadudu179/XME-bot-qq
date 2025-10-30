@@ -6,6 +6,7 @@ import config
 from xme.xmetools.loctools import search_location
 import re
 from xme.xmetools.jsontools import read_from_path, save_to_path
+from xme.plugins.commands.xme_user.classes.user import using_user, User
 
 alias = ['绑定位置', '设置位置', '定位', 'loc']
 __plugin_name__ = 'location'
@@ -19,21 +20,24 @@ __plugin_usage__ = str(CommandDoc(
 ))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
-async def _(session: CommandSession):
+@using_user(save_data=True)
+async def _(session: CommandSession, user: User):
     loc = session.current_arg_text
-    data = read_from_path(config.BOT_SETTINGS_PATH)
+    # data = read_from_path(config.BOT_SETTINGS_PATH)
     if not loc:
-        user_loc = data["locations"].get(str(session.event.user_id), None)
+        # user_loc = data["locations"].get(str(session.event.user_id), None)
+        user_loc = user.plugin_datas.get("location", None)
         if user_loc:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'curr_loc', loc=f'{user_loc["adm1"]} {user_loc["adm2"]} {user_loc["name"]}'), tips=True, tips_percent=10)
             return
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_curr_loc'), tips=True)
         return
     elif loc in ["clear", "unbind"]:
-        del data["locations"][str(session.event.user_id)]
-        save_to_path(config.BOT_SETTINGS_PATH, data)
+        # del data["locations"][str(session.event.user_id)]
+        # save_to_path(config.BOT_SETTINGS_PATH, data)
+        del user.plugin_datas["location"]
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'unbind_loc'), tips=True)
-        return
+        return True
     search = await search_location(loc, dict_output=False)
     if isinstance(search, str):
         await send_session_msg(session, search)
@@ -63,8 +67,9 @@ async def _(session: CommandSession):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_result', loc=loc), tips=True)
         return False
 
-    data = read_from_path(config.BOT_SETTINGS_PATH)
-    data["locations"][str(session.event.user_id)] = choose
-    save_to_path(config.BOT_SETTINGS_PATH, data)
+    # data = read_from_path(config.BOT_SETTINGS_PATH)
+    # data["locations"][str(session.event.user_id)] = choose
+    user.plugin_datas["location"] = choose
+    # save_to_path(config.BOT_SETTINGS_PATH, data)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'success', loc=f'{choose["adm1"]} {choose["adm2"]} {choose["name"]}'), tips=True, tips_percent=10)
     return True

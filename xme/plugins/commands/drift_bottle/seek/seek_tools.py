@@ -7,6 +7,5 @@ TOOLS = [
         "apply_message": "你的备用气罐激活了！",
         "apply_condition": lambda player: player.depth > 0 and player.oxygen.value <= 0,
         "apply_times": 1,
-        
     }
 ]

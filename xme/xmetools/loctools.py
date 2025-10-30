@@ -2,6 +2,7 @@ from xme.xmetools.reqtools import fetch_data
 from character import get_message
 from keys import WEATHER_API_KEY
 import config
+from xme.plugins.commands.xme_user.classes.user import try_load, User
 from xme.xmetools.jsontools import read_from_path, save_to_path
 
 async def search_location(loc: str, headers: dict = {"X-QW-Api-Key": WEATHER_API_KEY}, dict_output=True) -> dict | str:
@@ -36,8 +37,12 @@ async def get_user_location(user_id, location_text="") -> tuple[list[dict], dict
     Returns:
         tuple[list[dict], dict]: 搜索到的位置，用户位置
     """
-    data = read_from_path(config.BOT_SETTINGS_PATH)
-    user_location_info = data["locations"].get(str(user_id), None)
+    # data = read_from_path(config.BOT_SETTINGS_PATH)
+    user_location_info = None
+    user = try_load(user_id)
+    if isinstance(user, User):
+        user_location_info = user.plugin_datas.get("location", None)
+    # user_location_info = data["locations"].get(str(user_id), None)
     locations = []
     if location_text:
         print("搜索城市中...")

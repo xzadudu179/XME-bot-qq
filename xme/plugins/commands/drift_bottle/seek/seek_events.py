@@ -348,7 +348,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你似乎充满了力量", "你现在精神勃发", "你现在充满决心", "你现在精神亢奋"],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.85 and (oxygen.value >= oxygen.max_value * 0.85 or oxygen.value >= 110) and san.value >= san.max_value * 0.85 and depth.value > 105 and coins.value > 200,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.9 and (oxygen.value >= oxygen.max_value * 0.85 or oxygen.value >= 110) and san.value >= san.max_value * 0.85 and depth.value > 155 and coins.value > 200,
     "changes": {
       "chance": {
         "change": lambda: random.randint(1, 2),
@@ -361,14 +361,14 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 6,
+    "prob": 5,
     "post_func": None,
     "descs": ["你觉得这一切还不应该结束", "你觉得你还有精力继续探险", "你下定了探索的决心", "你知道你这次探险一定能成功"],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA, SeekRegion.TRENCH],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.9 and oxygen.value >= oxygen.max_value * 0.9 and san.value >= san.max_value * 0.9 and depth.value > 150 and coins.value > 240 and chance.value <= 3,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.95 and oxygen.value >= oxygen.max_value * 0.9 and san.value >= san.max_value * 0.9 and depth.value > 250 and coins.value > 440 and chance.value <= 3,
     "changes": {
       "chance": {
-        "change": lambda: random.randint(2, 5),
+        "change": lambda: random.randint(1, 5),
         "type": "+",
         "custom": False,
       }
@@ -613,7 +613,7 @@ EVENTS = [
   {
     "type": "decision",
     "tags": [],
-    "prob": 0.5,
+    "prob": 0.75,
     "post_func": None,
     "descs": ["你发现一个海底城市...要不要探索一下？", "你发现一片神秘的海底城市...要不要去探索一下？", "黑暗中出现了一片城市的轮廓...要去探索吗？"],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
@@ -756,7 +756,7 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
     "changes": {
       "oxygen": {
-        "change": lambda: random.randint(3, 15),
+        "change": lambda: random.randint(3, 20),
         "type": "+",
         "custom": False,
       }

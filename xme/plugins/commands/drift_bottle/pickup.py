@@ -3,7 +3,7 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools import jsontools
 from xme.plugins.commands.xme_user.classes import user as u
-from xme.xmetools.bottools import permission
+from aiocqhttp import ActionFailed
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_bottle_card_html, get_card_image
 from xme.xmetools.imgtools import image_msg
@@ -15,6 +15,7 @@ random.seed()
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers
 import config
+from nonebot import get_bot
 
 BOTTLE_PATH = './data/drift_bottles.json'
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
@@ -30,7 +31,7 @@ async def like(session, bottle: DriftBottle):
     await send_session_msg(session, content)
     return
 
-async def likesay(session, bottle: DriftBottle, comment_index: str):
+async def likesay(session: CommandSession, bottle: DriftBottle, comment_index: str):
     index = bottle.bottle_id
     if not comment_index.isdigit():
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
@@ -54,7 +55,11 @@ async def comment(session, bottle: DriftBottle, user_id, comment_content):
     if not comment_content:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_content"))
         return False
-    sender = (await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']
+    # try:
+        # sender = (await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']
+    # except ActionFailed:
+    sender = (await session.bot.get_stranger_info(user_id=user_id))['nickname']
+
     MAX_COMMENT_LEN = 35
     if len(comment_content) > MAX_COMMENT_LEN:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "comment_too_long", count=MAX_COMMENT_LEN, input_len=len(comment_content)))

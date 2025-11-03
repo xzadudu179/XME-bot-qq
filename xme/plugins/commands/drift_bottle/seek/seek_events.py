@@ -368,8 +368,13 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value >= health.max_value * 0.95 and oxygen.value >= oxygen.max_value * 0.9 and san.value >= san.max_value * 0.9 and depth.value > 250 and coins.value > 440 and chance.value <= 3,
     "changes": {
       "chance": {
-        "change": lambda: random.randint(1, 5),
+        "change": lambda: random.randint(2, 5),
         "type": "+",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(15, 25),
+        "type": "-",
         "custom": False,
       }
     },
@@ -749,6 +754,23 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
+    "prob": 8,
+    "post_func": None,
+    "descs": ["你找到了一些物资", "你发现了一些他人遗留的资源", "你找到了一些物资箱子", "你发现了别人曾丢弃的物品", "你发现了一些物资"],
+    "regions": [SeekRegion.UNDERSEA_CITY],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "coins": {
+        "change": lambda: random.randint(10, 80),
+        "type": "+",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
     "prob": 10,
     "post_func": None,
     "descs": ["你发现了一些氧气瓶", "你发现了一些氧气罐", "这里有些氧气瓶", "你找到了一些应急气罐"],
@@ -981,7 +1003,7 @@ EVENTS = [
     "ok": {
       "changes": {
         "coins": {
-          "change": lambda: random.randint(15, 60),
+          "change": lambda: random.randint(15, 70),
           "type": "+",
           "custom": False,
         },
@@ -995,7 +1017,7 @@ EVENTS = [
     "big_win": {
       "changes": {
         "coins": {
-          "change": lambda: random.randint(70, 120),
+          "change": lambda: random.randint(100, 150),
           "type": "+",
           "custom": False,
         },

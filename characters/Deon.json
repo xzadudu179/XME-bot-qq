@@ -2185,7 +2185,7 @@
       "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次",
       "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
       "talking_to_ai": "正在询问 AI！ {positive}",
-      "talk_result": "{positive}， AI 说：{talk}\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}",
+      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}",
       "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
       "too_long": "你输入的语句太长啦！要在 300 字以内哦"
     },
@@ -2193,8 +2193,8 @@
       "desc": "随机精华消息",
       "introduction": "让{bot_name}输出一个随机精华消息（如果群里的精华消息数大于 2）。",
       "result": [
-        "找到了一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。",
-        "这是一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。"
+        "找到了一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\n\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。",
+        "这是一条精华消息{positive_punc} {positive}：\n{avatar}{sender} ({sender_id})：\n\"{essence}\"\n由 \"{operator} ({operator_id})\" 在 {date} 设置。"
       ],
       "searching": [
         "正在寻找群内的精华消息{positive_punc}",

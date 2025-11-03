@@ -160,12 +160,15 @@ def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)
     print("numchoice " + s)
     def ra_int(match):
-
         start, end = map(int, match.group().replace("-", "~").split("~"))
+        if end > 10000000000000000000000000000000000:
+            raise ValueError("数字太大")
         result = random.randrange(start, end + 1)
         return str(result)
     try:
-        return re.sub(r'-?\d+~-?\d+', ra_int, s), True
+        if re.match(r'-?\d+~-?\d+', s):
+            return re.sub(r'-?\d+~-?\d+', ra_int, s), True
+        return s, False
     except Exception as ex:
         print(ex)
         return s, False

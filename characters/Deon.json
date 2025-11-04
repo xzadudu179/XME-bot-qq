@@ -381,8 +381,8 @@
     "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"
   },
   "user": {
-    "coin_name": "糖果",
-    "coin_pronoun": "颗",
+    "coin_name": "星币",
+    "coin_pronoun": "枚",
     "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",

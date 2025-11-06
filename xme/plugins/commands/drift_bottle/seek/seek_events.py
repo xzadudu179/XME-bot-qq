@@ -30,7 +30,7 @@ EVENTS = [
     "prob": 10,
     "post_func": None,
     "descs": ["你收集到了一些珍珠", "你发现了一些漂亮的石头", "你抓到了几只深海鱼类", "你发现了一些发光的物品", "你找到了一些挂饰"],
-    "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.SHALLOW_SEA],
+    "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.SHALLOW_SEA, SeekRegion.FOREST],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 300,
     "changes": {
       "coins": {
@@ -167,7 +167,7 @@ EVENTS = [
     "prob": -1,
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你感觉到水压越来越小..."],
-    "regions": [],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
     "changes": {
       "depth": {
@@ -289,7 +289,7 @@ EVENTS = [
     "top": True,
     "post_func": None,
     "descs": ["四周的小生物渐渐多了起来..", "海水总算有了颜色...和亮度", "四周不再是黑乎乎的一片了..."],
-    "regions": [SeekRegion.TRENCH, SeekRegion.FOREST],
+    "regions": [SeekRegion.TRENCH],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value <= 480,
     "changes": {
       "depth": {
@@ -552,7 +552,7 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
     "changes": {
       "san": {
-        "change": lambda: random.randint(1, 4),
+        "change": lambda: random.randint(1, 5),
         "type": "-",
         "custom": False,
       }
@@ -614,6 +614,310 @@ EVENTS = [
     "changes": {
     },
     "region_change": lambda last: last,
+  },
+  {
+    "type": "dice",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 1.7,
+    "post_func": None,
+    "event_messages": [
+      {
+        # 什么都没有是所有地区都可
+        "regions": [],
+        "descs": ["出现了一只巨大的远古生物！它似乎注意到了你...", "你发现了一只巨大的远古生物...而它也注意到了你...", "你看到了一只神秘的巨兽...与此同时，它注意到了你..."],
+        "ok_msgs": ["你的脑袋感受到了剧烈的疼痛，你奋力反抗，夺走了巨兽尝试对你的控制...巨兽似乎对你的精神力感到满意，留下了一些物品...", "你的思绪被一股庞大而混乱的力量侵蚀，你奋力尝试保持专注...夺回意志...最终，巨兽退去，留下了一些蠕动的小生物...", "你忽然感觉到一阵无形的力量从四周侵入，似乎要粉碎你的意志...但你奋力地反抗，最终击退了那股力量...巨兽发出了一阵低鸣，消失于海水中...并留下了一些奇怪的物品..."],
+        "bigwin_msgs": ["你的思绪被一股庞大而混乱的力量侵蚀，但你没有因此屈服，反而趁着巨兽集中精神的时刻朝着它的眼睛攻击！巨兽被击退了，留下了许多奇怪的珍品...", "巨兽的精神攻击被你成功的抵抗，并趁机攻击巨兽的弱点！巨兽痛苦地低吼，散落出闪烁着诡光的宝物离开...", "你忽然感到剧烈的疼痛，你集中全部精神反抗，并且找准时机攻击了巨兽的弱点！巨兽发出痛苦的嘶鸣，消散在了海里，留下了许多闪闪发光的宝物..."],
+        "fail_msgs": ["巨兽的眼睛散发光芒，你在剧烈的疼痛中被它控制，献上了鲜血以交换自由...", "你的意识被巨兽强大的力量击碎，你被迫献上了鲜血以换取自由...", "你的思绪忽然受到了强烈的侵蚀，你感到意识逐渐模糊...血液从身体中抽离...巨兽满意离去..."],
+        "bigfail_msgs": ["你的精神因巨兽的注视下而崩溃...它似乎不满于你的意志，夺走了你身上的财宝与鲜血作为对自己的补偿..", "你忽然被无形的力量控制，无论如何也无法反抗...你眼睁睁看着这只巨兽愤怒地夺走了你身上的财宝与鲜血...", f"巨兽在近乎一瞬间下压制了你的思绪，粉碎了你的精神...它似乎对你感到不满，愤怒地夺走了你身上的财宝与鲜血..."],
+      },
+    ],
+    "regions": [SeekRegion.FOREST],
+    "dice_faces": lambda: random.randint(10, 30),
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 200,
+    "determine_attr": "mental",
+    "ok": {
+      "changes": {
+        "coins": {
+          "change": lambda: random.randint(20, 80),
+          "type": "+",
+          "custom": False,
+        },
+        "oxygen": {
+          "change": lambda: random.randint(0, 5),
+          "type": "-",
+          "custom": False,
+        },
+        "san": {
+          "change": lambda: random.randint(0, 5),
+          "type": "-",
+          "custom": False,
+        },
+      },
+    },
+    "big_win": {
+      "changes": {
+        "coins": {
+          "change": lambda: random.randint(180, 320),
+          "type": "+",
+          "custom": False,
+        },
+        "combat": {
+          "change": lambda: random.randint(0, 1),
+          "type": "+",
+          "custom": False,
+        },
+        "mental": {
+          "change": lambda: random.randint(1, 3),
+          "type": "+",
+          "custom": False,
+        },
+        "san": {
+          "change": lambda: random.randint(10, 15),
+          "type": "+",
+          "custom": False,
+        }
+      },
+    },
+    "fail": {
+      "changes": {
+        "health": {
+          "change": lambda: random.randint(10, 20),
+          "type": "-",
+          "custom": False,
+        },
+        "oxygen": {
+          "change": lambda: random.randint(0, 5),
+          "type": "-",
+          "custom": False,
+        },
+        "san": {
+          "change": lambda: random.randint(7, 15),
+          "type": "-",
+          "custom": False,
+        },
+      },
+    },
+    "big_fail": {
+      "changes": {
+        "coins": {
+          "change": lambda: random.randint(100, 200),
+          "type": "-",
+          "custom": False,
+        },
+        "oxygen": {
+          "change": lambda: random.randint(5, 12),
+          "type": "-",
+          "custom": False,
+        },
+        "health": {
+          "change": lambda: random.randint(25, 45),
+          "type": "-",
+          "custom": False,
+        },
+        "san": {
+          "change": lambda: random.randint(10, 20),
+          "type": "-",
+          "custom": False,
+        },
+      },
+    },
+  },
+  {
+    # 返回事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": -1,
+    "post_func": None,
+    "descs": ["你奋力地试图往外游...", "你尝试往外游...", "你尽力地尝试往外游去...", "虽然感知不到方向，但你觉得你应该在往外游..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(-15, 20),
+        "type": "-",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(0, 3),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    "prob": 6.5,
+    "post_func": None,
+    "descs": ["你发现了一些发光的珍珠", "扭曲的藤蔓上出现了散发光芒的球体...", "你发现了一些藤蔓的嫩芽", "你找到了一些奇特的小生物"],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "coins": {
+        "change": lambda: random.randint(50, 100),
+        "type": "+",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    "prob": 8,
+    "post_func": None,
+    "descs": ["你找到了一些漂流的物资残骸...", "你发现了一些沉船的碎块...", "你找到了一些残破的物资箱..."],
+    "regions": [SeekRegion.FOREST, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CITY],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(5, 20),
+        "type": "+",
+        "custom": False,
+      },
+      "coins": {
+        "change": lambda: random.randint(10, 30),
+        "type": "+",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    "prob": 18,
+    "post_func": None,
+    "descs": ["你正在流血...", "你需要赶快寻找治疗...", "你感觉你快要失血过多了..."],
+    "regions": [],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: health.value < 30,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(1, 4),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    "prob": 5,
+    "post_func": None,
+    "descs": ["你触碰到了蠕动植物的荆棘，它似乎很不高兴...", "你似乎招惹到了这些植物，它们对你发动了攻击..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(2, 7),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    # 返回事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 15,
+    "regions": [SeekRegion.FOREST],
+    "post_func": None,
+    "descs": ["幽绿色的藤蔓形植物似乎正在低语...", "四周非常的空，且包裹着雾气...你感到很害怕", "那些扭曲的植物似乎在主动朝你靠近...", "你似乎听到了远古生物的低鸣..."],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "changes": {
+      "san": {
+        "change": lambda: random.randint(1, 5),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 0.35,
+    "post_func": None,
+    "descs": ["你一阵恍惚，这片森林忽然消失了...就好像它从来没存在过", "你突然感到一阵晕眩，随后发现整片森林消失不见了...", "你忽然感到了眩晕...随后发现整片森林完全消失了..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "san": {
+        "change": lambda: random.randint(5, 20),
+        "type": "-",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: last,
+  },
+  {
+    "type": "decision",
+    "tags": [],
+    "prob": 0.7,
+    "post_func": None,
+    "descs": ["一抹幽绿色的光芒引起了你的注意...前方似乎是一片森林？", "前方出现了一片神秘的...海底森林？", "你的视野似乎被蒙上了一层雾，前方出现了一片奇怪的海底森林..."],
+    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CITY],
+    "can_quit": True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 250 and depth.value < 600,
+    "decisions": [
+      {
+        "type": "normal",
+        "tags": [],
+        "names": ["进入此地", "探索森林"],
+        "descs": ["你游进了这片神秘的区域...", "你尝试探索这片奇怪的区域...", "你尝试探索这片海底森林...", "你尝试深入此地探索..."],
+        "tip": "[区域→]",
+        "changes": {
+        },
+        "region_change": lambda last: SeekRegion.FOREST
+      },
+      {
+        "type": "normal",
+        "tags": [],
+        "tip": "",
+        "names": ["离开", "放弃", "放弃探索"],
+        "descs": ["你觉得你可能进去这里后就出不来了...", "你觉得自己还不适合来这里探索", "你觉得你在这里无法判断深度，很可能出问题..."],
+        "changes": {
+        }
+      },
+    ]
+  },
+  {
+    # 返回事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": -1,
+    "post_func": None,
+    "descs": ["你总算离开了这个神秘的森林...", "在你的努力下，总算找到了森林的出口...", "你找到了森林的出口..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and depth.value < 180,
+    "changes": {
+    },
+    "region_change": lambda last: SeekRegion.DEEP_SEA,
+  },
+  {
+    # 下潜事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": -1,
+    "post_func": None,
+    "descs": ["你尝试往前探索...", "你尝试探索更深处...", "你希望能通过探索找到点什么..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(-10, 25),
+        "type": "+",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(0, 2),
+        "type": "-",
+        "custom": False,
+      }
+    }
   },
   {
     "type": "decision",
@@ -820,6 +1124,24 @@ EVENTS = [
   },
   {
     "type": "normal",
+    "tags": ["oxy_full"],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["氧气充足的状态让你感到精神充沛", "有了这么多的氧气，你觉得你可以继续你的探险", "获得了如此充足的氧气让你下定了决心"],
+    "regions": [],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, *args: not events_encountered.get("oxy_full", False) and oxygen.value >= 160,
+    "changes": {
+      "chance": {
+        "change": lambda: random.randint(4, 5),
+        "type": "+",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
     "prob": 5,
@@ -900,7 +1222,7 @@ EVENTS = [
       },
       {
         # 什么都没有是所有地区都可
-        "regions": [SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST],
+        "regions": [SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST, SeekRegion.FOREST],
         "descs": ["一个黑影逼近...", "你看到了一道黑影...", "你发现了一个不寻常的黑影...", "忽然闪过一团黑影..."],
         "ok_msgs": ["黑影突然冲了过来！但是你反应过来，干掉了它。", "黑影忽然把你包围了！但是在你的反击下，黑影逐渐消失了...", "黑影将你团团包围...但是被你反击开了。"],
         "bigwin_msgs": [f"你顺势攻击，黑影忽然消散了，变成了一堆{coin_name}...？", "你似乎察觉到了什么，瞬间朝黑影攻击！它即刻飘散了...", "黑影消失了...但是你的身边似乎多了一点东西...", "黑影突然冲来！但是你早有准备，一击挡住了它！它忽然消散了。"],
@@ -1166,13 +1488,13 @@ EVENTS = [
         "determine_attr": "mental",
         "ok": {
           "changes": {
-            "insight": {
-              "change": lambda: random.randint(0, 1),
+            "san": {
+              "change": lambda: random.randint(3, 12),
               "type": "+",
               "custom": False,
             },
-            "san": {
-              "change": lambda: random.randint(3, 12),
+            "insight": {
+              "change": lambda: random.randint(0, 1),
               "type": "+",
               "custom": False,
             },

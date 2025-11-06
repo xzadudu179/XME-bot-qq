@@ -220,7 +220,7 @@ def get_img_msg(
             }
             .other-lines {
                 text-indent: 2em;
-                max-width: 500px;
+                max-width: 415px;
             }
             .other-lines span {
                 text-indent: 0;

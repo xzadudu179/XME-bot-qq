@@ -1,5 +1,6 @@
 from xme.xmetools.randtools import html_messy_string
 from xme.xmetools.typetools import use_attribute
+import random
 from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
 
@@ -234,18 +235,18 @@ class Player:
                 attr_color = "#95ffa9"
                 line_color = "#89ff7e4b"
             case SeekRegion.UNDERSEA_CAVE:
-                text_color = "#d4ffe4"
-                card_border_color = "#136e53"
-                card_background_color = "#070e06"
-                fail_color = "#ee7051"
-                win_color = "#6bff58"
-                ident_color = "#52ff78"
-                dice_color = "#d6ff89"
-                region_color = "#bdff41"
-                effect_color = "#84ffe4"
+                text_color = "#d4eeff"
+                card_border_color = "#4c2b5c"
+                card_background_color = "#091316"
+                fail_color = "#ee5151"
+                win_color = "#8dff58"
+                ident_color = "#f36aff"
+                dice_color = "#9ed3ff"
+                region_color = "#928aff"
+                effect_color = "#7ba5ff"
                 event_color = "#95ffa9"
-                attr_color = "#95ffa9"
-                line_color = "#89ff7e4b"
+                attr_color = "#ffb6ef"
+                line_color = "#ffe17e4b"
 
         return {
             "text_color": text_color,
@@ -262,7 +263,7 @@ class Player:
             "line_color": line_color,
         }
 
-    def get_depth_tip(count):
+    def get_depth_tip(self, count):
         # 深度改变时 1~5 是 单箭头，5~15 是双箭头 15 以上是三箭头
         arrow_count = 1
         if abs(count) > 1000:
@@ -278,6 +279,12 @@ class Player:
         arrow = "↓" if count > 0 else "↑"
         if count == 0:
             arrow = "-"
+        return_str = ""
+        if self.region.value in [SeekRegion.FOREST]:
+            arrow = random.choice(["↓", "↑", "?"])
+            for _ in range(arrow_count):
+                return_str += random.choice(["↓", "↑", "?"])
+            return return_str
         return f"{arrow * arrow_count}"
 
     def get_messy_rate(self):
@@ -324,7 +331,7 @@ class Player:
                 continue
             # 深度单独计算
             if k == "depth":
-                result_strs.append(Player.get_depth_tip(value_diff))
+                result_strs.append(self.get_depth_tip(value_diff))
                 # if self.depth.value <= 0 and self.oxygen.value < self.oxygen.max_value:
                 #     result_strs.append(self.change_attr({
                 #         "oxygen": "+100000"
@@ -364,7 +371,10 @@ class Player:
                 value = v.value.value
                 maxvalue = -1
             if v.name == "深度":
-                value = str(value) + " d.n."
+                value = str(value)
+                if self.region.value in [SeekRegion.FOREST]:
+                    value = "???"
+                value += " d.n."
             name = html_messy_string(str(name), self.get_messy_rate(), html=html)
             value = html_messy_string(str(value), self.get_messy_rate(), html=html)
             # 星币不显示

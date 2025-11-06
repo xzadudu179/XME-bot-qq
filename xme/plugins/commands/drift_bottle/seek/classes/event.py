@@ -74,6 +74,7 @@ class Event:
         # random_events.reverse()
         # print(random_events)
         for e in random_events:
+            # print(e)
             if not random_percent(e["prob"]):
                 continue
             return e

@@ -344,7 +344,8 @@
       "试试用 \"/seek\" 指令玩玩寻宝吧！",
       "在 \"/desc\" 指令里给自己设置一个能够注入 SQL 的简介，似乎会发生奇怪的事情...",
       "使用 \"/anno\" 指令可以查看当前的公告~ 或者管理在没开启报时的群使用 \"/stime\" 开启报时后，每次报时也会展示公告~",
-      "使用 \"/al 指令名或别名\" 可以查看该指令的所有别名哦~"
+      "使用 \"/al 指令名或别名\" 可以查看该指令的所有别名哦~",
+      "有没有人尝试收集漠月的全成就（？）使用 \"/achi\" 指令可以查看成就列表~"
     ]
   },
   "apis": {
@@ -1330,9 +1331,9 @@
         "cancel_enable": "取消开启寻宝功能了哦 {neutral}",
         "enable": "在本群开启寻宝功能啦 {positive}",
         "limit": "你今天不能再寻宝啦，明天再来试试吧~\n不过你可以尝试在私聊使用 \"/seek sim\" 来模拟寻宝哦！",
-        "seek_start": "出发寻宝！{positive}\n> 欢迎使用 SeekingOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n注意：当结束时深度小于 20，寻宝成功，你会拿到你所有的奖励，若深度大于 20，会根据深度扣除{coin_name}惩罚\n——↓—开始下潜—↓——",
+        "seek_start": "出发寻宝！{positive}\n> 欢迎使用 SeekerOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n注意：当结束时深度小于 20，寻宝成功，你会拿到你所有的奖励，若深度大于 20，会根据深度扣除{coin_name}惩罚\n——↓—开始下潜—↓——",
         "not_admin": "你不是管理员哦，无法执行这个功能 {neutral}",
-        "seek_simulation": "开始模拟寻宝！{positive}\n> 欢迎使用 SeekingOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n当前为模拟环境，开始下潜。",
+        "seek_simulation": "开始模拟寻宝！{positive}\n> 欢迎使用 SeekerOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n当前为模拟环境，开始下潜。",
         "group_seeking": "这个群还有人在探险哦，可以试试私聊使用或者换一个群使用呢 {neutral}",
         "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change} {region_ch}</div>",
         "dice_event_no_html": "[掷骰事件] {event_desc}\n[正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message}\n{attr_change} {region_ch}",
@@ -1515,8 +1516,8 @@
       ],
       "limited": [
         "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",
-        "周围已经没有瓶子了...下一小时再来吧 {negative}",
-        "{bot_name}找不到别的瓶子啦...下一小时再来吧 {negative}",
+        "周围已经没有瓶子了...过段时间再来吧 {negative}",
+        "{bot_name}找不到别的瓶子啦...过段时间再来吧 {negative}",
         "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧..."
       ],
       "throwed": [

@@ -22,7 +22,7 @@ async def _(session: CommandSession):
     # bottles = bottles_dict['bottles']
     error_args = []
     for arg in args:
-        bottle: DriftBottle = DriftBottle.get(arg, None)
+        bottle: DriftBottle = DriftBottle.get(arg)
         if bottle is None:
             error_args.append((arg, get_message("plugins", __plugin_name__, 'bottle_not_exist')))
             # await send_msg(session, get_message("plugins", __plugin_name__, 'cthulhu_bottle_not_exist', id=arg))

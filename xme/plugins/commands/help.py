@@ -10,6 +10,7 @@ from xme.plugins.commands.xme_user import get_userhelp
 from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
 from xme.xmetools.imgtools import image_msg
 from nonebot import on_command, CommandSession, MessageSegment
+from traceback import print_exc
 from character import get_message
 from xme.xmetools.texttools import most_similarity_str
 
@@ -70,9 +71,23 @@ async def _(session: CommandSession, user: u.User):
         try:
             if p.usage.split(']')[0] in '[指令':
                 total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
-            else:
-                plugin_pages += "\n" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+                continue
+            page = ""
+            if p.usage.split(']')[0] in '[插件':
+                page += "\n" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+                # 插件内 cmds 统计
+                cmd_usages = p.usage.split("##内容##：\n")[1].split("\n##所有指令用法##")[0].split("\n")
+                if "/////OUTER/////" in p.usage:
+                    cmd_usages = p.usage.split("##内容##：\n")[1].split("\n/////OUTER/////##所有指令用法##")[0].split("\n")
+
+                # print(cmd_usages)
+                for u in cmd_usages:
+                    print(u)
+                    page += f"\n        | /{u.split(':')[0].strip().split(' ')[0]}    {u.split(':')[1].strip()}"
+                page += "\n        --------"
+            plugin_pages += page
         except:
+            print_exc()
             plugin_pages += "\n" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:

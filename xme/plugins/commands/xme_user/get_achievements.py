@@ -3,6 +3,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import permission
 from xme.xmetools.typetools import try_parse
+from xme.xmetools.bottools import get_group_name
 from xme.xmetools.texttools import replace_chinese_punctuation, fuzzy_search
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from .classes import user as u
@@ -42,7 +43,7 @@ def get_achievement_items(achievements: list):
         messages = [get_message("plugins", __plugin_name__, cmd_name, "nothing_here")]
     return messages
 
-def get_details(text: str, user: User):
+async def get_details(text: str, user: User):
     achievements = get_achievements()
     search = fuzzy_search(text, list(achievements.keys()), ratio=0.5)
     print(search)
@@ -59,7 +60,7 @@ def get_details(text: str, user: User):
     if achievement is not None:
         achieved = bool(achievement)
         achieved_time = achievement["achieve_time"]
-        achieved_from = achievement["from"]
+        achieved_from = await get_group_name(achievement["from"], "[未知群聊]")
     return get_achievement_details(achievement_name=search, achieved=achieved, achieved_time=achieved_time, achieved_from=achieved_from)
 
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
@@ -73,7 +74,7 @@ async def _(session: CommandSession, user: User):
     if arg:
         # if try_parse(arg, int) is None:
             # return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "error_arg"), tips=True)
-        details = get_details(text=arg, user=user)
+        details = await get_details(text=arg, user=user)
         if details is None:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "no_arg", text=arg), tips=True)
         return await send_session_msg(session, details)

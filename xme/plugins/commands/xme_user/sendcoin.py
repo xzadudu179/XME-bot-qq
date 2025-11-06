@@ -20,7 +20,7 @@ usage = {
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=True)
-@u.limit(cmd_name, 2, get_message("plugins", __plugin_name__, cmd_name, 'limited'))
+@u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited'), count_limit=2)
 @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     message = ''

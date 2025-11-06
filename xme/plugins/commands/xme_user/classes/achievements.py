@@ -1,5 +1,6 @@
 from xme.xmetools.jsontools import read_from_path
 
+
 def get_achievements() -> dict:
     return read_from_path("./static/achievements.json")
 

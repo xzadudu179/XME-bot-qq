@@ -4,6 +4,7 @@ from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import permission
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools import randtools
+import random
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
@@ -45,6 +46,8 @@ async def _(session: CommandSession, user: User):
     except:
         avatar = ""
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
+    if user.id == 1795886524:
+        reaction = "\n" + get_message("bot_info", "name") + ": " + random.choice([get_message("character", "info_reactions_179"), get_message("character", "info_reactions")])
     message = f'\n{avatar}[用户] {target_user}\n' + str(user) + reaction
 
 

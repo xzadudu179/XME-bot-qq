@@ -113,7 +113,7 @@ def is_it_command(text):
     # if raw_msg[0] not in config.COMMAND_START or not raw_msg[1:] or not raw_msg.replace(raw_msg[0], ""):
     if len(text) < 1:
         return False
-    if not text[0] in config.COMMAND_START[0] or not text[1:] or not text.replace(text[0], ""):
+    if not text[0] in config.COMMAND_START or not text[1:] or not text.replace(text[0], ""):
         return False
 
     if not get_cmd_by_alias(text.split(" ")[0]):

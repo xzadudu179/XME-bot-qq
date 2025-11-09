@@ -2,7 +2,8 @@ from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias, is_it_command
 from .classes.player import SeekRegion
-from xme.xmetools.bottools import permission
+from xme.xmetools.bottools import get_group_name
+from xme.xmetools.filetools import b64_encode_file
 from xme.xmetools.timetools import TimeUnit
 from config import BOT_SETTINGS_PATH
 from html2image import Html2Image
@@ -11,12 +12,13 @@ from character import get_message
 from xme.xmetools.imgtools import crop_transparent_area, image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
+import time
 import os
 from xme.plugins.commands.xme_user.classes import user
 import random
 import traceback
 from .classes.player import Player
-from .classes.event import Event
+from .classes.event import Event, SPECIAL_EVENTS
 random.seed()
 from .. import DriftBottle, get_random_bottle
 from nonebot import on_command, CommandSession, MessageSegment
@@ -54,8 +56,8 @@ class Seek:
         msgs = []
         count = 0
         self.status = "start"
-        isover = 0
-        for step in range(step_count):
+        # isover = 0
+        for _ in range(step_count):
             count += 1
             for tool in self.player.tools:
                 if tool.can_apply():
@@ -63,19 +65,22 @@ class Seek:
             msg = SeekStep(self.event).gen_step(self.events, self.player)
             is_die, die_reason = self.player.is_die()
             if (self.player.back and self.player.depth.value <= 0) or is_die:
-                # 到海面上后执行两次步数（问为什么就是第一次是到达事件）
-                if isover < 2:
-                    isover += 1
-                else:
-                    return {
-                        "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
-                        "count": count,
-                        "is_die": is_die,
-                        "die_reason": die_reason,
-                        "decision": None,
-                        "over": self.player.back and self.player.depth.value <= 0,
-                    }
+                # 回到海面，新增一步回到海面的计算
+                if not is_die:
+                    msgs.append(msg)
+                    msgs.append(SeekStep(self.event).gen_event_step(SPECIAL_EVENTS["on_sea"], self.player))
+                return {
+                    "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
+                    "count": count,
+                    "is_die": is_die,
+                    "die_reason": die_reason,
+                    "decision": None,
+                    "over": self.player.back and self.player.depth.value <= 0,
+                }
+            # 处理决策事件，决策事件会直接返回字典
             if isinstance(msg, dict) and msg["type"] == "decision":
+                if len(msgs) < 1:
+                    msgs.append(Seek.special_message("暂时没有任何事件..."))
                 return {
                     "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
                     "count": count,
@@ -83,10 +88,12 @@ class Seek:
                     "die_reason": die_reason,
                     "decision": msg,
                     "over": self.player.back and self.player.depth.value <= 0,
-            }
+                }
+            # 因为决策事件不在卡片里，所以并不会被添加到 msgs
             msgs.append(msg)
-        if self.player.depth.value <= 0 and self.player.oxygen.value < self.player.oxygen.max_value:
-            self.player.oxygen.change(lambda v: v + 100000)
+        # if self.player.depth.value <= 0 and self.player.oxygen.value < self.player.oxygen.max_value:
+        #     self.player.oxygen.change(lambda v: v + 100000)
+
         return {
             "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
             "count": count,
@@ -100,6 +107,10 @@ class Seek:
         result = await self.event.build_decision_event(session, decision, self.player.region.value, message_prefix=prefix)
         await send_session_msg(session, result + suffix)
         return result
+
+    @staticmethod
+    def special_message(content: str, html_class="tip"):
+        return f"<li><span class=\"{html_class}\">{content}</span></li>"
 
     # 阶段消息
     async def make_steps_message(self, session, steps_result: dict, prefix: str = "<h2>----------阶段总结----------</h2>\n<hr/>", suffix: str = "", send=True):
@@ -120,11 +131,11 @@ class Seek:
             print("OVER 探险结束")
             # self.status = "stop"
         if steps_result['is_die']:
-            steps += f"<li><span class=\"die\">你已被迫结束探险。原因：{steps_result['die_reason']}</span></li></ul>"
+            steps += Seek.special_message(f"你已被迫结束探险。原因：{steps_result['die_reason']}")
+            # steps += f"<li><span class=\"die\">你已被迫结束探险。原因：{steps_result['die_reason']}</span></li></ul>"
             # self.player.coins = 0
             self.status = "stop"
-        else:
-            steps += "</ul>"
+        steps += "</ul>"
 
         # if decision is not None:
         #     result = await self.event.build_decision_event(session, decision, self.player.region.value, message_prefix=msg + decision_prefix)
@@ -196,6 +207,7 @@ def get_img_msg(
 
             main h2 {
                 text-align: center;
+                font-weight: normal;
             }
 
             main {
@@ -213,6 +225,10 @@ def get_img_msg(
 
             .win {
                 color: var(--win-color);
+            }
+
+            .tip {
+                color: var(--attr-color);
             }
 
             .ident {
@@ -302,6 +318,16 @@ class SeekStep:
         # print(player.region)
         return self.event.gen_event(events, player.region.value)
 
+    def gen_event_step(self, event_dict: dict, player: Player):
+        """生成单独事件的寻宝步数
+
+        Args:
+            event_dict (dict): 事件字典
+            player (Player): 当前玩家
+        """
+        return self.event.create_event(event_dict, player.region.value)
+
+
 def is_stepping(reply, step_name="s"):
     return reply.startswith(step_name) and len(reply.split(step_name)) > 1 and reply.split(step_name)[1].strip().isdigit()
 
@@ -313,6 +339,9 @@ TIMES_LIMIT = 2
 seeking_groups = [
 
 ]
+seeking_players = {
+    # xxx: time
+}
 
 
 async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
@@ -323,6 +352,23 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
         result['data']['limited'] = True
     return result
 
+def validate_group(session: CommandSession, sender):
+    if sender.is_groupchat and session.event.group_id in seeking_groups:
+        return False
+    return True
+
+def validate_player(session: CommandSession) -> bool:
+    """
+    验证玩家是否可探险
+    """
+    global seeking_players
+    if session.event.user_id not in seeking_players.keys():
+        return True
+    if time.time() - seeking_players[session.event.user_id]["time"] > 1800:
+        del seeking_players[session.event.user_id]
+        return True
+    return False
+
 @on_command(command_name, aliases=seek_alias, only_to_me=False, permission=lambda _: True)
 @user.using_user(save_data=True)
 # @permission(lambda sender: sender.from_group(727949269) or sender.is_superuser, permission_help="在 179 的主群使用 或 是 SUPERUSER")
@@ -330,6 +376,7 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
 async def _(session: CommandSession, u: user.User, validate, count_tick):
     try:
         global seeking_groups
+        global seeking_players
         # TODO 插件管理系统
         enable_groups: list = read_from_path(BOT_SETTINGS_PATH)["seek_enable_groups"]
 
@@ -370,8 +417,14 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
 
         if validate() and not is_sim:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'limit'))
-        if sender.is_groupchat and session.event.group_id in seeking_groups:
+        # # 验证该群是否有人在探险
+        if not validate_group(session, sender):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'group_seeking'))
+        # # 验证正在探险的玩家防止多开
+        if not validate_player(session):
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'seek_on_seeking', place=seeking_players[session.event.user_id]["place"]))
+
+
 
         from .seek_events import EVENTS
         player = Player()
@@ -379,6 +432,10 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         total_results = []
         # total_messages: list[MessageSegment] = []
         seek.status = "start"
+        seeking_players[session.event.user_id] = {
+            "time": time.time(),
+            "place": f"{await get_group_name(session.event.group_id)}" if session.event.group_id is not None else "私聊"
+        }
         if sender.is_groupchat:
             seeking_groups.append(session.event.group_id)
             # 处理 每一次机会（？）
@@ -474,64 +531,65 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             player.chance.change(lambda v: v - 1)
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')
             # print(player.chance.value, seek.status)
-        # 结算
-
-        # 最后统计的值
-        result_value = player.coins.value
-        if player.depth.value > 20 and seek.status == "exit":
-            result_value = 0 if result_value > 0 else result_value
-            # coins_str = f"{player.coins.name}: {result_value}"
-        # if player.depth.value > 20: # 基准深度 20，超过有惩罚
-        #     # 深度惩罚
-        #     depth_punish = min(player.coins.value * 0.8 / 0.9 / math.log(player.depth.value), player.coins.value)
-        #     result_value = player.coins.value - depth_punish
-        #     # 对于手动退出的情况，无论如何星币数只能不大于 0
-        #     if seek.status == "exit" or player.is_die()[0] == True:
-        #         result_value = 0 if result_value > 0 else result_value
-        #     coins_str = f"{player.coins.name}: {result_value}"
-        gain_ratio = 1
-        # 深度惩罚
-        if player.depth.value > 300:
-            gain_ratio = 0
-        elif player.depth.value > 200:
-            gain_ratio = 0.1
-        elif player.depth.value > 100:
-            gain_ratio = 0.2
-        elif player.depth.value > 50:
-            gain_ratio = 0.5
-        elif player.depth.value > 20:
-            gain_ratio = 0.7
-
-        #########
-        exit_punish = 1
-        if seek.status == "exit":
-            exit_punish = 0
-        no_exit_result = int(result_value * gain_ratio)
-        result_value = no_exit_result * exit_punish
-        coins_str = f"{player.coins.name}: {player.coins.value} - {player.coins.value - no_exit_result} (深度惩罚){(' * ' + str(exit_punish) + ' (放弃惩罚) ') if exit_punish != 1 else ''}  结算: {result_value}"
-        if not is_sim and player.coins.value > 1000 and result_value == 0:
-            await u.achieve_achievement(session, "满载无归")
-        if sender.is_groupchat:
-            try:
-                seeking_groups.remove(session.event.group_id)
-            except:
-                print(f"无法移除群 id {session.event.group_id} 因为不存在。")
-        if is_sim:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg_simulation', gain=f"{coins_str}"))
-            return
-        else:
-            count_tick()
-        if result_value > 0 and seek.status != "exit":
-            await u.get_coins(session, result_value, _get_message = get_message("plugins", __plugin_name__, command_name, 'result_msg_with_coins', gain=f"{coins_str}", coins=result_value))
-        else:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg', gain=f"{coins_str}"))
-        return True
+    except TimeoutError as ex:
+        seek.status = "exit"
     except Exception as ex:
         if sender.is_groupchat:
             try:
                 seeking_groups.remove(session.event.group_id)
             except:
                 print(f"无法移除群 id {session.event.group_id} 因为不存在。")
+        try:
+            del seeking_players[session.event.user_id]
+        except:
+            print(f"无法移除用户 id {session.event.user_id} 因为不存在。")
         traceback.print_exc()
         return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'error_msg', ex=traceback.format_exc()))
     # await sleep(10)
+    # 结算
+    # 最后统计的值
+    result_value = player.coins.value
+    if player.depth.value > 20 and seek.status == "exit":
+        result_value = 0 if result_value > 0 else result_value
+
+    gain_ratio = 1
+    # 深度惩罚
+    if player.depth.value > 300:
+        gain_ratio = 0
+    elif player.depth.value > 200:
+        gain_ratio = 0.1
+    elif player.depth.value > 100:
+        gain_ratio = 0.2
+    elif player.depth.value > 50:
+        gain_ratio = 0.5
+    elif player.depth.value > 20:
+        gain_ratio = 0.7
+
+    #########
+    exit_punish = 1
+    if seek.status == "exit":
+        exit_punish = 0
+    no_exit_result = int(result_value * gain_ratio)
+    result_value = no_exit_result * exit_punish
+    coins_str = f"{player.coins.name}: {player.coins.value} - {player.coins.value - no_exit_result}(深度惩罚){(' * ' + str(exit_punish) + ' (放弃惩罚) ') if exit_punish != 1 else ''}  结算:{result_value}"
+    if not is_sim and player.coins.value > 1000 and result_value == 0:
+        await u.achieve_achievement(session, "满载无归")
+    try:
+        del seeking_players[session.event.user_id]
+    except:
+        print(f"无法移除用户 {session.event.user_id} 因为不存在。")
+    if sender.is_groupchat:
+        try:
+            seeking_groups.remove(session.event.group_id)
+        except:
+            print(f"无法移除群 id {session.event.group_id} 因为不存在。")
+    if is_sim:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg_simulation', gain=f"{coins_str}"))
+        return
+    else:
+        count_tick()
+    if result_value > 0 and seek.status != "exit":
+        await u.get_coins(session, result_value, _get_message = get_message("plugins", __plugin_name__, command_name, 'result_msg_with_coins', gain=f"{coins_str}", coins=result_value))
+    else:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg', gain=f"{coins_str}"))
+    return True

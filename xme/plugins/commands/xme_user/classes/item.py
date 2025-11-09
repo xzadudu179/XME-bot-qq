@@ -334,4 +334,16 @@ item_table = {
         action_args={
         },
     ),
+    17: Item(
+        id=17,
+        name="",
+        desc="加工所用的工业零件，在制作或维修物品方面会有需要。当然，也是很不错的交易材料。",
+        rarity=Rarity.COMMON,
+        tags=[Tag.SALEABLE],
+        maxcount=200,
+        price=10,
+        pronoun="盒",
+        action_args={
+        },
+    ),
 }

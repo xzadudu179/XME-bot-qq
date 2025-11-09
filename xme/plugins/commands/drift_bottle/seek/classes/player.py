@@ -3,6 +3,7 @@ from xme.xmetools.typetools import use_attribute
 import random
 from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
+from xme.xmetools.colortools import mix_hex_color_lab
 
 # 寻宝区域
 class SeekRegion(Enum):
@@ -142,125 +143,155 @@ class Player:
         return return_msg.format(name=change_value.name, value=value)
 
     def get_card_color(self) -> dict:
-        text_color = "#E2EBFF"
-        card_border_color = "#3ba3f8"
-        card_background_color = "#141430"
-        fail_color = "#FC5959"
-        win_color = "#7FFF7F"
-        ident_color = "#59CEFC"
-        dice_color = "#BBD0FF"
-        region_color = "#8DFFCA"
-        effect_color = "#8DBEFF"
-        event_color = "#addaff"
-        attr_color = "#addaff"
-        line_color = "#a9b2ff4b"
-        match self.region.value:
-            # 默认深海
-            case SeekRegion.SHALLOW_SEA:
-                text_color = "#FFFFFF"
-                card_border_color = "#9efcff"
-                card_background_color = "#121c2b"
-                fail_color = "#FC5959"
-                win_color = "#8aff8a"
-                ident_color = "#59CEFC"
-                dice_color = "#BBD0FF"
-                region_color = "#8DFFCA"
-                effect_color = "#75D8FF"
-                event_color = "#C5F2FF"
-                attr_color = "#C5F2FF"
-                line_color = "#a9c7ff4b"
-            case SeekRegion.SHIPWRECK:
-                text_color = "#FFF3EC"
-                card_border_color = "#b67154"
-                card_background_color = "#110D0B"
-                fail_color = "#FC5959"
-                win_color = "#B0FFA0"
-                ident_color = "#FFAF63"
-                dice_color = "#FFD4CC"
-                region_color = "#8DFFCA"
-                effect_color = "#FFECAC"
-                event_color = "#FFD9BA"
-                attr_color = "#FFD9BA"
-                line_color = "#ffdda94b"
-            case SeekRegion.UNDERSEA_CITY:
-                text_color = "#e9edff"
-                card_border_color = "#535368"
-                card_background_color = "#171a22"
-                fail_color = "#ff6161"
-                win_color = "#93dd91"
-                ident_color = "#76ade0"
-                dice_color = "#9bacbd"
-                region_color = "#94c6cc"
-                effect_color = "#decaff"
-                event_color = "#b5bce7"
-                attr_color = "#b5bce7"
-                line_color = "#c2c2c24b"
-            case SeekRegion.TRENCH:
-                text_color = "#cfdeff"
-                card_border_color = "#212396"
-                card_background_color = "#020205"
-                fail_color = "#ee516b"
-                win_color = "#72ffbd"
-                ident_color = "#54e5ff"
-                dice_color = "#89bcff"
-                region_color = "#59afff"
-                effect_color = "#c9c3ff"
-                event_color = "#a4b2ff5"
-                attr_color = "#a4b2ff"
-                line_color = "#817eff4b"
-            case SeekRegion.ABYSS:
-                text_color = "#ffccc8"
-                card_border_color = "#7c1414"
-                card_background_color = "#050202"
-                fail_color = "#ee5151"
-                win_color = "#a5f591"
-                ident_color = "#f7d35e"
-                dice_color = "#ff89a3"
-                region_color = "#ff8045"
-                effect_color = "#ffb17c"
-                event_color = "#ff8884"
-                attr_color = "#ff8884"
-                line_color = "#ff7e7e4b"
-            case SeekRegion.FOREST:
-                text_color = "#d4ffe4"
-                card_border_color = "#136e53"
-                card_background_color = "#070e06"
-                fail_color = "#ee7051"
-                win_color = "#6bff58"
-                ident_color = "#52ff78"
-                dice_color = "#d6ff89"
-                region_color = "#bdff41"
-                effect_color = "#84ffe4"
-                event_color = "#95ffa9"
-                attr_color = "#95ffa9"
-                line_color = "#89ff7e4b"
-            case SeekRegion.UNDERSEA_CAVE:
-                text_color = "#d4eeff"
-                card_border_color = "#4c2b5c"
-                card_background_color = "#091316"
-                fail_color = "#ee5151"
-                win_color = "#8dff58"
-                ident_color = "#f36aff"
-                dice_color = "#9ed3ff"
-                region_color = "#928aff"
-                effect_color = "#7ba5ff"
-                event_color = "#95ffa9"
-                attr_color = "#ffb6ef"
-                line_color = "#ffe17e4b"
+        depths = {
+            SeekRegion.SHALLOW_SEA: 0,
+            SeekRegion.DEEP_SEA: 120,
+            SeekRegion.TRENCH: 500,
+            SeekRegion.ABYSS: 1000
+        }
+        def get_depth_ratio():
+            depth: int = self.depth.value
+            weight = 1
+            # 将区间按深度排序
+            if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS]:
+                weight = 0.4
+            sorted_regions = sorted(depths.items(), key=lambda x: x[1])
+            for i in range(len(sorted_regions) - 1):
+                region_last, d_last = sorted_regions[i]
+                region_next, d_next = sorted_regions[i + 1]
 
+                # 判断深度是否在此区间之间
+                if d_last <= depth <= d_next:
+                    # 计算相对比值
+                    ratio = (depth - d_last) / (d_next - d_last)
+                    return region_next, ratio * weight
+            # 若未匹配到说明超过最大区间
+            last_region, _ = sorted_regions[-1]
+            return last_region, 1.0 * weight
+        region_colors = {
+            SeekRegion.SHALLOW_SEA: {
+                "text_color": "#FFFFFF",
+                "card_border_color": "#9efcff",
+                "card_background_color": "#121c2b",
+                "fail_color": "#FC5959",
+                "win_color": "#8aff8a",
+                "ident_color": "#59CEFC",
+                "dice_color": "#BBD0FF",
+                "region_color": "#8DFFCA",
+                "effect_color": "#75D8FF",
+                "event_color": "#C5F2FF",
+                "attr_color": "#C5F2FF",
+                "line_color": "#a9c7ff4b",
+                },SeekRegion.SHIPWRECK: {
+                "text_color": "#FFF3EC",
+                "card_border_color": "#b67154",
+                "card_background_color": "#110D0B",
+                "fail_color": "#FC5959",
+                "win_color": "#B0FFA0",
+                "ident_color": "#FFAF63",
+                "dice_color": "#FFD4CC",
+                "region_color": "#8DFFCA",
+                "effect_color": "#FFECAC",
+                "event_color": "#FFD9BA",
+                "attr_color": "#FFD9BA",
+                "line_color": "#ffdda94b",
+                },SeekRegion.UNDERSEA_CITY: {
+                "text_color": "#e9edff",
+                "card_border_color": "#535368",
+                "card_background_color": "#171a22",
+                "fail_color": "#ff6161",
+                "win_color": "#93dd91",
+                "ident_color": "#76ade0",
+                "dice_color": "#9bacbd",
+                "region_color": "#94c6cc",
+                "effect_color": "#decaff",
+                "event_color": "#b5bce7",
+                "attr_color": "#b5bce7",
+                "line_color": "#c2c2c24b",
+                },SeekRegion.TRENCH: {
+                "text_color": "#cfdeff",
+                "card_border_color": "#212396",
+                "card_background_color": "#020205",
+                "fail_color": "#ee516b",
+                "win_color": "#72ffbd",
+                "ident_color": "#54e5ff",
+                "dice_color": "#89bcff",
+                "region_color": "#59afff",
+                "effect_color": "#c9c3ff",
+                "event_color": "#a4b2ff5",
+                "attr_color": "#a4b2ff",
+                "line_color": "#817eff4b",
+                },SeekRegion.ABYSS: {
+                "text_color": "#ffccc8",
+                "card_border_color": "#7c1414",
+                "card_background_color": "#050202",
+                "fail_color": "#ee5151",
+                "win_color": "#a5f591",
+                "ident_color": "#f7d35e",
+                "dice_color": "#ff89a3",
+                "region_color": "#ff8045",
+                "effect_color": "#ffb17c",
+                "event_color": "#ff8884",
+                "attr_color": "#ff8884",
+                "line_color": "#ff7e7e4b",
+                },SeekRegion.FOREST: {
+                "text_color": "#d4ffe4",
+                "card_border_color": "#136e53",
+                "card_background_color": "#070e06",
+                "fail_color": "#ee7051",
+                "win_color": "#6bff58",
+                "ident_color": "#52ff78",
+                "dice_color": "#d6ff89",
+                "region_color": "#bdff41",
+                "effect_color": "#84ffe4",
+                "event_color": "#95ffa9",
+                "attr_color": "#95ffa9",
+                "line_color": "#89ff7e4b",
+                },SeekRegion.UNDERSEA_CAVE: {
+                "text_color": "#d4eeff",
+                "card_border_color": "#4c2b5c",
+                "card_background_color": "#091316",
+                "fail_color": "#ee5151",
+                "win_color": "#8dff58",
+                "ident_color": "#f36aff",
+                "dice_color": "#9ed3ff",
+                "region_color": "#928aff",
+                "effect_color": "#7ba5ff",
+                "event_color": "#95ffa9",
+                "attr_color": "#ffb6ef",
+                "line_color": "#ffe17e4b",
+                }
+        }
+        text_color = region_colors.get(self.region.value, {}).get("text_color", "#E2EBFF")
+        card_border_color = region_colors.get(self.region.value, {}).get("card_border_color", "#3ba3f8")
+        card_background_color = region_colors.get(self.region.value, {}).get("card_background_color", "#141430")
+        fail_color = region_colors.get(self.region.value, {}).get("fail_color", "#FC5959")
+        win_color = region_colors.get(self.region.value, {}).get("win_color", "#7FFF7F")
+        ident_color = region_colors.get(self.region.value, {}).get("ident_color", "#59CEFC")
+        dice_color = region_colors.get(self.region.value, {}).get("dice_color", "#BBD0FF")
+        region_color = region_colors.get(self.region.value, {}).get("region_color", "#8DFFCA")
+        effect_color = region_colors.get(self.region.value, {}).get("effect_color", "#8DBEFF")
+        event_color = region_colors.get(self.region.value, {}).get("event_color", "#addaff")
+        attr_color = region_colors.get(self.region.value, {}).get("attr_color", "#addaff")
+        line_color = region_colors.get(self.region.value, {}).get("line_color", "#a9b2ff4b")
+
+        next_region, ratio = get_depth_ratio()
+        # print(next_region, ratio)
+
+        curr_region_colors = region_colors.get(next_region, {})
         return {
-            "text_color": text_color,
-            "card_border_color": card_border_color,
-            "card_background_color": card_background_color,
-            "fail_color": fail_color,
-            "win_color": win_color,
-            "ident_color": ident_color,
-            "dice_color": dice_color,
-            "region_color": region_color,
-            "effect_color": effect_color,
-            "event_color": event_color,
-            "attr_color": attr_color,
-            "line_color": line_color,
+            "text_color": mix_hex_color_lab(text_color, curr_region_colors.get("text_color", text_color), ratio),
+            "card_border_color": mix_hex_color_lab(card_border_color, curr_region_colors.get("card_border_color", card_border_color), ratio),
+            "card_background_color": mix_hex_color_lab(card_background_color, curr_region_colors.get("card_background_color", card_background_color), ratio),
+            "fail_color": mix_hex_color_lab(fail_color, curr_region_colors.get("fail_color", fail_color), ratio),
+            "win_color": mix_hex_color_lab(win_color, curr_region_colors.get("win_color", win_color), ratio),
+            "ident_color": mix_hex_color_lab(ident_color, curr_region_colors.get("ident_color", ident_color), ratio),
+            "dice_color": mix_hex_color_lab(dice_color, curr_region_colors.get("dice_color", dice_color), ratio),
+            "region_color": mix_hex_color_lab(region_color, curr_region_colors.get("region_color", region_color), ratio),
+            "effect_color": mix_hex_color_lab(effect_color, curr_region_colors.get("effect_color", effect_color), ratio),
+            "event_color": mix_hex_color_lab(event_color, curr_region_colors.get("event_color", event_color), ratio),
+            "attr_color": mix_hex_color_lab(attr_color, curr_region_colors.get("attr_color", attr_color), ratio),
+            "line_color": mix_hex_color_lab(line_color, curr_region_colors.get("line_color", line_color), ratio),
         }
 
     def get_depth_tip(self, count):
@@ -281,9 +312,9 @@ class Player:
             arrow = "-"
         return_str = ""
         if self.region.value in [SeekRegion.FOREST]:
-            arrow = random.choice(["↓", "↑", "?"])
-            for _ in range(arrow_count):
-                return_str += random.choice(["↓", "↑", "?"])
+            # arrow = random.choice(["↓", "↑"])
+            for _ in range(max(arrow_count + random.randint(-1, 1), 1)):
+                return_str += random.choice(["↓", "↑"])
             return return_str
         return f"{arrow * arrow_count}"
 

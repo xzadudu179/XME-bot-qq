@@ -1,5 +1,10 @@
 from nonebot import log
 import os
+import base64
+
+def b64_encode_file(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 def delete_files_in_folder(folder_path):
     """删除文件夹内的所有文件

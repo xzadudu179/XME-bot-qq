@@ -163,3 +163,19 @@ __plugin_usage__ = str(PluginDoc(
     permissions=[prop['permission'] for prop in command_properties],
     alias_list=aliases
 ))
+
+EXAMPLE_BOTTLE = DriftBottle(
+    bottle_id="1179?",
+    content="这是一个用来演示漂流瓶卡片效果的瓶子~\n这个瓶子是虚拟的哦",
+    sender="漠月和他的550W",
+    likes=5,
+    views=10,
+    from_group="世界之外的一个神秘区域...",
+    send_time="2025年11月11日 11:23:45",
+    sender_id=0,
+    comments=[
+        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "好诶，是漠月~ 那我就在这里留下一条长长的评论吧~", "likes": 1},
+        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "摸摸漠月~ 第二次捡到了", "likes": 1}
+
+    ],
+)

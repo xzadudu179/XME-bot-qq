@@ -5,7 +5,8 @@ from xme.xmetools import jsontools
 from xme.plugins.commands.xme_user.classes import user as u
 from aiocqhttp import ActionFailed
 from xme.xmetools.bottools import get_stranger_name, get_group_name
-from .tools.bottlecard import get_bottle_card_html, get_card_image
+from .tools.bottlecard import get_class_bottle_card_html
+from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.imgtools import image_msg
 from character import get_message
 from xme.xmetools import randtools
@@ -96,6 +97,7 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
 # @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user: u.User):
     random.seed()
+    skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
     user_id = session.event.user_id
     # 普通瓶子
     # bottles_dict = jsontools.read_from_path(BOTTLE_PATH)
@@ -177,18 +179,12 @@ async def _(session: CommandSession, user: u.User):
             suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
         # else:
         #     bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt")
-    bottle_card = get_card_image(get_bottle_card_html(
-        id=index,
-        messy_rate_str=messy_rate_string,
+    bottle_card = get_html_image(get_class_bottle_card_html(
+        bottle=bottle,
         messy_rate=messy_rate,
-        date=bottle.send_time,
-        content=bottle.content,
-        sender=bottle.sender,
-        group=bottle.from_group,
-        views=bottle.views,
-        likes=bottle.likes,
-        comments_list=bottle.comments,
-        custom_suffix=suffix,
+        messy_rate_str=messy_rate_string,
+        custom_tip=suffix,
+        skin_name=skin_name,
     ))
     # await send_session_msg(session, bottle_card)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), tips=True)

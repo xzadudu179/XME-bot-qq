@@ -91,7 +91,7 @@ class User:
         self.xme_favorability = xme_favorability
         self.talked_to_bot = talked_to_bot
         self.counters = counters
-        self.plugin_datas = plugin_datas
+        self.plugin_datas: dict = plugin_datas
         # self.timers = timers
         self.achievements = achievements
         self.ai_history = ai_history
@@ -239,6 +239,9 @@ class User:
             self.xme_favorability = -100
         else:
             self.xme_favorability += count
+
+    def get_custom_setting(self, *keys, default="default"):
+        return dicttools.get_value("custom", *keys, search_dict=self.plugin_datas, default=default)
 
     def spend_coins(self, amount: int, out_of_range_zero: bool= False) -> tuple[bool, int]:
         """尝试花费星币

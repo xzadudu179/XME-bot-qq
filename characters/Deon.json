@@ -345,7 +345,9 @@
       "在 \"/desc\" 指令里给自己设置一个能够注入 SQL 的简介，似乎会发生奇怪的事情...",
       "使用 \"/anno\" 指令可以查看当前的公告~ 或者管理在没开启报时的群使用 \"/stime\" 开启报时后，每次报时也会展示公告~",
       "使用 \"/al 指令名或别名\" 可以查看该指令的所有别名哦~",
-      "有没有人尝试收集漠月的全成就（？）使用 \"/achi\" 指令可以查看成就列表~"
+      "有没有人尝试收集漠月的全成就（？）使用 \"/achi\" 指令可以查看成就列表~",
+      "d.n. 可不是米哦，1 d.n. 大概有 20 米，而且 \"/seek\" 里的每一步时间在 1~数十 分钟不等。",
+      "如果发现漠月有 bug，可以私聊漠月或者到交流群 1049755354 反馈哦！"
     ]
   },
   "apis": {
@@ -446,6 +448,14 @@
       "汪!",
       "感觉好有意思哦 {positive}",
       "嘻嘻, 摸一摸"
+    ],
+    "info_reactions_179": [
+      "好诶，是九九~ {positive}",
+      "是九九！(探头)",
+      "摸摸九九~",
+      "九九是我的~",
+      "捉一下九九！{positive}",
+      "是九九~！"
     ]
   },
   "items": {
@@ -1349,6 +1359,10 @@
           "发送序号来决策吧{positive_punc} 或者发送 \"stop\" 尝试放弃事件",
           "发送序号进行决策吧{positive_punc} 也可以发送 \"stop\" 尝试放弃事件~"
         ],
+        "seek_on_seeking": [
+          "你还在 \"{place}\" 探险哦，不能开始新的探险呢 {neutral}",
+          "你还在 \"{place}\" 探险诶，结束后再开始新的探险吧 {neutral}"
+        ],
         "on_seeking": [
           "正在探险中，不能执行指令哦 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。",
           "你还在探险中哦，不能执行指令 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。"
@@ -2212,6 +2226,27 @@
       "introduction": "花费 5 {coin_pronoun}{coin_name}抽取一个来自东京浅草寺的签。",
       "hint": "确定要花费 5 {coin_pronoun}{coin_name}来抽取一个代表运势的签嘛 {neutral}。确定请回复 \"y\" 哦",
       "canceled": "取消抽签了哦，{neutral}"
+    },
+    "shop": {
+      "desc": "星币商店",
+      "introduction": "使用星币购买各种物品的商店\n参数填写物品编号可以申请购买物品，例如 \"/shop a1\"",
+      "buy_success": "",
+      "buy_no_coin": "",
+      "default_buy": "你花费了 {coins} {coin_pronoun}{coin_name}购买商品 \"{good}\" {neutral}\n你还剩下 {coins_left} {coin_pronoun}{coin_name}{positive_punc}",
+      "has_bought": "这个商品已经被你买过啦 {neutral}",
+      "default_buy_error": "需要 {price} {coin_pronoun}{coin_name}来购买商品 \"{good}\"，但是你只有 {coins_left}{coin_pronoun}{coin_name} 呢 {negative}",
+      "shop_card": "{image}你可以发送 \"/shop 序号\" 来查看并决定购买指定序号的物品哦~ 例如 \"/shop a1\"",
+      "no_good": "序号 \"{serial}\" 没有商品诶 {neutral}, 可以检查下有没有打错字哦",
+      "good_card": "{image}你可以在下一条消息发送 \"y\" 花费 {price} {coin_pronoun}{coin_name} 购买商品，或者发送其他消息取消 {neutral}",
+      "good_card_bought": "{image}你已经购买了这个商品啦 {positive}"
+    },
+    "custom": {
+      "desc": "自定义设置",
+      "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n目前支持以下调用方法：\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
+      "custom_info": "以下是对于\"{items_name}\"可用的自定义项{positive_punc}:\n{items}\n{suffix}",
+      "custom_info_suffix": "在下面发送数字序号来选择想要指定的样式吧 {positive} 发送其他内容将会退出哦",
+      "index_not_found": "找不到序号为 \"{index}\" 的设置项呢 {neutral}",
+      "set_success": "成功将你对 \"{items_name}\" 的自定义项设置为 \"{item_result}\"！{positive}"
     }
   }
 }

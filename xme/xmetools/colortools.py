@@ -125,6 +125,14 @@ def clear_text_color(text: str) -> str:
     ansi_escape = re.compile(r'\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))')
     return ansi_escape.sub('', text)
 
+def mix_hex_color_lab(hex_color1, hex_color2, ratio):
+    # 混合颜色
+    lab1 = np.array(hex_to_lab(hex_color1))
+    lab2 = np.array(hex_to_lab(hex_color2))
+    mixed_lab = lab1 * (1 - ratio) + lab2 * ratio
+    return lab_to_hex(mixed_lab)
+
+
 def gradient_hex_color(hex_color1, hex_color2, num_colors):
     """将两个十六进制颜色进行渐变处理，返回指定数量的十六进制颜色列表
 

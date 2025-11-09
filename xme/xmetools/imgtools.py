@@ -10,10 +10,19 @@ from xme.xmetools.reqtools import fetch_data
 import pyautogui
 from xme.xmetools.texttools import hash_byte
 import mss
-import requests
+from html2image import Html2Image
+from uuid import uuid4
+hti = Html2Image()
 
 def read_image(path):
     image = Image.open(path)
+    return image
+
+def get_html_image(html_str) -> Image.Image:
+    name = f"image-{uuid4()}.png"
+    hti.screenshot(html_str=html_str, save_as=name, size=(1920, 2500))
+    image = crop_transparent_area(name)
+    os.remove(name)
     return image
 
 def crop_transparent_area(input_path) -> Image.Image:
@@ -71,7 +80,6 @@ async def get_url_image(url):
     # 打开图片
     img = Image.open(img_data)
     return img
-
 
 def hash_image(img):
     buffer = BytesIO()

@@ -36,9 +36,9 @@ def get_achievement_items(achievements: list):
             achieved = True
         if achi["hidden"] and not achieved:
             continue
-        current_index += 1
         # messages.append(get_message("plugins", __plugin_name__, cmd_name, "achievement_item", achi_name=achi_dict["name"], achi_desc=achi_dict["desc"], award=achi_dict["award"]))
         messages.append(f'{current_index + 1}. {k}{suffix}')
+        current_index += 1
     if messages == []:
         messages = [get_message("plugins", __plugin_name__, cmd_name, "nothing_here")]
     return messages

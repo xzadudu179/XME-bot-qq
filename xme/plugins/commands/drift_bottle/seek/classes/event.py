@@ -21,17 +21,20 @@ class Event:
         eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered)]
         # print("eligible_events", eligible_events)
         chosen_event = Event.choose_event(eligible_events)
+        return self.create_event(chosen_event, current_region)
+
+    def create_event(self, event_dict, current_region):
         result = self.build_event(
-            event_dict=chosen_event,
+            event_dict=event_dict,
             current_region=current_region
         )
         # print("event", chosen_event)
         # 事件标签，用来保存发生了哪类事件，用于特殊事件链
-        ev_tags: list = chosen_event.get("tags", None)
+        ev_tags: list = event_dict.get("tags", None)
         if ev_tags is not None:
             for t in ev_tags:
                 self.player.events_encountered[t] = True
-        self.player.post_process(chosen_event.get("post_func", None))
+        self.player.post_process(event_dict.get("post_func", None))
         return result
 
     def get_region_event_list(event_list: list[dict], current_region: SeekRegion) -> list[dict]:
@@ -354,3 +357,29 @@ class Event:
             return get_message("plugins", __plugin_name__, command_name, 'dice_event_no_html', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch)
         return get_message("plugins", __plugin_name__, command_name, 'dice_event', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch)
 
+SPECIAL_EVENTS: dict[dict] = {
+    "on_sea": {
+        # 返回事件
+        "type": "normal",
+        "tags": [],
+        # 概率 -1 为默认事件
+        "prob": 100,
+        "post_func": None,
+        "top": True,
+        "descs": ["你回到了海面", "你回到了海上"],
+        "regions": [SeekRegion.SHALLOW_SEA],
+        "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value <= 0,
+        "changes": {
+        "oxygen": {
+            "change": lambda: 10000,
+            "type": "+",
+            "custom": False,
+        },
+        "san": {
+            "change": lambda: 3,
+            "type": "*",
+            "custom": False,
+        }
+        }
+    },
+}

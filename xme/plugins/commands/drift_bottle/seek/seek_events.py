@@ -182,30 +182,30 @@ EVENTS = [
       }
     }
   },
-  {
-    # 返回事件
-    "type": "normal",
-    "tags": [],
-    # 概率 -1 为默认事件
-    "prob": 100,
-    "post_func": None,
-    "top": True,
-    "descs": ["你回到了海面", "你回到了海上"],
-    "regions": [SeekRegion.SHALLOW_SEA],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value <= 0,
-    "changes": {
-      "oxygen": {
-        "change": lambda: 10000,
-        "type": "+",
-        "custom": False,
-      },
-      "san": {
-        "change": lambda: 3,
-        "type": "*",
-        "custom": False,
-      }
-    }
-  },
+  # {
+  #   # 返回事件
+  #   "type": "normal",
+  #   "tags": [],
+  #   # 概率 -1 为默认事件
+  #   "prob": 100,
+  #   "post_func": None,
+  #   "top": True,
+  #   "descs": ["你回到了海面", "你回到了海上"],
+  #   "regions": [SeekRegion.SHALLOW_SEA],
+  #   "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value <= 0,
+  #   "changes": {
+  #     "oxygen": {
+  #       "change": lambda: 10000,
+  #       "type": "+",
+  #       "custom": False,
+  #     },
+  #     "san": {
+  #       "change": lambda: 3,
+  #       "type": "*",
+  #       "custom": False,
+  #     }
+  #   }
+  # },
   {
     # 返回事件
     "type": "normal",
@@ -857,7 +857,7 @@ EVENTS = [
     "prob": 0.7,
     "post_func": None,
     "descs": ["一抹幽绿色的光芒引起了你的注意...前方似乎是一片森林？", "前方出现了一片神秘的...海底森林？", "你的视野似乎被蒙上了一层雾，前方出现了一片奇怪的海底森林..."],
-    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CITY],
+    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
     "can_quit": True,
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 250 and depth.value < 600,
     "decisions": [

@@ -24,6 +24,32 @@ def is_prime(n: int) -> bool:
             return False
     return True
 
+def to_nums_base(num: int, num_strs: list[str]):
+    """将数字转换为任意进制字符列表，例如定义 ["a", "b", "c"]，会将十进制数字替换为数字字符为 a b c 的三进制数字
+
+    Args:
+        num (int): 输入的数字
+        num_strs (list[str]): 定义的字符列表
+
+    Returns:
+        _type_: _description_
+    """
+    base = len(num_strs)
+    if len(num_strs) < 2:
+        raise ValueError("进制不可小于2")
+    # if base > len(nums):
+    #     return "进制过大"
+    result = ""
+    div_num = abs(num)
+    while div_num != 0:
+        result += num_strs[div_num % base]
+        div_num = div_num // base
+    if num < 0:
+        result += '-'
+    elif num == 0:
+        result = num_strs[0]
+    return result[::-1]
+
 def divs(n):
     ds = []
     n = Decimal(n)
@@ -48,3 +74,6 @@ def extract_numbers(s):
     numbers = re.findall(r'\d+', s)
     # 将提取到的数字转换为整数列表
     return [int(num) for num in numbers]
+
+# if __name__ == "__main__":
+#     print(to_nums_base(1, ["a", "b"]))

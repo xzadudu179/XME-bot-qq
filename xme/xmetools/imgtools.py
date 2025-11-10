@@ -8,6 +8,7 @@ from io import BytesIO
 from PIL import Image, ImageChops
 from xme.xmetools.reqtools import fetch_data
 import pyautogui
+from character import get_message
 from xme.xmetools.texttools import hash_byte
 import mss
 from html2image import Html2Image
@@ -163,7 +164,7 @@ async def gif_msg(input_path, scale=1):
         return MessageSegment.text(f"[图片加载失败]")
 
 
-async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
+async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True, summary=get_message("config", "image_summary")):
     """获得可以直接发送的图片消息
 
     Args:
@@ -171,6 +172,7 @@ async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
         max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
         load_format (str): 图片原格式
         to_jpeg (bool): 是否转换为 Jpeg 格式
+        summary (str): 图片消息预览
 
     Returns:
         MessageSegment: 消息段
@@ -193,16 +195,22 @@ async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True):
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:
         # 将消息发送的同步方法放到后台线程执行
-        result = await asyncio.to_thread(create_image_message, b64)
+        result = await asyncio.to_thread(create_image_message, b64, summary=summary)
         return result
     except Exception as e:
         print(f"发生错误: {e}")
         return MessageSegment.text(f"[图片加载失败]")
 
-def create_image_message(b64: str):
+def create_image_message(b64: str, summary: str="[漠月的图片~]"):
     """同步发送图片消息"""
     try:
-        return MessageSegment.image(f'base64://{b64}', cache=True, timeout=10)
+        # return MessageSegment.image(f'base64://{b64}', cache=True, timeout=10)
+        return MessageSegment(type_="image", data={
+            'file': f"base64://{b64}",
+            'cache': 1,
+            'timeout': 10,
+            'summary': summary,
+        })
     except Exception as e:
         print(f"发送图片时出错: {e}")
         raise e

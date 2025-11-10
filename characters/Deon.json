@@ -355,6 +355,8 @@
     "search_location_error": "搜索地区出现错误 {negative}\n错误码：{code}\n错误消息：{msg}"
   },
   "config": {
+    "image_summary": "[漠月的图片]",
+    "face_summary": "[漠月的小表情]",
     "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
     "unknown_error": "指令执行出错了... {negative}\n以下是错误内容：{ex}",
     "busy": "我还在处理指令哦...呜呜",

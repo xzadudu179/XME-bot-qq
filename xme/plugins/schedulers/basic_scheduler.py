@@ -106,7 +106,7 @@ async def _():
     message = random.choice(messages)
     # print(has_faces, messages)
     if message in faces:
-        message = f"[CQ:image,file={message}]"
+        message = f"[CQ:image,file={message},summary={get_message('config', 'face_summary')}]"
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")
     try:
         await bot.send_group_msg(group_id=group_id,

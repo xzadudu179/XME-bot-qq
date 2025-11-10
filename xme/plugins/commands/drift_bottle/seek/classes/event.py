@@ -231,7 +231,7 @@ class Event:
         await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
         reply_valid = False
         while not reply_valid:
-            reply: str = (await aget_session_msg()).strip()
+            reply: str = (await aget_session_msg(session)).strip()
             if is_stepping(reply):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'in_decision'))
                 continue

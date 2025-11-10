@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from character import get_message, CHARACTER
 from xme.xmetools.bottools import permission
 
@@ -22,7 +22,7 @@ __plugin_usage__ = str(CommandDoc(
 @permission(lambda sender: (sender.is_superuser or sender.is_admin or sender.is_owner) and sender.is_groupchat, permission_help=" & ".join(permissions))
 async def _(session: CommandSession):
 
-    result = (await session.aget(prompt=get_message("plugins", __plugin_name__, 'leaving')))
+    result = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, 'leaving')))
     print("result", result)
     if result != "Y":
         return

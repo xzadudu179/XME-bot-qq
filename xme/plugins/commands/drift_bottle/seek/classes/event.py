@@ -7,7 +7,7 @@ from xme.xmetools.typetools import use_attribute
 from nonebot import CommandSession
 from xme.xmetools.randtools import html_messy_string
 from character import get_message
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 
 # 探险事件
 class Event:
@@ -231,7 +231,7 @@ class Event:
         await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
         reply_valid = False
         while not reply_valid:
-            reply: str = (await session.aget()).strip()
+            reply: str = (await aget_session_msg()).strip()
             if is_stepping(reply):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'in_decision'))
                 continue

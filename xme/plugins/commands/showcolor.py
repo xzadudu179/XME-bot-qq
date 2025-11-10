@@ -4,7 +4,7 @@ import aiocqhttp
 from xme.xmetools.doctools import SpecialDoc
 from ...xmetools import colortools as c
 from character import get_message
-from xme.xmetools.cmdtools import send_event_msg
+from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import fullwidth_to_halfwidth
 from xme.xmetools.filetools import has_file
 from xme.xmetools.imgtools import image_msg

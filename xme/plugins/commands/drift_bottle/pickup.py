@@ -14,7 +14,7 @@ from . import DriftBottle, get_random_bottle
 import random
 random.seed()
 from nonebot import on_command, CommandSession
-from xme.xmetools.msgtools import send_session_msg, send_to_superusers
+from xme.xmetools.msgtools import send_session_msg, send_to_superusers, aget_session_msg
 import config
 from nonebot import get_bot
 
@@ -187,7 +187,7 @@ async def _(session: CommandSession, user: u.User):
         skin_name=skin_name,
     ))
     # await send_session_msg(session, bottle_card)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), tips=True)
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), linebreak=False, tips=True)
     content = ""
     if broken:
         await user.achieve_achievement(session, "混乱不堪")
@@ -220,18 +220,18 @@ async def _(session: CommandSession, user: u.User):
         while True:
             if while_index > 3:
                 return True
-            reply = (await session.aget()).strip()
-            print(get_cmd_by_alias(reply))
-            print(reply)
-            if get_cmd_by_alias(reply) != False:
+            async def cmd_func(reply):
                 print("执行指令")
                 # 手动计数，防止递归调用不计数问题
                 u.limit_count_tick(user, command_name)
                 user.save()
                 print("增加计数")
                 await send_cmd(reply, session)
+                return "CMD_OVER"
+            reply = await aget_session_msg(session=session, can_use_command=True, command_func=cmd_func)
+            if reply == "CMD_OVER":
                 return False
-            elif reply == '-like' and not operated["like"]:
+            if reply == '-like' and not operated["like"]:
                 operated["like"] = True
                 await like(session, bottle)
                 continue

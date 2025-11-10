@@ -1,6 +1,6 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools import texttools
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
@@ -28,7 +28,7 @@ async def _(session: CommandSession, user: User):
         if not user.desc:
             await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_arg'), tips=True)
             return False
-        ans = await session.aget(prompt=f"[CQ:at,qq={session.event.user_id}] " + get_message("plugins", __plugin_name__, cmd_name, 'desc_info', desc=user.desc))
+        ans = await aget_session_msg(session, prompt=f"[CQ:at,qq={session.event.user_id}] " + get_message("plugins", __plugin_name__, cmd_name, 'desc_info', desc=user.desc))
         if ans == "delete-desc":
             await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'deleted', desc=user.desc), tips=True)
             user.desc = ""

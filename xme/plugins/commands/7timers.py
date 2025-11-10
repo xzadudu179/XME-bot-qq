@@ -1,7 +1,7 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools import texttools
 from xme.xmetools.typetools import try_parse
 from xme.xmetools.loctools import get_user_location
@@ -25,7 +25,7 @@ async def _(session: CommandSession):
         _, user_location_info = await get_user_location(session.event.user_id)
         # print(len(locations), user_location_info)
         if not args and not user_location_info:
-            location = texttools.replace_chinese_punctuation(await session.aget(prompt=get_message("plugins", __plugin_name__, 'ask_location')))
+            location = texttools.replace_chinese_punctuation(aget_session_msg(session, get_message("plugins", __plugin_name__, 'ask_location')))
             if "[CQ:location" in location:
                 location_info = location.split("[CQ:location,")[1].split(",title")[0].replace(",", "&")
         elif user_location_info and not args:

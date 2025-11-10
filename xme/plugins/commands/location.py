@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from character import get_message
 import config
 from xme.xmetools.loctools import search_location
@@ -49,7 +49,9 @@ async def _(session: CommandSession, user: User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))
         times = 0
         while not has_target and times < 3:
-            target: str = await session.aget()
+            target: str = await aget_session_msg(session, can_use_command=True)
+            if target == "CMD_END":
+                return False
             target = target.replace(".", "").strip()
             if target.isdigit():
                 has_target = True

@@ -2,7 +2,7 @@ from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools.texttools import fuzzy_search, is_valid_english_word
-from xme.xmetools.cmdtools import get_cmds_alias_strings, event_send_cmd, get_cmd_by_alias, is_it_command
+from xme.xmetools.cmdtools import get_cmds_alias_strings, event_send_cmd, get_cmd_by_alias, is_command
 from xme.xmetools.msgtools import send_event_msg
 from nonebot import message_preprocessor
 from character import get_message

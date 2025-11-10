@@ -2192,8 +2192,8 @@
       "introduction": "随机返回一张《今日鉴毛》图片",
       "error": "无法获取今日鉴毛图片... {negative}",
       "result": [
-        "{positive}这次的鉴毛图片是一只来自{city}的{type}——{name}{positive_punc}\nAPI 由筱翯提供 {positive}",
-        "{positive}这张鉴毛图片是来自{city}的{type}——{name} 的{positive_punc}\nAPI 由筱翯提供 {positive}"
+        "{positive}这次的鉴毛图片是一只来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}",
+        "{positive}这张鉴毛图片是来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}"
       ]
     },
     "ai_helper": {
@@ -2244,9 +2244,11 @@
     "custom": {
       "desc": "自定义设置",
       "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n目前支持以下调用方法：\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
-      "custom_info": "以下是你对于 \"{items_name}\" 可用的自定义项{positive_punc}:\n{items}\n{suffix}",
+      "custom_info": "以下是你对于 \"{items_name}\" 可用的自定义项{positive_punc}:\n{items}\n当前使用的设置是：\"{curr_custom}\"\n{suffix}",
       "custom_info_suffix": "在下面发送数字序号来选择想要指定的样式吧 {positive} 发送其他内容将会退出哦",
       "index_not_found": "找不到序号为 \"{index}\" 的设置项呢 {neutral}",
+      "index_not_found_arg": "找不到序号为 \"{index}\" 的设置项呢 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",
+      "index_error": "序号 \"{index}\" 不是整数哦 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",
       "set_success": "成功将你对 \"{items_name}\" 的自定义项设置为 \"{item_result}\"！{positive}"
     }
   }

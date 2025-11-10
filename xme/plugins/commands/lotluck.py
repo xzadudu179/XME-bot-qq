@@ -6,7 +6,7 @@ from xme.xmetools.timetools import curr_days
 from cn2an import an2cn
 import random
 random.seed()
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from character import get_message
 
 alias = ['抽签', '求签', '签']
@@ -23,7 +23,7 @@ __plugin_usage__ = str(CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @using_user(True)
 async def _(session: CommandSession, u: User):
-    reply: str = await session.aget(prompt=get_message("plugins", __plugin_name__, "hint"))
+    reply: str = await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, "hint"))
     if reply.lower().strip() != "y":
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "canceled"), tips=True)
     result = await u.try_spend(session, 5)

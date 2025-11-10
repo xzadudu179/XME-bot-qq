@@ -1,6 +1,6 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import on_command, CommandSession
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools.bottools import permission
 from xme.xmetools.typetools import try_parse
 from xme.xmetools.bottools import get_group_name
@@ -94,7 +94,7 @@ async def _(session: CommandSession, user: User):
         await send_session_msg(session, message, tips=True)
         if total_pages <= 1:
             return False
-        reply = (await session.aget()).strip()
+        reply = (await aget_session_msg(session)).strip()
         reply = replace_chinese_punctuation(reply)
         if get_cmd_by_alias(reply) != False:
             print("执行指令")

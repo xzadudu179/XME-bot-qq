@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from . import httpstats as h
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from character import get_message
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.reqtools import fetch_data
@@ -26,8 +26,7 @@ async def _(session: CommandSession):
     # doc = httpstats
     params = session.current_arg_text.strip()
     if not params:
-        params: str = (await session.aget(prompt=get_message("plugins", __plugin_name__, 'code_prompt'))).strip()
-        # params: str = (await session.aget(prompt="请发送你想要查询的状态码")).strip()
+        params: str = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, 'code_prompt'))).strip()
 
     if params:
         search = params.strip()

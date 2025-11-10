@@ -1,4 +1,4 @@
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools import randtools
 from character import get_message
 from asyncio import sleep
@@ -73,7 +73,7 @@ async def talk_to_bot(_, session: CommandSession, user):
     result_int = 0
     while not is_result_legal:
         print(f"result: {result}")
-        result = await session.aget(prompt=prompt if prompt else None)
+        result = await aget_session_msg(session, prompt=prompt if prompt else None)
         if result == "quit":
             await send_session_msg(session, "[正在取消通讯...]")
             return {

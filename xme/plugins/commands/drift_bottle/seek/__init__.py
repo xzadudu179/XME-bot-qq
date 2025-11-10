@@ -1,6 +1,6 @@
 from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias, is_it_command
+from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias, is_command
 from .classes.player import SeekRegion
 from xme.xmetools.bottools import get_group_name
 from xme.xmetools.filetools import b64_encode_file
@@ -22,26 +22,10 @@ from .classes.event import Event, SPECIAL_EVENTS
 random.seed()
 from .. import DriftBottle, get_random_bottle
 from nonebot import on_command, CommandSession, MessageSegment
-from xme.xmetools.msgtools import send_session_msg, send_forward_msg, change_group_message_content
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from uuid import uuid4
 from enum import Enum
 hti = Html2Image()
-
-
-
-# class PlayerRegion:
-#     def __init__(self, region: SeekRegion = SeekRegion.SHALLOW_SEA):
-#         self.region: SeekRegion = region
-#         self.lastRegion = SeekRegion.SHALLOW_SEA
-
-#     def change_region(self, region: SeekRegion) -> 'PlayerRegion':
-#         self.lastRegion = self.region
-#         self.region = region
-#         return self
-
-#     def get_last_region(self) -> SeekRegion:
-#         return self.lastRegion
-
 
 
 class Seek:
@@ -397,7 +381,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'disable'))
                 enable_groups.remove(str(session.event.group_id))
             else:
-                reply = (await session.aget(at=True, prompt=get_message("plugins", __plugin_name__, command_name, 'enable_warning'))).strip()
+                reply = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, command_name, 'enable_warning'))).strip()
                 if reply != 'y':
                     return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'cancel_enable'))
                 enable_groups.append(str(session.event.group_id))
@@ -502,7 +486,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             valid_reply = False
             player.back = False
             while not valid_reply:
-                reply: str = await session.aget()
+                reply: str = await aget_session_msg(session)
                 reply = reply.strip()
                 if reply == "quit":
                     seek.status = "exit"
@@ -511,7 +495,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                         seek.status = "stop"
                     valid_reply = True
                     # await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'introduction'))
-                elif is_it_command(reply):
+                elif is_command(reply):
                     await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'on_seeking'))
                 elif is_stepping(reply, "b") and player.depth.value > 0:
                     expected_steps = int(reply.split("b")[1].strip())

@@ -63,8 +63,8 @@ class Seek:
                 }
             # 处理决策事件，决策事件会直接返回字典
             if isinstance(msg, dict) and msg["type"] == "decision":
-                if len(msgs) < 1:
-                    msgs.append(Seek.special_message("暂时没有任何事件..."))
+                # if len(msgs) < 1:
+                    # msgs.append()
                 return {
                     "msgs": "\n".join([f"<li><div class=\"text\">{i + 1 + total_steps}. {m}</li>" for i, m in enumerate(msgs)]),
                     "count": count,
@@ -99,7 +99,11 @@ class Seek:
     # 阶段消息
     async def make_steps_message(self, session, steps_result: dict, prefix: str = "<h2>----------阶段总结----------</h2>\n<hr/>", suffix: str = "", send=True):
         prefix = prefix.format(chance=self.player.chance.value)
-        steps = f"{prefix}<ul>{steps_result['msgs']}"
+        msgs = steps_result['msgs']
+        if len(steps_result['msgs']) < 1:
+            msgs = Seek.special_message("暂时没有任何事件...")
+        steps = f"{prefix}<ul>{msgs}"
+
         coins = f"{self.player.coins.name}: {self.player.coins.value}"
         coins = html_messy_string(coins, self.player.get_messy_rate())
         attr_header = html_messy_string("----------当前属性----------", self.player.get_messy_rate())
@@ -115,7 +119,7 @@ class Seek:
             print("OVER 探险结束")
             # self.status = "stop"
         if steps_result['is_die']:
-            steps += Seek.special_message(f"你已被迫结束探险。原因：{steps_result['die_reason']}")
+            steps += Seek.special_message(f"你已被迫结束探险。原因：{steps_result['die_reason']}", html_class="die")
             # steps += f"<li><span class=\"die\">你已被迫结束探险。原因：{steps_result['die_reason']}</span></li></ul>"
             # self.player.coins = 0
             self.status = "stop"
@@ -407,9 +411,6 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         # # 验证正在探险的玩家防止多开
         if not validate_player(session):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'seek_on_seeking', place=seeking_players[session.event.user_id]["place"]))
-
-
-
         from .seek_events import EVENTS
         player = Player()
         seek = Seek(player, EVENTS)

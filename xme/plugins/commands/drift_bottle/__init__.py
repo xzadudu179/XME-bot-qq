@@ -6,7 +6,7 @@ from xme.xmetools.dbtools import DATABASE, XmeDatabase
 import json
 
 class DriftBottle:
-    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False):
+    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False, skin=""):
         self.id = id
         self.bottle_id: str = bottle_id
         self.content: str = content
@@ -19,6 +19,7 @@ class DriftBottle:
         self.comments = comments
         self.group_id = group_id
         self.is_broken = is_broken
+        self.skin = skin
 
 
     def get_table_name():
@@ -38,6 +39,7 @@ class DriftBottle:
             "comments": json.dumps(self.comments, ensure_ascii=False),
             "group_id": self.group_id,
             "is_broken": self.is_broken,
+            "skin": self.skin,
         }
 
     def exec_query(query: str, params=(), dict_data=False):
@@ -99,6 +101,7 @@ class DriftBottle:
             comments=json.loads(data['comments']),
             group_id=data['group_id'],
             is_broken=data.get('is_broken', False),
+            skin=data.get('skin', "")
         )
 
 
@@ -135,7 +138,7 @@ command_properties = [
     {
         'name': 'seek',
         'introduction': get_message('plugins', __plugin_name__, 'seek_introduction'),
-        'usage': '',
+        'usage': '<操作>',
         'permission': ''
     }
 ]

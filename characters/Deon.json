@@ -58,232 +58,11 @@
         "owo~！"
       ]
     },
-    "tips_new": [
-      {
-        "content": "{bot_name}会随机发消息",
-        "tags": []
-      },
-      {
-        "content": "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/stats\" 指令可以查看{bot_name}的状态哦",
-        "tags": []
-      },
-      {
-        "content": "1049755354 是漠月 BOT 和漠星 BOT 的交流群哦！有什么想聊的或者问的都可以去聊聊呢",
-        "tags": []
-      },
-      {
-        "content": "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
-        "tags": []
-      },
-      {
-        "content": "你们要不要帮我想几个 tips（）我觉得很需要",
-        "tags": []
-      },
-      {
-        "content": "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2087865718 哦，是漠星的 qq。",
-        "tags": []
-      },
-      {
-        "content": "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}漠星的开发进度哦",
-        "tags": []
-      },
-      {
-        "content": "九九木有钱钱，饭饭（bushi",
-        "tags": []
-      },
-      {
-        "content": "https://www.xzadudu179.top 是九九的个人主页 / 赛博名片哦！",
-        "tags": []
-      },
-      {
-        "content": "虽然是{bot_name}的 tips 但是发送的人是九九呢",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/s\" 来签到~",
-        "tags": []
-      },
-      {
-        "content": "很欢迎把{bot_name}拉到大家的群哦~ 大家可以多多宣传{bot_name}（？）",
-        "tags": []
-      },
-      {
-        "content": "我是 550W。",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/pick\" 指令来捡漂流瓶~",
-        "tags": []
-      },
-      {
-        "content": "漂流瓶里有神秘的彩蛋瓶！大家可以试试找找呢",
-        "tags": []
-      },
-      {
-        "content": "如果在群内不加好友私聊{bot_name}的话，{bot_name}会收不到你的消息哦，指令也都没有用呢",
-        "tags": []
-      },
-      {
-        "content": "点赞漂流瓶会让漂流瓶的混乱度减少一些哦",
-        "tags": []
-      },
-      {
-        "content": "请不要随意禁言 / 踢出 {bot_name} 哦~ 需要{bot_name}离开的话使用 \"bot_leave\" 指令就好，禁言 / 踢出容}易造成风控",
-        "tags": []
-      },
-      {
-        "content": "闲着没事干可以找九九扩列呢（1795886524）",
-        "tags": []
-      },
-      {
-        "content": "\"/map\" 真是一个奇怪的指令，不是嘛？",
-        "tags": []
-      },
-      {
-        "content": "随机数是 550W 操控{bot_name}的载体",
-        "tags": []
-      },
-      {
-        "content": "大家的支持可以让{bot_name}变得更好~",
-        "tags": []
-      },
-      {
-        "content": "漠星和漠月是朋友哦！",
-        "tags": []
-      },
-      {
-        "content": "漠月生活在一颗遥远星球的沙漠中...",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/help\" 查看{bot_name}的总体帮助~",
-        "tags": []
-      },
-      {
-        "content": "{bot_name}保存着大家的消息记录！请不要让漠月输出不好的消息哦",
-        "tags": []
-      },
-      {
-        "content": "问 \"xxx是不是质数\" 漠月会告诉你哦！",
-        "tags": []
-      },
-      {
-        "content": "前往扬州能够抓到九九（？",
-        "tags": []
-      },
-      {
-        "content": "有关瓶子的污染尚不明确...但或许和一位形似章鱼的东西有关。",
-        "tags": []
-      },
-      {
-        "content": "{bot_name}是开源的哦！ Github 仓库在 https://github.com/xzadudu179/XME-bot-qq 喜欢的话可以点个 star~",
-        "tags": []
-      },
-      {
-        "content": "大家喜欢{bot_name}的话可以放心大胆地到处宣传（？",
-        "tags": []
-      },
-      {
-        "content": "{bot_name}有些时候会重启调试 / 更新，如果发现{bot_name}没有回复，可以过一会再发一遍指令试试哦~",
-        "tags": []
-      },
-      {
-        "content": "为了{bot_name}的安全~ 请不要把{bot_name}拉到有违规内容的群哦",
-        "tags": []
-      },
-      {
-        "content": "179 是无处不在的数字",
-        "tags": []
-      },
-      {
-        "content": "如果管理员不知道{bot_name}在群里并且想让{bot_name}离开的话，发送 \"/bot_leave\" 就好啦",
-        "tags": []
-      },
-      {
-        "content": "如果对{bot_name}有什么建议的话，可以私发给{bot_name}哦！",
-        "tags": []
-      },
-      {
-        "content": "awmc",
-        "tags": []
-      },
-      {
-        "content": "如果发现{bot_name}不回话了的话，可以尝试 \"/ping\" 指令",
-        "tags": []
-      },
-      {
-        "content": "喜欢漠月的话，可以推荐给其他人！",
-        "tags": []
-      },
-      {
-        "content": "大家可以向{bot_name}申请以把{bot_name}拉进别的群哦",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/ai 询问内容\" 指令可以问 ai 问题，包括指令问题等也可以问哦",
-        "tags": []
-      },
-      {
-        "content": "\"/alias 指令名\" 指令可以查询指令的别名~",
-        "tags": []
-      },
-      {
-        "content": "\"/ans\" 指令里有关于 550W 的彩蛋... 尝试使用 \"/ans 特定问题\" 来触发吧~",
-        "tags": []
-      },
-      {
-        "content": "如果在漂流瓶发现违规信息，可以在捡到瓶子后发送 \"-rep\" 来举报哦！",
-        "tags": []
-      },
-      {
-        "content": "大家可以多捡多扔漂流瓶（）",
-        "tags": []
-      },
-      {
-        "content": "拉{bot_name}进群前一定要和群里的管理/群主沟通好~",
-        "tags": []
-      },
-      {
-        "content": "和{bot_name}说话某种意义上相当于和九九说话（？）（仅限私聊）",
-        "tags": []
-      },
-      {
-        "content": "非好友私聊{bot_name}是收不到消息的哦~",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/h 指令或功能名\" 来查看指令/功能的完整帮助~",
-        "tags": []
-      },
-      {
-        "content": "不要把{bot_name}当成（完全的）机器哦，{bot_name}有设子",
-        "tags": []
-      },
-      {
-        "content": "你们可以帮九九想点 tips~ 想好了就发过来（？）",
-        "tags": []
-      },
-      {
-        "content": "使用 \"/lot xxx\" 指令抽取的{coin_name}是漠月发给你的哦！会从漠月的{coin_name}数里扣除或增加，每天统计一次。",
-        "tags": []
-      },
-      {
-        "content": "help 里被 \"<>\" 括起来的参数是可选参数哦~ 使用时也不需要加上括号",
-        "tags": []
-      },
-      {
-        "content": "help 里被 \"()\" 括起来的参数是必要参数哦，但是使用的时候不需要加上括号呢",
-        "tags": []
-      },
-      {
-        "content": "{bot_name}会给好友点赞哦~",
-        "tags": []
-      }
-    ],
+    "type_tips": {
+      "normal": [],
+      "bug": [],
+      "prompt": []
+    },
     "tips": [
       "{bot_name}会随机发消息",
       "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
@@ -346,7 +125,7 @@
       "使用 \"/anno\" 指令可以查看当前的公告~ 或者管理在没开启报时的群使用 \"/stime\" 开启报时后，每次报时也会展示公告~",
       "使用 \"/al 指令名或别名\" 可以查看该指令的所有别名哦~",
       "有没有人尝试收集漠月的全成就（？）使用 \"/achi\" 指令可以查看成就列表~",
-      "d.n. 可不是米哦，1 d.n. 大概有 20 米，而且 \"/seek\" 里的每一步时间在 1~数十 分钟不等。",
+      "d.n. 可不是米哦，1 d.n. 大概在 5~20 米变动，越深代表的深度越大，而且 \"/seek\" 里的每一步时间在 1~数十 分钟不等。",
       "如果发现漠月有 bug，可以私聊漠月或者到交流群 1049755354 反馈哦！",
       "漂流瓶的皮肤可以在商店购买哦~ 使用 \"/shop\" 浏览商店。"
     ]
@@ -1370,7 +1149,7 @@
           "正在探险中，不能执行指令哦 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。",
           "你还在探险中哦，不能执行指令 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。"
         ],
-        "error_msg": "{negative} 运行出现错误：{ex}",
+        "error_msg": "{negative} 运行出现错误：{ex}\n可以尝试重新探险，或者将错误内容发送给九九 {neutral}",
         "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
         "continue_step_tip": [
           "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃这次探险。"
@@ -1667,8 +1446,8 @@
       "achievement": {
         "desc": "查看成就列表",
         "introduction": "查看所有成就，使用 \"/achi 成就名\" 可以查看指定名称的成就详情。",
-        "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就名\" 来查看指定成就的详情{positive_punc}\n",
-        "turn_page_tips": "你可以发送 \"<\" \">\" 来向前/向后翻页哦",
+        "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就关键词或序号\" 来查看指定成就的详情{positive_punc}",
+        "turn_page_tips": "你可以发送 \"<\" \">\" 来向前/后翻页哦",
         "achievement_item": "- {achi_name} (奖励 {award} {coin_pronoun}{coin_name})\n  {achi_desc}",
         "too_large_page": "你指定的页数 {page} 太大啦，超过了总页数 {total_pages} 呢...",
         "nothing_here": [
@@ -1677,7 +1456,8 @@
         ],
         "too_small_page": "指定的页数不能小于 0 哦 {neutral}",
         "error_arg": "你输入的详情参数不是整数呢... {neutral}",
-        "no_arg": "找不到你指定的关键字 \"{text}\" 所对应的成就呢..."
+        "no_arg": "找不到你指定的关键字 \"{text}\" 所对应的成就呢...",
+        "no_index": "找不到你指定的序号 \"{index}\" 所对应的成就呢..."
       },
       "sign": {
         "desc": "签到",
@@ -2238,7 +2018,7 @@
       "default_buy": "你花费了 {coins} {coin_pronoun}{coin_name}购买商品 \"{good}\" {neutral}\n你还剩下 {coins_left} {coin_pronoun}{coin_name}{positive_punc}",
       "has_bought": "这个商品已经被你买过啦 {neutral}",
       "default_buy_error": "需要 {price} {coin_pronoun}{coin_name}来购买商品 \"{good}\"，但是你只有 {coins_left}{coin_pronoun}{coin_name} 呢 {negative}",
-      "shop_card": "{image}你可以发送 \"/shop 序号\" 来查看并决定购买指定序号的物品哦~ 例如 \"/shop a1\"",
+      "shop_card": "{image}你可以发送 \"/shop 序号\" 来查看并决定购买指定序号的物品哦~\n例如 \"/shop a1\"",
       "no_good": "序号 \"{serial}\" 没有商品诶 {neutral}, 可以检查下有没有打错字哦",
       "good_card": "{image}你可以在下一条消息发送 \"y\" 花费 {price} {coin_pronoun}{coin_name} 购买商品，或者发送其他消息取消 {neutral}",
       "good_card_bought": "{image}你已经购买了这个商品啦 {positive}"
@@ -2248,6 +2028,7 @@
       "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n目前支持以下调用方法：\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
       "custom_info": "以下是你对于 \"{items_name}\" 可用的自定义项{positive_punc}:\n{items}\n当前使用的设置是：\"{curr_custom}\"\n{suffix}",
       "custom_info_suffix": "在下面发送数字序号来选择想要指定的样式吧 {positive} 发送其他内容将会退出哦",
+      "index_duplicate": "你正在使用这个样式哦 {neutral}",
       "index_not_found": "找不到序号为 \"{index}\" 的设置项呢 {neutral}",
       "index_not_found_arg": "找不到序号为 \"{index}\" 的设置项呢 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",
       "index_error": "序号 \"{index}\" 不是整数哦 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",

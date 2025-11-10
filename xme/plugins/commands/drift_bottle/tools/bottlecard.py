@@ -1,11 +1,11 @@
 from xme.xmetools.texttools import limit_str_len
 from xme.xmetools.randtools import html_messy_string
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
-def get_card_item(item_name: str, skin_name="default") -> str | dict:
-    item = CARD_SKINS.get(skin_name, CARD_SKINS["default"]).get(item_name, CARD_SKINS["default"][item_name])
+def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
+    item = CARD_SKINS.get(skin_name, CARD_SKINS["默认卡片"]).get(item_name, CARD_SKINS["默认卡片"][item_name])
     return item
 
-def get_custom_card_html(skin_name="default"):
+def get_custom_card_html(skin_name="默认卡片"):
     colors: dict = get_card_item("colors", skin_name)
     styles = get_card_item("styles", skin_name)
     body = get_card_item("html_body", skin_name)
@@ -26,7 +26,7 @@ def get_custom_card_html(skin_name="default"):
     operate_tip = get_card_item("operate_tip", skin_name)
     return html_style, html_text, operate_tip
 
-def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_name="default"):
+def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_name="默认卡片"):
     comment_html = get_card_item("comment", skin_name)
     no_comment = get_card_item("no_comment", skin_name)
     infos = [
@@ -59,11 +59,11 @@ def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_nam
         comment_htmls.append(comment_html_content)
     return "\n".join(comment_htmls)
 
-def get_example_bottle(skin_name="default"):
+def get_example_bottle(skin_name="默认卡片"):
     from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
     return get_class_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
 
-def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="default"):
+def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片"):
     if messy_rate is None:
         messy_rate = min(100, max(0, bottle.views * 2 - bottle.likes * 3))
     if messy_rate_str is None:
@@ -83,16 +83,18 @@ def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, cus
         skin_name=skin_name,
     )
 
-def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", skin_name="default"):
+def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", skin_name="默认卡片"):
     content = f'"{content}"'
+    str_len = get_card_item("str_len", skin_name)
     comments = get_comment_html(messy_rate, comments_list, skin_name=skin_name)
     formated_content = [f'<p class="main_content">{html_messy_string(c, messy_rate)}</p>' for c in content.replace("\n", "\r").split("\r")]
     info_texts = [
         "#{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,
-        'by "{sender}"（来自 "{group}"）'.format(sender=limit_str_len(sender, 10), group=limit_str_len(group, 10)),
+        limit_str_len('by "{sender}"（来自 "{group}"）'.format(sender=sender, group=group), str_len),
         "拾取 {views} - 点赞 {likes}".format(views=views, likes=likes),
-        "- 漂流瓶留言 -",
+        # "- 漂流瓶留言 -",
+        get_card_item("comment_message", skin_name),
     ]
     info_texts = [html_messy_string(i, messy_rate) for i in info_texts]
     html_style, html_text, operate_tip = get_custom_card_html(skin_name)

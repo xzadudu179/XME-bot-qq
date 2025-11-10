@@ -87,7 +87,6 @@ class Good:
 
                         .shopimg {
                             max-width: 700px;
-                            border-radius: 12px;
                         }
 
                         .img-container {

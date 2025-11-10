@@ -302,13 +302,6 @@ class User:
 
     @staticmethod
     def load(id: int, create_default_user=True):
-        # user_dict = jsontools.read_from_path(config.USER_PATH)['users'].get(str(id), None)
-        # if user_dict is None and create_default_user:
-        #     user_dict = {}
-        # elif user_dict is None:
-        #     return None
-        # return load_from_dict(user_dict, id)
-
         c = DATABASE.load_class(select_keys=(id,), query='SELECT * FROM {table_name} WHERE user_id = ?', cl=User)
         if c is None and create_default_user:
             print("创建一个新用户")
@@ -316,36 +309,7 @@ class User:
         return c
 
     def save(self):
-        # data_to_save = self.__dict__()
-        # users = jsontools.read_from_path(config.USER_PATH)
-        # users['users'][str(self.id)] = data_to_save
-        # jsontools.save_to_path(config.USER_PATH, users)
         self.db_id = DATABASE.save_to_db(obj=self)
-
-    # async def draw_user_starfield_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-    #     # print(self.celestial )
-    #     celestial = self.get_celestial()
-    #     # if self.celestial is None:
-    #     #     return "static/img/no-signal.png"
-    #     center = celestial.location
-    #     starfield = self.get_starfield()
-    #     if starfield is None:
-    #         raise ValueError("用户星域坐标无效")
-    #     #     print("用户星域坐标无效")
-    #     #     self.get_celestial()
-    #     map_img = starfield.draw_starfield_map(
-    #         img_zoom=img_zoom,
-    #         zoom_fac=zoom_fac,
-    #         ui_zoom_fac=ui_zoom_fac,
-    #         center=center,
-    #         padding=padding,
-    #         background_color=background_color,
-    #         line_width=line_width,
-    #         grid_color=grid_color
-    #     )
-    #     map_size = starfield.max_size
-    #     return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=celestial.location, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
-
 
     async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
         celestial = self.get_celestial()
@@ -640,68 +604,6 @@ def custom_limit(limit_name: str,
     return decorator
 
 
-# def timer_tick(user: User, name: str, count=1):
-#     """计时器减少
-
-#     Args:
-#         user (User): 用户
-#         name (str): 时间限制名
-#         count (int): 次数. Defaults to 1.
-#     """
-#     user.counters[name]["count"] += count
-#     # user.save()
-
-# def timer_limit(limit_name: str,
-#           limit: float | int,
-#           limit_message: str,
-#           count_limit: int = 1,
-#           unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
-#           floor_float: bool = True,
-#           fails=lambda x: x == False,
-#           limit_func=None, ):
-#     """对函数进行限制时间内只能执行数次
-
-#     Args:
-#         limit_name (str): 限制名
-#         limit (float | int): 多少时间单位后刷新限制
-#         limit_message (str): 限制时返回的消息
-#         count_limit (int, optional): 时间内限制次数. Defaults to 1.
-#         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
-#         floor_float (bool, optional): 是否向下取整时间. Defaults to True.
-#         fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: x == False.
-#         limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
-#     """
-
-#     def decorator(func):
-#         @wraps(func)
-#         async def wrapper(session, user: User, *args, **kwargs):
-#             print(user.counters)
-#             if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
-#                               floor_float=floor_float):
-#                 if not limit_func:
-#                     return await send_session_msg(session, limit_message)
-#                 # 有自定义函数传入情况
-#                 elif inspect.iscoroutinefunction(limit_func):
-#                     return await limit_func(func, session, user, *args, **kwargs)
-#                 else:
-#                     return limit_func(func, session, user, *args, **kwargs)
-#             # user = try_load(session.event.user_id, User(session.event.user_id))
-#             print(user.counters)
-#             result = await func(session, user, *args, **kwargs)
-#             print(f"result: {result}")
-#             if not fails(result):
-#                 print("保存用户数据, 增加计数")
-#                 limit_count_tick(user, limit_name)
-#                 user.save()
-#             if isinstance(result, str):
-#                 await send_session_msg(session, result)
-#             return result
-
-#         return wrapper
-
-#     return decorator
-
-
 
 def using_user(save_data=False, id=0):
     def decorator(func):
@@ -724,17 +626,27 @@ def using_user(save_data=False, id=0):
     return decorator
 
 def load_dict_user(data: dict):
-    inventory_data = json.loads(data.get('inventory', None))
+    inventory_data = None
+    # print(celestial)
+    plugin_datas = {}
+    counters = {}
+    ai_history = []
+    try:
+        inventory_data = json.loads(data.get('inventory', None))
+        plugin_datas = json.loads(data.get('plugin_datas', "{}"))
+        counters = json.loads(data.get('counters', "{}"))
+        ai_history = json.loads(data.get('ai_history', "[]"))
+    except Exception as ex:
+        print(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错，请联系九九进行修复")
+        raise ex
+    # print(counters)
     inventory = Inventory()
     # print(inventory_data)
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
     # print(data)
     celestial = data.get('celestial', None)
-    # print(celestial)
-    # print(celestial)
-    counters = json.loads(data.get('counters', "{}"))
-    # print(counters)
+
     return {
             "id": data.get('id', -1),
             "user_id": data["user_id"],
@@ -742,11 +654,11 @@ def load_dict_user(data: dict):
             "counters": counters,
             "xme_favorability": data.get('xme_favorability', 0),
             "desc": data.get('desc', ""),
-            "plugin_datas": json.loads(data.get('plugin_datas', "{}")),
+            "plugin_datas": plugin_datas,
             "inventory": inventory,
             "talked_to_bot": data.get('talked_to_bot', []),
             "celestial": celestial,
-            "ai_history": json.loads(data.get('ai_history', "[]")),
+            "ai_history": ai_history,
     }
 
 def load_from_dict(data: dict, id: int) -> User:

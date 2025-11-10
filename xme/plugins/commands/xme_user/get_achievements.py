@@ -19,7 +19,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'<成就名>',
+    "usage": f'<成就关键词或序号>',
     "permissions": [],
     "alias": alias
 }
@@ -27,6 +27,7 @@ usage = {
 def get_achievement_items(achievements: list):
     total_achievements: dict = get_achievements()
     messages = []
+    messages_dict = {}
     current_index = 0
     for k, achi in total_achievements.items():
         achieved = False
@@ -38,17 +39,19 @@ def get_achievement_items(achievements: list):
             continue
         # messages.append(get_message("plugins", __plugin_name__, cmd_name, "achievement_item", achi_name=achi_dict["name"], achi_desc=achi_dict["desc"], award=achi_dict["award"]))
         messages.append(f'{current_index + 1}. {k}{suffix}')
+        messages_dict[current_index + 1] = k
         current_index += 1
     if messages == []:
         messages = [get_message("plugins", __plugin_name__, cmd_name, "nothing_here")]
-    return messages
+    return messages, messages_dict
 
-async def get_details(text: str, user: User):
+async def get_details(text: str, user: User, use_search=True):
     achievements = get_achievements()
-    search = fuzzy_search(text, list(achievements.keys()), ratio=0.5)
-    print(search)
-    if search is None:
-        return None
+    search = text
+    if use_search:
+        search = fuzzy_search(text, list(achievements.keys()), ratio=0.5)
+        if search is None:
+            return None
     achievement = user.get_achievement(search)
     # achievement = achievements[search]
     achieved = False
@@ -67,14 +70,19 @@ async def get_details(text: str, user: User):
 @u.using_user(save_data=False)
 async def _(session: CommandSession, user: User):
     arg = session.current_arg_text.strip()
-    print("arg", arg)
     page = 1
     achievements: list = [a["name"] for a in user.achievements]
-    achi_items_total = get_achievement_items(achievements)
+    achi_items_total, achi_dict = get_achievement_items(achievements)
+    print("d", achi_dict)
     if arg:
-        # if try_parse(arg, int) is None:
-            # return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "error_arg"), tips=True)
-        details = await get_details(text=arg, user=user)
+        if (arg_int:=try_parse(arg, int)) is not None:
+            try:
+                arg = achi_dict.get(arg_int, arg)
+                details = await get_details(text=arg, user=user, use_search=False)
+            except ValueError:
+                return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "no_index", index=arg_int))
+        else:
+            details = await get_details(text=arg, user=user, use_search=True)
         if details is None:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, "no_arg", text=arg), tips=True)
         return await send_session_msg(session, details)
@@ -94,13 +102,11 @@ async def _(session: CommandSession, user: User):
         await send_session_msg(session, message, tips=True)
         if total_pages <= 1:
             return False
-        reply = (await aget_session_msg(session)).strip()
-        reply = replace_chinese_punctuation(reply)
-        if get_cmd_by_alias(reply) != False:
-            print("执行指令")
-            await send_cmd(reply, session)
+        reply = (await aget_session_msg(session, can_use_command=True)).strip()
+        if reply == "CMD_END":
             return False
-        elif reply in ["<", ">"]:
+        reply = replace_chinese_punctuation(reply)
+        if reply in ["<", ">"]:
             if reply == "<":
                 page -= 1
             else:

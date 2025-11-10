@@ -68,5 +68,10 @@
         "desc": "(/seek) 你本可以收益超过 1000 {coin_pronoun}{coin_name}...但是什么也不剩了。",
         "award": 1,
         "hidden": true
+    },
+    "焕然一新": {
+        "desc": "在 \"/cus\" 指令里成功应用一个自定义样式设置",
+        "award": 200,
+        "hidden": false
     }
 }

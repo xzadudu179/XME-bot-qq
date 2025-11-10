@@ -19,13 +19,18 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-def get_custom_items(*keys, user: User, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧"):
+def get_custom_items(*keys, user: User, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧",default_value=""):
     items_value: list | None = get_value(*keys, search_dict=user.plugin_datas)
     if items_value is None:
         return (False, none_message)
     results = []
-    for i, item in enumerate(items_value):
-        results.append(f"{i + 1}. {item}")
+    index = 0
+    if default_value:
+        results.append(f"{index + 1}. {default_value}")
+        index += 1
+    for item in items_value:
+        results.append(f"{index + 1}. {item}")
+        index += 1
     return (True, "\n".join(results))
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
@@ -40,7 +45,9 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
         return False
 
     keys = ()
+    default = "default"
     if setting.lower() == "bottle":
+        default = "默认卡片"
         items_name = "漂流瓶卡片"
         from xme.plugins.commands.drift_bottle import __plugin_name__ as bottle_plugin_name
         name = "custom_cards"
@@ -52,13 +59,14 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
         return False
     setting_index: int | str = arg_list[1]
     cmd_no_suffix = f"{COMMAND_START[0]}{__plugin_name__} {setting}"
+    curr_custom = get_value(__plugin_name__, *keys, search_dict=user.plugin_datas, default=default)
     if setting_index != "" and not isinstance(setting_index, int):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "index_error", index=setting_index, cmd_no_suffix=cmd_no_suffix), tips=True)
         return False
     elif setting_index == "":
-        stats, result = get_custom_items(*keys, user=user)
+        stats, result = get_custom_items(*keys, user=user, default_value=default)
         suffix = "" if not stats else get_message("plugins", __plugin_name__, 'custom_info_suffix')
-        curr_custom = get_value(__plugin_name__, *keys, search_dict=user.plugin_datas, default="默认")
+
         message = get_message("plugins", __plugin_name__, 'custom_info', items_name=items_name, items=result, suffix=suffix, curr_custom=curr_custom)
         if not stats:
             await send_session_msg(session, message, tips=True)
@@ -73,16 +81,20 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
         if reply is None:
             return False
         setting_index = reply
-    items: list = get_value(*keys, search_dict=user.plugin_datas, default=[])
+    items: list = [default] + get_value(*keys, search_dict=user.plugin_datas, default=[])
     item_result = ""
     # 尝试使用索引
     try:
         if setting_index - 1 < 0:
             raise IndexError()
         item_result = items[setting_index - 1]
+        if curr_custom == item_result:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'index_duplicate'), tips=True)
+            return False
     except IndexError:
         await send_session_msg(session, get_message("plugins", __plugin_name__, ('index_not_found' if arg_list[1] == "" else "index_not_found_arg"), index=setting_index, cmd_no_suffix=cmd_no_suffix), tips=True)
         return False
     set_value(__plugin_name__, *keys, search_dict=user.plugin_datas, set_method=lambda v: item_result)
+    await user.achieve_achievement(session, "焕然一新")
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'set_success', items_name=items_name, item_result=item_result), tips=True)
     return True

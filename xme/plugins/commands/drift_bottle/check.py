@@ -49,7 +49,9 @@ async def _(session: CommandSession, user: u.User):
     # sender_now = await get_stranger_name(bottle['sender_id'])
     # group_now = await get_group_name(bottle['group_id'])
     suffix = ""
-
+    # 瓶子自己的皮肤
+    if bottle.skin:
+        skin_name = bottle.skin
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100

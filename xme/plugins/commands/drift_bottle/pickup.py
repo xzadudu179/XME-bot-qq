@@ -122,7 +122,7 @@ async def _(session: CommandSession, user: u.User):
     f"""SELECT * FROM {table_name}
     WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179") AND is_broken != TRUE
     AND bottle_id NOT LIKE '%PURE%'""", dict_data=True)
-    print(random.choice(special))
+    # print(random.choice(special))
     have_special_bottle = False
     # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
     bottle: DriftBottle = get_random_bottle()
@@ -144,6 +144,9 @@ async def _(session: CommandSession, user: u.User):
         if bottle.sender_id == session.event.user_id and bottle.views == 0:
             await user.achieve_achievement(session, "回旋瓶")
         print("捡到了瓶子")
+    # 瓶子自己的皮肤
+    if bottle.skin:
+        skin_name = bottle.skin
     index = bottle.bottle_id
     index_is_int = index.isdigit()
 

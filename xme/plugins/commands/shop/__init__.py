@@ -45,7 +45,9 @@ async def _(session: CommandSession, user: User):
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "good_card_bought", image=good_img_msg), tips=True)
 
     # 未购买时
-    reply = await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, "good_card", image=good_img_msg, price=good.price))
+    reply = await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, "good_card", image=good_img_msg, price=good.price), can_use_command=True)
+    if reply == "CMD_END":
+        return False
     if reply != "y":
         return False
     result = await good.buy(session, user)

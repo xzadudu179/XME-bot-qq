@@ -7,7 +7,10 @@ from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops
 from xme.xmetools.reqtools import fetch_data
-import pyautogui
+try:
+    import pyautogui
+except Exception:
+    pyautogui = None
 from character import get_message
 from xme.xmetools.texttools import hash_byte
 import mss

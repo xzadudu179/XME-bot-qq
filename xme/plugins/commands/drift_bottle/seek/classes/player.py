@@ -251,7 +251,7 @@ class Player:
                 "text_color": "#d4eeff",
                 "card_border_color": "#4c2b5c",
                 "card_background_color": "#091316",
-                "fail_color": "#ee5151",
+                "fail_color": "#ff5f5f",
                 "win_color": "#8dff58",
                 "ident_color": "#f36aff",
                 "dice_color": "#9ed3ff",

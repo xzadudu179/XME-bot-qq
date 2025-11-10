@@ -61,7 +61,7 @@ def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_nam
 
 def get_example_bottle(skin_name="default"):
     from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
-    return get_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
+    return get_class_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
 
 def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="default"):
     if messy_rate is None:

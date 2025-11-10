@@ -347,7 +347,8 @@
       "使用 \"/al 指令名或别名\" 可以查看该指令的所有别名哦~",
       "有没有人尝试收集漠月的全成就（？）使用 \"/achi\" 指令可以查看成就列表~",
       "d.n. 可不是米哦，1 d.n. 大概有 20 米，而且 \"/seek\" 里的每一步时间在 1~数十 分钟不等。",
-      "如果发现漠月有 bug，可以私聊漠月或者到交流群 1049755354 反馈哦！"
+      "如果发现漠月有 bug，可以私聊漠月或者到交流群 1049755354 反馈哦！",
+      "漂流瓶的皮肤可以在商店购买哦~ 使用 \"/shop\" 浏览商店。"
     ]
   },
   "apis": {
@@ -2243,7 +2244,7 @@
     "custom": {
       "desc": "自定义设置",
       "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n目前支持以下调用方法：\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
-      "custom_info": "以下是对于\"{items_name}\"可用的自定义项{positive_punc}:\n{items}\n{suffix}",
+      "custom_info": "以下是你对于 \"{items_name}\" 可用的自定义项{positive_punc}:\n{items}\n{suffix}",
       "custom_info_suffix": "在下面发送数字序号来选择想要指定的样式吧 {positive} 发送其他内容将会退出哦",
       "index_not_found": "找不到序号为 \"{index}\" 的设置项呢 {neutral}",
       "set_success": "成功将你对 \"{items_name}\" 的自定义项设置为 \"{item_result}\"！{positive}"

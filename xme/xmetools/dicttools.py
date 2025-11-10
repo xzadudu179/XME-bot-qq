@@ -12,9 +12,7 @@ def get_value(*keys, search_dict: dict, default=None):
     try:
         result = search_dict[keys[0]]
     except Exception as ex:
-        if default is not None:
-            return default
-        raise ex
+        return default
     if len(keys) > 1:
         return get_value(*keys[1:], search_dict=result, default=default)
     return result

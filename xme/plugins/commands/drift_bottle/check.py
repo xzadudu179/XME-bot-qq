@@ -26,7 +26,7 @@ async def _(session: CommandSession, user: u.User):
     skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
     bottle_id = session.current_arg_text.strip()
     if bottle_id == "example":
-        bottle = get_example_bottle()
+        return await send_session_msg(session, (await image_msg(get_html_image(get_example_bottle(skin_name=skin_name)))), tips=True)
     else:
         bottle: DriftBottle = DriftBottle.get(bottle_id)
 

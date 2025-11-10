@@ -17,7 +17,7 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-def get_custom_items(*keys, user: User, none_message = "什么都没有呢..."):
+def get_custom_items(*keys, user: User, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧"):
     items_value: list | None = get_value(*keys, search_dict=user.plugin_datas)
     if items_value is None:
         return (False, none_message)

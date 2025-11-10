@@ -239,4 +239,58 @@ CARD_SKINS = {
             "sender-color": "#ddd",
         }
     },
+    "漂流瓶卡片-基础绿色": {
+        "colors": {
+            "text-color": "#eee",
+            "primary-color": "#91ff87",
+            "code-color": "#55c1ff",
+            "code-bg": "#29332c",
+            "date-color": "#aaa",
+            "comments-bg": "#222b28",
+            "background-color": "#1b1c26",
+            "hr-color": "#444",
+            "sender-color": "#ddd",
+        }
+    },
+    "漂流瓶卡片-基础蓝色": {
+        "colors": {
+            "text-color": "#eee",
+            "primary-color": "#87ddff",
+            "code-color": "#fff781",
+            "code-bg": "#292b33",
+            "date-color": "#aaa",
+            "comments-bg": "#22242b",
+            "background-color": "#1b1c26",
+            "hr-color": "#444",
+            "sender-color": "#ddd",
+        }
+    },
+    "漂流瓶卡片-基础粉色": {
+        "colors": {
+            "text-color": "#eee",
+            "primary-color": "#fca8ff",
+            "code-color": "#7bb4ff",
+            "code-bg": "#312933",
+            "date-color": "#aaa",
+            "comments-bg": "#28222b",
+            "background-color": "#1b1c26",
+            "hr-color": "#444",
+            "sender-color": "#ddd",
+        }
+    },
+    "漂流瓶卡片-基础白色": {
+        "colors": {
+            "text-color": "#000000",
+            "primary-color": "#3040ca",
+            "code-color": "#b93075",
+            "code-bg": "#c9d2f7",
+            "date-color": "#525252",
+            "comments-bg": "#cacedb",
+            "background-color": "#ebedf0",
+            "hr-color": "#cecece",
+            "sender-color": "#19191b",
+        },
+        "comment_suffix": """<div><p style="color: #333;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #333;">{content}</p></div>',
+    },
 }

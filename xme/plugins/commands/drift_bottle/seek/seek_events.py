@@ -50,7 +50,7 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 900,
     "changes": {
       "coins": {
-        "change": lambda: random.randint(50, 120),
+        "change": lambda: random.randint(90, 150),
         "type": "+",
         "custom": False,
       }

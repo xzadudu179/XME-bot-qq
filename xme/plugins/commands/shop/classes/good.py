@@ -6,6 +6,7 @@ random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import read_image, image_to_base64
 from character import get_message
+
 class Good:
     # 商品
     def __init__(self, id: int, name: str, introduction: str, image: str | Image | None = None, introduction_html: str | None = None, price: int = -1, buy_func=None, **kwargs):
@@ -36,7 +37,7 @@ class Good:
         return f"- {self.name} -\n---------------------------\n{self.introduction}\n---------------------------"
 
     def get_html_information(self) -> str:
-        from ..static.templates import COLORS, FONTS_STYLE
+        from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
         introduction = '\n'.join(['<p>' + n + '</p>' for n in self.introduction_html.split('\n')])
         return """
             <!DOCTYPE html>
@@ -46,19 +47,7 @@ class Good:
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>shopcheck</title>
                     <style>
-                        """ + COLORS + FONTS_STYLE + """
-                        .orbitron {
-                            font-family: "Orbitron";
-                            letter-spacing: 0.05em;
-                        }
-
-                        .electrolize {
-                            font-family: "Electrolize";
-                        }
-
-                        .melete {
-                            font-family: "Melete";
-                        }
+                        """ + HIUN_COLORS + FONTS_STYLE + """
 
                         * {
                             margin: 0;
@@ -105,6 +94,7 @@ class Good:
                             text-align: center;
                             font-weight: normal;
                             font-size: 1.5rem;
+                            margin-bottom: 5px;
                         }
 
                         h1 {
@@ -131,7 +121,8 @@ class Good:
                         }
 
                         .price {
-                            text-align: right;
+                            text-align: center;
+                            margin-bottom: 5px;
                         }
                     </style>
                 </head>
@@ -144,9 +135,9 @@ class Good:
                         </div>
                         <div class="info orbitron">
                             <h2 class="colored">- {self.name} -</h2>
+                            <p class="colored price">${self.price}</p>
                             <div class="introduction">
                                 {introduction}
-                                <p class="colored price">${self.price}</p>
                             </div>
                         </div>
                     </main>

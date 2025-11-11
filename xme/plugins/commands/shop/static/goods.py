@@ -1,8 +1,8 @@
 from ..classes.good import Good
-from .templates import IMG_PREFIX
 from xme.xmetools.dicttools import set_value
 from xme.plugins.commands.xme_user.classes.user import User
 from xme.plugins.commands.drift_bottle import __plugin_name__ as bottle_plugin_name
+IMG_PREFIX = "./static/img/goods/"
 
 def bottle_card_func(_: Good, spend_result: bool, user: User, card_name: str):
     # 购买失败
@@ -84,5 +84,60 @@ DECORATIONS = [
         price=900,
         buy_func=bottle_card_func,
         card_name="星际工业",
+    ),
+    Good(
+        id=7,
+        name="漂流瓶卡片-联合矿业",
+        introduction="漂流瓶卡片的装饰物，使用了星际联合矿业独特的风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 \"/cus bottle\" 指令来设置你的漂流瓶样式。",
+        image=IMG_PREFIX + "bottle_examples/imi.png",
+        # image=None,
+        introduction_html='漂流瓶卡片的装饰物，使用了星际联合矿业独特的风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 <span class="code">/cus bottle</span> 指令来设置你的漂流瓶样式。',
+        price=900,
+        buy_func=bottle_card_func,
+        card_name="联合矿业",
+    ),
+    Good(
+        id=8,
+        name="漂流瓶卡片-基础九镹",
+        introduction="漂流瓶卡片的装饰物，使用了九镹的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 \"/cus bottle\" 指令来设置你的漂流瓶样式。",
+        image=IMG_PREFIX + "bottle_examples/99.png",
+        # image=None,
+        introduction_html='漂流瓶卡片的装饰物，使用了九镹的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 <span class="code">/cus bottle</span> 指令来设置你的漂流瓶样式。',
+        price=300,
+        buy_func=bottle_card_func,
+        card_name="基础九镹",
+    ),
+    Good(
+        id=9,
+        name="漂流瓶卡片-基础漠月",
+        introduction="漂流瓶卡片的装饰物，使用了漠月的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 \"/cus bottle\" 指令来设置你的漂流瓶样式。",
+        image=IMG_PREFIX + "bottle_examples/deon.png",
+        # image=None,
+        introduction_html='漂流瓶卡片的装饰物，使用了漠月的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 <span class="code">/cus bottle</span> 指令来设置你的漂流瓶样式。',
+        price=300,
+        buy_func=bottle_card_func,
+        card_name="基础漠月",
+    ),
+    Good(
+        id=10,
+        name="漂流瓶卡片-基础漠星",
+        introduction="漂流瓶卡片的装饰物，使用了漠星的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 \"/cus bottle\" 指令来设置你的漂流瓶样式。",
+        image=IMG_PREFIX + "bottle_examples/destar.png",
+        # image=None,
+        introduction_html='漂流瓶卡片的装饰物，使用了漠星的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 <span class="code">/cus bottle</span> 指令来设置你的漂流瓶样式。',
+        price=300,
+        buy_func=bottle_card_func,
+        card_name="基础漠星",
+    ),
+    Good(
+        id=11,
+        name="漂流瓶卡片-基础幼龙云",
+        introduction="漂流瓶卡片的装饰物，使用幼龙云的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 \"/cus bottle\" 指令来设置你的漂流瓶样式。",
+        image=IMG_PREFIX + "bottle_examples/cub.png",
+        # image=None,
+        introduction_html='漂流瓶卡片的装饰物，使用幼龙云的配色风格。购买后会添加到漂流瓶卡片皮肤收藏。\n使用 <span class="code">/cus bottle</span> 指令来设置你的漂流瓶样式。',
+        price=300,
+        buy_func=bottle_card_func,
+        card_name="基础幼龙云",
     ),
 ]

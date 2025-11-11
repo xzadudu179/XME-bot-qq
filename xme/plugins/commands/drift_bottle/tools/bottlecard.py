@@ -1,6 +1,7 @@
 from xme.xmetools.texttools import limit_str_len
 from xme.xmetools.randtools import html_messy_string
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
+from xme.plugins.commands.drift_bottle import DriftBottle
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
     item = CARD_SKINS.get(skin_name, CARD_SKINS["默认卡片"]).get(item_name, CARD_SKINS["默认卡片"][item_name])
     return item
@@ -29,9 +30,10 @@ def get_custom_card_html(skin_name="默认卡片"):
 def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_name="默认卡片"):
     comment_html = get_card_item("comment", skin_name)
     no_comment = get_card_item("no_comment", skin_name)
+    comment_content = get_card_item("comment_content", skin_name)
     infos = [
         "[{id}] {name}",
-        '："{comment_content}"',
+        comment_content,
         '点赞 {likes} - 混乱程度 {messy}%',
         '还有 {comments} 条留言...',
     ]
@@ -45,7 +47,7 @@ def get_comment_html(messy_rate: int | float, comment_list: list[dict], skin_nam
     for i, comment in enumerate(comment_list):
         card_messy_rate = min(100, max(0, messy_rate - (comment["likes"] * 3)))
         comment_html_content = comment_html.format(
-            info0=html_messy_string(infos[0].format(id=f"#{i + 1}", name=limit_str_len(comment["sender"], 12)), card_messy_rate),
+            info0=html_messy_string(infos[0].format(id=f"#{i + 1}", name=limit_str_len(comment["sender"], get_card_item("comment_name_len", skin_name))), card_messy_rate),
             info1=html_messy_string(infos[1].format(comment_content=comment["content"]), card_messy_rate),
             info2=html_messy_string(infos[2].format(likes=comment["likes"], messy=card_messy_rate), card_messy_rate) + "\n")
 
@@ -63,7 +65,7 @@ def get_example_bottle(skin_name="默认卡片"):
     from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
     return get_class_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
 
-def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片"):
+def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片"):
     if messy_rate is None:
         messy_rate = min(100, max(0, bottle.views * 2 - bottle.likes * 3))
     if messy_rate_str is None:
@@ -73,7 +75,7 @@ def get_class_bottle_card_html(bottle, messy_rate=None, messy_rate_str=None, cus
         messy_rate_str=messy_rate_str,
         messy_rate=messy_rate,
         date=bottle.send_time,
-        content=bottle.content,
+        content=bottle.content.format(views=bottle.views, likes=bottle.likes, messy_rate=messy_rate_str, sender=bottle.sender, group=bottle.from_group, id=bottle.bottle_id),
         sender=bottle.sender,
         group=bottle.from_group,
         views=bottle.views,

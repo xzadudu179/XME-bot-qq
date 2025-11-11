@@ -4,9 +4,11 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.cmdtools import use_args, send_cmd
 from xme.xmetools.typetools import try_parse
 from config import COMMAND_START
+from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from character import get_message
+from xme.xmetools.imgtools import get_html_image, image_msg
 
 __plugin_name__ = "custom"
 alias = ['自定义', '样式', 'cus']
@@ -19,19 +21,128 @@ __plugin_usage__ = str(CommandDoc(
     alias=alias
 ))
 
-def get_custom_items(*keys, user: User, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧",default_value=""):
+def get_custom_items_html(*keys, user: User, curr_custom: str, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧",default_value=""):
+    html_head = """
+    <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>shop</title>
+                <style>
+    """ + HIUN_COLORS + FONTS_STYLE + """
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Geist Variable", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Heiti SC", "WenQuanYi Micro Hei", sans-serif;
+                background: transparent;
+                color: var(--text-color);
+            }
+
+            main {
+                background: var(--bg-color);
+                width: 1000px;
+                /* min-height: 600px; */
+                border-radius: 30px;
+                padding: 30px;
+                /* border: 4px solid var(--border-color); */
+            }
+
+            .colored {
+                color: var(--color-primary);
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 2em;
+                margin: 0;
+                font-weight: normal;
+            }
+
+            h2 {
+                font-weight: normal;
+                margin: 0;
+            }
+
+            .items {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+                border-radius: 10px;
+                padding: 10px 0;
+                border: 2px solid var(--border-color);
+                border-top: 0;
+                border-bottom: 0;
+            }
+
+            .title {
+                margin-bottom: 30px;
+            }
+
+            .item {
+                /* border: 1px solid red; */
+                padding: 5px 0;
+                margin: 0 20px;
+                font-size: 1.2rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .center {
+                text-align: center;
+                border-radius: 10px;
+                padding: 10px 0;
+                border: 2px solid var(--border-color);
+                border-top: 0;
+                border-bottom: 0;
+            }
+        </style>
+    </head>
+    """
     items_value: list | None = get_value(*keys, search_dict=user.plugin_datas)
     if items_value is None:
-        return (False, none_message)
+        return (False, html_head + """
+    <body>
+        <main class="melete">
+            <div class="title">
+                <h1>-- CUSTOMS --</h1>
+            </div>
+            <div class="center orbitron">
+                <p>什么都没有呢...</p>
+            </div>
+            </main>
+        </body>
+    </html>
+    """)
     results = []
     index = 0
     if default_value:
-        results.append(f"{index + 1}. {default_value}")
+        v = 'colored' if default_value == curr_custom else ''
+        results.append(f'<div class="item"><p class="{v}"><span class="colored">{index + 1}. </span>{default_value}</p></div>')
         index += 1
     for item in items_value:
-        results.append(f"{index + 1}. {item}")
+        v = 'colored' if item == curr_custom else ''
+        results.append(f'<div class="item"><p class="{v}"><span class="colored">{index + 1}. </span>{item}</p></div>')
         index += 1
-    return (True, "\n".join(results))
+    html_body = """
+    <body>
+        <main class="melete">
+            <div class="title">
+                <h1>-- CUSTOMS --</h1>
+            </div>
+            <div class="items orbitron">
+    """ + "\n".join(results) + """
+                </div>
+            </main>
+        </body>
+    </html>
+    """
+    return (True, html_head + html_body)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @use_args(2, arg_types=[str, int])
@@ -64,10 +175,10 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "index_error", index=setting_index, cmd_no_suffix=cmd_no_suffix), tips=True)
         return False
     elif setting_index == "":
-        stats, result = get_custom_items(*keys, user=user, default_value=default)
+        stats, result = get_custom_items_html(*keys, user=user, curr_custom=curr_custom, default_value=default)
         suffix = "" if not stats else get_message("plugins", __plugin_name__, 'custom_info_suffix')
-
-        message = get_message("plugins", __plugin_name__, 'custom_info', items_name=items_name, items=result, suffix=suffix, curr_custom=curr_custom)
+        html_image = await image_msg(get_html_image(result))
+        message = get_message("plugins", __plugin_name__, 'custom_info', items_name=items_name, html_image=html_image, suffix=suffix, curr_custom=curr_custom)
         if not stats:
             await send_session_msg(session, message, tips=True)
             return False

@@ -25,38 +25,14 @@ async def _(session: CommandSession, user):
     arg = session.current_arg_text.strip()
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
-        # await send_msg(session, f"漂流瓶似乎没有内容呢ovo\n格式：\n{config.COMMAND_START[0]}throw (漂流瓶内容)")
         return False
-    if len(arg) > MAX_LENGTH:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(arg)))
-        # await send_msg(session, f"瓶子的内容太多啦！要 200 字以内哦")
-        return False
-    if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))
-        # await send_msg(session, f"瓶子的行数太多啦！最多 MAX_LINES 行哦")
-        return False
-
-    # bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
-    user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
-    group = await session.bot.get_group_info(group_id=session.event.group_id)
-    # try:
-    #     id = bottles_dict["max_index"] + 1
-    # except:
-    #     id = 0
-    # for k, bottle in bottles_dict['bottles'].items():
-    #     # print(bottle)
-    #     if not k.isdigit():
-    #         continue
-    #     if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] <= bottle["views"] // 2):
-    #     # if arg == bottle['content']:
-    #         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
-    #         # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
-    #         return
-
     check = DriftBottle.check_duplicate_bottle(arg)
     if check['status'] == False:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=check['content'], id=check['duplicate_bottle_id']))
         return False
+
+    user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
+    group = await session.bot.get_group_info(group_id=session.event.group_id)
     bottle_id = DriftBottle.get_max_bottle_id() + 1
     print(bottle_id)
     bottle_content = {
@@ -75,6 +51,33 @@ async def _(session: CommandSession, user):
         # "pure_vote_users": {},
         "group_id": user['group_id'],
     }
+    formatted_arg = arg.format(views=bottle_content["views"], likes=bottle_content["likes"], messy_rate="0%", sender=bottle_content["sender"], group=bottle_content["from_group"], id=bottle_content["bottle_id"])
+    # print(formatted_arg, len(formatted_arg))
+    # print(arg, len(arg))
+    if len(formatted_arg) > MAX_LENGTH:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg)))
+        return False
+    if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))
+        return False
+
+    # bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
+
+    # try:
+    #     id = bottles_dict["max_index"] + 1
+    # except:
+    #     id = 0
+    # for k, bottle in bottles_dict['bottles'].items():
+    #     # print(bottle)
+    #     if not k.isdigit():
+    #         continue
+    #     if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] <= bottle["views"] // 2):
+    #     # if arg == bottle['content']:
+    #         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
+    #         # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
+    #         return
+
+
     bottle: DriftBottle = DriftBottle.form_dict(bottle_content)
     bottle.save()
     print(bottle)

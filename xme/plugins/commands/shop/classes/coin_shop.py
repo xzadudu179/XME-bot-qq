@@ -1,6 +1,6 @@
 from ..classes.good import Good
 from ..tools.good import get_good_from_id
-from ..static.templates import COLORS, FONTS_STYLE
+from .....xmetools.templates import HIUN_COLORS, FONTS_STYLE
 from xme.plugins.commands.xme_user.classes.user import User
 import string
 from xme.xmetools.numtools import to_nums_base
@@ -56,19 +56,7 @@ class CoinShop:
                             <meta name="viewport" content="width=device-width, initial-scale=1.0">
                             <title>shopcheck</title>
                             <style>
-                                """ + COLORS + FONTS_STYLE + """
-                    .orbitron {
-                        font-family: "Orbitron";
-                        letter-spacing: 0.05em;
-                    }
-
-                    .electrolize {
-                        font-family: "Electrolize";
-                    }
-
-                    .melete {
-                        font-family: "Melete";
-                    }
+                                """ + HIUN_COLORS + FONTS_STYLE + """
 
                     * {
                         margin: 0;

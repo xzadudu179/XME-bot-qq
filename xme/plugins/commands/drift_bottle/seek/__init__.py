@@ -183,6 +183,7 @@ def get_img_msg(
             }
             body {
                 background-color: transparent;
+                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
             }
             main li {
                 font-size: 1em;

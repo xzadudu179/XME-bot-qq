@@ -1,8 +1,6 @@
 from xme.xmetools.filetools import b64_encode_file
 
-IMG_PREFIX = "./static/img/goods/"
-
-COLORS = """
+HIUN_COLORS = """
 :root {
     --color-primary: #97DAFF;
     --color-primary2: #78B9FF;
@@ -67,5 +65,15 @@ FONTS_STYLE = f"""
     src: url(data:font/ttf;base64,{b64_encode_file('./static/fonts/Orbitron/Orbitron Black.ttf')}) format('truetype');
     font-weight: 700;
     font-style: normal;
+}}
+.orbitron {{
+    font-family: "Orbitron";
+    letter-spacing: 0.05em;
+}}
+.electrolize {{
+    font-family: "Electrolize";
+}}
+.melete {{
+    font-family: "Melete";
 }}
 """

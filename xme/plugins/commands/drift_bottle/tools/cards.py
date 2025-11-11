@@ -1,4 +1,4 @@
-from xme.plugins.commands.shop.static.templates import FONTS_STYLE
+from xme.xmetools.templates import FONTS_STYLE
 CARD_SKINS = {
     "默认卡片": {
         "colors": {
@@ -13,6 +13,7 @@ CARD_SKINS = {
             "sender-color": "#ddd",
         },
         "str_len": 30,
+        "comment_name_len": 12,
         "styles": """
 
         body {
@@ -212,6 +213,7 @@ CARD_SKINS = {
                             {info2}
                         </p>
                     </div>""",
+        "comment_content": '："{comment_content}"',
         "comment_suffix": """<div><p style="color: #bbb;">{info3}</p></div>""",
         "no_comment": '<div><p style="color: #bbb;">{content}</p></div>',
         "comment_message": "- 漂流瓶留言 -",
@@ -228,6 +230,481 @@ CARD_SKINS = {
             "hr-color": "#444",
             "sender-color": "#ddd",
         }
+    },
+    "基础漠月": {
+        "colors": {
+            "text-color": "#ffffff",
+            "primary-color": "#FFA953",
+            "code-color": "#AAFCDC",
+            "code-bg": "#3C424E",
+            "date-color": "#CDD6EA",
+            "comments-bg": "#333842",
+            "background-color": "#222330",
+            "hr-color": "#3C424E",
+            "sender-color": "#CDD6EA",
+        }
+    },
+    "基础九镹": {
+        "colors": {
+            "text-color": "#f4f7ff",
+            "primary-color": "#46CFF1",
+            "primary-color2": "#7AEBCD",
+            "code-color": "#FBE261",
+            "code-bg": "#3D3D57",
+            "date-color": "#c0c4d8",
+            "comments-bg": "#2f2f44",
+            "background-color": "#222333",
+            "hr-color": "#3C424E",
+            "sender-color": "#c0c4d8",
+        },
+        "styles": """
+            body {
+                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+                background-color: transparent;
+                color: var(--text-color);
+                margin: 0;
+                padding: 20px;
+            }
+
+            main {
+                background-color: var(--background-color);
+                color: var(--text-color);
+                max-width: 600px;
+                margin: auto;
+                border-radius: 20px;
+                padding: 20px;
+            }
+
+            .main_content {
+                font-size: 1.2em;
+                font-weight: bold;
+                text-indent: 2em;
+                word-wrap: normal;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
+            .small {
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            }
+
+            .info {
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+
+            hr {
+            border: none;
+            border-top: 1px solid var(--hr-color);
+            margin: 15px 0;
+            }
+
+            p {
+            line-height: 1.6;
+            margin: 10px 0;
+            }
+
+            .colored {
+            color: var(--primary-color);
+            font-weight: 500;
+            }
+
+            .infoul, .operateul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            }
+
+            .infoul {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: var(--sender-color);
+            }
+
+            .small-like {
+                font-size: 0.9em;
+                padding-top: 2px;
+                padding-right: 10px;
+                color: var(--primary-color2);
+            }
+
+            .operateul li {
+            margin-bottom: 8px;
+            }
+
+            .infoul li.colored {
+                font-weight: bold;
+                color: var(--primary-color2);
+            }
+
+            .comments div {
+                background: var(--comments-bg);
+                padding: 7px 12px;
+                border-radius: 8px;
+                margin: 6px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                font-size: 0.95em;
+            }
+
+            .comment-main {
+                max-width: calc(100% - 10rem);
+            }
+
+            .comments span.colored {
+                color: var(--primary-color);
+                font-weight: 500;
+            }
+
+            .code {
+            font-family: "Courier New", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--code-color);
+            }
+
+            .operateul {
+                padding: 0 10px;
+            }
+
+            .operateul li {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .operateul li p:first-child {
+            margin-bottom: 4px;
+            }
+
+            .operateul li p {
+            margin: 0;
+            font-size: 0.95em;
+            }
+
+            .operateul span {
+            display: inline-block;
+            }
+        """,
+        "comment_suffix": """<div><p style="color: #c0c4d8;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #c0c4d8;">{content}</p></div>',
+    },
+    "基础幼龙云": {
+        "colors": {
+            "text-color": "#f4f7ff",
+            "primary-color": "#F36F80",
+            "primary-color2": "#F9D1A4",
+            "code-color": "#CEF3E9",
+            "code-bg": "#3f374b",
+            "date-color": "#c2c0d8",
+            "comments-bg": "#3e3847",
+            "background-color": "#1d1a24",
+            "hr-color": "#3e3c4e",
+            "sender-color": "#c2c0d8",
+        },
+        "styles": """
+            body {
+                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+                background-color: transparent;
+                color: var(--text-color);
+                margin: 0;
+                padding: 20px;
+            }
+
+            main {
+                background-color: var(--background-color);
+                color: var(--text-color);
+                max-width: 600px;
+                margin: auto;
+                border-radius: 20px;
+                padding: 20px;
+            }
+
+            .main_content {
+                font-size: 1.2em;
+                font-weight: bold;
+                text-indent: 2em;
+                word-wrap: normal;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
+            .small {
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            }
+
+            .info {
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+
+            hr {
+            border: none;
+            border-top: 1px solid var(--hr-color);
+            margin: 15px 0;
+            }
+
+            p {
+            line-height: 1.6;
+            margin: 10px 0;
+            }
+
+            .colored {
+            color: var(--primary-color);
+            font-weight: 500;
+            }
+
+            .infoul, .operateul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            }
+
+            .infoul {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: var(--sender-color);
+            }
+
+            .small-like {
+                font-size: 0.9em;
+                padding-top: 2px;
+                padding-right: 10px;
+                color: var(--primary-color2);
+            }
+
+            .operateul li {
+            margin-bottom: 8px;
+            }
+
+            .infoul li.colored {
+                font-weight: bold;
+                color: var(--primary-color2);
+            }
+
+            .comments div {
+                background: var(--comments-bg);
+                padding: 7px 12px;
+                border-radius: 8px;
+                margin: 6px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                font-size: 0.95em;
+            }
+
+            .comment-main {
+                max-width: calc(100% - 10rem);
+            }
+
+            .comments span.colored {
+                color: var(--primary-color);
+                font-weight: 500;
+            }
+
+            .code {
+            font-family: "Courier New", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--code-color);
+            }
+
+            .operateul {
+                padding: 0 10px;
+            }
+
+            .operateul li {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .operateul li p:first-child {
+            margin-bottom: 4px;
+            }
+
+            .operateul li p {
+            margin: 0;
+            font-size: 0.95em;
+            }
+
+            .operateul span {
+            display: inline-block;
+            }
+        """,
+        "comment_suffix": """<div><p style="color: #c2c0d8;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #c2c0d8;">{content}</p></div>',
+    },
+    "基础漠星": {
+        "colors": {
+            "text-color": "#FFFFFF",
+            "primary-color": "#fa4134",
+            "primary-color2": "#ffa545",
+            "code-color": "#4bff84",
+            "code-bg": "#333440",
+            "date-color": "#c0c0d8",
+            "comments-bg": "#333440",
+            "background-color": "#1a1a24",
+            "hr-color": "#333440",
+            "sender-color": "#c0c0d8",
+            "light-color": "#ffdf4eab",
+            "light-color2": "#4bff84d2",
+        },
+        "styles": """
+
+        body {
+            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            background-color: transparent;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        main {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            max-width: 600px;
+            margin: auto;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .main_content {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-indent: 2em;
+            word-wrap: normal;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .small {
+        font-size: 0.9em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        }
+
+        .info {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        hr {
+        border: none;
+        border-top: 1px solid var(--hr-color);
+        margin: 15px 0;
+        }
+
+        p {
+        line-height: 1.6;
+        margin: 10px 0;
+        }
+
+        .colored {
+        color: var(--primary-color);
+        font-weight: 500;
+        }
+
+        .infoul, .operateul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        }
+
+        .infoul {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--sender-color);
+        }
+
+        .small-like {
+            font-size: 0.9em;
+            padding-top: 2px;
+            padding-right: 10px;
+            color: var(--primary-color2);
+            text-shadow: 0 0 10px var(--light-color);
+        }
+
+        .operateul li {
+        margin-bottom: 8px;
+        }
+
+        .infoul li.colored {
+            font-weight: bold;
+            color: var(--primary-color2);
+            text-shadow: 0 0 10px var(--light-color);
+        }
+
+        .comments div {
+            background: var(--comments-bg);
+            padding: 7px 12px;
+            border-radius: 8px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            font-size: 0.95em;
+        }
+
+        .comment-main {
+            max-width: calc(100% - 10rem);
+        }
+
+        .comments span.colored {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .code .colored {
+            text-shadow: none;
+            color: var(--code-color);
+            text-shadow: 0 0 10px var(--light-color2);
+        }
+
+        .code {
+            font-family: "Courier New", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-shadow: 0 0 10px var(--light-color);
+            color: var(--primary-color2);
+        }
+
+        .operateul {
+            padding: 0 10px;
+        }
+
+        .operateul li {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .operateul li p:first-child {
+        margin-bottom: 4px;
+        }
+
+        .operateul li p {
+        margin: 0;
+        font-size: 0.95em;
+        }
+
+        .operateul span {
+        display: inline-block;
+        }
+        """,
+        "comment_suffix": """<div><p style="color: #c0c0d8;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #c0c0d8;">{content}</p></div>',
     },
     "基础红色": {
         "colors": {
@@ -311,19 +788,6 @@ CARD_SKINS = {
             "sender-color" : "#B6BCDB",
         },
         "styles": FONTS_STYLE + r"""
-        .orbitron {
-                font-family: "Orbitron", "Helvetica Neue", "Segoe UI";
-                letter-spacing: 0.05em;
-            }
-
-            .electrolize {
-                font-family: "Electrolize", "Helvetica Neue", "Segoe UI";
-            }
-
-            .melete {
-                font-family: "Melete", "Helvetica Neue", "Segoe UI";
-            }
-
         body {
             font-family: "Helvetica Neue", "Segoe UI", sans-serif;
             background-color: transparent;
@@ -414,6 +878,7 @@ CARD_SKINS = {
         .small-like {
             font-size: 0.9em;
             padding-top: 2px;
+            margin: 3px 0;
             padding-right: 10px;
         }
 
@@ -430,8 +895,8 @@ CARD_SKINS = {
             border-radius: 12px;
             border: 2px solid var(--border-inner-color);
             border-top: 0;
-            padding: 5px 0;
             margin: 0 10px;
+            padding: 5px 0;
             border-bottom: 0;
         }
 
@@ -439,24 +904,27 @@ CARD_SKINS = {
             border-bottom: none;
         }
 
-        .comments div {
-            padding: 5px 15px;
-            margin: 5px 0;
+        .comments>div {
+            position: relative;
+            padding: 5px 20px;
             display: flex;
             justify-content: space-between;
             align-items: start;
             font-size: 0.95em;
         }
 
-        .comments div p {
-            margin: 10px 0;
-        }
-
         .comment-main {
-            max-width: calc(100% - 11rem);
+            max-width: calc(100% - 14rem);
+            display: flex;
+            /* margin: 5px 0; */
+            flex-direction: column;
         }
 
-        .comments span.colored {
+        .comment-main p {
+            margin: 3px 0;
+        }
+
+        .comments p.colored {
             color: var(--primary-color);
             font-weight: 500;
         }
@@ -517,6 +985,15 @@ CARD_SKINS = {
             </div>
         </body>""",
         "comment_suffix": """<div><p style="color: #B6BCDB;">{info3}</p></div>""",
+        "comment": """<div>
+                        <div class="comment-main">
+                            <p class="colored">{info0}</p>
+                            <p>{info1}</p>
+                        </div>
+                        <p class="colored small-like">
+                            {info2}
+                        </p>
+                    </div>""",
         "no_comment": '<div><p style="color: #B6BCDB;">{content}</p></div>',
         "comment_message": "- MESSAGES -",
         "operate_tip": """
@@ -553,6 +1030,8 @@ CARD_SKINS = {
             </ul>
         """,
         "str_len": 30,
+        "comment_name_len": 18,
+        "comment_content": '"{comment_content}"',
     },
     "流浪地球": {
         "colors": {
@@ -569,19 +1048,6 @@ CARD_SKINS = {
             "sender-color" : "#3e4047",
         },
         "styles": FONTS_STYLE + r"""
-        .orbitron {
-                font-family: "Orbitron";
-                letter-spacing: 0.05em;
-            }
-
-            .electrolize {
-                font-family: "Electrolize";
-            }
-
-            .melete {
-                font-family: "Melete";
-            }
-
         body {
             font-family: "Helvetica Neue", "Segoe UI", sans-serif;
             background-color: transparent;
@@ -818,4 +1284,271 @@ CARD_SKINS = {
         """,
         "str_len": 30,
     },
+    "联合矿业": {
+        "colors": {
+            "text-color" : "#fafafa",
+            "primary-color" : "#ffce72",
+            "border-color" : "#adacb3",
+            "code-color" : "#ff9e78",
+            "code-bg" : "#292b33",
+            "date-color" : "#86899c",
+            "comments-bg" : "#212430",
+            "background-color" : "#11121d",
+            "hr-color" : "#4440",
+            "border-inner-color": "#7c6d50",
+            "sender-color" : "#b8bac9",
+        },
+        "styles": FONTS_STYLE + r"""
+        body {
+            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            background-color: transparent;
+            color: var(--text-color);
+            margin: 0;
+            word-break: break-all;
+            padding: 20px;
+        }
+
+        main {
+            position: relative;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            clip-path: polygon(0% 30px, 30px 0%, 100% 0%, 100% 100%, calc(100% - 30px) 100%, 0% 100%);
+            max-width: 600px;
+            margin: auto;
+            /* border-radius: 12px; */
+            z-index: 1;
+            border-radius: 0;
+            padding: 25px;
+            /* margin: 2px; */
+            margin-bottom: 0;
+            /* border: 2px solid var(--border-color); */
+        }
+
+        .border {
+            background: var(--border-color);
+            max-width: 600px;
+            margin: auto;
+            padding: 2px;
+        }
+
+        .main_content {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-indent: 2em;
+            word-wrap: normal;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .small {
+        font-size: 0.9em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        }
+
+        .info {
+        font-weight: bold;
+        color: var(--primary-color);
+        }
+
+        hr {
+        border: none;
+        border-top: 1px solid var(--hr-color);
+        margin: 15px 0;
+        }
+
+        p {
+        line-height: 1.6;
+        margin: 10px 0;
+        }
+
+        .colored {
+        color: var(--primary-color);
+        font-weight: 500;
+        }
+
+        .infoul, .operateul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .infoul {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--sender-color);
+        }
+
+        .infoul li:nth-child(1) {
+            max-width: 370px;
+        }
+
+        .small-like {
+            font-size: 0.9em;
+            padding-top: 2px;
+            margin: 3px 0;
+            padding-right: 10px;
+        }
+
+        .operateul li {
+        margin-bottom: 8px;
+        }
+
+        .infoul li.colored {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .comments {
+            /* background: var(--comments-bg); */
+            /* border-radius: 12px; */
+            margin: 0 10px;
+            padding: 5px 0;
+        }
+
+        .comments div:nth-last-child(1) {
+            border-bottom: none;
+        }
+
+        .comments>div {
+            border-left: 2px solid var(--border-inner-color);
+            background: var(--comments-bg);
+            /* border-bottom: 1px solid var(--comments-bg); */
+            position: relative;
+            padding: 5px 20px;
+            /* border-radius: 8px; */
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            font-size: 0.95em;
+        }
+
+        /* .comments div p { */
+            /* margin: 10px 0; */
+        /* } */
+
+        .comment-main {
+            max-width: calc(100% - 14rem);
+            display: flex;
+            /* margin: 5px 0; */
+            flex-direction: column;
+        }
+
+        .comment-main p {
+            margin: 3px 0;
+        }
+
+        .comments p.colored {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--code-color);
+        }
+
+        .operateul {
+            padding: 0 10px;
+        }
+
+        .operateul li {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .operateul li p:first-child {
+        margin-bottom: 4px;
+        }
+
+        .operateul li p {
+        margin: 0;
+        font-size: 0.95em;
+        }
+
+        .operateul span {
+            display: inline-block;
+        }
+
+        """,
+        "html_body": """<body>
+            <div class="border">
+                <main class="orbitron">
+                    <p style="padding: 0 10px;" class="small">
+                        <span class="info">{info0}</span>
+                        <span
+                            style="color: var(--date-color); float: right; padding: 2px 5px;">{info1}</span>
+                    </p>
+                    <hr>
+                    {info2}
+                    <hr>
+                    <ul class="infoul">
+                        <li>{info3}</li>
+                        <li class="colored">{info4}</li>
+                    </ul>
+                    <hr>
+                    <p class="colored">{info5}</p>
+                    <div class="comments">
+                        {comments}
+                    </div>
+                    <hr>
+                    {suffix}
+                </main>
+            </div>
+        </body>""",
+        "comment_suffix": """<div><p style="color: #b8bac9;">{info3}</p></div>""",
+        "comment": """<div>
+                        <div class="comment-main">
+                            <p class="colored">{info0}</p>
+                            <p>{info1}</p>
+                        </div>
+                        <p class="colored small-like">
+                            {info2}
+                        </p>
+                    </div>""",
+        "no_comment": '<div><p style="color: #b8bac9;">{content}</p></div>',
+        "comment_message": "/// MESSAGES ///",
+        "operate_tip": """
+            <p class="colored">/// OPERATIONS ///</p>
+            <ul class="operateul">
+                <li>
+                    <p>
+                        <span class="code">-like</span> /
+                        <span class="code">-rep</span> /
+                        <span class="code">-pure</span>
+                    </p>
+                    <p>点赞 / 举报 / 申请纯净</p>
+                </li>
+                <li>
+                    <p>
+                        <span class="code">
+                            -say
+                            <span class="colored">
+                                (留言内容)
+                            </span>
+                        </span>
+                        /
+                        <span class="code">
+                            -likesay
+                            <span class="colored">
+                                (留言编号)
+                            </span>
+                        </span>
+                    </p>
+                    <p>
+                        留言 / 点赞留言
+                    </p>
+                </li>
+            </ul>
+        """,
+        "str_len": 30,
+        "comment_name_len": 18,
+        "comment_content": '"{comment_content}"',
+    },
+
 }

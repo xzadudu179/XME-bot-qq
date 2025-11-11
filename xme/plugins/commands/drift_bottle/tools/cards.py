@@ -552,7 +552,7 @@ CARD_SKINS = {
             "code-color": "#4bff84",
             "code-bg": "#333440",
             "date-color": "#c0c0d8",
-            "comments-bg": "#333440",
+            "comments-bg": "#24252e",
             "background-color": "#1a1a24",
             "hr-color": "#333440",
             "sender-color": "#c0c0d8",

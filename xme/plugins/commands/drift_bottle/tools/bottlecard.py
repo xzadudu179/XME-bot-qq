@@ -1,5 +1,5 @@
 from xme.xmetools.texttools import limit_str_len
-from xme.xmetools.randtools import html_messy_string
+from xme.xmetools.randtools import html_messy_string, messy_string
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
@@ -65,7 +65,7 @@ def get_example_bottle(skin_name="默认卡片"):
     from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
     return get_class_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
 
-def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片"):
+def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片", html_render=False):
     if messy_rate is None:
         messy_rate = min(100, max(0, bottle.views * 2 - bottle.likes * 3))
     if messy_rate_str is None:
@@ -83,13 +83,14 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
         comments_list=bottle.comments,
         custom_tip=custom_tip,
         skin_name=skin_name,
+        html_render=html_render,
     )
 
-def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", skin_name="默认卡片"):
+def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", skin_name="默认卡片", html_render=False):
     content = f'"{content}"'
     str_len = get_card_item("str_len", skin_name)
     comments = get_comment_html(messy_rate, comments_list, skin_name=skin_name)
-    formated_content = [f'<p class="main_content">{html_messy_string(c, messy_rate)}</p>' for c in content.replace("\n", "\r").split("\r")]
+    formated_content = [f'<p class="main_content">{html_messy_string(c, messy_rate) if not html_render else messy_string(c, messy_rate)}</p>' for c in content.replace("\n", "\r").split("\r")]
     info_texts = [
         "#{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,

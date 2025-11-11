@@ -188,6 +188,7 @@ async def _(session: CommandSession, user: u.User):
         messy_rate_str=messy_rate_string,
         custom_tip=suffix,
         skin_name=skin_name,
+        html_render=not index_is_int,
     ))
     # await send_session_msg(session, bottle_card)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), linebreak=False, tips=True)

@@ -26,9 +26,6 @@ class DbReadWriteable(Protocol):
     def to_dict(self):
         ...
 
-# class DbTypeParser:
-
-#     @staticmethod
 
 class XmeDatabase:
     """XME 数据库相关类
@@ -38,12 +35,6 @@ class XmeDatabase:
         """初始化数据库
         """
         self.db_path = db_path
-
-    # def get_class_table_name(cls: type[object]):
-    #     return cls.__name__
-
-    # def get_instance_class_table_name(cls_instance: object):
-    #     return cls_instance.__class__.__name__
 
     def get_class_typing_hints(cls: type[T_DbReadWriteable]):
         hints = get_type_hints(cls)
@@ -251,39 +242,6 @@ class XmeDatabase:
 
         # data_dict['database'] = self
         return data_dict
-
-    # def create_table(self, obj: T_DbReadWriteable, name=''):
-    #     """通过类创建表
-
-    #     Args:
-    #         name (str): 表名
-    #         obj (Any): 类
-    #     """
-    #     if obj == None: raise ValueError("类不可是 None")
-    #     if not name:
-    #         name = XmeDatabase.get_instance_class_table_name(obj)
-    #     print(f"初始化表 {name} 中...")
-    #     # print(obj.__dict__.items())
-    #     fields = {k: v for k, v in obj.to_dict().items() if k != 'id' and k != 'database'}
-    #     types = ['TEXT' if isinstance(value, str) else 'INTEGER' if isinstance(value, int) else 'BLOB' for value in fields.values()]
-    #     columns = ', '.join([f"{field} {ftype}" for field, ftype in zip(fields.keys(), types)])
-    #     sql = f"CREATE TABLE IF NOT EXISTS {name} (id INTEGER PRIMARY KEY, {columns})"
-    #     self.exec_query(sql)
-
-    # def init_user_info(self):
-    #     """初始化用户信息
-    #     """
-    #     self.exec_query('''
-    #         CREATE TABLE IF NOT EXISTS users (
-    #             id INTEGER PRIMARY KEY,
-    #             name TEXT NOT NULL,
-    #             last_reg_days INTEGER,
-    #             coins INTEGER,
-    #             permission INTEGER DEFAULT 1,
-    #             bio TEXT,
-    #             inventory TEXT
-    #         )
-    #     ''')
 
     @database_connect
     def exec_query(self, cursor, query, params=(), dict_data=False) -> list[tuple | dict]:

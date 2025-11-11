@@ -1,7 +1,7 @@
 from nonebot import on_websocket_connect
 import aiocqhttp
 import xme.xmetools.colortools as c
-import xme.xmetools.numtools as n
+from sympy import isprime
 import nonebot
 from xme.xmetools.jsontools import read_from_path, save_to_path
 import config
@@ -16,7 +16,7 @@ async def connect(event: aiocqhttp.Event):
     vars = read_from_path("data/bot_vars.json")
     vars["self_id"] = event.self_id
     save_to_path("data/bot_vars.json", vars)
-    if not n.is_prime(var.currentpid):
+    if not isprime(var.currentpid):
         message = f"[DEBUG] {character.get_message('bot_info', 'name')} 准备好啦~"
         if not config.DEBUG: return
     # else:

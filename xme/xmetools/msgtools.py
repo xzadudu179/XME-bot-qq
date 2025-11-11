@@ -120,8 +120,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         ) +
         msg +
         (
-            "" if
-                not has_tips
+            "" if not has_tips
             else
                 "\n-------------------\ntip：" +
             get_message("bot_info", "tips")

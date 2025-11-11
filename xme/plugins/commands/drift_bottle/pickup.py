@@ -8,6 +8,7 @@ from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.imgtools import image_msg
+from xme.xmetools.randtools import messy_image
 from character import get_message
 from xme.xmetools import randtools
 from . import DriftBottle, get_random_bottle
@@ -32,12 +33,16 @@ async def like(session, bottle: DriftBottle):
     await send_session_msg(session, content)
     return
 
-async def likesay(session: CommandSession, bottle: DriftBottle, comment_index: str):
+async def likesay(session: CommandSession, bottle: DriftBottle, comment_index: str, said):
     index = bottle.bottle_id
     if not comment_index.isdigit():
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
         return False
     comment_index = int(comment_index)
+    # 排除刚说完话就点赞自己的留言的情况
+    if said and bottle.comments[comment_index -1] == bottle.comments[-1]:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_self"))
+        return False
     if comment_index < 1 or comment_index > len(bottle.comments):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
         return False
@@ -93,7 +98,7 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
 
 @on_command(command_name, aliases=pickup_alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
-@u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=20)
+@u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=30)
 # @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user: u.User):
     random.seed()
@@ -182,14 +187,14 @@ async def _(session: CommandSession, user: u.User):
             suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
         # else:
         #     bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt")
-    bottle_card = get_html_image(get_class_bottle_card_html(
+    bottle_card = messy_image(get_html_image(get_class_bottle_card_html(
         bottle=bottle,
         messy_rate=messy_rate,
         messy_rate_str=messy_rate_string,
         custom_tip=suffix,
         skin_name=skin_name,
         html_render=not index_is_int,
-    ))
+    )), messy_rate / 2)
     # await send_session_msg(session, bottle_card)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), linebreak=False, tips=True)
     content = ""
@@ -254,7 +259,7 @@ async def _(session: CommandSession, user: u.User):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
                 continue
             elif reply.split(" ")[0] == '-likesay' and not operated["likesay"]:
-                result = await likesay(session, bottle, " ".join(reply.split(" ")[1:]).strip())
+                result = await likesay(session, bottle, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
                 if result:
                     operated["likesay"] = True
                 continue

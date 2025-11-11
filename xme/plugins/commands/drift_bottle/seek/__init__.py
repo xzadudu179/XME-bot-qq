@@ -7,7 +7,7 @@ from xme.xmetools.filetools import b64_encode_file
 from xme.xmetools.timetools import TimeUnit
 from config import BOT_SETTINGS_PATH
 from html2image import Html2Image
-from xme.xmetools.randtools import html_messy_string
+from xme.xmetools.randtools import html_messy_string, messy_image
 from character import get_message
 from xme.xmetools.imgtools import crop_transparent_area, image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
@@ -246,12 +246,12 @@ def get_img_msg(
             .fl {
                 display: flex;
                 margin: auto;
-                width: 500px;
+                width: 600px;
                 flex-wrap: wrap;
-                justify-content: space-around;
+                justify-content: center;
             }
             .fl div {
-                padding: 10px;
+                padding: 10px 20px;
                 font-size: 1.2em;
                 color: var(--attr-color);
             }
@@ -453,7 +453,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 msg = ""
                 if step_results[0].strip() != prefix:
                     md_msg = "\n".join(step_results)
-                    msg = msg_prefix + (await image_msg(get_img_msg(md_msg, player))) + (continue_message if result["decision"] is None else "")
+                    msg = msg_prefix + (await image_msg(messy_image(get_img_msg(md_msg, player), (100 - player.san.value) / 2, rand_color=False))) + (continue_message if result["decision"] is None else "")
                     if result["decision"] is None:
                     # new_messages += [change_group_message_content(msg_dict, r) for r in step_results]
                         await send_session_msg(session, msg)

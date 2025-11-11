@@ -395,6 +395,7 @@ class Player:
             if not isinstance(v.value, int) and not isinstance(v.value, SeekRegion): continue
             # if v.name == "上个区域": continue
             if not v.show: continue
+            danger_class = 'style="color: var(--fail-color)"' if v.name in ["氧气值", "生命值", "san 值"] and v.value < 30 else ""
             value = v.value
             name = v.name
             maxvalue = v.max_value
@@ -411,7 +412,7 @@ class Player:
             # 星币不显示
             if v.name == f"{coin_name}数":
                 continue
-            prefix = "<div>"
+            prefix = f"<div {danger_class}>"
             suffix = "</div>"
             if not html:
                 prefix = ""

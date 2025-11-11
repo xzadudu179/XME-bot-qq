@@ -7,7 +7,7 @@ from character import get_message
 import random
 random.seed()
 
-dicealias = ["d"]
+dicealias = ["d", "rd", "骰子"]
 command_name = 'dice'
 @on_command('dice', aliases=dicealias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):

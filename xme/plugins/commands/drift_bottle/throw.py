@@ -1,8 +1,5 @@
 from xme.xmetools.timetools import *
-from xme.xmetools import jsontools
 from .pickup import report
-import json
-from xme.xmetools import texttools
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.msgtools import send_session_msg
@@ -28,7 +25,7 @@ async def _(session: CommandSession, user):
         return False
     check = DriftBottle.check_duplicate_bottle(arg)
     if check['status'] == False:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=check['content'], id=check['duplicate_bottle_id']))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
         return False
 
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
@@ -51,7 +48,9 @@ async def _(session: CommandSession, user):
         # "pure_vote_users": {},
         "group_id": user['group_id'],
     }
-    formatted_arg = arg.format(views=bottle_content["views"], likes=bottle_content["likes"], messy_rate="0%", sender=bottle_content["sender"], group=bottle_content["from_group"], id=bottle_content["bottle_id"])
+
+    bottle: DriftBottle = DriftBottle.form_dict(bottle_content)
+    formatted_arg = bottle.get_formatted_content("0%")
     # print(formatted_arg, len(formatted_arg))
     # print(arg, len(arg))
     if len(formatted_arg) > MAX_LENGTH:
@@ -61,31 +60,10 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))
         return False
 
-    # bottles_dict = jsontools.read_from_path('./data/drift_bottles.json')
 
-    # try:
-    #     id = bottles_dict["max_index"] + 1
-    # except:
-    #     id = 0
-    # for k, bottle in bottles_dict['bottles'].items():
-    #     # print(bottle)
-    #     if not k.isdigit():
-    #         continue
-    #     if texttools.difflib_similar(arg, bottle['content'], False) > 0.75 and bottle["views"] < 114514 and (bottle["likes"] <= bottle["views"] // 2):
-    #     # if arg == bottle['content']:
-    #         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown", content=bottle['content'], id=k))
-    #         # await send_msg(session, f"大海里已经有这个瓶子了哦ovo")
-    #         return
-
-
-    bottle: DriftBottle = DriftBottle.form_dict(bottle_content)
     bottle.save()
     print(bottle)
-    # bottles_dict['bottles'][id] = bottle_content
-    # bottles_dict["max_index"] = id
-    # jsontools.save_to_path('./data/drift_bottles.json', bottles_dict)
-    # with open('./data/drift_bottles.json', 'w', encoding='utf-8') as file:
-    #     file.write(json.dumps(bottles_dict, ensure_ascii=False))
+
     await report(session, bottle, user['user_id'], "发送了一个漂流瓶", False)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=bottle_id), tips=True)
     # await send_msg(session, f"[CQ:at,qq={user['user_id']}] 瓶子扔出去啦~ 这是大海里的第 {id} 号瓶子哦 owo")

@@ -75,7 +75,7 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
         messy_rate_str=messy_rate_str,
         messy_rate=messy_rate,
         date=bottle.send_time,
-        content=bottle.content.format(views=bottle.views, likes=bottle.likes, messy_rate=messy_rate_str, sender=bottle.sender, group=bottle.from_group, id=bottle.bottle_id),
+        content=bottle.get_formatted_content(messy_rate_str),
         sender=bottle.sender,
         group=bottle.from_group,
         views=bottle.views,

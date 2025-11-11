@@ -18,6 +18,11 @@ from html2image import Html2Image
 from uuid import uuid4
 hti = Html2Image()
 
+def get_image(path_or_image: str | Image.Image) -> Image.Image:
+    if isinstance(path_or_image, str):
+        return read_image(path_or_image)
+    return path_or_image
+
 def read_image(path):
     image = Image.open(path)
     return image

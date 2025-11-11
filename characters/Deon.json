@@ -72,6 +72,7 @@
       "你们要不要帮我想几个 tips（）我觉得很需要",
       "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2087865718 哦，是漠星的 qq。",
       "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}漠星的开发进度哦",
+      "如果喜欢{bot_name}，在 https://afdian.com/a/xzadudu179 可以给九镹投喂哦~",
       "九九木有钱钱，饭饭（bushi",
       "https://www.xzadudu179.top 是九九的个人主页 / 赛博名片哦！",
       "虽然是{bot_name}的 tips 但是发送的人是九九呢",
@@ -957,7 +958,7 @@
       ],
       "rank_error": [
         "成员数量需要是整数哦 {neutral}",
-        "{bot_name}不知道成员数量是多少{negative}",
+        "{bot_name}不知道成员数量是多少 {negative}",
         "成员数量需要是整数哦..."
       ],
       "not_in_group": [
@@ -1290,6 +1291,9 @@
         "找不到 #{id} 号的留言呢...确定是第 {bottle} 号瓶子的留言以及是整数嘛？",
         "找不到 #{id} 号的留言诶...确定是第 {bottle} 号瓶子的留言以及是整数嘛？"
       ],
+      "like_comment_self": [
+        "你不能在刚刚留言过后就点赞自己的留言哦 {neutral}"
+      ],
       "reported": [
         "举报成功",
         "举报成功哦",
@@ -1327,9 +1331,9 @@
         "瓶子扔出去啦{positive_punc} 这是第 {id} 号瓶子哦 {positive}"
       ],
       "content_already_thrown": [
-        "大海里已经有类似的瓶子了哦，类似的瓶子：\n[#{id}]：{content}",
-        "唔...大海里已经有类似的瓶子了哦：\n[#{id} 号漂流瓶]：{content}",
-        "大海里已经有类似的瓶子了哦...是第 #{id} 号：\n{content}"
+        "大海里已经有类似的瓶子了哦 {neutral}",
+        "唔...大海里已经有类似的瓶子了哦 {neutral}",
+        "大海里已经有类似的瓶子了哦..."
       ],
       "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
       "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",

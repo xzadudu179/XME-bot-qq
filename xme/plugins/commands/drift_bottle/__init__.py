@@ -2,7 +2,8 @@ __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from character import get_message
-from xme.xmetools.dbtools import DATABASE, XmeDatabase
+from xme.xmetools.dbtools import DATABASE
+from xme.xmetools.texttools import FormatDict
 import json
 
 class DriftBottle:
@@ -21,6 +22,11 @@ class DriftBottle:
         self.is_broken = is_broken
         self.skin = skin
 
+    def get_formatted_content(self, messy_rate_str):
+        try:
+            return self.content.format_map(FormatDict(views=self.views, likes=self.likes, messy_rate=messy_rate_str, sender=self.sender, group=self.from_group, id=self.bottle_id))
+        except:
+            return self.content
 
     def get_table_name():
         return DriftBottle.__name__
@@ -43,7 +49,6 @@ class DriftBottle:
         }
 
     def exec_query(query: str, params=(), dict_data=False):
-        DATABASE.create_class_table(DriftBottle())
         return DATABASE.exec_query(query=query, params=params, dict_data=dict_data)
 
     def check_duplicate_bottle(content: str):
@@ -107,7 +112,7 @@ class DriftBottle:
 
 def get_random_bottle() -> DriftBottle:
     table_name = DriftBottle.get_table_name()
-    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken != TRUE ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
 
 commands = ['throw', 'pickup']
 command_properties = [
@@ -142,6 +147,8 @@ command_properties = [
         'permission': ''
     }
 ]
+DATABASE.create_class_table(DriftBottle())
+
 
 from .throw import *
 from .pickup import *

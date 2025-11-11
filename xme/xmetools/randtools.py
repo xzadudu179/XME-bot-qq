@@ -1,6 +1,7 @@
 import random
 random.seed()
 from .jsontools import read_from_path
+from PIL import Image
 from functools import wraps
 
 def random_percent(percent : float) -> bool:
@@ -73,6 +74,72 @@ def html_messy_string(string_input, temperature: float=50, resample_times=0, htm
     if not html:
         return result
     return result.replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;")
+
+def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True, max_messy_break=False):
+    """
+    messy_rate: 0~100
+    混乱图片，建议图片小一点
+    """
+    from .imgtools import get_image
+    img = get_image(path_or_image)
+    w, h = img.size
+    pixels = img.load()
+
+    # 根据强度计算次数与块最大尺寸
+    boxsize = (w + h) / 2
+    max_block_size = int(min(max((messy_rate / 50) * (boxsize / 4), boxsize / 50), boxsize / 5))
+    region_count = int((messy_rate) * (boxsize / max_block_size / 8))
+    # print(max_wh)
+    # print(region_count)
+    # print(max_block_size)
+    # 最大的
+    if messy_rate >= 100 and max_messy_break:
+        for y in range(img.height):
+            random_color = (
+                random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255)
+            )
+            for x in range(img.width):
+                pixels[x, y] = random_color
+        return img
+
+    for _ in range(region_count):
+        block_size = random.randint(1, max_block_size)
+
+        x1, y1 = random.randint(0, w - block_size), random.randint(0, h - block_size)
+        x2, y2 = random.randint(0, w - block_size), random.randint(0, h - block_size)
+
+        block1 = [
+            [pixels[x1 + dx, y1 + dy] for dx in range(block_size)]
+            for dy in range(block_size)
+        ]
+        block2 = [
+            [pixels[x2 + dx, y2 + dy] for dx in range(block_size)]
+            for dy in range(block_size)
+        ]
+        random_color = (
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255)
+        )
+        random_color1 = (
+            random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255)
+        )
+        for dy in range(block_size):
+            random_color = random.random() < 0.1 if rand_color else False
+            for dx in range(block_size):
+                # 随机颜色
+                if random_color:
+                    pixels[x1 + dx, y1 + dy] = random_color
+                    pixels[x2 + dx, y2 + dy] = random_color1
+                    continue
+                pixels[x1 + dx, y1 + dy] = block2[dy][dx]
+                pixels[x2 + dx, y2 + dy] = block1[dy][dx]
+    return img
+
 
 def messy_string(string_input, temperature: float=50, resample_times=0):
     """返回一个混乱的字符串

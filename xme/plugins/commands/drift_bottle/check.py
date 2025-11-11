@@ -5,7 +5,7 @@ from xme.xmetools.bottools import permission
 from .tools.bottlecard import get_class_bottle_card_html
 from xme.xmetools.imgtools import image_msg, get_html_image
 from character import get_message
-from xme.xmetools import randtools
+from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
 import random
 from nonebot import on_command, CommandSession
@@ -63,13 +63,13 @@ async def _(session: CommandSession, user: u.User):
     if str(index) == "-179":
         # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
         suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
-    bottle_card = get_html_image(get_class_bottle_card_html(
+    bottle_card = messy_image(get_html_image(get_class_bottle_card_html(
         bottle=bottle,
         messy_rate=messy_rate,
         messy_rate_str=messy_rate_string,
         custom_tip=suffix,
         skin_name=skin_name,
         html_render=not index_is_int,
-    ))
+    )), messy_rate / 2)
     # await send_session_msg(session, bottle_card)
     await send_session_msg(session, (await image_msg(bottle_card)), tips=True)

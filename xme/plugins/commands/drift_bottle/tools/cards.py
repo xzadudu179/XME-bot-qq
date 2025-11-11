@@ -17,7 +17,7 @@ CARD_SKINS = {
         "styles": """
 
         body {
-            word-break: break-all;
+            word-break: break-all;word-wrap: break-word;
             font-family: "Helvetica Neue", "Segoe UI", sans-serif;
             background-color: transparent;
             color: var(--text-color);
@@ -27,6 +27,7 @@ CARD_SKINS = {
 
         main {
             background-color: var(--background-color);
+            position: relative;
             color: var(--text-color);
             max-width: 600px;
             margin: auto;
@@ -37,10 +38,9 @@ CARD_SKINS = {
         .main_content {
             font-size: 1.2em;
             text-indent: 2em;
-            word-wrap: normal;
+            word-break: break-all;word-wrap: break-word;
             font-weight: bold;
             max-width: 100%;
-            overflow: hidden;
         }
 
         .small {
@@ -267,6 +267,7 @@ CARD_SKINS = {
             }
 
             main {
+                position: relative;
                 background-color: var(--background-color);
                 color: var(--text-color);
                 max-width: 600px;
@@ -279,9 +280,8 @@ CARD_SKINS = {
                 font-size: 1.2em;
                 font-weight: bold;
                 text-indent: 2em;
-                word-wrap: normal;
+                word-break: break-all;word-wrap: break-word;
                 max-width: 100%;
-                overflow: hidden;
             }
 
             .small {
@@ -417,6 +417,7 @@ CARD_SKINS = {
             }
 
             main {
+                position: relative;
                 background-color: var(--background-color);
                 color: var(--text-color);
                 max-width: 600px;
@@ -429,9 +430,8 @@ CARD_SKINS = {
                 font-size: 1.2em;
                 font-weight: bold;
                 text-indent: 2em;
-                word-wrap: normal;
+                word-break: break-all;word-wrap: break-word;
                 max-width: 100%;
-                overflow: hidden;
             }
 
             .small {
@@ -571,6 +571,7 @@ CARD_SKINS = {
 
         main {
             background-color: var(--background-color);
+            position: relative;
             color: var(--text-color);
             max-width: 600px;
             margin: auto;
@@ -582,9 +583,8 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
-            word-wrap: normal;
+            word-break: break-all;word-wrap: break-word;
             max-width: 100%;
-            overflow: hidden;
         }
 
         .small {
@@ -758,6 +758,19 @@ CARD_SKINS = {
             "sender-color": "#ddd",
         }
     },
+    "基础紫色": {
+        "colors": {
+            "text-color": "#eee",
+            "primary-color": "#dd6dff",
+            "code-color": "#9e8dff",
+            "code-bg": "#292b33",
+            "date-color": "#aaa",
+            "comments-bg": "#2b2933",
+            "background-color": "#1d1b26",
+            "hr-color": "#5e466b",
+            "sender-color": "#ddd",
+        }
+    },
     "基础白色": {
         "colors": {
             "text-color": "#000000",
@@ -781,8 +794,8 @@ CARD_SKINS = {
             "code-color" : "#ffc578",
             "code-bg" : "#292b33",
             "date-color" : "#8187AA",
-            "comments-bg" : "#292b33",
-            "background-color" : "#11121d",
+            "comments-bg" : "#1b1d2b",
+            "background-color" : "#131522",
             "hr-color" : "#4440",
             "border-inner-color": "#424660",
             "sender-color" : "#B6BCDB",
@@ -793,7 +806,7 @@ CARD_SKINS = {
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
-            word-break: break-all;
+            word-break: break-all;word-wrap: break-word;
             padding: 20px;
         }
 
@@ -825,9 +838,8 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
-            word-wrap: normal;
+            word-break: break-all;word-wrap: break-word;
             max-width: 100%;
-            overflow: hidden;
         }
 
         .small {
@@ -892,6 +904,7 @@ CARD_SKINS = {
         }
 
         .comments {
+            background: var(--comments-bg);
             border-radius: 12px;
             border: 2px solid var(--border-inner-color);
             border-top: 0;
@@ -1053,7 +1066,7 @@ CARD_SKINS = {
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
-            word-break: break-all;
+            word-break: break-all;word-wrap: break-word;
             padding: 20px;
         }
 
@@ -1085,9 +1098,9 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
-            word-wrap: normal;
+            word-break: break-all;
+            word-wrap: break-word;
             max-width: 100%;
-            overflow: hidden;
         }
 
         .small {
@@ -1304,7 +1317,7 @@ CARD_SKINS = {
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
-            word-break: break-all;
+            word-break: break-all;word-wrap: break-word;
             padding: 20px;
         }
 
@@ -1335,9 +1348,8 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
-            word-wrap: normal;
+            word-break: break-all;word-wrap: break-word;
             max-width: 100%;
-            overflow: hidden;
         }
 
         .small {
@@ -1550,5 +1562,153 @@ CARD_SKINS = {
         "comment_name_len": 18,
         "comment_content": '"{comment_content}"',
     },
+    "深海城市": {
+        "colors": {
+            "text-color": "#e9edff",
+            "primary-color": "#b5bce7",
+            "code-color": "#93dd91",
+            "code-bg": "#25283b",
+            "date-color": "#decaff",
+            "comments-bg": "#21212e",
+            "background-color": "#171a22",
+            "hr-color": "#c2c2c24b",
+            "border-color": "#535368",
+            "sender-color": "#decaff",
+        },
+        "styles": """
+                body {
+            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            background-color: transparent;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
 
+        main {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            max-width: 600px;
+            margin: auto;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            border: 4px solid var(--border-color);
+        }
+
+        .main_content {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-indent: 2em;
+            word-break: break-all;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        .small {
+        font-size: 0.9em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        }
+
+        .info {
+        font-weight: bold;
+        color: var(--primary-color);
+        }
+
+        hr {
+        border: none;
+        border-top: 1px solid var(--hr-color);
+        margin: 15px 0;
+        }
+
+        p {
+        line-height: 1.6;
+        margin: 10px 0;
+        }
+
+        .colored {
+        color: var(--primary-color);
+        font-weight: 500;
+        }
+
+        .infoul, .operateul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        }
+
+        .infoul {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--sender-color);
+        }
+
+        .small-like {
+            font-size: 0.9em;
+            padding-top: 2px;
+            padding-right: 10px;
+        }
+
+        .operateul li {
+        margin-bottom: 8px;
+        }
+
+        .infoul li.colored {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .comments div {
+            background: var(--comments-bg);
+            padding: 7px 12px;
+            border-radius: 8px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            font-size: 0.95em;
+        }
+
+        .comment-main {
+            max-width: calc(100% - 10rem);
+        }
+
+        .comments span.colored {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .code {
+        font-family: "Courier New", monospace;
+        background: var(--code-bg);
+        padding: 2px 6px;
+        border-radius: 6px;
+        color: var(--code-color);
+        }
+
+        .operateul {
+            padding: 0 10px;
+        }
+
+        .operateul li {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .operateul li p:first-child {
+        margin-bottom: 4px;
+        }
+
+        .operateul li p {
+        margin: 0;
+        font-size: 0.95em;
+        }
+
+        .operateul span {
+        display: inline-block;
+        }
+        """
+    },
 }

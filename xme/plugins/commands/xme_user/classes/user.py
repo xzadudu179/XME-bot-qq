@@ -97,7 +97,7 @@ class User:
         self.ai_history = ai_history
         # print(self.ai_history)
         # 用户所在天体
-        print("dbid", self.db_id)
+        # print("dbid", self.db_id)
         self.celestial_uid = celestial_uid
         self.celestial = None
         if not gen_starfield:
@@ -126,7 +126,7 @@ class User:
         return get_starfield_map(self.get_celestial().galaxy_location)
 
     def get_achievement(self, achievement_name) -> dict | bool:
-        print("achievement_name:", achievement_name)
+        # print("achievement_name:", achievement_name)
         achi = get_achievements().get(achievement_name, False)
         if not achi:
             raise ValueError(f"无该成就名 \"{achievement_name}\"")
@@ -338,7 +338,7 @@ class User:
         zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
         append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
         point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
-        print("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
+        # print("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
         mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
         # 保存图片
         path = f'data/images/temp/{hash_image(map_img)}.png'
@@ -440,10 +440,10 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     time_now = time_now if not floor_float else math.floor(time_now)
     # True 禁止继续使用指令 因为已受到限制
     time_limit, c_limit = False, False
-    print(time_now)
-    print(user.counters[name]["time"])
-    print(timetools.get_valuetime(user.counters[name]["time"], unit))
-    print(limit)
+    # print(time_now)
+    # print(user.counters[name]["time"])
+    # print(timetools.get_valuetime(user.counters[name]["time"], unit))
+    # print(limit)
     if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < limit:
         print("时间受限制")
         time_limit = True
@@ -528,7 +528,7 @@ def limit(limit_name: str,
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
-            print(user.counters)
+            # print(user.counters)
             if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                 if not limit_func:
@@ -539,9 +539,9 @@ def limit(limit_name: str,
                 else:
                     return limit_func(func, session, user, *args, **kwargs)
             # user = try_load(session.event.user_id, User(session.event.user_id))
-            print(user.counters)
+            # print(user.counters)
             result = await func(session, user, *args, **kwargs)
-            print(f"result: {result}")
+            # print(f"result: {result}")
             if not fails(result):
                 print("保存用户数据, 增加计数")
                 print("coins", user.coins)
@@ -575,7 +575,7 @@ def custom_limit(limit_name: str,
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
-            print(user.counters)
+            # print(user.counters)
             def count_tick():
                 print("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
@@ -590,7 +590,7 @@ def custom_limit(limit_name: str,
                 print("无限制")
                 return False
             # user = try_load(session.event.user_id, User(session.event.user_id))
-            print(user.counters)
+            # print(user.counters)
             result = await func(session, user, validate, count_tick, *args, **kwargs)
             print(f"result: {result}")
             # if not fails(result):
@@ -615,7 +615,7 @@ def using_user(save_data=False, id=0):
             print(user_id)
             user = try_load(user_id)
             result = await func(session, user, *args, **kwargs)
-            print(f"result: {result}")
+            # print(f"result: {result}")
             if save_data and result != False:
                 print("保存用户数据中")
                 user.save()
@@ -637,7 +637,7 @@ def load_dict_user(data: dict):
         counters = json.loads(data.get('counters', "{}"))
         ai_history = json.loads(data.get('ai_history', "[]"))
     except Exception as ex:
-        print(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错，请联系九九进行修复")
+        print(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错")
         raise ex
     # print(counters)
     inventory = Inventory()

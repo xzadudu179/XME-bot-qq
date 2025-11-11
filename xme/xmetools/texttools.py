@@ -11,6 +11,10 @@ d = enchant.Dict("en_US")
 def is_valid_english_word(word: str) -> bool:
     return d.check(word)
 
+class FormatDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
+
 class SQLInjectionDetector:
     """
     一个简化版的 SQL 注入检测器

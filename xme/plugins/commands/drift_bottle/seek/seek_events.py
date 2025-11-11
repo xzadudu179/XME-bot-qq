@@ -816,6 +816,22 @@ EVENTS = [
     }
   },
   {
+    "type": "normal",
+    "tags": [],
+    "prob": 5.5,
+    "post_func": None,
+    "descs": ["你返回的途中碰到了蠕动植物的荆棘，它似乎很不高兴...", "你似乎在返回的路上招惹到了这些植物，它们对你发动了攻击...", "你撞到了荆棘上，它们毫不犹豫地向你发动了攻击..."],
+    "regions": [SeekRegion.FOREST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(4, 12),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
     # 返回事件
     "type": "normal",
     "tags": [],
@@ -882,6 +898,37 @@ EVENTS = [
       },
     ]
   },
+  # {
+  #   "type": "decision",
+  #   "tags": [],
+  #   "prob": 0.7,
+  #   "post_func": None,
+  #   "descs": ["一些华丽的鱼群吸引了你的注意...前方是一片错综复杂的海底洞穴...", "你忽然发现了一片绚丽的海底洞穴...", "这里出现了一片生态丰富的海底洞穴..."],
+  #   "regions": [SeekRegion.DEEP_SEA],
+  #   "can_quit": True,
+  #   "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value < 450,
+  #   "decisions": [
+  #     {
+  #       "type": "normal",
+  #       "tags": [],
+  #       "names": ["探索此地", "探索洞穴"],
+  #       "descs": ["你尝试进入这片洞穴搜刮...", "你觉得进去这里能找到好东西...", "你打算探索这片美丽的洞穴...", "你尝试游入洞穴探索..."],
+  #       "tip": "[区域→]",
+  #       "changes": {
+  #       },
+  #       "region_change": lambda last: SeekRegion.FOREST
+  #     },
+  #     {
+  #       "type": "normal",
+  #       "tags": [],
+  #       "tip": "",
+  #       "names": ["离开", "放弃", "放弃探索"],
+  #       "descs": ["你觉得你可能进去这里后就出不来了...", "你觉得自己还不适合来这里探索", "你觉得你在这里无法判断深度，很可能出问题..."],
+  #       "changes": {
+  #       }
+  #     },
+  #   ]
+  # },
   {
     # 返回事件
     "type": "normal",

@@ -73,7 +73,7 @@ def html_messy_string(string_input, temperature: float=50, resample_times=0, htm
     result = messy_string(string_input, temperature, resample_times)
     if not html:
         return result
-    return result.replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;")
+    return result.replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;").replace('"', "&quot;")
 
 def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True, max_messy_break=False):
     """

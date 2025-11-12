@@ -17,7 +17,7 @@ random.seed()
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers, aget_session_msg
 import config
-from nonebot import get_bot
+from xme.xmetools.texttools import get_image_files_from_message
 
 BOTTLE_PATH = './data/drift_bottles.json'
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
@@ -91,8 +91,10 @@ async def comment(session, bottle: DriftBottle, user_id, comment_content):
 
 async def report(session, bottle: DriftBottle, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True, report_content=""):
     content = get_message("plugins", __plugin_name__, "reported")
+    messy_rate = max(0, min(100, bottle.views * 2 - bottle.likes * 3))
+    card = await image_msg(get_html_image(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%")))
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：\n内容：\n-----------\n{bottle.content}\n-----------\nid: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
+        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
     if send_success_message:
         await send_session_msg(session, content)
 
@@ -140,7 +142,7 @@ async def _(session: CommandSession, user: u.User):
             bottle: DriftBottle = DriftBottle.form_dict(random.choice(special))
         print("捡到了彩蛋瓶子")
         await user.achieve_achievement(session, "彩蛋瓶")
-        if bottle.bottle_id == "550W":
+        if bottle.bottle_id in ["550W", "MOSS"]:
             await user.achieve_achievement(session, "MOSS")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
@@ -177,7 +179,9 @@ async def _(session: CommandSession, user: u.User):
 
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
-    broken_rate = min(100, 1 + messy_rate / 2.5) if messy_rate < 100 else 100
+    broken_rate = min(100, 0.5 + messy_rate / 3) if messy_rate < 100 else 100
+    if is_special_bottle:
+        broken_rate = random.randint(1, 10)
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
@@ -204,6 +208,11 @@ async def _(session: CommandSession, user: u.User):
         if messy_rate >= 100:
             content = get_message("plugins", __plugin_name__, "bottle_broken_messy")
             await user.achieve_achievement(session, "章鱼的诅咒...")
+        # 被举报混乱的瓶子浏览量大于 114514，点赞小于 2000 是防止极端情况
+        if bottle.views >= 114514 and bottle.likes < 2000 and messy_rate >= 100:
+            # 删除被举报的瓶子
+            DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
+            return True
         if index != "-179":
             broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
             broken_bottles[index] = bottle.to_dict()
@@ -227,7 +236,7 @@ async def _(session: CommandSession, user: u.User):
         }
         while_index = 0
         while True:
-            if while_index > 3:
+            if while_index > 4:
                 return True
             async def cmd_func(reply):
                 print("执行指令")

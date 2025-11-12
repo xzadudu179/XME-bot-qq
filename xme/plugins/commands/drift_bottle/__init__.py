@@ -1,13 +1,17 @@
 __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
+from xme.xmetools.imgtools import image_to_base64, get_image
+from xme.xmetools.randtools import messy_image
 from character import get_message
+from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
-from xme.xmetools.texttools import FormatDict
+from xme.xmetools.texttools import FormatDict, html_text
 import json
+BOTTLE_IMAGES_PATH = "./data/images/driftbottle/"
 
 class DriftBottle:
-    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False, skin=""):
+    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False, skin="", images=[]):
         self.id = id
         self.bottle_id: str = bottle_id
         self.content: str = content
@@ -21,10 +25,22 @@ class DriftBottle:
         self.group_id = group_id
         self.is_broken = is_broken
         self.skin = skin
+        # 存储图片文件名
+        self.images = images
 
-    def get_formatted_content(self, messy_rate_str):
+    def get_formatted_content(self, messy_rate_str, messy_rate):
         try:
-            return self.content.format_map(FormatDict(views=self.views, likes=self.likes, messy_rate=messy_rate_str, sender=self.sender, group=self.from_group, id=self.bottle_id))
+            return self.content.format_map(
+                FormatDict(
+                    views=self.views,
+                    likes=self.likes,
+                    messy_rate=messy_rate_str,
+                    sender=self.sender,
+                    group=self.from_group,
+                    id=self.bottle_id,
+                    **{'.'.join(i.split(".")[:-1]): f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
+                )
+            )
         except:
             return self.content
 
@@ -46,6 +62,7 @@ class DriftBottle:
             "group_id": self.group_id,
             "is_broken": self.is_broken,
             "skin": self.skin,
+            "images": json.dumps(self.images, ensure_ascii=False)
         }
 
     def exec_query(query: str, params=(), dict_data=False):
@@ -93,6 +110,10 @@ class DriftBottle:
         self.id = DATABASE.save_to_db(self)
 
     def form_dict(data: dict) -> 'DriftBottle':
+        # print(data)
+        images = data.get('images', '[]')
+        if images is None:
+            images = '[]'
         return DriftBottle(
             id=data["id"],
             bottle_id=data["bottle_id"],
@@ -106,7 +127,8 @@ class DriftBottle:
             comments=json.loads(data['comments']),
             group_id=data['group_id'],
             is_broken=data.get('is_broken', False),
-            skin=data.get('skin', "")
+            skin=data.get('skin', ""),
+            images=json.loads(images),
         )
 
 
@@ -176,7 +198,7 @@ __plugin_usage__ = str(PluginDoc(
 
 EXAMPLE_BOTTLE = DriftBottle(
     bottle_id="1179?",
-    content="这是一个用来演示漂流瓶卡片效果的瓶子~\n这个瓶子是虚拟的哦",
+    content="这是一个用来演示漂流瓶卡片效果的瓶子~\n\n这个瓶子是虚拟的哦",
     sender="漠月和他的550W",
     likes=5,
     views=10,

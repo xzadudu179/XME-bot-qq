@@ -11,6 +11,11 @@ d = enchant.Dict("en_US")
 def is_valid_english_word(word: str) -> bool:
     return d.check(word)
 
+async def get_image_files_from_message(bot, msg):
+    images = [(await bot.get_image(file=image))["file"] for image in re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*?file=([^,]+),", msg)]
+    return images
+
+
 class FormatDict(dict):
     def __missing__(self, key):
         return '{' + key + '}'
@@ -366,6 +371,9 @@ def merge_positive_negative(content):
     result_is = content.replace("不不", "是")
     result_is = re.sub(r"(.*?)是是", lambda match: prefix + "是是" if (prefix:=match.group(1)) else prefix + "是", result_is)
     return result_is
+
+def html_text(text):
+    return text.replace("<", "&lt;").replace(">", "&gt;").replace(" ", "&nbsp;").replace('"', "&quot;")
 
 def try_split_left_right_equals(text, splits, total_split_return=False):
     """以 ABA 的格式分隔字符

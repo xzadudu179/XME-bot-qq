@@ -6,7 +6,12 @@ from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
+from . import BOTTLE_IMAGES_PATH
+from xme.xmetools.texttools import get_image_files_from_message
+from xme.xmetools.imgtools import get_image, limit_size, get_image_format
 import config
+import re
+import os
 from nonebot import on_command, CommandSession
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
@@ -18,11 +23,27 @@ command_name = 'throw'
 async def _(session: CommandSession, user):
     MAX_LENGTH = 300
     MAX_LINES = 20
+    MAX_IMAGES = 1
 
-    arg = session.current_arg_text.strip()
+    arg = session.current_arg.strip()
+
+    print(arg)
+
+    pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+    matches = re.findall(pattern, arg)
+    image_paths = await get_image_files_from_message(session.bot, arg)
+    images = [limit_size(get_image(image), 400) for image in image_paths]
+    image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
+
+    for i, image_cq in enumerate(matches):
+        filename = ".".join(image_filenames[i].split(".")[:-1])
+        print("filename", filename)
+        arg = arg.replace(image_cq, "{" + filename + "}")
+    arg = re.sub(r"\[[^\[\]]*\]", "", arg).strip()
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False
+
     check = DriftBottle.check_duplicate_bottle(arg)
     if check['status'] == False:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
@@ -36,7 +57,7 @@ async def _(session: CommandSession, user):
         "id": -1,
         "bottle_id": bottle_id,
         "content": arg,
-        # "images": list(images),
+        # "images": str(images),
         "sender": user['nickname'],
         "likes": 0,
         'views': 0,
@@ -50,7 +71,7 @@ async def _(session: CommandSession, user):
     }
 
     bottle: DriftBottle = DriftBottle.form_dict(bottle_content)
-    formatted_arg = bottle.get_formatted_content("0%")
+    formatted_arg = bottle.get_formatted_content("0%", 0)
     # print(formatted_arg, len(formatted_arg))
     # print(arg, len(arg))
     if len(formatted_arg) > MAX_LENGTH:
@@ -60,7 +81,17 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))
         return False
 
+    # if arg.count("")
+    if len(image_paths) > MAX_IMAGES:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_many", max_images=MAX_IMAGES))
+        return False
 
+    # 处理图片
+    for i, image in enumerate(images):
+        # 存储图片
+        image.save(BOTTLE_IMAGES_PATH + image_filenames[i])
+
+    bottle.images = image_filenames
     bottle.save()
     print(bottle)
 

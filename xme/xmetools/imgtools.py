@@ -18,6 +18,8 @@ from html2image import Html2Image
 from uuid import uuid4
 hti = Html2Image()
 
+
+
 def get_image(path_or_image: str | Image.Image) -> Image.Image:
     if isinstance(path_or_image, str):
         return read_image(path_or_image)
@@ -108,12 +110,31 @@ def take_screenshot(screen_num=1):
     name = os.path.abspath(name)
     return name, state
 
-def image_to_base64(img: Image.Image, format="PNG", to_jpeg=True) -> str:
+def get_image_format(image: Image.Image, default="PNG") -> str:
+    formats = {
+        "1": "PNG",
+        "L": "PNG",
+        "P": "PNG",
+        "RGB": "JPG",
+        "RGBA": "PNG",
+        "CMYK": "TIFF",
+        "YCbCr": "JPG",
+        "LAB": "TIFF",
+        "I": "TIFF",
+        "F": "TIFF",
+    }
+    return formats.get(image.mode, default)
+
+def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
     output_buffer = BytesIO()
     print("正在将图片转为base64")
-    if img.mode == "RGBA" or not to_jpeg:
-        print("save to png")
-        img.save(output_buffer, format=format)
+    if img.mode in ["RGBA", "P"] or not to_jpeg:
+        img_mode_dict = {
+            "RGBA": "PNG",
+            "P": "GIF"
+        }
+        print("save to normal")
+        img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
     else:
         img.save(output_buffer, format="JPEG", quality=75)
     byte_data = output_buffer.getvalue()
@@ -143,7 +164,7 @@ def gif_to_base64(img, frames: list[Image.Image]):
     print("result len", len(base64_str))
     return base64_str
 
-def limit_size(image: Image.Image, max_value):
+def limit_size(image: Image.Image, max_value) -> Image.Image:
     width, height = image.size
     ratio = max_value / float(max(width, height))
     new_width = int(width * ratio)
@@ -172,13 +193,12 @@ async def gif_msg(input_path, scale=1):
         return MessageSegment.text(f"[图片加载失败]")
 
 
-async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True, summary=get_message("config", "image_summary")):
+async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message("config", "image_summary")):
     """获得可以直接发送的图片消息
 
     Args:
         path_or_image (str): 图片路径或图片
         max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
-        load_format (str): 图片原格式
         to_jpeg (bool): 是否转换为 Jpeg 格式
         summary (str): 图片消息预览
 
@@ -198,7 +218,7 @@ async def image_msg(path_or_image, max_size=0, load_format="PNG", to_jpeg=True, 
         print("重新缩放")
         image = limit_size(image, max_size)
     # print(image)
-    b64 = image_to_base64(image, load_format, to_jpeg)
+    b64 = image_to_base64(image, to_jpeg)
     print("b64 success")
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:

@@ -25,6 +25,13 @@ CARD_SKINS = {
             padding: 20px;
         }
 
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            border-radius: 15px;
+            margin: 10px;
+        }
+
         main {
             background-color: var(--background-color);
             position: relative;
@@ -38,6 +45,7 @@ CARD_SKINS = {
         .main_content {
             font-size: 1.2em;
             text-indent: 2em;
+            margin: 0;
             word-break: break-all;word-wrap: break-word;
             font-weight: bold;
             max-width: 100%;
@@ -266,6 +274,13 @@ CARD_SKINS = {
                 padding: 20px;
             }
 
+            .img {
+                max-height: 400px;
+                max-width: calc(100% - 20px);
+                border-radius: 15px;
+                margin: 10px;
+            }
+
             main {
                 position: relative;
                 background-color: var(--background-color);
@@ -278,6 +293,7 @@ CARD_SKINS = {
 
             .main_content {
                 font-size: 1.2em;
+                margin: 0;
                 font-weight: bold;
                 text-indent: 2em;
                 word-break: break-all;word-wrap: break-word;
@@ -416,6 +432,13 @@ CARD_SKINS = {
                 padding: 20px;
             }
 
+            .img {
+                max-height: 400px;
+                max-width: calc(100% - 20px);
+                border-radius: 15px;
+                margin: 10px;
+            }
+
             main {
                 position: relative;
                 background-color: var(--background-color);
@@ -430,6 +453,7 @@ CARD_SKINS = {
                 font-size: 1.2em;
                 font-weight: bold;
                 text-indent: 2em;
+                margin: 0;
                 word-break: break-all;word-wrap: break-word;
                 max-width: 100%;
             }
@@ -561,6 +585,13 @@ CARD_SKINS = {
         },
         "styles": """
 
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            border-radius: 15px;
+            margin: 10px;
+        }
+
         body {
             font-family: "Helvetica Neue", "Segoe UI", sans-serif;
             background-color: transparent;
@@ -582,6 +613,7 @@ CARD_SKINS = {
         .main_content {
             font-size: 1.2em;
             font-weight: bold;
+            margin: 0;
             text-indent: 2em;
             word-break: break-all;word-wrap: break-word;
             max-width: 100%;
@@ -838,6 +870,7 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
+            margin: 0;
             word-break: break-all;word-wrap: break-word;
             max-width: 100%;
         }
@@ -927,7 +960,7 @@ CARD_SKINS = {
         }
 
         .comment-main {
-            max-width: calc(100% - 14rem);
+            max-width: calc(100% - 12rem);
             display: flex;
             /* margin: 5px 0; */
             flex-direction: column;
@@ -960,6 +993,13 @@ CARD_SKINS = {
 
         .operateul li p:first-child {
         margin-bottom: 4px;
+        }
+
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            clip-path: polygon(0% 40px, 40px 0%, 100% 0%, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0% 100%);
+            margin: 10px;
         }
 
         .operateul li p {
@@ -1097,6 +1137,7 @@ CARD_SKINS = {
         .main_content {
             font-size: 1.2em;
             font-weight: bold;
+            margin: 0;
             text-indent: 2em;
             word-break: break-all;
             word-wrap: break-word;
@@ -1233,6 +1274,13 @@ CARD_SKINS = {
         display: inline-block;
         }
 
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            clip-path: polygon(0 0%, calc(100% - 30px) 0%, 100% 30px, 100% calc(100% - 30px), calc(100% - 30px) 100%, 30px 100%, 0% 100%);
+            margin: 10px;
+        }
+
         """,
         "html_body": """<body>
             <div class="border">
@@ -1348,6 +1396,7 @@ CARD_SKINS = {
             font-size: 1.2em;
             font-weight: bold;
             text-indent: 2em;
+            margin: 0;
             word-break: break-all;word-wrap: break-word;
             max-width: 100%;
         }
@@ -1443,7 +1492,7 @@ CARD_SKINS = {
         /* } */
 
         .comment-main {
-            max-width: calc(100% - 14rem);
+            max-width: calc(100% - 12rem);
             display: flex;
             /* margin: 5px 0; */
             flex-direction: column;
@@ -1485,6 +1534,13 @@ CARD_SKINS = {
 
         .operateul span {
             display: inline-block;
+        }
+
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            border: 3px solid var(--date-color);
+            margin: 10px;
         }
 
         """,
@@ -1584,6 +1640,13 @@ CARD_SKINS = {
             padding: 20px;
         }
 
+        .img {
+            max-height: 400px;
+            max-width: calc(100% - 20px);
+            border-radius: 15px;
+            margin: 10px;
+        }
+
         main {
             background-color: var(--background-color);
             color: var(--text-color);
@@ -1600,6 +1663,7 @@ CARD_SKINS = {
             font-weight: bold;
             text-indent: 2em;
             word-break: break-all;
+            margin: 0;
             word-wrap: break-word;
             max-width: 100%;
         }

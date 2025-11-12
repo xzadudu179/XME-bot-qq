@@ -631,11 +631,18 @@ def load_dict_user(data: dict):
     plugin_datas = {}
     counters = {}
     ai_history = []
+    achievements = []
+    talked_to_bot = []
     try:
         inventory_data = json.loads(data.get('inventory', None))
         plugin_datas = json.loads(data.get('plugin_datas', "{}"))
         counters = json.loads(data.get('counters', "{}"))
         ai_history = json.loads(data.get('ai_history', "[]"))
+        achievements = data.get('achievements', "[]")
+        if achievements is None:
+            achievements = "[]"
+        achievements = json.loads(achievements)
+        talked_to_bot = json.loads(data.get('talked_to_bot', "[]"))
     except Exception as ex:
         print(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错")
         raise ex
@@ -655,8 +662,9 @@ def load_dict_user(data: dict):
             "xme_favorability": data.get('xme_favorability', 0),
             "desc": data.get('desc', ""),
             "plugin_datas": plugin_datas,
+            "achievements": achievements,
             "inventory": inventory,
-            "talked_to_bot": data.get('talked_to_bot', []),
+            "talked_to_bot": talked_to_bot,
             "celestial": celestial,
             "ai_history": ai_history,
     }

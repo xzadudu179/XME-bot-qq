@@ -72,4 +72,4 @@ async def _(session: CommandSession, user: u.User):
         html_render=not index_is_int,
     )), messy_rate / 2)
     # await send_session_msg(session, bottle_card)
-    await send_session_msg(session, (await image_msg(bottle_card)), tips=True)
+    await send_session_msg(session, (await image_msg(bottle_card)) + "这个瓶子已经碎掉了哦" if bottle.is_broken else "", tips=True)

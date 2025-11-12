@@ -1113,7 +1113,7 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 10,
+    "prob": 11.3,
     "post_func": None,
     "descs": ["你发现了一些喷气孔", "你发现这里有一些气泡", "有一些气泡正在上浮...", "你发现了一个气孔", "你发现了一根气泡柱..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST],

@@ -183,7 +183,7 @@ def get_img_msg(
             }
             body {
                 background-color: transparent;
-                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", sans-serif;
             }
             main li {
                 font-size: 1em;
@@ -453,7 +453,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 msg = ""
                 if step_results[0].strip() != prefix:
                     md_msg = "\n".join(step_results)
-                    msg = msg_prefix + (await image_msg(messy_image(get_img_msg(md_msg, player), (100 - player.san.value) / 2, rand_color=False))) + (continue_message if result["decision"] is None else "")
+                    msg = msg_prefix + (await image_msg(messy_image(get_img_msg(md_msg, player), (100 - player.san.value) / 3.5, rand_color=False))) + (continue_message if result["decision"] is None else "")
                     if result["decision"] is None:
                     # new_messages += [change_group_message_content(msg_dict, r) for r in step_results]
                         await send_session_msg(session, msg)

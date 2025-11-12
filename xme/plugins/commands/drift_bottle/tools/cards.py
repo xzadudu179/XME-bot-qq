@@ -410,6 +410,164 @@ CARD_SKINS = {
         "comment_suffix": """<div><p style="color: #c0c4d8;">{info3}</p></div>""",
         "no_comment": '<div><p style="color: #c0c4d8;">{content}</p></div>',
     },
+    "基础宇喵天枢": {
+        "colors": {
+            "text-color": "#ffffff",
+            "primary-color": "#FFA05C",
+            "primary-color2": "#00C3FF",
+            "code-color": "#FFDF6E",
+            "code-bg": "#7080a342",
+            "date-color": "#A3E7FF",
+            "comments-bg": "#64748b36",
+            "background-color": "#242931",
+            "hr-color": "#61798079",
+            "sender-color": "#A3E7FF",
+        },
+        "styles": """
+            body {
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+                background-color: transparent;
+                color: var(--text-color);
+                margin: 0;
+                padding: 20px;
+            }
+
+            .img {
+                max-height: 400px;
+                max-width: calc(100% - 20px);
+                border-radius: 15px;
+                margin: 10px;
+            }
+
+            main {
+                position: relative;
+                background-color: var(--background-color);
+                color: var(--text-color);
+                max-width: 600px;
+                margin: auto;
+                border-radius: 20px;
+                padding: 20px;
+            }
+
+            .main_content {
+                font-size: 1.2em;
+                margin: 0;
+                font-weight: bold;
+                text-indent: 2em;
+                word-break: break-all;word-wrap: break-word;
+                max-width: 100%;
+            }
+
+            .small {
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            }
+
+            .info {
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+
+            hr {
+            border: none;
+            border-top: 1px solid var(--hr-color);
+            margin: 15px 0;
+            }
+
+            p {
+            line-height: 1.6;
+            margin: 10px 0;
+            }
+
+            .colored {
+            color: var(--primary-color);
+            font-weight: 500;
+            }
+
+            .infoul, .operateul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            }
+
+            .infoul {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: var(--sender-color);
+            }
+
+            .small-like {
+                font-size: 0.9em;
+                padding-top: 2px;
+                padding-right: 10px;
+                color: var(--primary-color2);
+            }
+
+            .operateul li {
+            margin-bottom: 8px;
+            }
+
+            .infoul li.colored {
+                font-weight: bold;
+                color: var(--primary-color2);
+            }
+
+            .comments div {
+                background: var(--comments-bg);
+                padding: 7px 12px;
+                border-radius: 8px;
+                margin: 6px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                font-size: 0.95em;
+            }
+
+            .comment-main {
+                max-width: calc(100% - 10rem);
+            }
+
+            .comments span.colored {
+                color: var(--primary-color);
+                font-weight: 500;
+            }
+
+            .code {
+            font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: var(--code-color);
+            }
+
+            .operateul {
+                padding: 0 10px;
+            }
+
+            .operateul li {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .operateul li p:first-child {
+            margin-bottom: 4px;
+            }
+
+            .operateul li p {
+            margin: 0;
+            font-size: 0.95em;
+            }
+
+            .operateul span {
+            display: inline-block;
+            }
+        """,
+        "comment_suffix": """<div><p style="color: #A3E7FF;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #A3E7FF;">{content}</p></div>',
+    },
     "基础幼龙云": {
         "colors": {
             "text-color": "#f4f7ff",

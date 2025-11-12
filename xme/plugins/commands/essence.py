@@ -29,6 +29,7 @@ async def _(session: CommandSession):
     except ActionFailed:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
     essence = random.choice(essences)
+    print("精华消息数量：", len(essences))
     if len(essences) < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
     print("ESSENCE", essence)

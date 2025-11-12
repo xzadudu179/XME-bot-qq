@@ -18,13 +18,13 @@ usage = {
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'<at人>',
-    "permissions": ["在群聊内"],
+    "permissions": [""],
     "alias": alias
 }
 
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
-@permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
+# @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     arg = session.current_arg
     print("arg", arg)

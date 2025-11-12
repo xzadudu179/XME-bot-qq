@@ -108,7 +108,7 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
     )
 
 def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", images=[], skin_name="默认卡片", html_render=False):
-    content: str = f'"{content}"'
+    content: str = f'{content}'
     str_len = get_card_item("str_len", skin_name)
     comments = get_comment_html(messy_rate, messy_rate_str, comments_list, skin_name=skin_name)
     formatted_content = []

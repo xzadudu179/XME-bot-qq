@@ -67,13 +67,13 @@ FONTS_STYLE = f"""
     font-style: normal;
 }}
 .orbitron {{
-    font-family: "Orbitron";
+    font-family: "Orbitron", "Noto Sans CJK SC", "Noto Sans SC";
     letter-spacing: 0.05em;
 }}
 .electrolize {{
-    font-family: "Electrolize";
+    font-family: "Electrolize", "Noto Sans CJK SC", "Noto Sans SC";
 }}
 .melete {{
-    font-family: "Melete";
+    font-family: "Melete", "Noto Sans CJK SC", "Noto Sans SC";
 }}
 """

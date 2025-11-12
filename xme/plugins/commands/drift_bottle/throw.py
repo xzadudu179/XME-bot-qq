@@ -43,8 +43,8 @@ async def _(session: CommandSession, user):
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False
-
     check = DriftBottle.check_duplicate_bottle(arg)
+    print("查重", check['content'])
     if check['status'] == False:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
         return False

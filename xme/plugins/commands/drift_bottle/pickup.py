@@ -2,24 +2,25 @@ from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools import jsontools
+from . import get_messy_rate
 from xme.plugins.commands.xme_user.classes import user as u
 from aiocqhttp import ActionFailed
 from xme.xmetools.bottools import get_stranger_name, get_group_name
-from .tools.bottlecard import get_class_bottle_card_html
+from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools.randtools import messy_image
 from character import get_message
 from xme.xmetools import randtools
+import os
 from . import DriftBottle, get_random_bottle
 import random
 random.seed()
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers, aget_session_msg
 import config
-from xme.xmetools.texttools import get_image_files_from_message
-
-BOTTLE_PATH = './data/drift_bottles.json'
+from . import BOTTLE_IMAGES_PATH
+# BOTTLE_PATH = './data/drift_bottles.json'
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
 command_name = "pickup"
 
@@ -157,25 +158,14 @@ async def _(session: CommandSession, user: u.User):
     index = bottle.bottle_id
     index_is_int = index.isdigit()
 
-    # 混乱值根据浏览量计算
-    messy_rate: float = min(100, max(0, bottle.views * 2 - bottle.likes * 3)) if index_is_int or index != '-179' else 0
+
     # 增加浏览量以及构造卡片
     # ----------------------------
     bottle.views += 1
     bottle.save()
 
-    messy_rate_string = ""
-    if index == '-179':
-        messy_rate_string = "##未知##"
-        messy_rate = random.randint(30, 100)
-    elif not index_is_int:
-        messy_rate_string = "##纯洁无暇##"
-        messy_rate = 0
-    else:
-        messy_rate_string = f"{messy_rate}%"
-    # sender_now = await get_stranger_name(bottle['sender_id'])
-    # group_now = await get_group_name(bottle['group_id'])
     suffix = ""
+    messy_rate, _ = get_messy_rate(bottle, view_minus=1)
 
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
@@ -185,20 +175,7 @@ async def _(session: CommandSession, user: u.User):
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
-    if not broken:
-        if str(index) == "-179":
-            # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
-            suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
-        # else:
-        #     bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt")
-    bottle_card = messy_image(get_html_image(get_class_bottle_card_html(
-        bottle=bottle,
-        messy_rate=messy_rate,
-        messy_rate_str=messy_rate_string,
-        custom_tip=suffix,
-        skin_name=skin_name,
-        html_render=not index_is_int,
-    )), messy_rate / 2)
+    bottle_card = get_pickedup_bottle_card(bottle, skin_name=skin_name, view_minus=1)
     # await send_session_msg(session, bottle_card)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), linebreak=False, tips=True)
     content = ""
@@ -211,12 +188,18 @@ async def _(session: CommandSession, user: u.User):
         # 被举报混乱的瓶子浏览量大于 114514，点赞小于 2000 是防止极端情况
         if bottle.views >= 114514 and bottle.likes < 2000 and messy_rate >= 100:
             # 删除被举报的瓶子
+            if len(bottle.images) > 0:
+                # 删除所有图片
+                for i in bottle.images:
+                    print("删除图片", BOTTLE_IMAGES_PATH + i)
+                    os.remove(BOTTLE_IMAGES_PATH + i)
             DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
+            await send_session_msg(session, content)
             return True
         if index != "-179":
             broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
             broken_bottles[index] = bottle.to_dict()
-            jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
+            # jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
             # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()
             print("瓶子碎了")

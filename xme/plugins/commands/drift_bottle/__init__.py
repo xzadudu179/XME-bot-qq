@@ -73,7 +73,7 @@ class DriftBottle:
         for bottle in bottles:
             if not bottle.bottle_id.isdigit():
                 continue
-            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2) and not bottle.is_broken:
+            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2): # 碎瓶子也一并检查
                 return {
                     "status": False,
                     "content": bottle.content,
@@ -131,10 +131,32 @@ class DriftBottle:
             images=json.loads(images),
         )
 
+# 碎瓶子，不包括 114514
+def get_random_broken_bottle() -> DriftBottle:
+    table_name = DriftBottle.get_table_name()
+    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken == TRUE AND views < 114514 ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
 
 def get_random_bottle() -> DriftBottle:
     table_name = DriftBottle.get_table_name()
     return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken != TRUE ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+
+def get_messy_rate(bottle: DriftBottle, view_minus=0) -> tuple[float, str]:
+    # 混乱值根据浏览量计算
+    index_is_int = bottle.bottle_id.isdigit()
+    views = bottle.views - view_minus
+    messy_rate: float = min(100, max(0, views * 2 - bottle.likes * 3)) if index_is_int or bottle.bottle_id != '-179' else 0
+    # 增加浏览量以及构造卡片
+    # ----------------------------
+    messy_rate_string = ""
+    if bottle.bottle_id == '-179':
+        messy_rate_string = "##未知##"
+        messy_rate = random.randint(30, 100)
+    elif not index_is_int:
+        messy_rate_string = "##纯洁无暇##"
+        messy_rate = 0
+    else:
+        messy_rate_string = f"{messy_rate}%"
+    return messy_rate, messy_rate_string
 
 commands = ['throw', 'pickup']
 command_properties = [

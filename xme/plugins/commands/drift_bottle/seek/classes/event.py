@@ -1,11 +1,12 @@
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from .player import Player, PlayerAttr, SeekRegion
 from xme.xmetools.randtools import random_percent
+from inspect import iscoroutinefunction
 import random
 from typing import Any
 from xme.xmetools.typetools import use_attribute
 from nonebot import CommandSession
-from xme.xmetools.randtools import html_messy_string
+from xme.xmetools.randtools import html_messy_string, messy_string
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 
@@ -14,11 +15,11 @@ class Event:
     def __init__(self, player: Player):
         self.player = player
 
-    def gen_event(self, event_list: list[dict], current_region: SeekRegion) -> str | dict:
+    def gen_event(self, event_list: list[dict], current_region: SeekRegion, is_sim=False) -> str | dict:
         region_events = Event.get_region_event_list(event_list, self.player.region.value)
         # 符合条件的事件
         # print("region_events", region_events)
-        eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered)]
+        eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered, is_sim)]
         # print("eligible_events", eligible_events)
         chosen_event = Event.choose_event(eligible_events)
         return self.create_event(chosen_event, current_region)
@@ -104,12 +105,10 @@ class Event:
                 build_changes[k] = f"{v['type']}{v['change']()}" # 这里需要调用一次，因为是 Lambda
         return build_changes
 
-    def build_normal_event(self, event_dict: dict, html=True) -> str:
+    def build_normal_event(self, event_dict: dict, html=True, event_datas={}) -> str:
         event_changes: dict = event_dict["changes"]
         region_change = event_dict.get("region_change", None)
         build_changes = Event.build_changes(event_changes)
-        # for k, v in event_changes:
-            # build_changes[k] = f"{v['type']}{v['change']()}"
         event_desc: str = random.choice(event_dict["descs"])
         return self.normal_event(event_desc, build_changes, region_change, html=html)
 
@@ -126,7 +125,7 @@ class Event:
             result_list.append(e)
         return result_list
 
-    def build_dice_event(self, event_dict: dict, current_region, html=True) -> str:
+    def build_dice_event(self, event_dict: dict, current_region, html=True, event_datas={}) -> str:
         event_message = random.choice(Event.parse_event_messages(event_dict["event_messages"], current_region))
         # print("evmsg", event_message)
         desc: str = random.choice(event_message["descs"])
@@ -183,11 +182,18 @@ class Event:
             str: 决策事件返回
         """
         can_quit: bool = event_dict["can_quit"]
+        event_datas = {k: v() for k, v in event_dict.get("datas", {}).items()}
+        formats = {k: (await v(event_datas) if iscoroutinefunction(v) else v(event_datas)) for k, v in event_dict.get("formats", {}).items()}
+        # print(formats, event_dict.get("formats", {}))
+        event_dict["descs"] = [desc.format(**formats) for desc in event_dict["descs"]]
         desc: str = random.choice(event_dict["descs"])
-        return await self.decision_event(session, current_region, can_quit, desc, event_dict["decisions"], message_prefix)
+        event_func = event_dict.get("event_func", None)
+        if event_func is not None:
+            await event_func(event_datas, self.player)
+        return await self.decision_event(session, current_region, can_quit, desc, event_dict["decisions"], message_prefix, event_datas=event_datas)
 
     # 构建事件
-    def build_event(self, event_dict: dict, current_region: SeekRegion, html=True) -> str | dict:
+    def build_event(self, event_dict: dict, current_region: SeekRegion, html=True, event_datas={}) -> str | dict:
         """构造并且执行事件
 
         Args:
@@ -197,19 +203,32 @@ class Event:
             str: 事件结果
         """
         event_type: str = event_dict["type"]
+        # for k, v in event_changes:
+            # build_changes[k] = f"{v['type']}{v['change']()}"
+        # formats = event_dict.get("formats", {})
+        # format_strs = {k: v() for k, v in formats}
+        # print(event_dict)
+        if not event_datas:
+            event_datas = {k: (v() if callable(v) else v) for k, v in event_dict.get("datas", {}).items()}
+        if event_type == "normal":
+            formats = {k: v(event_datas) for k, v in event_dict.get("formats", {}).items()}
+            event_dict["descs"] = [desc.format(**formats) for desc in event_dict["descs"]]
+        event_func = event_dict.get("event_func", None)
+        if event_func is not None and event_type != "decision":
+            event_func(event_datas, self.player)
 
         match event_type:
             case 'normal':
-                return self.build_normal_event(event_dict, html=html)
+                return self.build_normal_event(event_dict, html=html, event_datas=event_datas)
             case 'dice':
-                return self.build_dice_event(event_dict, current_region, html=html)
+                return self.build_dice_event(event_dict, current_region, html=html, event_datas=event_datas)
             # 单独处理决策事件
             case 'decision':
                 return event_dict
             #     return await self.build_decision_event(session, event_dict, current_region)
 
     # 决策事件
-    async def decision_event(self, session: CommandSession, current_region: SeekRegion, can_quit: bool, event_desc, decisions = [list[dict]], message_prefix = "") -> str | dict:
+    async def decision_event(self, session: CommandSession, current_region: SeekRegion, can_quit: bool, event_desc, decisions = [list[dict]], message_prefix = "", event_datas={}) -> str | dict:
         from .. import is_stepping, command_name
         """决策事件
 
@@ -224,7 +243,7 @@ class Event:
             str: 决策事件返回结果
         """
         # 决策事件里的决策是封装的普通事件或者其他事件，当然也可以是决策事件
-        decision_strs = [f'{i + 1}. {html_messy_string(random.choice(e["names"]), self.player.get_messy_rate())} {html_messy_string(e.get("tip", ""), self.player.get_messy_rate())}' for i, e in enumerate(decisions)]
+        decision_strs = [f'{i + 1}. {messy_string(random.choice(e["names"]), self.player.get_messy_rate())} {messy_string(e.get("tip", ""), self.player.get_messy_rate())}' for i, e in enumerate(decisions)]
         decision_chunks = [decision_strs[i : i + 2] for i in range(0, len(decision_strs), 2)]
         decision_str = "\n".join(["\t".join(a) for a in decision_chunks])
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
@@ -242,7 +261,7 @@ class Event:
             if reply.isdigit() and int(reply) <= len(decisions) and int(reply) > 0:
                 reply_valid = True
         next_event = decisions[int(reply) - 1]
-        return self.build_event(next_event, current_region, html=False)
+        return self.build_event(next_event, current_region, html=False, event_datas=event_datas)
 
 
     # 一般事件，只有结果
@@ -267,7 +286,6 @@ class Event:
         if not html:
             return get_message("plugins", __plugin_name__, command_name, 'normal_event_no_html', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch).strip()
         return get_message("plugins", __plugin_name__, command_name, 'normal_event', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch).strip()
-
 
     # 掷骰判定事件
     def dice_event(

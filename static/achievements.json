@@ -68,5 +68,10 @@
         "desc": "在 \"/cus\" 指令里成功应用一个自定义样式设置",
         "award": 200,
         "hidden": false
+    },
+    "打捞者": {
+        "desc": "(/seek) 你修好了一个瓶子...",
+        "award": 200,
+        "hidden": false
     }
 }

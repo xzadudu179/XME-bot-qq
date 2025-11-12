@@ -1124,7 +1124,7 @@
         "not_group": "你不在群聊里，不能执行这个操作哦 {neutral}",
         "enable_warning": "请发送 \"y\" 确定开启群聊的寻宝功能 或发送其他任意消息取消。 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦",
         "disable": "群里的寻宝功能已关闭 {neutral}",
-        "not_private": "你需要在私聊里使用 \"/seek sim\" 哦（注意：{bot_name}无法接收到临时会话的消息哦）",
+        "not_private": "你需要在私聊里使用 \"/seek sim\" 哦（注意：{bot_name}可能无法接收到临时会话的消息哦）",
         "cancel_enable": "取消开启寻宝功能了哦 {neutral}",
         "enable": "在本群开启寻宝功能啦 {positive}",
         "limit": "你今天不能再寻宝啦，明天再来试试吧~\n不过你可以尝试在私聊使用 \"/seek sim\" 来模拟寻宝哦！",

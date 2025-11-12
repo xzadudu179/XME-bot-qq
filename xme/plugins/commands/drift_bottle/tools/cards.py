@@ -18,7 +18,7 @@ CARD_SKINS = {
 
         body {
             word-break: break-all;word-wrap: break-word;
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue","Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -128,7 +128,7 @@ CARD_SKINS = {
         }
 
         .code {
-            font-family: "Courier New", monospace;
+            font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
             background: var(--code-bg);
             padding: 2px 6px;
             border-radius: 6px;
@@ -267,7 +267,7 @@ CARD_SKINS = {
         },
         "styles": """
             body {
-                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
                 background-color: transparent;
                 color: var(--text-color);
                 margin: 0;
@@ -378,7 +378,7 @@ CARD_SKINS = {
             }
 
             .code {
-            font-family: "Courier New", monospace;
+            font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
             background: var(--code-bg);
             padding: 2px 6px;
             border-radius: 6px;
@@ -425,7 +425,7 @@ CARD_SKINS = {
         },
         "styles": """
             body {
-                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
                 background-color: transparent;
                 color: var(--text-color);
                 margin: 0;
@@ -536,7 +536,7 @@ CARD_SKINS = {
             }
 
             .code {
-            font-family: "Courier New", monospace;
+            font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
             background: var(--code-bg);
             padding: 2px 6px;
             border-radius: 6px;
@@ -593,7 +593,7 @@ CARD_SKINS = {
         }
 
         body {
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -705,7 +705,7 @@ CARD_SKINS = {
         }
 
         .code {
-            font-family: "Courier New", monospace;
+            font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
             background: var(--code-bg);
             padding: 2px 6px;
             border-radius: 6px;
@@ -834,7 +834,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1102,7 +1102,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1361,7 +1361,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1633,7 +1633,7 @@ CARD_SKINS = {
         },
         "styles": """
                 body {
-            font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1745,7 +1745,7 @@ CARD_SKINS = {
         }
 
         .code {
-        font-family: "Courier New", monospace;
+        font-family: "Courier New", "Noto Sans CJK SC", "Noto Sans SC", monospace;
         background: var(--code-bg);
         padding: 2px 6px;
         border-radius: 6px;

@@ -1,11 +1,24 @@
 from .classes.player import SeekRegion, Player
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 import random
-import uuid
+from .. import get_random_broken_bottle, DriftBottle
+from ..tools.bottlecard import get_pickedup_bottle_card
+from xme.xmetools.imgtools import image_msg
 
 def shark_post(p: Player):
   if p.is_die()[0] and p.region.value == SeekRegion.SHALLOW_SEA:
     p.achieved_achievements.append("你需要一艘更大的船"),
+
+def repair_bottle(data: dict, p: Player):
+  bottle = data["bottle"]
+  bottle.is_broken = False
+  bottle.views //= 2
+  bottle.likes //= 2
+  bottle.save()
+  p.achieved_achievements.append("打捞者"),
+
+async def get_bottle_content(datas):
+  return await image_msg(get_pickedup_bottle_card(datas["bottle"], suffix="<div></div>"))
 
 EVENTS = [
   {
@@ -181,6 +194,52 @@ EVENTS = [
         "custom": False,
       }
     }
+  },
+  # 漂流瓶决策
+  {
+    "type": "decision",
+    "tags": [],
+    "datas": {"bottle": get_random_broken_bottle},
+    "formats": {
+      "bottle_content": get_bottle_content,
+    },
+    "prob": 0.05,
+    "post_func": None,
+    "descs": ["你发现一个破碎的漂流瓶...{bottle_content}你打算如何处理它？", "你找到了一个已经被打碎的漂流瓶...{bottle_content}要把它装到新的瓶子里吗？", "你发现了一个碎掉的漂流瓶...{bottle_content}要把它装进新的瓶子吗？"],
+    "regions": [],
+    "can_quit": True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events, is_sim, *args: not back and not is_sim,
+    "decisions": [
+      {
+        "type": "normal",
+        "tags": [],
+        "names": ["使用少许星币修复瓶子", "用少许星币修好瓶子"],
+        "descs": ["你修复了这个瓶子，向远处抛去...", "你修复了这个瓶子，并抛去...", "你修复并抛走了这个瓶子..."],
+        "event_func": repair_bottle,
+        "tip": "[特殊+][星币-]",
+        "changes": {
+          "san": {
+            "change": lambda: random.randint(0, 5),
+            "type": "+",
+            "custom": False,
+          },
+          "coins": {
+            "change": lambda: random.randint(5, 15),
+            "type": "-",
+            "custom": False,
+          },
+        },
+      },
+      {
+        "type": "normal",
+        "tags": [],
+        "tip": "",
+        "names": ["无视", "不管"],
+        "descs": ["你不打算管这个瓶子", "你觉得没必要修复这个瓶子", "你不打算修复这个瓶子"],
+        "changes": {
+        }
+      },
+    ]
   },
   # {
   #   # 返回事件

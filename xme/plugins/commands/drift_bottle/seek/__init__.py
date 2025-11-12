@@ -36,7 +36,7 @@ class Seek:
         self.status = "stop"
         self.total_steps = 0
 
-    def parse_steps(self, step_count, total_steps: int) -> dict:
+    async def parse_steps(self, step_count, total_steps: int, is_sim) -> dict:
         msgs = []
         count = 0
         self.status = "start"
@@ -46,7 +46,7 @@ class Seek:
             for tool in self.player.tools:
                 if tool.can_apply():
                     msgs.append(tool.apply_event(self.event))
-            msg = SeekStep(self.event).gen_step(self.events, self.player)
+            msg = SeekStep(self.event).gen_step(self.events, self.player, is_sim=is_sim)
             is_die, die_reason = self.player.is_die()
             if (self.player.back and self.player.depth.value <= 0) or is_die:
                 # 回到海面，新增一步回到海面的计算
@@ -183,7 +183,7 @@ def get_img_msg(
             }
             body {
                 background-color: transparent;
-                font-family: "Helvetica Neue", "Segoe UI", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
             }
             main li {
                 font-size: 1em;
@@ -303,9 +303,9 @@ class SeekStep:
         self.event = event
     # def parse_step():
 
-    def gen_step(self, events, player: Player) -> str | dict:
+    def gen_step(self, events, player: Player, is_sim) -> str | dict:
         # print(player.region)
-        return self.event.gen_event(events, player.region.value)
+        return self.event.gen_event(events, player.region.value, is_sim=is_sim)
 
     def gen_event_step(self, event_dict: dict, player: Player):
         """生成单独事件的寻宝步数
@@ -430,7 +430,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             step_results = []
             last_event = ''
             while expected_steps > 0 and seek.status == "start":
-                result = seek.parse_steps(expected_steps, total_steps)
+                result = await seek.parse_steps(expected_steps, total_steps, is_sim=is_sim)
                 # --------- 检测成就
                 if player.region.value == SeekRegion.ABYSS:
                     await u.achieve_achievement(session, "来自深渊")

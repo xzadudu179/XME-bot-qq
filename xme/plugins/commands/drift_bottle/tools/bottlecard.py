@@ -1,5 +1,7 @@
 from xme.xmetools.texttools import limit_str_len
-from xme.xmetools.randtools import html_messy_string, messy_string
+from xme.xmetools.randtools import html_messy_string, messy_string, messy_image
+from character import get_message
+from xme.xmetools.imgtools import get_html_image
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 from keys import BOTTLE_IMAGE_KEY
@@ -62,6 +64,22 @@ def get_comment_html(messy_rate: int | float, messy_rate_str: str, comment_list:
             break
         comment_htmls.append(comment_html_content)
     return "\n".join(comment_htmls)
+
+def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认卡片", image_messy_magni=0.5, view_minus = 0):
+    from .. import __plugin_name__, get_messy_rate
+    if str(bottle.bottle_id) == "-179" and not suffix:
+        # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
+        suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
+    messy_rate, messy_rate_string = get_messy_rate(bottle, view_minus)
+    bottle_card = messy_image(get_html_image(get_class_bottle_card_html(
+        bottle=bottle,
+        messy_rate=messy_rate,
+        messy_rate_str=messy_rate_string,
+        custom_tip=suffix,
+        skin_name=skin_name if not bottle.skin else bottle.skin,
+        html_render=not bottle.bottle_id.isdigit(),
+    )), messy_rate * image_messy_magni)
+    return bottle_card
 
 def get_example_bottle(skin_name="默认卡片"):
     from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE

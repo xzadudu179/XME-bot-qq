@@ -6,7 +6,10 @@ import asyncio
 from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops
+import imagehash
+from collections import defaultdict
 from xme.xmetools.reqtools import fetch_data
+import traceback
 try:
     import pyautogui
 except Exception:
@@ -16,8 +19,115 @@ from xme.xmetools.texttools import hash_byte
 import mss
 from html2image import Html2Image
 from uuid import uuid4
+import torch
+from PIL import Image
+from torchvision import models, transforms
+from torch.nn.functional import cosine_similarity
+
+# # 加载图片模型
+# _model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+# _model.eval()
+
+# _preprocess = transforms.Compose([
+#     transforms.Resize((224, 224)),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.485, 0.456, 0.406],
+#                          std=[0.229, 0.224, 0.225]),
+# ])
+
+
+# def get_feature(path_or_image):
+#     img = get_image(path_or_image).convert("RGB")
+#     t = _preprocess(img).unsqueeze(0)
+#     with torch.no_grad():
+#         feat = _model(t).squeeze(0)
+#     return feat
+
+
+# def feature_compare_single(path_or_image, folder, threshold=0.9) -> list[tuple[str, float]]:
+#     """模型查找图片相似度
+
+#     Args:
+#         path_or_image (str): 目标图片
+#         folder (str): 需要对比的文件夹
+#         threshold (float, optional): 相似度阈值. Defaults to 0.9.
+
+#     Returns:
+#         list[tuple[str, float]]: 相似度列表（文件路径，相似度）
+#     """
+#     target_feat = get_feature(path_or_image)
+#     result = []   # (filepath, similarity)
+
+#     for filename in os.listdir(folder):
+#         path = os.path.join(folder, filename)
+#         if not os.path.isfile(path):
+#             continue
+#         # if path == path_or_image:
+#         #     continue
+
+#         try:
+#             feat = get_feature(path)
+#         except:
+#             continue
+
+#         sim = cosine_similarity(target_feat, feat, dim=0).item()
+#         if sim >= threshold:
+#             result.append((path, sim))
+
+#     # sim 越大越相似
+#     result.sort(key=lambda x: -x[1])
+#     return result
+
+
+
 hti = Html2Image()
 
+def get_hash(path_or_image):
+    try:
+        return imagehash.phash(get_image(path_or_image))
+    except Exception as ex:
+        # traceback.print_exc()
+        print(ex)
+        return None
+
+def phash_compare_folder(path_or_image, folder, threshold=5) -> list[tuple[str, int]]:
+    """HASH 查重图片
+
+    Args:
+        path_or_image (str): 目标图片（路径或 Image）
+        folder (str): 查重图片文件夹
+        threshold (int, optional): HASH 差别，越低越严格，最大64. Defaults to 5.
+
+    Returns:
+        list[tuple[str, int]]: 结果列表（文件路径，差距）
+    """
+    # target_hash = get_hash(path_or_image)
+
+    result = []   # (filepath, diff)
+    for filename in os.listdir(folder):
+        path = os.path.join(folder, filename)
+        if not os.path.isfile(path):
+            continue
+        # if path == path_or_image:
+        #     continue
+        diff = phash_compare(path_or_image, path, threshold=threshold)
+        if diff >= 999:
+            continue
+    # diff 越小越相似
+    result.sort(key=lambda x: x[1])
+    return result
+
+def phash_compare(target_image: str | Image.Image, compare_image: str| Image.Image, threshold=5):
+    # print("比较", target_image, compare_image)
+    target_hash = get_hash(target_image)
+    h = get_hash(compare_image)
+    result = 999
+    if h is None or target_hash is None:
+        return result
+    diff = target_hash - h
+    if diff <= threshold:
+        result = diff
+    return result
 
 
 def get_image(path_or_image: str | Image.Image) -> Image.Image:

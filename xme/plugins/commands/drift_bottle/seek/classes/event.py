@@ -251,7 +251,7 @@ class Event:
         reply_valid = False
         while not reply_valid:
             reply: str = (await aget_session_msg(session)).strip()
-            if is_stepping(reply):
+            if is_stepping(reply) or is_stepping(reply, "b"):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'in_decision'))
                 continue
             if reply == "stop" and can_quit:

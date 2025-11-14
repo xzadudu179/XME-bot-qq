@@ -13,6 +13,7 @@ from xme.xmetools.imgtools import crop_transparent_area, image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time
+import asyncio
 import os
 from xme.plugins.commands.xme_user.classes import user
 import random
@@ -24,7 +25,6 @@ from .. import DriftBottle, get_random_bottle
 from nonebot import on_command, CommandSession, MessageSegment
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from uuid import uuid4
-from enum import Enum
 hti = Html2Image()
 
 
@@ -418,6 +418,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         total_results = []
         # total_messages: list[MessageSegment] = []
         seek.status = "start"
+        # seek_operate_time = time.time()
         seeking_players[session.event.user_id] = {
             "time": time.time(),
             "place": f"{await get_group_name(session.event.group_id)}" if session.event.group_id is not None else "私聊"
@@ -426,6 +427,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             seeking_groups.append(session.event.group_id)
             # 处理 每一次机会（？）
         async def parse_event_steps(total_steps, expected_steps, prefix='', msg_prefix="", prefix_onlyonce=False):
+            # seek_operate_time = time.time()
             msgs = ""
             step_results = []
             last_event = ''
@@ -487,8 +489,21 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             expected_steps = 0
             valid_reply = False
             player.back = False
+            afk = False
             while not valid_reply:
-                reply: str = await aget_session_msg(session)
+                try:
+                    reply: str = await asyncio.wait_for(aget_session_msg(session), timeout=300)
+                except asyncio.TimeoutError:
+                    # 5 分钟没有操作
+                    if afk:
+                        seek.status = 'exit'
+                        break
+                    msg_name = "seeking_tip"
+                    if player.depth <= 0:
+                        msg_name = "seeking_tip_onsea"
+                    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, msg_name))
+                    afk = True
+                    continue
                 reply = reply.strip()
                 if reply == "quit":
                     seek.status = "exit"
@@ -513,6 +528,10 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                         continue
                     valid_reply = True
             # result = await seek.parse_steps(step)
+            if seek.status != "exit" and afk:
+                afk = False
+            if afk:
+                break
             prefix = "----------阶段总结[剩余 {chance} 次机会]----------"
             player.chance.change(lambda v: v - 1)
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')

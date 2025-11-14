@@ -79,7 +79,7 @@ def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认�
         messy_rate_str=messy_rate_string,
         custom_tip=suffix,
         skin_name=skin_name if not bottle.skin else bottle.skin,
-        html_render=not bottle.bottle_id.isdigit(),
+        html_render=(not bottle.bottle_id.isdigit() and "PURE " not in bottle.bottle_id) or bottle.bottle_id == "-179",
     )), messy_rate * image_messy_magni)
     return bottle_card
 

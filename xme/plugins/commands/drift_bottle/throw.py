@@ -33,7 +33,7 @@ async def _(session: CommandSession, user):
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
         matches = re.findall(pattern, arg)
         image_paths = await get_image_files_from_message(session.bot, arg)
-        images = [limit_size(get_image(image), 400) for image in image_paths]
+        images = [limit_size(get_image(image), 700) for image in image_paths]
         # image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
         image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_paths)]
     except Exception as ex:
@@ -92,9 +92,16 @@ async def _(session: CommandSession, user):
         return False
 
     # 处理图片
+
     for i, image in enumerate(images):
+        path = BOTTLE_IMAGES_PATH + image_filenames[i]
+        check_image = DriftBottle.check_duplicate_image(image)
+        if check_image["status"] == False:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
+            print("查重图片：", check_image)
+            return False
         # 存储图片
-        image.save(BOTTLE_IMAGES_PATH + image_filenames[i])
+        image.save(path)
 
     bottle.images = image_filenames
     bottle.save()

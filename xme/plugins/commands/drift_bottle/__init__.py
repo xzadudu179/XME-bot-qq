@@ -1,7 +1,7 @@
 __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
-from xme.xmetools.imgtools import image_to_base64, get_image
+from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
 from xme.xmetools.randtools import messy_image
 from character import get_message
 from keys import BOTTLE_IMAGE_KEY
@@ -85,6 +85,36 @@ class DriftBottle:
             "duplicate_bottle_id": None,
         }
 
+    def check_duplicate_image(path_or_image):
+        bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
+        for bottle in bottles:
+            if not bottle.bottle_id.isdigit():
+                continue
+            # 没有图片不检查
+            if bottle.images is None or len(bottle.images) <= 0:
+                continue
+            # 克苏鲁瓶子
+            if bottle.views >= 114514 and (bottle.likes <= bottle.views // 2):
+                continue
+            print("查重", bottle.bottle_id)
+            for image in bottle.images:
+                result = phash_compare(path_or_image, BOTTLE_IMAGES_PATH + image, threshold=999)
+                print("图片查重result", result)
+                if result <= 12:
+                    return {
+                    "status": False,
+                    "content": bottle.content,
+                    "images": bottle.images,
+                    "duplicate_bottle_id": bottle.bottle_id,
+                }
+        return {
+            "status": True,
+            "content": "",
+            "images": [],
+            "duplicate_bottle_id": None,
+        }
+
+
     def remove_self(self):
         """从数据表里移除自己并保存（改为 标记为broken）
         """
@@ -100,6 +130,7 @@ class DriftBottle:
         print(result)
         return int(result['COALESCE(MAX(CAST(bottle_id AS REAL)), 0)'])
 
+    @staticmethod
     def get(bottle_id: str) -> 'DriftBottle':
         result = DATABASE.load_class(select_keys=(bottle_id,), query="SELECT * FROM {table_name} WHERE bottle_id = ?", cl=DriftBottle)
         if result is None:
@@ -108,6 +139,9 @@ class DriftBottle:
 
     def save(self):
         self.id = DATABASE.save_to_db(self)
+
+    def update(self, update_method):
+        DATABASE.update_db(obj=self, id=self.id, **update_method(self))
 
     def form_dict(data: dict) -> 'DriftBottle':
         # print(data)

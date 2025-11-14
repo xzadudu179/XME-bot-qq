@@ -976,6 +976,54 @@ CARD_SKINS = {
         "comment_suffix": """<div><p style="color: #333;">{info3}</p></div>""",
         "no_comment": '<div><p style="color: #333;">{content}</p></div>',
     },
+    "幽灵": {
+        "colors": {
+            "text-color": "#000000b4",
+            "primary-color": "#0000009f",
+            "code-color": "#ffffffe7",
+            "code-bg": "#1721252c",
+            "date-color": "#1358c0de",
+            "comments-bg": "#53535362",
+            "background-color": "#ffffff9d",
+            "hr-color": "#2727272f",
+            "sender-color": "#1358c0de",
+        },
+        "comment_suffix": """<div><p style="color: #ffffffe7;">{info3}</p></div>""",
+        "no_comment": '<div><p style="color: #ffffffe7;">{content}</p></div>',
+        "operate_tip": """
+            <p class="colored">-----------------------</p>
+            <ul class="operateul">
+                <li>
+                    <p>
+                        <span class="code">???</span> /
+                        <span class="code">???</span> /
+                        <span class="code">???</span>
+                    </p>
+                    <p>??? / ??? / ???</p>
+                </li>
+                <li>
+                    <p>
+                        <span class="code">
+                            ???
+                            <span class="colored">
+                                ???
+                            </span>
+                        </span>
+                        /
+                        <span class="code">
+                            ???
+                            <span class="colored">
+                                ???
+                            </span>
+                        </span>
+                    </p>
+                    <p>
+                        ??? / ???
+                    </p>
+                </li>
+            </ul>
+        """,
+    },
     "星际工业": {
         "colors": {
             "text-color" : "#E7ECFF",

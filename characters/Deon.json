@@ -130,7 +130,8 @@
       "你可以自定义漂流瓶的样式哦~ 在 \"/shop\" 里购买后在 \"/cus bottle\" 里设置就好了~",
       "如果你们有不错的漂流瓶卡片设计或者概念，可以发给九九或者{bot_name}哦~",
       "漠月 BOT 并不是真正的漠月呢...",
-      "若不想使用报时功能，就用 \"/stime\" 来关闭吧~ 如果想用，也可以用这个指令打开~"
+      "若不想使用报时功能，就用 \"/stime\" 来关闭吧~ 如果想用，也可以用这个指令打开~",
+      "使用 \"/lot all\" 指令可以直接投入自己可以投入的最大值星币进行抽奖！"
     ]
   },
   "apis": {
@@ -138,8 +139,8 @@
   },
   "config": {
     "arg_failed": "指令参数有误哦 {neutral} 试试发送 \"{command}\" 吧{positive_punc}",
-    "image_summary": "[漠月的图片];",
-    "face_summary": "[漠月的小表情];",
+    "image_summary": "[漠月的图片]",
+    "face_summary": "[漠月的小表情]",
     "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
     "unknown_error": "指令执行出错了... {negative}\n以下是错误内容：{ex}",
     "busy": "我还在处理指令哦...呜呜",
@@ -1165,6 +1166,12 @@
           "你正在决策事件中哦，请先进行决策吧 {neutral}",
           "你还在决策事件中哦，需要先进行决策{positive_punc} {neutral}"
         ],
+        "seeking_tip": [
+          "你还在探险中哦，发送 \"s 1~20\" 或 \"b 1~30\" 来探险 / 返回，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
+        ],
+        "seeking_tip_onsea": [
+          "你还在探险中哦，发送 \"s 1~20\" 来探险，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
+        ],
         "invalid_step": "探险步数需要保持在 1~{max} 以内哦，你指定的步数 {count} 太大啦",
         "quit_success": [
           "成功退出了事件决策 {neutral}",
@@ -1223,6 +1230,11 @@
         "你捡到了一个漂流瓶{positive_punc}",
         "你捡到了一个漂流瓶 {positive}",
         "出现了一个漂流瓶{positive_punc}"
+      ],
+      "bottle_picked_prefix_broken": [
+        "出现了一个...漂流瓶？",
+        "这是...什么漂流瓶？",
+        "发现了一个...漂流瓶？"
       ],
       "bottle_card_content": "你捡到了一个漂流瓶{positive_punc}\n[#{index} 号漂流瓶，来自 \"{from_group}{group_now}\" 混乱程度：{messy_rate}]：\n-----------\n{content}\n-----------\n由 \"{sender}{sender_now}\" 在{send_time} 投出\n这个瓶子{view_message}，{like_message}",
       "response_prompt": [

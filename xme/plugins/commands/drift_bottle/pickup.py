@@ -2,7 +2,7 @@ from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools import jsontools
-from . import get_messy_rate
+from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
 from aiocqhttp import ActionFailed
 from xme.xmetools.bottools import get_stranger_name, get_group_name
@@ -24,18 +24,23 @@ from . import BOTTLE_IMAGES_PATH
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
 command_name = "pickup"
 
-async def like(session, bottle: DriftBottle):
+async def like(session, bottle_id):
     content = get_message("plugins", __plugin_name__, "liked")
     # jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'likes', set_method=lambda v: v + 1)
+    bottle = DriftBottle.get(bottle_id)
     bottle.likes += 1
+    # bottle.update(lambda bottle: {
+        # "likes": bottle.likes
+    # })
     bottle.save()
     print("点赞了")
     # print(bottles_dict['bottles'][index])
     await send_session_msg(session, content)
     return
 
-async def likesay(session: CommandSession, bottle: DriftBottle, comment_index: str, said):
-    index = bottle.bottle_id
+async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
+    bottle = DriftBottle.get(bottle_id)
+    index = bottle_id
     if not comment_index.isdigit():
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
         return False
@@ -50,13 +55,19 @@ async def likesay(session: CommandSession, bottle: DriftBottle, comment_index: s
     # jsontools.change_json(BOTTLE_PATH, 'bottles', index, 'comments', set_method=lambda v: v[comment_index - 1]['likes'] + 1)
     bottle.comments[comment_index - 1]["likes"] += 1
     bottle.save()
+    # bottle.update(lambda bottle: {
+    #     "comments": bottle.comments
+    # })
+    # bottle.save()
     print("点赞了评论")
     print(bottle)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "liked_comment", id=comment_index))
     return True
 
-async def comment(session, bottle: DriftBottle, user_id, comment_content):
-    index = bottle.bottle_id
+async def comment(session, bottle_id, user_id, comment_content):
+    bottle = DriftBottle.get(bottle_id)
+    index = bottle_id
+    # index = bottle.bottle_id
     content = get_message("plugins", __plugin_name__, "commented", id=index)
     comment_content = comment_content.strip()
     if not comment_content:
@@ -123,9 +134,12 @@ async def _(session: CommandSession, user: u.User):
         # await send_msg(session, "你没有捡到瓶子ovo")
         return False
     is_special_bottle = randtools.random_percent(0.9)
-    # special_bottles = [(i, b) for i, b in list(bottles.items()) if (not i.isdigit() or i == "-179") and not "PURE" in i]
-
-    # print(special_bottles)
+    # 幽灵瓶子 只在 23 点 ~ 3点出现
+    is_broken_bottle = randtools.random_percent(0.8) if (datetime.now().hour < 3 or datetime.now().hour >= 23) else False
+    print("时间段", (datetime.now().hour < 3 or datetime.now().hour >= 23))
+    if is_broken_bottle:
+        broken = get_random_broken_bottle()
+    broken = None
     special = DriftBottle.exec_query(query=
     f"""SELECT * FROM {table_name}
     WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179") AND is_broken != TRUE
@@ -137,7 +151,13 @@ async def _(session: CommandSession, user: u.User):
     if not bottle.bottle_id.isdigit() or bottle.bottle_id == '-179':
         is_special_bottle = True
         have_special_bottle
-    if is_special_bottle and special or have_special_bottle:
+    if is_broken_bottle:
+        bottle = broken
+        print("捡到了碎瓶子")
+        bottle.skin = "幽灵"
+        await user.achieve_achievement(session, "幽灵瓶")
+        await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个幽灵瓶子~")
+    elif is_special_bottle and special or have_special_bottle and not is_broken_bottle:
         if not have_special_bottle:
             # print(random.choice(special))
             bottle: DriftBottle = DriftBottle.form_dict(random.choice(special))
@@ -163,23 +183,30 @@ async def _(session: CommandSession, user: u.User):
 
     # 增加浏览量以及构造卡片
     # ----------------------------
-    bottle.views += 1
-    bottle.save()
+    if not is_broken_bottle:
+        bottle.views += 1
+        bottle.save()
 
-    suffix = ""
+    # suffix = ""
     messy_rate, _ = get_messy_rate(bottle, view_minus=1)
 
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 0.5 + messy_rate / 3) if messy_rate < 100 else 100
     if is_special_bottle:
-        broken_rate = random.randint(1, 10)
+        broken_rate = random.randint(5, 25)
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
     bottle_card = get_pickedup_bottle_card(bottle, skin_name=skin_name, view_minus=1)
     # await send_session_msg(session, bottle_card)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "bottle_picked_prefix") + (await image_msg(bottle_card)), linebreak=False, tips=True)
+    prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix")
+    if is_broken_bottle:
+        prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix_broken")
+    await send_session_msg(session, prefix_message + (await image_msg(bottle_card)), linebreak=False, tips=True)
+    if is_broken_bottle:
+        print("破碎的瓶子直接返回")
+        return
     content = ""
     if broken:
         await user.achieve_achievement(session, "混乱不堪")
@@ -236,14 +263,14 @@ async def _(session: CommandSession, user: u.User):
                 return False
             if reply == '-like' and not operated["like"]:
                 operated["like"] = True
-                await like(session, bottle)
+                await like(session, bottle.bottle_id)
                 continue
             elif reply.split(" ")[0] == '-rep' and not operated["rep"]:
                 operated["rep"] = True
                 await report(session, bottle, user_id, report_content=reply.split(" ")[1] if len(reply.split(" ")) > 1 else "")
                 continue
             elif reply.split(" ")[0] == '-say' and not operated["say"]:
-                result = await comment(session, bottle, user_id, " ".join(reply.split(" ")[1:]))
+                result = await comment(session, bottle.bottle_id, user_id, " ".join(reply.split(" ")[1:]))
                 if result:
                     operated["say"] = True
                 continue
@@ -253,7 +280,7 @@ async def _(session: CommandSession, user: u.User):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
                 continue
             elif reply.split(" ")[0] == '-likesay' and not operated["likesay"]:
-                result = await likesay(session, bottle, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
+                result = await likesay(session, bottle.bottle_id, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
                 if result:
                     operated["likesay"] = True
                 continue

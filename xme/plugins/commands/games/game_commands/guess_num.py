@@ -11,7 +11,7 @@ random.seed()
 import math
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 
-TIMES_LIMIT = 5
+TIMES_LIMIT = 10
 name = 'guess'
 game_meta = {
     "name": name,
@@ -85,7 +85,7 @@ def calc_award(basic, game: GuessNum):
     award = int(basic + times_addition + min(2 * theorical_times, theorical_times ** 2))
     if game.guessing_times >= range_len:
         award = 0
-    award = min(award, 512)
+    award = min(award, 1024)
     return int(max(0, award) / 2)
 
 
@@ -100,7 +100,7 @@ async def limited(func, session: CommandSession, user: user.User, *args, **kwarg
 @user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
 @permission(lambda sender: sender.is_privatechat, no_perm_result=return_state(f"{get_message('config', 'no_permission', permission='在私聊使用')}", "ERROR"), silent=True)
 async def play_game(session: CommandSession, u: user.User, args: dict):
-    BASIC_AWARD = 10
+    BASIC_AWARD = 25
     MAX_RANGE = 34359738368
     MAX_LIMIT = 35
     start_guessing = False

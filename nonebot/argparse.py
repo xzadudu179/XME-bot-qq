@@ -40,6 +40,7 @@ class ArgumentParser(ArgumentParser):
                 # --help
                 self._session_finish(self.usage or self.format_help())
             else:
+
                 self._session_finish('参数不足或不正确，请使用 --help 参数查询使用帮助')
 
 

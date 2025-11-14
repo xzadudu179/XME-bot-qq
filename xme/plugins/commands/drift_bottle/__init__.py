@@ -136,9 +136,12 @@ def get_random_broken_bottle() -> DriftBottle:
     table_name = DriftBottle.get_table_name()
     return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken == TRUE AND views < 114514 ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
 
-def get_random_bottle() -> DriftBottle:
+def get_random_bottle(no_easteregg=True) -> DriftBottle:
     table_name = DriftBottle.get_table_name()
-    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken != TRUE ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    # 排除彩蛋瓶
+    if no_easteregg:
+        return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE (CAST(bottle_id AS TEXT) == CAST(bottle_id AS INTEGER) AND bottle_id != \"-179\") AND is_broken != TRUE OR bottle_id LIKE '%PURE%' ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
+    return DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} WHERE is_broken != TRUE  ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
 
 def get_messy_rate(bottle: DriftBottle, view_minus=0) -> tuple[float, str]:
     # 混乱值根据浏览量计算

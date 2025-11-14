@@ -73,5 +73,10 @@
         "desc": "(/seek) 你修好了一个瓶子...",
         "award": 200,
         "hidden": false
+    },
+    "蠕动的血肉": {
+        "desc": "你看清了世界的本质...",
+        "award": 666,
+        "hidden": true
     }
 }

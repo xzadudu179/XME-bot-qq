@@ -951,7 +951,7 @@ CARD_SKINS = {
     "基础紫色": {
         "colors": {
             "text-color": "#eee",
-            "primary-color": "#dd6dff",
+            "primary-color": "#e282ff",
             "code-color": "#9e8dff",
             "code-bg": "#292b33",
             "date-color": "#aaa",

@@ -58,11 +58,13 @@ def get_comment_html(messy_rate: int | float, messy_rate_str: str, comment_list:
         if len(comment_htmls) < 1:
             comment_htmls.append(comment_html_content)
             continue
-        # 留言大于十条
-        if i + 1 > 10:
-            comment_htmls.append(comment_suffix.format(comments=len(comment_htmls - 10)))
-            break
         comment_htmls.append(comment_html_content)
+    # 留言大于十条
+    if len(comment_list) > 10:
+        comment_htmls_total = comment_htmls
+        comment_htmls = comment_htmls[-10:]
+        comment_htmls.append(comment_suffix.format(info3=infos[3].format(comments=len(comment_htmls_total) - 10)))
+        # break
     return "\n".join(comment_htmls)
 
 def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认卡片", image_messy_magni=0.5, view_minus = 0):

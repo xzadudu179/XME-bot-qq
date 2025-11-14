@@ -6,6 +6,7 @@ from xme.plugins.commands.xme_user.classes.user import try_load, User
 from nonebot import log
 from xme.xmetools.bottools import bot_call_action
 from xme.xmetools import randtools
+from aiocqhttp import MessageSegment
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools import timetools
 from xme.xmetools import msgtools
@@ -106,7 +107,13 @@ async def _():
     message = random.choice(messages)
     # print(has_faces, messages)
     if message in faces:
-        message = f"[CQ:image,file={message},summary={get_message('config', 'face_summary')}]"
+        # message = f"[CQ:image,file={message},summary={get_message('config', 'face_summary')}]"
+        message = MessageSegment(type_="image", data={
+            'file': message,
+            'cache': 1,
+            'timeout': 10,
+            'summary': get_message('config', 'face_summary'),
+        })
     log.logger.info(f"发一条随机消息 \"{message}\" 给 {group['group_name']} ({group_id})")
     try:
         await bot.send_group_msg(group_id=group_id,

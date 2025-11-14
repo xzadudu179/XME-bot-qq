@@ -71,7 +71,7 @@ async def comment(session, bottle: DriftBottle, user_id, comment_content):
     if len(comment_content) > MAX_COMMENT_LEN:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "comment_too_long", count=MAX_COMMENT_LEN, input_len=len(comment_content)))
         return False
-    MAX_COMMENT_COUNT = 10
+    MAX_COMMENT_COUNT = 15
     if len(bottle.comments) > MAX_COMMENT_COUNT:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "comment_too_many", count=MAX_COMMENT_COUNT))
         return False
@@ -145,6 +145,8 @@ async def _(session: CommandSession, user: u.User):
         await user.achieve_achievement(session, "彩蛋瓶")
         if bottle.bottle_id in ["550W", "MOSS"]:
             await user.achieve_achievement(session, "MOSS")
+        elif bottle.bottle_id in ["CTHULHU", "CTHULHU-2"]:
+            await user.achieve_achievement(session, "蠕动的血肉")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
         # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])

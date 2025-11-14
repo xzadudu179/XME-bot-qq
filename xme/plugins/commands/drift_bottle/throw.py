@@ -9,6 +9,7 @@ from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
 from xme.xmetools.texttools import get_image_files_from_message
 from xme.xmetools.imgtools import get_image, limit_size, get_image_format
+from traceback import format_exc
 import config
 import re
 import os
@@ -28,18 +29,22 @@ async def _(session: CommandSession, user):
     arg = session.current_arg.strip()
 
     print(arg)
-
-    pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
-    matches = re.findall(pattern, arg)
-    image_paths = await get_image_files_from_message(session.bot, arg)
-    images = [limit_size(get_image(image), 400) for image in image_paths]
-    image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
+    try:
+        pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+        matches = re.findall(pattern, arg)
+        image_paths = await get_image_files_from_message(session.bot, arg)
+        images = [limit_size(get_image(image), 400) for image in image_paths]
+        # image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
+        image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_paths)]
+    except Exception as ex:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
+        print("error", format_exc())
 
     for i, image_cq in enumerate(matches):
         filename = ".".join(image_filenames[i].split(".")[:-1])
         print("filename", filename)
         arg = arg.replace(image_cq, "{" + filename + "}")
-    arg = re.sub(r"\[[^\[\]]*\]", "", arg).strip()
+    arg = re.sub(r"\[[^\[\]]*\]", "", arg).replace("&#91;", "[").replace("&#93;", "]").strip()
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False

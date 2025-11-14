@@ -203,7 +203,7 @@ EVENTS = [
     "formats": {
       "bottle_content": get_bottle_content,
     },
-    "prob": 0.05,
+    "prob": 0.084,
     "post_func": None,
     "descs": ["你发现一个破碎的漂流瓶...{bottle_content}你打算如何处理它？", "你找到了一个已经被打碎的漂流瓶...{bottle_content}要把它装到新的瓶子里吗？", "你发现了一个碎掉的漂流瓶...{bottle_content}要把它装进新的瓶子吗？"],
     "regions": [],
@@ -912,7 +912,7 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 0.35,
+    "prob": 0.3,
     "post_func": None,
     "descs": ["你一阵恍惚，这片森林忽然消失了...就好像它从来没存在过", "你突然感到一阵晕眩，随后发现整片森林消失不见了...", "你忽然感到了眩晕...随后发现整片森林完全消失了..."],
     "regions": [SeekRegion.FOREST],

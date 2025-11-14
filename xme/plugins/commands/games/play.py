@@ -1,10 +1,11 @@
 cmd_name = 'game'
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
-from nonebot.argparse import ArgumentParser
+from xme.xmetools.bottools import XmeArgumentParser
 from character import get_message
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from xme.plugins.commands.xme_user.classes import user
+from config import COMMAND_START
 import xme.xmetools.texttools as t
 from xme.xmetools.msgtools import send_session_msg
 from . import game_commands as games
@@ -62,7 +63,8 @@ def get_game_help(game_name) -> str | bool:
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
 @user.using_user(True)
 async def _(session: CommandSession, user: user.User):
-    parser = ArgumentParser(session=session, usage=docs)
+    parser = XmeArgumentParser(session=session, usage=docs)
+    parser.exit_mssage = get_message("config", "arg_failed", command=f"{COMMAND_START[0]}{cmd_name} -h")
     parser.add_argument('-a', '--args', nargs='+')
     parser.add_argument('-i', '--info', action='store_true')
     parser.add_argument('text', nargs='+')

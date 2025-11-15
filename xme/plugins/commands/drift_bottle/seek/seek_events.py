@@ -59,7 +59,7 @@ EVENTS = [
     "prob": 4,
     "post_func": None,
     "descs": ["你收集到了一些神秘的发光物体...", "你发现了几个发着光的球体...", "你捕捉到了一些黑影..."],
-    "regions": [SeekRegion.ABYSS],
+    "regions": [SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 900,
     "changes": {
       "coins": {
@@ -206,7 +206,7 @@ EVENTS = [
     "prob": 0.084,
     "post_func": None,
     "descs": ["你发现一个破碎的漂流瓶...{bottle_content}你打算如何处理它？", "你找到了一个已经被打碎的漂流瓶...{bottle_content}要把它装到新的瓶子里吗？", "你发现了一个碎掉的漂流瓶...{bottle_content}要把它装进新的瓶子吗？"],
-    "regions": [],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.FOREST, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.UNDERSEA_CAVE, SeekRegion.TRENCH],
     "can_quit": True,
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events, is_sim, *args: not back and not is_sim,
     "decisions": [
@@ -318,6 +318,110 @@ EVENTS = [
       }
     },
     "region_change": lambda last: SeekRegion.TRENCH,
+  },
+  {
+    # ↓切换溟渊事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["水的感觉渐渐减弱了...周围似乎冒出了一些奇怪的光点...", "你来到了深渊之下...这是一个理论上不可能出现的区域..."],
+    "regions": [SeekRegion.ABYSS],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 2000,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "+",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.DEEPEST,
+  },
+  {
+    # ↑切换深渊事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["你回到了...深渊", "你回到了有点\"温暖\"的深渊..."],
+    "regions": [SeekRegion.DEEPEST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 2000,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "-",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.ABYSS,
+  },
+  {
+    # ↓切换虚境事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["你感到身体轻飘飘的...下方...似乎有光...", "光点逐渐消散...你感到自己的身体变得很轻盈...下方似乎有光..."],
+    "regions": [SeekRegion.DEEPEST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 3500,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "+",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.VOID,
+  },
+  {
+    # ↑切换溟渊事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["周围的光点逐渐变多，你也不再感到身体那么轻盈了...", "水的感觉变明显了...你离开了这片虚空..."],
+    "regions": [SeekRegion.VOID],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 2000,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "-",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.DEEPEST,
+  },
+  {
+    # 深度过高受到伤害
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": -1,
+    # "top": True,
+    "post_func": None,
+    "descs": ["周围嘈杂的声响正在撕裂你的身体...与心智...", "你的心灵无法承受如此多的...侵蚀...", "你快要被虚空融化了..."],
+    "regions": [SeekRegion.VOID],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 5000,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(10, 20),
+        "type": "-",
+        "custom": False,
+      },
+      "san": {
+        "change": lambda: random.randint(10, 20),
+        "type": "-",
+        "custom": False,
+      }
+    },
   },
   {
     # ↓切换海沟事件
@@ -685,10 +789,10 @@ EVENTS = [
         # 什么都没有是所有地区都可
         "regions": [],
         "descs": ["出现了一只巨大的远古生物！", "你发现了一只巨大的远古生物...", "你看到了一只神秘的巨兽..."],
-        "ok_msgs": ["你的脑袋感受到了剧烈的疼痛，你奋力反抗，夺走了巨兽尝试对你的控制..", "你的思绪被一股庞大而混乱的力量侵蚀，你奋力尝试保持专注...", "你忽然感觉到一阵无形的力量从四周侵入，你奋力反抗，最终击退了那股力量..."],
-        "bigwin_msgs": ["你的思绪被一股庞大而混乱的力量侵蚀，但你趁着巨兽集中精神的时刻朝着它的眼睛攻击！巨兽被击退了，留下了许多奇怪的珍品...", "巨兽的精神攻击被你成功的抵抗，并趁机攻击巨兽的弱点！巨兽痛苦地低吼，散落出闪烁着诡光的宝物离开...", "你忽然感到剧烈的疼痛，你集中全部精神反抗，并且找准时机攻击了巨兽的弱点！巨兽发出痛苦的嘶鸣，留下了许多闪闪发光的宝物消散..."],
+        "ok_msgs": ["你的脑袋感受到了剧烈的疼痛，你奋力反抗，夺走了巨兽尝试对你的控制...", "你的思绪被一股强大且混乱的力量侵蚀，你奋力尝试保持专注...", "你忽然感觉到一阵无形的力量从四周侵入，你奋力反抗，最终击退了那股力量..."],
+        "bigwin_msgs": ["你的思绪被巨兽强大的力量侵蚀，但你趁着它集中精神的时刻朝着它的眼睛攻击！巨兽被击退了，留下了许多奇怪的珍品...", "你成功抵抗了巨兽对你的精神攻击，并趁机攻击巨兽的弱点！巨兽痛苦地嚎叫，散落出闪烁着诡光的宝物离开...", "你忽然感到剧烈的疼痛，你集中全部精神反抗，并且找准时机攻击了巨兽的弱点！巨兽发出痛苦的嘶鸣，留下了许多闪闪发光的宝物消散..."],
         "fail_msgs": ["巨兽的眼睛散发光芒，你在剧烈的疼痛中被它控制，献上了鲜血以交换自由...", "你的意识被巨兽强大的力量击碎，你被迫献上了鲜血以换取自由...", "你的思绪忽然受到了强烈的侵蚀，你感到意识逐渐模糊...血液从身体中抽离..."],
-        "bigfail_msgs": ["你的精神因巨兽的注视下而崩溃...它似乎不满于你的意志，夺走了你身上的财宝与鲜血作为对自己的补偿..", "你忽然被无形的力量控制，无论如何也无法反抗...你眼睁睁看着这只巨兽愤怒地夺走了你身上的财宝与鲜血...", f"巨兽在一瞬间下压制了你的思绪，粉碎了你的精神...它似乎对你感到不满，夺走了你身上的财宝与鲜血..."],
+        "bigfail_msgs": ["你的精神因巨兽的注视下而崩溃...它夺走了你身上的财宝与鲜血作为对你精神力的惩罚...", "你忽然被无形的力量控制，无论如何也无法反抗...你眼睁睁看着这只巨兽愤怒地夺走了你身上的财宝与鲜血...", f"巨兽在一瞬间下压制了你的思绪，粉碎了你的精神...它夺走了你身上的财宝与鲜血...作为你弱小精神力的惩罚"],
       },
     ],
     "regions": [SeekRegion.FOREST],
@@ -1305,7 +1409,7 @@ EVENTS = [
     "type": "dice",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 5,
+    "prob": 4,
     "post_func": shark_post,
     "event_messages": [
       {
@@ -1328,7 +1432,7 @@ EVENTS = [
       },
       {
         # 什么都没有是所有地区都可
-        "regions": [SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST, SeekRegion.FOREST],
+        "regions": [SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST],
         "descs": ["一个黑影逼近...", "你看到了一道黑影...", "你发现了一个不寻常的黑影...", "忽然闪过一团黑影..."],
         "ok_msgs": ["黑影突然冲了过来！但是你反应过来，干掉了它。", "黑影忽然把你包围了！但是在你的反击下，黑影逐渐消失了...", "黑影将你团团包围...但是被你反击开了。"],
         "bigwin_msgs": [f"你顺势攻击，黑影忽然消散了，变成了一堆{coin_name}...？", "你似乎察觉到了什么，瞬间朝黑影攻击！它即刻飘散了...", "黑影消失了...但是你的身边似乎多了一点东西...", "黑影突然冲来！但是你早有准备，一击挡住了它！它忽然消散了。"],
@@ -1376,7 +1480,7 @@ EVENTS = [
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(5, 10),
+          "change": lambda: random.randint(10, 23),
           "type": "-",
           "custom": False,
         },
@@ -1390,12 +1494,12 @@ EVENTS = [
     "big_fail": {
       "changes": {
         "oxygen": {
-          "change": lambda: random.randint(12, 25),
+          "change": lambda: random.randint(12, 30),
           "type": "-",
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(12, 25),
+          "change": lambda: random.randint(20, 38),
           "type": "-",
           "custom": False,
         },

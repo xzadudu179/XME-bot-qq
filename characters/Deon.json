@@ -1332,11 +1332,12 @@
       "images_too_many": [
         "图片太多啦！最多放 {max_images} 张哦"
       ],
+      "reset_limit": "成功快进时间让你附近的大海多出了 {count} 个瓶子 {positive}",
       "limited": [
-        "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}",
-        "周围已经没有瓶子了...过段时间再来吧 {negative}",
-        "{bot_name}找不到别的瓶子啦...过段时间再来吧 {negative}",
-        "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧..."
+        "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}\n你也可以尝试发送 \"/pick reset\" 花费 100 星币重置次数",
+        "周围已经没有瓶子了...过段时间再来吧 {negative}\n也可以试试发送 \"/pick reset\" 花费 100 星币重置次数",
+        "{bot_name}找不到别的瓶子啦...过段时间再来吧 {negative}\n或者可以尝试发送 \"/pick reset\" 花费 100 星币重置次数",
+        "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧...\n或者可以试试发送 \"/pick reset\" 花费 100 星币重置次数"
       ],
       "throwed": [
         "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
@@ -2056,6 +2057,10 @@
       "index_not_found_arg": "找不到序号为 \"{index}\" 的设置项呢 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",
       "index_error": "序号 \"{index}\" 不是整数哦 {neutral}\n使用 \"{cmd_no_suffix}\" 来查看你可用的设置项吧{positive_punc}",
       "set_success": "成功将你对 \"{items_name}\" 的自定义项设置为 \"{item_result}\"！{positive}"
+    },
+    "machine": {
+      "desc": "神秘机器...（WIP）",
+      "introduction": "一个神秘的机器，查看它会发生什么呢？（未做完）"
     }
   }
 }

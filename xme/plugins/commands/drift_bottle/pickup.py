@@ -4,7 +4,6 @@ from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools import jsontools
 from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
-from aiocqhttp import ActionFailed
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
@@ -37,6 +36,14 @@ async def like(session, bottle_id):
     # print(bottles_dict['bottles'][index])
     await send_session_msg(session, content)
     return
+
+async def reset(session: CommandSession, user: u.User):
+    result = await user.try_spend(session, 100)
+    if not result:
+        return False
+    u.reset_limit(user, command_name)
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "reset_limit", count=30))
+    return True
 
 async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
     bottle = DriftBottle.get(bottle_id)
@@ -112,9 +119,17 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
 
 @on_command(command_name, aliases=pickup_alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
-@u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=30)
+@u.custom_limit(command_name, 1, unit=TimeUnit.HOUR, count_limit=30)
 # @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
-async def _(session: CommandSession, user: u.User):
+async def _(session: CommandSession, user: u.User, validate, count_tick):
+    if session.current_arg_text == "reset":
+        await reset(session, user)
+        user.save()
+        return True
+
+    if validate():
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
+        return False
     random.seed()
     skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
     user_id = session.event.user_id
@@ -133,10 +148,11 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle_picked"))
         # await send_msg(session, "你没有捡到瓶子ovo")
         return False
-    is_special_bottle = randtools.random_percent(0.9)
+    is_special_bottle = randtools.random_percent(1.32)
     # 幽灵瓶子 只在 23 点 ~ 3点出现
-    is_broken_bottle = randtools.random_percent(0.8) if (datetime.now().hour < 3 or datetime.now().hour >= 23) else False
+    is_broken_bottle = randtools.random_percent(1.2) if (datetime.now().hour < 3 or datetime.now().hour >= 23) else False
     print("时间段", (datetime.now().hour < 3 or datetime.now().hour >= 23))
+    print("isbroken", is_broken_bottle)
     if is_broken_bottle:
         broken = get_random_broken_bottle()
     broken = None
@@ -194,7 +210,7 @@ async def _(session: CommandSession, user: u.User):
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 0.5 + messy_rate / 3) if messy_rate < 100 else 100
     if is_special_bottle:
-        broken_rate = random.randint(5, 25)
+        broken_rate = random.randint(5, 20)
     print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
@@ -206,7 +222,8 @@ async def _(session: CommandSession, user: u.User):
     await send_session_msg(session, prefix_message + (await image_msg(bottle_card)), linebreak=False, tips=True)
     if is_broken_bottle:
         print("破碎的瓶子直接返回")
-        return
+        count_tick()
+        return False
     content = ""
     if broken:
         await user.achieve_achievement(session, "混乱不堪")
@@ -221,22 +238,27 @@ async def _(session: CommandSession, user: u.User):
                 # 删除所有图片
                 for i in bottle.images:
                     print("删除图片", BOTTLE_IMAGES_PATH + i)
-                    os.remove(BOTTLE_IMAGES_PATH + i)
+                    try:
+                        os.remove(BOTTLE_IMAGES_PATH + i)
+                    except FileNotFoundError:
+                        continue
             DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
             await send_session_msg(session, content)
             return True
-        if index != "-179":
+        if str(index) == "-179" or not index_is_int:
+            print("瓶子碎了？")
+            await user.achieve_achievement(session, "纯洁无暇！")
+            content = get_message("plugins", __plugin_name__, "bottle_broken?")
+        elif index != "-179":
             broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
             broken_bottles[index] = bottle.to_dict()
             # jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
             # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()
             print("瓶子碎了")
-        elif str(index) == "-179" or not index_is_int:
-            print("瓶子碎了？")
-            await user.achieve_achievement(session, "纯洁无暇！")
-            content = get_message("plugins", __plugin_name__, "bottle_broken?")
+
         await send_session_msg(session, content)
+        count_tick()
         return True
     else:
         operated = {
@@ -285,3 +307,4 @@ async def _(session: CommandSession, user: u.User):
                     operated["likesay"] = True
                 continue
             while_index += 1
+    count_tick

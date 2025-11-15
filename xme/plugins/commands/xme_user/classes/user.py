@@ -365,7 +365,7 @@ def verify_counters(user: User, name: str):
     user.counters[name].setdefault("count", 0)
 
 
-def reset_limit(user: User, name: str, unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True,
+def reset_limit(user: User, name: str, floor_float: bool = True,
                 count_add=False):
     """重置限制时间和数量
 
@@ -449,7 +449,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
         time_limit = True
     else:
         print("时间过了 刷新")
-        reset_limit(user, name, unit, floor_float)
+        reset_limit(user, name, floor_float)
         return False
         # return (True, True)
     if user.counters[name]["count"] >= count_limit:

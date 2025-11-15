@@ -14,6 +14,8 @@ class SeekRegion(Enum):
     UNDERSEA_CITY = "深海城市"
     UNDERSEA_CAVE = "海底洞穴"
     ABYSS = "深渊"
+    DEEPEST = "溟渊"
+    VOID = "虚境"
     # 设计于会让人迷路的危险区域
     FOREST = "扭曲森林"
 
@@ -105,7 +107,7 @@ class Player:
         self.last_region = PlayerAttr(f"上个区域", SeekRegion.SHALLOW_SEA, show=False)
 
         # 探险深度，目前想法是每走一步深度会随机加减
-        self.depth = PlayerAttr(f"深度", 0, max_value=2500, detail=False)
+        self.depth = PlayerAttr(f"深度", 0, max_value=6666, detail=False)
         # 是否往回走
         self.back = False
         # 机会
@@ -147,7 +149,8 @@ class Player:
             SeekRegion.SHALLOW_SEA: 0,
             SeekRegion.DEEP_SEA: 120,
             SeekRegion.TRENCH: 500,
-            SeekRegion.ABYSS: 1000
+            SeekRegion.ABYSS: 1000,
+            SeekRegion.DEEPEST: 2000,
         }
         def get_depth_ratio():
             depth: int = self.depth.value

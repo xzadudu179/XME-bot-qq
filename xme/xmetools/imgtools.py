@@ -276,6 +276,8 @@ def gif_to_base64(img, frames: list[Image.Image]):
 
 def limit_size(image: Image.Image, max_value) -> Image.Image:
     width, height = image.size
+    if max(width, height) < max_value:
+        return image
     ratio = max_value / float(max(width, height))
     new_width = int(width * ratio)
     new_height = int(height * ratio)

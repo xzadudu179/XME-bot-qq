@@ -38,11 +38,17 @@ async def like(session, bottle_id):
     return
 
 async def reset(session: CommandSession, user: u.User):
-    result = await user.try_spend(session, 100)
+    _, count = u.get_limit_info(user, command_name)
+    if count <= 0:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "no_limit", count=count))
+        return True
+
+    price = count * 10
+    result = await user.try_spend(session, price)
     if not result:
         return False
     u.reset_limit(user, command_name)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "reset_limit", count=30))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "reset_limit", count=count))
     return True
 
 async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
@@ -128,7 +134,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return True
 
     if validate():
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
+        _, count = u.get_limit_info(user, command_name)
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited', price=count * 10))
         return False
     random.seed()
     skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
@@ -150,12 +157,14 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return False
     is_special_bottle = randtools.random_percent(1.32)
     # 幽灵瓶子 只在 23 点 ~ 3点出现
-    is_broken_bottle = randtools.random_percent(1.2) if (datetime.now().hour < 3 or datetime.now().hour >= 23) else False
-    print("时间段", (datetime.now().hour < 3 or datetime.now().hour >= 23))
+    is_broken_bottle = randtools.random_percent(1.2) if (datetime.now().hour < 4 or datetime.now().hour >= 22) else False
+    is_cthulhu_bottle = randtools.random_percent(0.7)
+    print("时间段", (datetime.now().hour < 4 or datetime.now().hour >= 22))
     print("isbroken", is_broken_bottle)
     if is_broken_bottle:
         broken = get_random_broken_bottle()
-    broken = None
+    else:
+        broken = None
     special = DriftBottle.exec_query(query=
     f"""SELECT * FROM {table_name}
     WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179") AND is_broken != TRUE
@@ -164,6 +173,9 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     have_special_bottle = False
     # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
     bottle: DriftBottle = get_random_bottle()
+    if is_cthulhu_bottle:
+        from . import ERROR_BOTTLE
+        bottle = ERROR_BOTTLE
     if not bottle.bottle_id.isdigit() or bottle.bottle_id == '-179':
         is_special_bottle = True
         have_special_bottle
@@ -242,7 +254,10 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
                         os.remove(BOTTLE_IMAGES_PATH + i)
                     except FileNotFoundError:
                         continue
-            DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
+            try:
+                DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
+            except:
+                pass
             await send_session_msg(session, content)
             return True
         if str(index) == "-179" or not index_is_int:

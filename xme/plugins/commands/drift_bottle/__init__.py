@@ -270,3 +270,17 @@ EXAMPLE_BOTTLE = DriftBottle(
 
     ],
 )
+
+ERROR_BOTTLE = DriftBottle(
+    bottle_id="6066",
+    content="xwx 你好我是妖妻酒\n\n其实你们并不能看到这个瓶子的任何消息",
+    sender="妖妻酒和他的妖妻酒",
+    likes=0,
+    views=114514,
+    from_group="ono妈咪何意味...",
+    send_time="1145年01月04日 11:45:14",
+    sender_id=0,
+    comments=[
+        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "嗷呜", "likes": 0}
+    ],
+)

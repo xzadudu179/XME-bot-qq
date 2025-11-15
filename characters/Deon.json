@@ -1193,8 +1193,8 @@
         "{bot_name}没有更多的瓶子啦...下一个小时再来吧 {negative}"
       ],
       "pickup_introduction": "尝试捡一个漂流瓶",
-      "cthulhu_introduction": "毁掉指定的漂流瓶",
-      "check_introduction": "查看指定的漂流瓶",
+      "cthulhu_introduction": "毁掉指定的漂流瓶（SUPERUSER）",
+      "check_introduction": "查看指定的漂流瓶（SUPERUSER）",
       "no_bottle": [
         "海里一个瓶子里都没有...",
         "大海里完全没有瓶子...",
@@ -1333,11 +1333,12 @@
         "图片太多啦！最多放 {max_images} 张哦"
       ],
       "reset_limit": "成功快进时间让你附近的大海多出了 {count} 个瓶子 {positive}",
+      "no_limit": "你附近的大海有很多的瓶子哦，不需要快进时间呢 {positive}",
       "limited": [
-        "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}\n你也可以尝试发送 \"/pick reset\" 花费 100 星币重置次数",
-        "周围已经没有瓶子了...过段时间再来吧 {negative}\n也可以试试发送 \"/pick reset\" 花费 100 星币重置次数",
-        "{bot_name}找不到别的瓶子啦...过段时间再来吧 {negative}\n或者可以尝试发送 \"/pick reset\" 花费 100 星币重置次数",
-        "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧...\n或者可以试试发送 \"/pick reset\" 花费 100 星币重置次数"
+        "{bot_name}已经找完你附近的瓶子啦，下一个小时再来吧 {negative}\n你也可以尝试发送 \"/pick reset\" 花费 {price} {coin_pronoun}{coin_name}重置次数",
+        "周围已经没有瓶子了...过段时间再来吧 {negative}\n也可以试试发送 \"/pick reset\" 花费 {price} {coin_pronoun}{coin_name}来重置次数",
+        "{bot_name}找不到别的瓶子啦...过段时间再来吧 {negative}\n或者可以尝试发送 \"/pick reset\" 花费 {price} {coin_pronoun}{coin_name}来重置次数",
+        "{negative} {bot_name}已经找完你周围的所有瓶子啦，下一个小时再来吧...\n或者可以试试发送 \"/pick reset\" 花费 {price} {coin_pronoun}{coin_name}来重置次数"
       ],
       "throwed": [
         "瓶子扔出去啦{positive_punc} 这是大海里的第 {id} 号瓶子哦 {positive}",
@@ -1471,7 +1472,7 @@
         "desc": "查看成就列表",
         "introduction": "查看所有成就，使用 \"/achi 成就名\" 可以查看指定名称的成就详情。",
         "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就关键词或序号\" 来查看指定成就的详情{positive_punc}",
-        "turn_page_tips": "你可以发送 \"<\" \">\" 来向前/后翻页哦",
+        "turn_page_tips": "\n你可以发送 \"<\" \">\" 来向前/后翻页哦",
         "achievement_item": "- {achi_name} (奖励 {award} {coin_pronoun}{coin_name})\n  {achi_desc}",
         "too_large_page": "你指定的页数 {page} 太大啦，超过了总页数 {total_pages} 呢...",
         "nothing_here": [
@@ -1597,7 +1598,7 @@
         "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {neutral}"
       },
       "takecoin": {
-        "desc": "拿取{coin_name}",
+        "desc": "拿取{coin_name}（SUPERUSER）",
         "introduction": "at 一个人并且拿走指定数量的{coin_name}",
         "no_arg": [
           "请在参数里 at 你要拿取的用户哦",

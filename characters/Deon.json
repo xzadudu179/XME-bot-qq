@@ -1332,6 +1332,11 @@
       "images_too_many": [
         "图片太多啦！最多放 {max_images} 张哦"
       ],
+      "too_fast_warning": [
+        "你捡瓶子的速度有点快哦... {negative}",
+        "你捡瓶子的速度太快啦... {negative}"
+      ],
+      "too_fast": "你捡瓶子太快了 {negative} 因此附近的大海消失了 {count} 个瓶子...",
       "reset_limit": "成功快进时间让你附近的大海多出了 {count} 个瓶子 {positive}",
       "no_limit": "你附近的大海有很多的瓶子哦，不需要快进时间呢 {positive}",
       "limited": [

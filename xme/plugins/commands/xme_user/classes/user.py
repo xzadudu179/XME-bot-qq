@@ -2,10 +2,9 @@ from character import get_message
 coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
 
-from xme.xmetools import jsontools
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
-from .achievements import get_achievements
+from .achievements import get_achievements, has_achievement
 from nonebot.session import BaseSession
 from functools import wraps
 from aiocqhttp import ActionFailed
@@ -219,7 +218,7 @@ class User:
         return get_message("user", "user_info_str",
             id=str(self.id),
             coins_count=self.coins,
-            achievements_count=len(self.achievements),
+            achievements_count=len([a for a in self.achievements if has_achievement(a.get("name", ""))]),
             get_achievements_total=len(get_achievements().items()),
             sign_message=sign_message,
             rank_ratio=f"{rank_ratio:.2f}",

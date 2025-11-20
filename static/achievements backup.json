@@ -1,4 +1,14 @@
 {
+    "MOSS": {
+        "desc": "在漂流瓶里发现 550W 彩蛋...",
+        "award": 550,
+        "hidden": false
+    },
+    "彩蛋瓶": {
+        "desc": "捡到了一个神秘的瓶子？",
+        "award": 300,
+        "hidden": false
+    },
     "550W": {
         "desc": "答案之书说他是谁...？你为什么要问他是不是 550W...",
         "award": 50,
@@ -14,10 +24,20 @@
         "award": 199,
         "hidden": false
     },
+    "回旋瓶": {
+        "desc": "第一个捡到你的漂流瓶的人是你自己。",
+        "award": 100,
+        "hidden": false
+    },
     "章鱼的诅咒...": {
         "desc": "捡到一个无比混乱的漂流瓶",
         "award": 999,
         "hidden": false
+    },
+    "纯洁无暇！": {
+        "desc": "真的摔碎了一个瓶子嘛？",
+        "award": 2222,
+        "hidden": true
     },
     "V我50": {
         "desc": "在星期四给漠月 50 {coin_pronoun}{coin_name}",
@@ -50,7 +70,7 @@
         "hidden": false
     },
     "打捞者": {
-        "desc": "(/seek) 你修好了一个漂流瓶...",
+        "desc": "(/seek) 你修好了一个瓶子...",
         "award": 200,
         "hidden": false
     },
@@ -58,5 +78,10 @@
         "desc": "你看清了世界的本质...",
         "award": 666,
         "hidden": true
+    },
+    "幽灵瓶": {
+        "desc": "这个瓶子...难道不是已经碎了吗？",
+        "award": 400,
+        "hidden": false
     }
 }

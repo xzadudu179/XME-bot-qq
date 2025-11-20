@@ -10,8 +10,10 @@ class SeekRegion(Enum):
     SHALLOW_SEA = "浅海"
     DEEP_SEA = "深海"
     SHIPWRECK = "沉船"
+    SHADOWRECK = "阴影船骸"
     TRENCH = "海沟"
     UNDERSEA_CITY = "深海城市"
+    ABYSS_CITY = "深渊城市"
     UNDERSEA_CAVE = "海底洞穴"
     ABYSS = "深渊"
     DEEPEST = "溟渊"
@@ -151,12 +153,13 @@ class Player:
             SeekRegion.TRENCH: 500,
             SeekRegion.ABYSS: 1000,
             SeekRegion.DEEPEST: 2000,
+            SeekRegion.VOID: 3500
         }
         def get_depth_ratio():
             depth: int = self.depth.value
             weight = 1
             # 将区间按深度排序
-            if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS]:
+            if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
                 weight = 0.4
             sorted_regions = sorted(depths.items(), key=lambda x: x[1])
             for i in range(len(sorted_regions) - 1):
@@ -211,7 +214,20 @@ class Player:
                 "event_color": "#b5bce7",
                 "attr_color": "#b5bce7",
                 "line_color": "#c2c2c24b",
-                },SeekRegion.TRENCH: {
+                }, SeekRegion.ABYSS_CITY: {
+                "text_color": "#e9edff",
+                "card_border_color": "#d3d3fa",
+                "card_background_color": "#040507",
+                "fail_color": "#ff6161",
+                "win_color": "#87ff83",
+                "ident_color": "#59d8ff",
+                "dice_color": "#bbc2ff",
+                "region_color": "#60ffea",
+                "effect_color": "#e196ff",
+                "event_color": "#a0f9ff",
+                "attr_color": "#a0f9ff",
+                "line_color": "#ffffff4b",
+                }, SeekRegion.TRENCH: {
                 "text_color": "#cfdeff",
                 "card_border_color": "#212396",
                 "card_background_color": "#020205",
@@ -224,7 +240,7 @@ class Player:
                 "event_color": "#a4b2ff5",
                 "attr_color": "#a4b2ff",
                 "line_color": "#817eff4b",
-                },SeekRegion.ABYSS: {
+                }, SeekRegion.ABYSS: {
                 "text_color": "#ffccc8",
                 "card_border_color": "#7c1414",
                 "card_background_color": "#050202",
@@ -237,7 +253,33 @@ class Player:
                 "event_color": "#ff8884",
                 "attr_color": "#ff8884",
                 "line_color": "#ff7e7e4b",
-                },SeekRegion.FOREST: {
+                }, SeekRegion.DEEPEST: {
+                "text_color": "#cacaec",
+                "card_border_color": "#acacac",
+                "card_background_color": "#020305",
+                "fail_color": "#f3657d",
+                "win_color": "#91f5dc",
+                "ident_color": "#ffffff",
+                "dice_color": "#8a82ff",
+                "region_color": "#cac1ff",
+                "effect_color": "#ffffff",
+                "event_color": "#ffffff",
+                "attr_color": "#8b93ff",
+                "line_color": "#cec3ff4b",
+                }, SeekRegion.VOID: {
+                "text_color": "#efe8ff",
+                "card_border_color": "#9d79ff",
+                "card_background_color": "#020305",
+                "fail_color": "#f3657d",
+                "win_color": "#7decff",
+                "ident_color": "#ffffff",
+                "dice_color": "#9992ff",
+                "region_color": "#cac1ff",
+                "effect_color": "#ffffff",
+                "event_color": "#d89dff",
+                "attr_color": "#ab8dff",
+                "line_color": "#cec3ff4b",
+                }, SeekRegion.FOREST: {
                 "text_color": "#d4ffe4",
                 "card_border_color": "#136e53",
                 "card_background_color": "#070e06",
@@ -250,7 +292,7 @@ class Player:
                 "event_color": "#95ffa9",
                 "attr_color": "#95ffa9",
                 "line_color": "#89ff7e4b",
-                },SeekRegion.UNDERSEA_CAVE: {
+                }, SeekRegion.UNDERSEA_CAVE: {
                 "text_color": "#d4eeff",
                 "card_border_color": "#4c2b5c",
                 "card_background_color": "#091316",
@@ -263,6 +305,19 @@ class Player:
                 "event_color": "#95ffa9",
                 "attr_color": "#ffb6ef",
                 "line_color": "#ffe17e4b",
+                }, SeekRegion.SHADOWRECK: {
+                "text_color": "#eceeff",
+                "card_border_color": "#825fff",
+                "card_background_color": "#0c0c1a",
+                "fail_color": "#fc597c",
+                "win_color": "#a0ffcb",
+                "ident_color": "#FFAF63",
+                "dice_color": "#daccff",
+                "region_color": "#bd9aff",
+                "effect_color": "#acb2ff",
+                "event_color": "#dabaff",
+                "attr_color": "#dabaff",
+                "line_color": "#b6a9ff4b",
                 }
         }
         text_color = region_colors.get(self.region.value, {}).get("text_color", "#E2EBFF")
@@ -300,15 +355,25 @@ class Player:
     def get_depth_tip(self, count):
         # 深度改变时 1~5 是 单箭头，5~15 是双箭头 15 以上是三箭头
         arrow_count = 1
-        if abs(count) > 1000:
+        if abs(count) > 3000:
+            arrow_count = 11
+        elif abs(count) > 2500:
+            arrow_count = 10
+        elif abs(count) > 2000:
+            arrow_count = 9
+        elif abs(count) > 1500:
+            arrow_count = 8
+        elif abs(count) > 1000:
+            arrow_count = 7
+        elif abs(count) > 800:
             arrow_count = 6
         elif abs(count) > 300:
             arrow_count = 5
         elif abs(count) > 60:
             arrow_count = 4
-        elif abs(count) > 15:
+        elif abs(count) > 20:
             arrow_count = 3
-        elif abs(count) > 5:
+        elif abs(count) > 9:
             arrow_count = 2
         arrow = "↓" if count > 0 else "↑"
         if count == 0:

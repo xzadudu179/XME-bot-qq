@@ -8,7 +8,7 @@ from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.imgtools import image_msg
-from xme.xmetools.randtools import messy_image
+from xme.xmetools.dicttools import set_value, get_value
 from character import get_message
 from xme.xmetools import randtools
 import os
@@ -48,7 +48,7 @@ async def reset(session: CommandSession, user: u.User):
     if not result:
         return False
     u.reset_limit(user, command_name)
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "reset_limit", count=count))
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "reset_limit", count=max(count, 30)))
     return True
 
 async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
@@ -123,26 +123,57 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
     if send_success_message:
         await send_session_msg(session, content)
 
+
+pick_up_users = {
+
+}
+
 @on_command(command_name, aliases=pickup_alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
 @u.custom_limit(command_name, 1, unit=TimeUnit.HOUR, count_limit=30)
 # @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user: u.User, validate, count_tick):
+    global pick_up_users
     if session.current_arg_text == "reset":
         await reset(session, user)
         user.save()
         return True
-
+    user_id = session.event.user_id
+    if pick_up_users.get(user_id) is None:
+        pick_up_users[user_id] = {
+            "last_time": 0,
+            "too_fast": False,
+            "times": 0,
+        }
+    warning_text = ""
     if validate():
         _, count = u.get_limit_info(user, command_name)
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited', price=count * 10))
         return False
     random.seed()
     skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
-    user_id = session.event.user_id
+    # 2 秒之内捡两次瓶子
+    if time.time() - pick_up_users[user_id]["last_time"] <= 2.8:
+        # 如果太快了就返回
+        if pick_up_users[user_id]["too_fast"]:
+            return
+        warning_text = get_message("plugins", __plugin_name__, "too_fast_warning")
+        pick_up_users[user_id]["times"] += 1
+    else:
+        pick_up_users[user_id]["too_fast"] = False
+        pick_up_users[user_id]["times"] = 1
+    pick_up_users[user_id]["last_time"] = time.time()
+    if pick_up_users[user_id]["times"] > 3:
+        pick_up_users[user_id]["too_fast"] = True
+        print(f"{user_id}捡瓶子太快了")
+        lose_bottle_count = random.randint(5, 10)
+        for _ in range(lose_bottle_count):
+            count_tick()
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_fast', count=lose_bottle_count))
+        return
+    print(pick_up_users)
+
     # 普通瓶子
-    # bottles_dict = jsontools.read_from_path(BOTTLE_PATH)
-    # bottles = bottles_dict['bottles']
     table_name = DriftBottle.get_table_name()
     print("捡瓶子中")
     # 没捡到瓶子
@@ -231,7 +262,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix")
     if is_broken_bottle:
         prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix_broken")
-    await send_session_msg(session, prefix_message + (await image_msg(bottle_card)), linebreak=False, tips=True)
+    await send_session_msg(session, prefix_message + (await image_msg(bottle_card)) + warning_text, linebreak=False, tips=True)
     if is_broken_bottle:
         print("破碎的瓶子直接返回")
         count_tick()
@@ -322,4 +353,3 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
                     operated["likesay"] = True
                 continue
             while_index += 1
-    count_tick

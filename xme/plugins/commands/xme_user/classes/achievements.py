@@ -4,6 +4,12 @@ from xme.xmetools.jsontools import read_from_path
 def get_achievements() -> dict:
     return read_from_path("./static/achievements.json")
 
+def has_achievement(achievement_name):
+    achievements = get_achievements()
+    if achievement_name not in achievements.keys():
+        return False
+    return True
+
 def get_achievement_details(achievement_name: str, achieved: bool = False, achieved_time="", achieved_from=""):
     achievements = get_achievements()
     if achievement_name not in achievements.keys():

@@ -499,7 +499,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                         seek.status = 'exit'
                         break
                     msg_name = "seeking_tip"
-                    if player.depth <= 0:
+                    if player.depth.value <= 0:
                         msg_name = "seeking_tip_onsea"
                     await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, msg_name))
                     afk = True

@@ -26,7 +26,7 @@ __plugin_usage__ = str(CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     random.seed()
-    args = session.current_arg.strip()
+    args = session.current_arg_text.strip()
     if not args:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_args"),)
         return

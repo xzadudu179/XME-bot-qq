@@ -163,6 +163,30 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
+    "prob": 25,
+    "top": True,
+    "post_func": None,
+    "descs": ["岸边离你越来越远了...", "太阳的光线逐渐变暗了...", "海平面越来越模糊了...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
+    "regions": [SeekRegion.SHALLOW_SEA],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False and depth.value < 150,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(2, 10),
+        "type": "+",
+        "custom": False,
+      },
+      "oxygen": {
+         "change": lambda: random.randint(0, 2),
+        "type": "-",
+        "custom": False,
+      },
+    }
+  },
+  {
+    # 下潜事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
     "prob": 5,
     "post_func": None,
     "descs": ["你徘徊了一阵子...", "你想要回头看看有没有东西错过。", "你觉得你下潜的有点太快了。"],
@@ -209,6 +233,30 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
+    "prob": 20,
+    "top": True,
+    "post_func": None,
+    "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
+    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(2, 14),
+        "type": "+",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(0, 2),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    # 下潜事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
     "prob": -1,
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你反而感觉到水压越来越小..."],
@@ -232,11 +280,12 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": -1,
+    "prob": 50,
+    "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你感觉到水压越来越小..."],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value >= 30,
     "changes": {
       "depth": {
         "change": lambda: random.randint(7, 20),
@@ -255,11 +304,36 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": -1,
+    "prob": 34,
+    "top": True,
+    "post_func": None,
+    "descs": ["你奋力地往上游...但是你快没氧气了...", "你尽全力往上游去...但是你快没有氧气了...", "你尝试尽力地往上游..."],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY, SeekRegion.VOID, SeekRegion.DEEPEST],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value < 30,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(3, 12),
+        "type": "-",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(0, 1),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    # 返回事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 50,
+    "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你虽然在往上游，但是感觉到水压越来越大..."],
     "regions": [SeekRegion.VOID, SeekRegion.DEEPEST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value >= 30,
     "changes": {
       "depth": {
         "change": lambda: random.randint(10, 38),
@@ -1027,6 +1101,22 @@ EVENTS = [
   {
     "type": "normal",
     "tags": [],
+    "prob": 8,
+    "post_func": None,
+    "descs": ["你找到了一些漂流的物资残骸...", "你发现了一些沉船的碎块...", "你找到了一些残破的物资箱..."],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "health": {
+        "change": lambda: random.randint(5, 12),
+        "type": "+",
+        "custom": False,
+      }
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
     "prob": 18,
     "post_func": None,
     "descs": ["你正在流血...", "你需要赶快寻找治疗...", "你感觉你快要失血过多了..."],
@@ -1346,7 +1436,7 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 11.3,
+    "prob": 14.3,
     "post_func": None,
     "descs": ["你发现了一些喷气孔", "你发现这里有一些气泡", "有一些气泡正在上浮...", "你发现了一些气泡", "你发现了一根气泡柱..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST, SeekRegion.DEEPEST, SeekRegion.VOID],
@@ -1585,16 +1675,28 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
     "changes": {
       "oxygen": {
-        "change": lambda: random.randint(1, 15),
-        "type": "+",
-        "custom": False,
-      },
-      "oxygen": {
         "change": lambda v: v.change_max(lambda x: x + random.randint(1, 15)),
         "return": lambda v: v.max_value,
         "return_msg": "最大{name} = {value}",
         "custom": True,
         "assign": False,
+      },
+    }
+  },
+  {
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 5,
+    "post_func": None,
+    "descs": ["你发现了一些氧气瓶", "你发现了一些小气罐", "你找到了一些能被你使用的应急气罐", "你找到了完好的氧气罐"],
+    "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+    "changes": {
+      "oxygen": {
+        "change": lambda: random.randint(9, 19),
+        "type": "+",
+        "custom": False,
       },
     }
   },
@@ -1759,7 +1861,7 @@ EVENTS = [
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(10, 23),
+          "change": lambda: random.randint(10, 20),
           "type": "-",
           "custom": False,
         },
@@ -1778,7 +1880,7 @@ EVENTS = [
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(20, 44),
+          "change": lambda: random.randint(15, 35),
           "type": "-",
           "custom": False,
         },

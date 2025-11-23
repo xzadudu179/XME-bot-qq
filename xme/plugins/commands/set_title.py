@@ -1,6 +1,7 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission
 from character import get_message
 
@@ -26,7 +27,7 @@ async def _(session: CommandSession):
         if not name:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_name_arg'))
         if at and "[CQ:at,qq=" in at:
-            at_id = int(at.split("[CQ:at,qq=")[1].split(",")[0])
+            at_id = get_at_id(at)
         else:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_at_arg'))
             return

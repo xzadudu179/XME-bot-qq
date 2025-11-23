@@ -17,6 +17,10 @@ async def get_image_files_from_message(bot, msg):
 
 
 class FormatDict(dict):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def __missing__(self, key):
         return '{' + key + '}'
 

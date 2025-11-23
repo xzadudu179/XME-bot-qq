@@ -2,6 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
 from character import get_message
+from xme.xmetools.texttools import get_at_id
 from xme.xmetools.imgtools import image_msg
 from xme.xmetools.msgtools import send_session_msg
 import traceback
@@ -41,7 +42,7 @@ async def _(session: CommandSession):
     qq_id = session.event.user_id
     try:
         if arg.startswith("[CQ:at,qq="):
-            qq_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
+            qq_id = get_at_id(arg)
         image = await gen_maifriend(qq_id)
     except:
         traceback.print_exc()

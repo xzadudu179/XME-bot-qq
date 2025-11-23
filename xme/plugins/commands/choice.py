@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict
+from xme.xmetools.texttools import FormatDict, only_positional_fields
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
@@ -73,7 +73,7 @@ async def _(session: CommandSession):
                 "plugins",
                 __plugin_name__,
                 'choice_message',
-                choice=texttools.me_to_you(str(choice)).format_map(formats),
+                choice=only_positional_fields(texttools.me_to_you(str(choice))).format_map(formats),
             ),
             tips=True,
             tips_percent=20,
@@ -82,9 +82,11 @@ async def _(session: CommandSession):
 def has_valid_placeholders(s: str, allowed: list[str]) -> bool:
     # 匹配是否有指定的字符串format
     matches = re.findall(r"{([^{}]+)}", s)
+    # print(matches)
     if not matches:
         return False
-    return all(m in allowed for m in matches)
+    print([m in allowed for m in matches])
+    return len([m for m in matches if m in allowed ]) > 0
 
 async def get_random_group_member(session: CommandSession, group_id):
     if group_id is None:

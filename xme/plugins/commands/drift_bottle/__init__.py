@@ -3,6 +3,7 @@ from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
 from xme.xmetools.randtools import messy_image
+from xme.xmetools.texttools import only_positional_fields
 from character import get_message
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
@@ -30,7 +31,7 @@ class DriftBottle:
 
     def get_formatted_content(self, messy_rate_str, messy_rate):
         try:
-            return self.content.format_map(
+            return only_positional_fields(self.content).format_map(
                 FormatDict(
                     views=self.views,
                     likes=self.likes,

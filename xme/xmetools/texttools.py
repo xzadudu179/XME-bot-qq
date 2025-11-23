@@ -15,6 +15,8 @@ async def get_image_files_from_message(bot, msg):
     images = [(await bot.get_image(file=image))["file"] for image in re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*?file=([^,]+),", msg)]
     return images
 
+def only_positional_fields(s: str) -> str:
+    return re.sub(r"{(\d+)}", r"{{\1}}", s)
 
 class FormatDict(dict):
 

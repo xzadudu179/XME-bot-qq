@@ -16,6 +16,7 @@ def get_fusion_card(card_data: dict):
         3: "on-event",
         4: "cancelled",
     }
+    c = state_class[card_data['state']]
     if card_data["state"] in [0, 3, 4]:
         daysleft_str = {
             0: "活动结束",
@@ -23,6 +24,8 @@ def get_fusion_card(card_data: dict):
             4: "活动取消"
         }[card_data["state"]]
     else:
+        if card_data['time_surplus'] < 10:
+            c = "about-begin"
         daysleft_str = f"剩余 {card_data['time_surplus']} 天"
     time_formatted = ".".join(card_data["time_start"].split(".")[1:]) + " - " + ".".join(card_data["time_end"].split(".")[1:])
     return f"""
@@ -33,7 +36,7 @@ def get_fusion_card(card_data: dict):
                         <h1 class="title">{card_data['title']}</h1>
                         <div>
                             <p>{card_data['address_province']}·{card_data['address_city']}</p>
-                            <p class="{state_class[card_data['state']]}">{STATE[card_data['state']]}</p>
+                            <p class="{c}">{STATE[card_data['state']]}</p>
                         </div>
                     </div>
                     <div class="bottom">
@@ -43,7 +46,7 @@ def get_fusion_card(card_data: dict):
                             <p>{time_formatted}</p>
                         </div>
                         <div class="btm_right">
-                            <p class="remaining daysleft {state_class[card_data['state']]}">
+                            <p class="remaining daysleft {c}">
                                 {daysleft_str}
                             </p>
 
@@ -72,6 +75,7 @@ def get_countdown_cards(data: list[dict]):
                 --background-color: #1b1b25;
                 --primary-color: #78B9FF;
                 --error-color: #ff7a85;
+                --about-begin-color: #ffdb65;
                 --on-event-color: #7bffb6;
             }
 
@@ -262,6 +266,21 @@ def get_countdown_cards(data: list[dict]):
                 flex-wrap: wrap;
                 /* justify-content; */
             }
+
+            footer {
+                text-align: center;
+            }
+
+            footer p {
+                color: var(--info-color);
+                font-size: 1em;
+                line-height: 1.6em;
+            }
+
+            .about-begin {
+                color: var(--about-begin-color);
+            }
+
         </style>
     </head>
     <body>
@@ -270,6 +289,9 @@ def get_countdown_cards(data: list[dict]):
     """
     html_bottom = """
                 </div>
+                <footer>
+                    <p class="orbitron">数据来源于 FURRYFUSION 提供的 API.</p>
+                </footer>
             </div>
         </body>
     </html>

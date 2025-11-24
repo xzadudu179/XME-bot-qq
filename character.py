@@ -64,8 +64,10 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
         result = get_character_item(*keys, character=character, default=default)
     except:
         return f"[获取消息错误：无法获取键组为 {keys} 的消息，如用户使用出现该问题，请截图交给九镹（并暴打九镹（？））]"
-
+    if result is None:
+            return default
     result = str_choice(result)
+
     # if len(kwargs) < 1:
     #     return str(result).format()
     # 格式化参数文本

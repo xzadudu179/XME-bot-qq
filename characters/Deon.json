@@ -177,7 +177,7 @@
     "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
-    "user_info_str": "----------\n{desc}用户 id: {id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
+    "user_info_str": "----------\n{desc}用户 id: {id}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
     "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
     "no_sign": "没有签过到呢...",
     "empty_inventory": "什么也没有呢...",
@@ -2068,6 +2068,17 @@
     "machine": {
       "desc": "神秘机器...（WIP）",
       "introduction": "一个神秘的机器，查看它会发生什么呢？（未做完）"
+    },
+    "furfusion": {
+      "desc": "兽聚汇总相关指令",
+      "introduction": "使用兽聚汇总的 API 进行各种兽聚相关的查询~",
+      "countdown": "这是当前兽聚时间表信息 {positive}{image}",
+      "error": "数据读取错误 {negative}：code {code}",
+      "no_search_data": "找不到和关键词 \"{keyword}\" 有关的兽聚诶 {neutral}",
+      "fusion_data": "{image}{name}\n状态：{state}\n官方群：{groups}\n别名：{correlation}",
+      "search_mutiple": "找到了多条相关数据{positive_punc}\n{datas}\n在下面发送序号来指定要搜索的内容吧 {neutral}",
+      "index_not_num": "你输入的序号不是整数哦 {negative} 重新发一个序号吧",
+      "index_out_of_range": "你输入的序号不在可选的范围里哦 {neutral}"
     }
   }
 }

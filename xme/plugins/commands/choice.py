@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict, only_positional_fields
+from xme.xmetools.texttools import FormatDict, replace_formatted
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
@@ -67,13 +67,19 @@ async def _(session: CommandSession):
     print(all(x == choices[0] for x in choices), can_choice, choices, has_valid_placeholders(choice, ['member']))
     if all(x == choices[0] for x in choices) and not can_choice and not has_valid_placeholders(choice, ["member"]):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
+    choice = replace_formatted(texttools.me_to_you(str(choice)), **formats)
+    # try:
+    #     choice = choice.format_map(formats)
+    # except ValueError as ex:
+    #     print("error", ex)
+    #     pass
     await send_session_msg(
             session,
             get_message(
                 "plugins",
                 __plugin_name__,
                 'choice_message',
-                choice=only_positional_fields(texttools.me_to_you(str(choice))).format_map(formats),
+                choice=choice,
             ),
             tips=True,
             tips_percent=20,
@@ -143,7 +149,11 @@ def ends_is_or_not_choice(text):
             prefix = "".join([t for t, _ in words[:i]])
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
-            choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
+            if prefix.endswith("可以"):
+                prefix = prefix[:-2]
+                choices = [f"{prefix}{suffix}", f"{prefix}不可以{suffix}"]
+            else:
+                choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
             if suffix and suffix[0] == "有":
                 choices[1] = f"{prefix}没{suffix}"
             if suffix and suffix[0] in ["不", "没"]:

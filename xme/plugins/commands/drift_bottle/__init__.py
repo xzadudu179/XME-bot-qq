@@ -3,8 +3,9 @@ from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
 from xme.xmetools.randtools import messy_image
-from xme.xmetools.texttools import only_positional_fields
+from xme.xmetools.texttools import only_positional_fields, replace_formatted
 from character import get_message
+from traceback import print_exc
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
 from xme.xmetools.texttools import FormatDict, html_text
@@ -31,18 +32,18 @@ class DriftBottle:
 
     def get_formatted_content(self, messy_rate_str, messy_rate):
         try:
-            return only_positional_fields(self.content).format_map(
-                FormatDict(
-                    views=self.views,
-                    likes=self.likes,
-                    messy_rate=messy_rate_str,
-                    sender=self.sender,
-                    group=self.from_group,
-                    id=self.bottle_id,
-                    **{'.'.join(i.split(".")[:-1]): f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
-                )
+            return replace_formatted(
+                self.content,
+                views=self.views,
+                likes=self.likes,
+                messy_rate=messy_rate_str,
+                sender=self.sender,
+                group=self.from_group,
+                id=self.bottle_id,
+                **{'.'.join(i.split(".")[:-1]): f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
             )
         except:
+            print_exc()
             return self.content
 
     def get_table_name():

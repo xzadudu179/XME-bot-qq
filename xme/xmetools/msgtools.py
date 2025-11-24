@@ -2,6 +2,7 @@ from nonebot import MessageSegment, Message, NoneBot
 from aiocqhttp import Event
 import config
 import config
+import base64
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
@@ -83,7 +84,7 @@ async def msg_preprocesser(session, message, send_time=-1):
             message = result
     return message
 
-async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, can_use_command=False, command_func=None, func_kwargs: dict= {}, **kwargs):
+async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, can_use_command=False, command_func=None, func_kwargs: dict= {}, check_prohibited_words=False, **kwargs):
     """异步获取会话回复消息，并设置 prompt
 
     Args:
@@ -132,7 +133,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         return "CMD_END"
     return reply
 
-async def send_session_msg(session: BaseSession, message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False,  **kwargs):
+async def send_session_msg(session: BaseSession, message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, **kwargs):
     message_result = message
     message_result = await msg_preprocesser(session, message)
     if not message_result or message_result == "":

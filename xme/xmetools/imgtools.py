@@ -139,9 +139,9 @@ def read_image(path):
     image = Image.open(path)
     return image
 
-def get_html_image(html_str) -> Image.Image:
+def get_html_image(html_str, height=2500) -> Image.Image:
     name = f"image-{uuid4()}.png"
-    hti.screenshot(html_str=html_str, save_as=name, size=(1920, 2500))
+    hti.screenshot(html_str=html_str, save_as=name, size=(1920, height))
     image = crop_transparent_area(name)
     os.remove(name)
     return image

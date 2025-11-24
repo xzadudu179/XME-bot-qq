@@ -28,7 +28,7 @@ async def get_random_jianmao_data(token: str, qq: str):
         "token": token,
         "qq": qq
     }
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(trust_env=False) as client:
         try:
             response = await client.post(url, json=payload)
             response.raise_for_status()  # 检查 HTTP 状态码

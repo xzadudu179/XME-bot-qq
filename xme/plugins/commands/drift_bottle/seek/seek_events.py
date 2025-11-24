@@ -304,7 +304,7 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 34,
+    "prob": 27,
     "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...但是你快没氧气了...", "你尽全力往上游去...但是你快没有氧气了...", "你尝试尽力地往上游..."],
@@ -1436,7 +1436,8 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": 14.3,
+    "prob": 10.3,
+    "top": True,
     "post_func": None,
     "descs": ["你发现了一些喷气孔", "你发现这里有一些气泡", "有一些气泡正在上浮...", "你发现了一些气泡", "你发现了一根气泡柱..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.FOREST, SeekRegion.DEEPEST, SeekRegion.VOID],

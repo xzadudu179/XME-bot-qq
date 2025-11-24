@@ -18,6 +18,13 @@ async def get_image_files_from_message(bot, msg):
 def only_positional_fields(s: str) -> str:
     return re.sub(r"{(\d+)}", r"{{\1}}", s)
 
+def replace_formatted(s: str, **formats):
+    result = s
+    for k, v in formats.items():
+        result = result.replace("{" + k + "}", str(v))
+    return result
+
+
 class FormatDict(dict):
 
     def __init__(self, *args, **kwargs):

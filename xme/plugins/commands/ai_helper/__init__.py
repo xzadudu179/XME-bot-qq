@@ -5,6 +5,8 @@ from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
 from .commands import clear_history
 import cn2an
+from traceback import format_exc
+import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
@@ -14,6 +16,8 @@ from keys import GLM_API_KEY
 import asyncio
 from xme.plugins.commands.xme_user.classes import user as u
 from zhipuai import ZhipuAI
+
+
 
 cmds = {
         "clear": {
@@ -101,9 +105,12 @@ async def _(session: CommandSession, user: u.User):
         return False
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
+        print("正常")
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     except Exception as ex:
-        await send_session_msg(session, get_message("unknown_error", ex=ex.with_traceback()))
+        print("错误：", ex)
+        await send_session_msg(session, get_message("config", "unknown_error", ex=ex))
+        return False
     return True
 
 def get_history(user: u.User):
@@ -135,7 +142,12 @@ def build_history(user: u.User, ask, ans):
 #     save_to_path("./ai_configs.json", ai_conf, indent=4)
 
 async def talk(session: CommandSession, text, user: u.User):
-    client = ZhipuAI(api_key=GLM_API_KEY)
+    httpx_client = httpx.Client(
+        proxy=None,
+        trust_env=False,
+        timeout=60.0
+    )
+    client = ZhipuAI(api_key=GLM_API_KEY, http_client=httpx_client)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
     with open("./docs.md") as do:
@@ -161,4 +173,5 @@ async def talk(session: CommandSession, text, user: u.User):
         get_cnt += 1
     ans = result_response.choices[0].message.content
     build_history(user=user, ask=text, ans=ans)
+    print("处理结果")
     return result_response.choices[0].message.content

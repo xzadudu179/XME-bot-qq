@@ -1,4 +1,5 @@
 from xme.xmetools.templates import FONTS_STYLE
+from xme.plugins.commands.xme_user.classes.user import User
 
 STATE = {
     0: "活动结束",
@@ -8,7 +9,7 @@ STATE = {
     4: "活动取消"
 }
 
-def get_fusion_card(card_data: dict):
+def get_fusion_card(card_data: dict, u: User):
     state_class = {
         0: "cancelled",
         1: "",
@@ -17,6 +18,7 @@ def get_fusion_card(card_data: dict):
         4: "cancelled",
     }
     c = state_class[card_data['state']]
+    state_c = c
     if card_data["state"] in [0, 3, 4]:
         daysleft_str = {
             0: "活动结束",
@@ -27,16 +29,27 @@ def get_fusion_card(card_data: dict):
         if card_data['time_surplus'] < 10:
             c = "about-begin"
         daysleft_str = f"剩余 {card_data['time_surplus']} 天"
+    title_class = ""
+    if card_data["time_day"] > 3:
+        title_class = "gold"
+    loc_class = ""
+    border_c = ""
+    location_province = u.plugin_datas.get("location", {}).get("adm1")
+    if location_province is not None and location_province.split("省")[0] == card_data['address_province']:
+        loc_class = "gold-small"
+    if loc_class == "gold-small" and title_class == "gold":
+        c = "gold"
+        border_c = "gold-border"
     time_formatted = ".".join(card_data["time_start"].split(".")[1:]) + " - " + ".".join(card_data["time_end"].split(".")[1:])
     return f"""
-        <section class="card">
+        <section class="card {border_c}">
             <div class="img">
                 <div class="cover">
                     <div class="top">
-                        <h1 class="title">{card_data['title']}</h1>
+                        <h1 class="title {title_class}">{card_data['title']}</h1>
                         <div>
-                            <p>{card_data['address_province']}·{card_data['address_city']}</p>
-                            <p class="{c}">{STATE[card_data['state']]}</p>
+                            <p class="{loc_class}">{card_data['address_province']}·{card_data['address_city']}</p>
+                            <p class="{state_c}">{STATE[card_data['state']]}</p>
                         </div>
                     </div>
                     <div class="bottom">
@@ -56,7 +69,7 @@ def get_fusion_card(card_data: dict):
             </div>
         </section>
     """
-def get_countdown_cards(data: list[dict]):
+def get_countdown_cards(data: list[dict], u: User):
     html_head = """
     <!DOCTYPE html>
     <html lang="en">
@@ -75,7 +88,7 @@ def get_countdown_cards(data: list[dict]):
                 --background-color: #1b1b25;
                 --primary-color: #78B9FF;
                 --error-color: #ff7a85;
-                --about-begin-color: #ffdb65;
+                --about-begin-color: #8affff;
                 --on-event-color: #7bffb6;
             }
 
@@ -281,6 +294,23 @@ def get_countdown_cards(data: list[dict]):
                 color: var(--about-begin-color);
             }
 
+            .gold-border {
+                border-color: #3c6a88;
+            }
+
+            .gold-small {
+                color: #9df4ff;
+            }
+
+            .gold {
+                /* background: linear-gradient(45deg, #ffb29b 0%, #ffdc9b 100%); */
+                color: #9df4ff;
+                /* color: transparent; */
+                /* background-clip: text; */
+                /* -webkit-background-clip: text; */
+                /* -moz-background-clip: text; */
+            }
+
         </style>
     </head>
     <body>
@@ -314,6 +344,6 @@ def get_countdown_cards(data: list[dict]):
             <div class="month">
             """
             for card_data in month_datas['list']:
-                html_content += get_fusion_card(card_data)
+                html_content += get_fusion_card(card_data, u)
             html_content += "</div>"
     return html_head + html_content + html_bottom

@@ -40,11 +40,11 @@ async def get_search_fusion_data_msg(data):
     )
     return msg
 
-async def get_countdown_card():
+async def get_countdown_card(u: User):
     response = await get_countdown()
     if response["code"] != "OK":
         return get_message("plugins", __plugin_name__, "error", code=response['code'])
-    html_card = get_countdown_cards(response["data"])
+    html_card = get_countdown_cards(response["data"], u)
     msg = get_message("plugins", __plugin_name__, "countdown", image=(await image_msg(get_html_image(html_card, height=5000))))
     return msg
 
@@ -98,7 +98,7 @@ async def _(session: CommandSession, u: User, arg_list):
     msg = ""
     match mode:
         case "countdown":
-            msg = await get_countdown_card()
+            msg = await get_countdown_card(u)
         case "search":
             #                                              ↓TODO 更多种类搜索
             msg = await search_by_name(session, search, "name")

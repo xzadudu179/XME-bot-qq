@@ -718,7 +718,7 @@ EVENTS = [
     "prob": -1,
     "post_func": None,
     "descs": ["什么都没有发生...你长舒一口气", "还好...你没发现任何东西...", "安静...或许是一种好事", "这里什么都没有...那就足够了", "还好没有任何东西..."],
-    "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.TRENCH, SeekRegion.SHALLOW_SEA, SeekRegion.SHADOWRECK],
+    "regions": [],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: san.value < 80 and san.value >= 50,
     "changes": {
       "san": {

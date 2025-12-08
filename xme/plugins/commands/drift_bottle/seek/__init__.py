@@ -1,6 +1,6 @@
 from xme.xmetools.timetools import *
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias, is_command
+from xme.xmetools.cmdtools import is_command
 from .classes.player import SeekRegion
 from xme.xmetools.bottools import get_group_name
 from xme.xmetools.filetools import b64_encode_file
@@ -571,12 +571,13 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         gain_ratio = 0.7
 
     #########
+    # 去除放弃惩罚
     exit_punish = 1
-    if seek.status == "exit":
-        exit_punish = 0
+    # if seek.status == "exit":
+        # exit_punish = 0
     no_exit_result = int(result_value * gain_ratio)
     result_value = no_exit_result * exit_punish
-    coins_str = f"{player.coins.name}: {player.coins.value} - {player.coins.value - no_exit_result}(深度惩罚){(' * ' + str(exit_punish) + ' (放弃惩罚) ') if exit_punish != 1 else ''}  结算:{result_value}"
+    coins_str = f"{player.coins.name}: {player.coins.value} - {player.coins.value - no_exit_result}(深度惩罚)  结算:{result_value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:
         await u.achieve_achievement(session, "满载无归")
     try:

@@ -107,13 +107,14 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         return
     has_tips = random_percent(tips_percent) and tips
     msg = str(prompt)
-    if msg[-1] in ["\n", "\r"]:
+    if msg and msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
+    is_nline_start = True if msg and msg[0] == "\n" else False
     reply = await session.aget(
         prompt="" if prompt is None else (debug_prefix +
         (
             "\n" if
-                msg[0] != "\n" and
+                is_nline_start and
                 at and
                 linebreak and
                 session.event.group_id is not None

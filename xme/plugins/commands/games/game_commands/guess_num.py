@@ -1,10 +1,11 @@
 from nonebot import CommandSession
 from xme.plugins.commands.games.play import cmd_name
+from xme.xmetools.cmdtools import is_command
 from .game import Game
 from xme.xmetools.bottools import permission
-from xme.xmetools.cmdtools import get_cmd_by_alias
+# from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.plugins.commands.xme_user.classes import user
-from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
+# from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
 import random
 random.seed()
@@ -138,7 +139,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     while True:
         user_input = (await aget_session_msg(session, prompt=f'[CQ:at,qq={session.event.user_id}] ' + get_message("plugins", cmd_name, name, 'guess_prompt',
             prefix=prefix,
-            quit_input=quit_inputs[0]) if ask_to_guess else "")).strip()
+            quit_input=quit_inputs[0]) if ask_to_guess else "", can_use_command=False)).strip()
         # 退出游戏
         if user_input.lower().strip() in quit_inputs:
             await send_session_msg(session, get_message("plugins", cmd_name, name, 'quit_message') if start_guessing else get_message("plugins", cmd_name, name, 'quit_message_not_start', ))
@@ -156,7 +157,8 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
         except:
             print("忽略")
             ask_to_guess = False
-            if get_cmd_by_alias(user_input) != False:
+            # if get_cmd_by_alias(user_input) != False:
+            if is_command(user_input):
                 await send_session_msg(session, get_message("plugins", cmd_name, name, 'cmd_in_game'))
             continue
         result = guess.parse_game_step(num)

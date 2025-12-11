@@ -64,5 +64,5 @@ async def _(session: CommandSession):
         message = get_message("plugins", w.__plugin_name__, "error", ex=ex)
         # message = f"呜呜，无法获取到群员信息：{ex}"
         print(traceback.format_exc())
-    await send_session_msg(session, message, tips=True, tips_percent=30)
+    await send_session_msg(session, message, tips=True, tips_percent=60)
 

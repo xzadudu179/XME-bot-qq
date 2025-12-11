@@ -94,19 +94,21 @@ async def _(session: CommandSession, user: u.User):
         args = parser.parse_args(session.argv)
         # print(session.argv)
         text =  ' '.join(args.text).strip()
-        if args.ctrl and text and len(text) <= 300:
+        MAX_LENGTH = 1000
+        if args.ctrl and text and len(text) <= MAX_LENGTH:
             await send_session_msg(session, parse_control(session, text, user))
             return 2
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False
-    if len(text) > 300:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long'))
+    if len(text) > MAX_LENGTH:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=MAX_LENGTH))
         return False
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
         print("正常")
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
+        await send_session_msg(session,
+                               get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     except Exception as ex:
         print("错误：", ex)
         await send_session_msg(session, get_message("config", "unknown_error", ex=ex))

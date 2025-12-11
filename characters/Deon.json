@@ -2020,9 +2020,9 @@
             "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次",
             "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
             "talking_to_ai": "正在询问 AI！ {positive}",
-            "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}",
+            "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录",
             "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
-            "too_long": "你输入的语句太长啦！要在 300 字以内哦"
+            "too_long": "你输入的语句太长啦！要在 {count} 字以内哦"
         },
         "essence": {
             "desc": "随机精华消息",

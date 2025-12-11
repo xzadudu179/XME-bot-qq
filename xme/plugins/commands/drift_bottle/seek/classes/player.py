@@ -320,37 +320,27 @@ class Player:
                 "line_color": "#b6a9ff4b",
                 }
         }
-        text_color = region_colors.get(self.region.value, {}).get("text_color", "#E2EBFF")
-        card_border_color = region_colors.get(self.region.value, {}).get("card_border_color", "#3ba3f8")
-        card_background_color = region_colors.get(self.region.value, {}).get("card_background_color", "#141430")
-        fail_color = region_colors.get(self.region.value, {}).get("fail_color", "#FC5959")
-        win_color = region_colors.get(self.region.value, {}).get("win_color", "#7FFF7F")
-        ident_color = region_colors.get(self.region.value, {}).get("ident_color", "#59CEFC")
-        dice_color = region_colors.get(self.region.value, {}).get("dice_color", "#BBD0FF")
-        region_color = region_colors.get(self.region.value, {}).get("region_color", "#8DFFCA")
-        effect_color = region_colors.get(self.region.value, {}).get("effect_color", "#8DBEFF")
-        event_color = region_colors.get(self.region.value, {}).get("event_color", "#addaff")
-        attr_color = region_colors.get(self.region.value, {}).get("attr_color", "#addaff")
-        line_color = region_colors.get(self.region.value, {}).get("line_color", "#a9b2ff4b")
-
-        next_region, ratio = get_depth_ratio()
-        # print(next_region, ratio)
-
-        curr_region_colors = region_colors.get(next_region, {})
-        return {
-            "text_color": mix_hex_color_lab(text_color, curr_region_colors.get("text_color", text_color), ratio),
-            "card_border_color": mix_hex_color_lab(card_border_color, curr_region_colors.get("card_border_color", card_border_color), ratio),
-            "card_background_color": mix_hex_color_lab(card_background_color, curr_region_colors.get("card_background_color", card_background_color), ratio),
-            "fail_color": mix_hex_color_lab(fail_color, curr_region_colors.get("fail_color", fail_color), ratio),
-            "win_color": mix_hex_color_lab(win_color, curr_region_colors.get("win_color", win_color), ratio),
-            "ident_color": mix_hex_color_lab(ident_color, curr_region_colors.get("ident_color", ident_color), ratio),
-            "dice_color": mix_hex_color_lab(dice_color, curr_region_colors.get("dice_color", dice_color), ratio),
-            "region_color": mix_hex_color_lab(region_color, curr_region_colors.get("region_color", region_color), ratio),
-            "effect_color": mix_hex_color_lab(effect_color, curr_region_colors.get("effect_color", effect_color), ratio),
-            "event_color": mix_hex_color_lab(event_color, curr_region_colors.get("event_color", event_color), ratio),
-            "attr_color": mix_hex_color_lab(attr_color, curr_region_colors.get("attr_color", attr_color), ratio),
-            "line_color": mix_hex_color_lab(line_color, curr_region_colors.get("line_color", line_color), ratio),
+        default_colors = {
+            "text_color": "#E2EBFF",
+            "card_border_color": "#3ba3f8",
+            "card_background_color": "#141430",
+            "fail_color": "#FC5959",
+            "win_color": "#7FFF7F",
+            "ident_color": "#59CEFC",
+            "dice_color": "#BBD0FF",
+            "region_color": "#8DFFCA",
+            "effect_color": "#8DBEFF",
+            "event_color": "#addaff",
+            "attr_color": "#addaff",
+            "line_color": "#a9b2ff4b",
         }
+        color_dict = {}
+        next_region, ratio = get_depth_ratio()
+        next_region_colors = region_colors.get(next_region, {})
+        for k, v in default_colors.items():
+            curr_color = region_colors.get(self.region.value, {}).get(k, v)
+            color_dict[k] = mix_hex_color_lab(curr_color, next_region_colors.get(k, curr_color), ratio)
+        return color_dict
 
     def get_depth_tip(self, count):
         # 深度改变时 1~5 是 单箭头，5~15 是双箭头 15 以上是三箭头

@@ -102,7 +102,8 @@ async def _(session: CommandSession):
     for i, (id, v) in enumerate(rank_items_short):
         # u_name = (await session.bot.api.get_stranger_info(user_id=id))['nickname']
         nickname = u_names[id]
-        if nickname == u_names.get(sender, "获取名称失败"):
+        # if nickname == u_names.get(sender, "获取名称失败"):
+        if sender == id:
             nickname += "（你）"
         message += '\n' + get_message("plugins", __plugin_name__, cmd_name, 'ranking_row',
             rank=i + 1 + index_addtion,

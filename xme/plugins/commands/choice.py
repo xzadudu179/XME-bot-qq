@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict, replace_formatted
+from xme.xmetools.texttools import FormatDict, replace_formatted, chinese_proportion
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，10~1例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 -1~10 会返回 1~10 1~-10 的随机数',
-    usage=f'(事情列表(空格分隔)或是任意选择语句)',
+    usage=f'(事情列表或是任意选择语句)',
     permissions=[],
     alias=alias
 ))
@@ -33,7 +33,10 @@ async def _(session: CommandSession):
     elif len(args) > 300:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "args_too_long", count=len(args)),)
         return
-    choices = args.split(" ")
+    # split_str = " " if chinese_proportion(args) > 0 else ","
+    # TODO: 分割英文
+    split_str = " "
+    choices = args.split(split_str)
     choice = ""
     can_choice = True
     # 只有一项选择

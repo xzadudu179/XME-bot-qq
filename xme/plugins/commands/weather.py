@@ -70,7 +70,7 @@ async def _(session: CommandSession, user: u.User):
         warnings = output_warning(await get_warnings(location_id))
         if args.warn:
             return await get_warnings_now(session, location_info, warnings)
-        return await get_weather_now(session, location_info, user_location_info, user_search, warnings, args.text[0] if len(args.text) > 0 else "")
+        return await get_weather_now(session, location_info, user_location_info, user_search, warnings, location_text if len(location_text) > 0 else "")
     except Exception as ex:
         traceback.print_exc()
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"), tips=True)

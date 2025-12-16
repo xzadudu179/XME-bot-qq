@@ -145,7 +145,7 @@ def base64_encode(text):
     return base64_string
 
 def contains_blacklisted(expr: str) -> bool:
-    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open']
+    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open', 'attr']
     blacklist_whitelist = ['cos']
     return any(bad in expr for bad in blacklist) and not any(c in expr for c in blacklist_whitelist)
 

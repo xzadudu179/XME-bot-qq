@@ -71,7 +71,10 @@ async def _(session: CommandSession):
         else:
             message = get_message("plugins", __plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
         try:
-            float_result = str(float(result.doit()))
+            float_result = None
+            if result.is_number and result.free_symbols == set():
+                if result.as_integer_ratio()[0].bit_length() < 1024:
+                    float_result = float(result)
         except Exception as ex:
             print(ex)
             print(result)

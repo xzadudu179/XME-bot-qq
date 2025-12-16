@@ -35,7 +35,7 @@ def get_command_list():
 
 def parse_control(session: CommandSession, text: str, user: u.User) -> str:
     text, args = text.split(" ")[0], text.split(" ")[1:]
-    parse_func = lambda text, **kwargs: f"没有这个指令 \"{text}\" 哦"
+    parse_func = lambda text, **_: f"没有这个指令 \"{text}\" 哦"
     cmd = cmds.get(text, None)
     if cmd is not None:
         parse_func = cmd["content"]
@@ -111,7 +111,7 @@ async def _(session: CommandSession, user: u.User):
                                get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     except Exception as ex:
         print("错误：", ex)
-        await send_session_msg(session, get_message("config", "unknown_error", ex=ex))
+        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     return True
 
@@ -159,7 +159,7 @@ async def talk(session: CommandSession, text, user: u.User):
     # print(f"{get_history(session.event.user_id)}\n{text}")
     response = client.chat.asyncCompletions.create(
     # model="glm-4-flashx",
-    model="glm-4-plus",
+    model="glm-4.6",
     messages=[
             {"role": "system","content": role},
             {"role": "user","content": f"{get_history(user)}\n{text}"}

@@ -64,6 +64,7 @@ async def _(session: CommandSession):
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
         choice, can_choice = parse_num_choice(item)
+        print("choice", choice, "canchoice", can_choice)
     formats = FormatDict(
         member=await get_random_group_member(session, session.event.group_id)
     )
@@ -100,7 +101,7 @@ def has_valid_placeholders(s: str, allowed: list[str]) -> bool:
 async def get_random_group_member(session: CommandSession, group_id):
     if group_id is None:
         return random.choice([await get_stranger_name(session.event.user_id), await get_stranger_name(session.self_id)])
-    return await get_group_member_name(group_id=group_id, user_id=random.choice(await session.bot.get_group_member_list(group_id=group_id))["user_id"])
+    return await get_group_member_name(group_id=group_id, user_id=random.choice(await session.bot.get_group_member_list(group_id=group_id))["user_id"], card=True)
 
 def another_or_choice(input_str, another_text="还是"):
     # 还是
@@ -195,8 +196,10 @@ def parse_num_choice(s):
         result = random.randrange(start, end + 1)
         return str(result)
     try:
-        if re.match(r'-?\d+~-?\d+', s):
+        if re.search(r'-?\d+~-?\d+', s):
+            print("匹配", re.match(r'-?\d+~-?\d+', s))
             return re.sub(r'-?\d+~-?\d+', ra_int, s), True
+        print("无匹配")
         return s, False
     except Exception as ex:
         print(ex)

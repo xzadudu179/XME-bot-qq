@@ -73,7 +73,7 @@ async def _(session: CommandSession, user: u.User):
         return await get_weather_now(session, location_info, user_location_info, user_search, warnings, location_text if len(location_text) > 0 else "")
     except Exception as ex:
         traceback.print_exc()
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {ex}"), tips=True)
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {traceback.format_exc()}"), tips=True)
         return False
 
 async def get_warnings_now(session, location_info, warnings):
@@ -105,6 +105,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
 def ouptut_weather_now(weather, air, moon):
     data = weather["now"]
     #  数据更新时间
+    print("data:", data)
     obs_time = iso_format_time(data["obsTime"], '%Y年%m月%d日 %H:%M')
     temp = data["temp"]
     feels_temp = data["feelsLike"]
@@ -126,8 +127,11 @@ def ouptut_weather_now(weather, air, moon):
     print(moon)
     print("moonrise", moonrise)
     print("moonset", moonset)
-    moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]])]["name"]
-    moon_info = f"今日月相为{moon_phase}"
+    moon_phase = moon.get("moonPhase", None)
+    moon_info = "今日月相未知"
+    if moon_phase is not None:
+        moon_phase = moon_phase[get_closest_time([iso_format_time(m["fxTime"]) for m in moon_phase])]["name"]
+        moon_info = f"今日月相为{moon_phase}"
     if moonrise:
         rise_difference = -int(get_time_difference(iso_format_time(moonrise)))
         if moonset:
@@ -136,9 +140,10 @@ def ouptut_weather_now(weather, air, moon):
             set_difference = 0
         # print("Rd", rise_difference, "sd", set_difference)
         if rise_difference > 0 and set_difference < 0:
-            moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]
-            moon_info = f"将在{secs_to_ymdh(rise_difference)}后升起{moon_phase}"
-        else:
+            if moon_phase is not None:
+                moon_phase = moon["moonPhase"][get_closest_time([iso_format_time(m["fxTime"]) for m in moon["moonPhase"]], iso_format_time(moonrise))]["name"]
+                moon_info = f"将在{secs_to_ymdh(rise_difference)}后升起{moon_phase}"
+        elif moon_phase:
             moon_info = f"当前天空上有{moon_phase}"
 
     return textwrap.dedent(f"""

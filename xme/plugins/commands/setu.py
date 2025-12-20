@@ -12,7 +12,7 @@ from xme.xmetools.imgtools import image_msg
 alias = ["涩图", "setu", "色图" ]
 __plugin_name__ = 'setu'
 
-__plugin_usage__= str(CommandDoc(
+__plugin_usage__= CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='涩图？',
@@ -21,7 +21,7 @@ __plugin_usage__= str(CommandDoc(
     usage=f'',
     permissions=["无"],
     alias=alias
-))
+)
 PATH_179 = rf"./data/images/179"
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def setu(session: CommandSession):

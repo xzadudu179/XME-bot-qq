@@ -8,14 +8,14 @@ from character import get_message
 alias = ['set_title', '设置头衔', '头衔']
 permissions = ["是管理员 或 是 SUPERUSER", "在群组里"]
 __plugin_name__ = 'title'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(at想要设置的群友) (头衔名 填写 -delete 删除头衔)',
     permissions=permissions,
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @permission(lambda sender: (sender.is_admin or sender.is_superuser) and sender.is_groupchat, permission_help=" & ".join(permissions))

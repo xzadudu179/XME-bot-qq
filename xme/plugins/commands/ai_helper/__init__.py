@@ -62,14 +62,14 @@ arg_usage = shell_like_usage("OPTION", [
 
 alias = ['ai', 'aih']
 __plugin_name__ = 'ai_helper'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(对话内容) [OPTION]\n{arg_usage}',
     permissions=[],
     alias=alias
-))
+)
 
 # history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 

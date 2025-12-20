@@ -7,7 +7,7 @@ from xme.xmetools.bottools import permission
 alias = [f'{get_message("bot_info", "name")}退群', f'{get_message("bot_info", "name")}退出群聊', f'{CHARACTER}_exit']
 permissions = ["是管理 或 是群主 或 是 SUPERUSER", "在群聊内"]
 __plugin_name__ = 'bot_leave'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='机器人退群',
@@ -16,7 +16,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'',
     permissions=permissions,
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 @permission(lambda sender: (sender.is_superuser or sender.is_admin or sender.is_owner) and sender.is_groupchat, permission_help=" & ".join(permissions))

@@ -8,14 +8,14 @@ from xme.xmetools.loctools import get_user_location
 
 alias = ['7t', '晴天钟']
 __plugin_name__ = '7timers'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<纬度,经度>',
     permissions=["无"],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
 async def _(session: CommandSession):

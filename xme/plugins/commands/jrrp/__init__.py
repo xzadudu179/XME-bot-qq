@@ -14,7 +14,7 @@ from character import get_message
 alias = ["今日人品" , "luck"]
 __plugin_name__ = 'jrrp'
 
-__plugin_usage__= str(CommandDoc(
+__plugin_usage__= CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='今日人品',
@@ -23,7 +23,7 @@ __plugin_usage__= str(CommandDoc(
     usage=f'jrrp <参数>',
     permissions=[],
     alias=alias
-))
+)
 
 
 

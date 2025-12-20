@@ -10,14 +10,14 @@ import config
 alias = ['报时', 'stime']
 permissions = ["在群聊内", "是管理员或群主"]
 __plugin_name__ = 'schtime'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     usage=f'',
     permissions=permissions,
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @permission(lambda sender: (sender.is_groupchat and sender.is_admin or sender.is_owner), permission_help=" & ".join(permissions))

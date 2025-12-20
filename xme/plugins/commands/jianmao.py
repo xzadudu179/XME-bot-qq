@@ -8,14 +8,14 @@ from xme.xmetools.imgtools import image_msg
 
 alias = ['鉴毛', 'jianmao', 'jrjm']
 __plugin_name__ = '今日鉴毛'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'',
     permissions=["无"],
     alias=alias
-))
+)
 
 async def get_random_jianmao_data(token: str, qq: str):
     url = "http://furgon.yjwmidc.com:8000/furry_will/random/"

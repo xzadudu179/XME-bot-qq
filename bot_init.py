@@ -57,7 +57,7 @@ def gen_doc_md():
     usages = []
     for pl in plugins:
         try:
-            usage = pl.usage.replace("/////OUTER/////", "")
+            usage = str(pl.usage).replace("/////OUTER/////", "")
             pl_type = usage.split("]")[0].split("[")[1]
             if pl_type == "指令":
                 # print(pl.name, "是指令")
@@ -92,22 +92,10 @@ def parse_user_doc(doc_str):
     desc = "- **作用**\n\n  " + "\n  ".join((doc_str.split("作用：")[1].split("\n##内容##：")[0]).split("\n"))
     content = "- **指令列表：**\n\n"
     cmds = [item.strip().split(" ")[0].replace(":", "") for item in doc_str.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n") if item]
-    # usages = {item.strip()[1:].split(" ")[0].replace(":", ""): item.strip() for item in doc_str.split("##所有指令用法##：")[1].split("##权限/可用范围##：")[0].split("\n") if item}
-    # perms = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(" & ") for item in doc_str.split("##权限/可用范围##：")[1].split("##别名##：")[0].split("\n") if item}
-    # alias = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(", ") for item in doc_str.split("##别名##：")[1].split("\n########")[0].split("\n") if item}
-    # print(alias)
     md_cmds = []
     for cmd in cmds:
         cmd_info = parse_command_doc(get_userhelp(cmd), 4)
-        # perm_lines = "\n    ".join(f"{i}. **{perm}**" for i, perm in enumerate(perms[cmd]))
-        # print(cmd_info)
         md_cmds.append("\n  ".join(cmd_info.split("\n")))
-    # print(header)
-    # print(desc)
-    # print(content)
-    # print(md_cmds)
-        # md_cmds.append(f'  #### {cmd}\n\n  - **作用**\n\n    {u}\n\n  - **用法**\n\n  ```Text\n  {usages[cmd]}\n  ```\n\n  - **权限/可用范围**\n\n    {perm_lines}\n\n  - **别名**\n\n    {"、 ".join([f"`{a}`" for a in alias[cmd]])}。\n\n  ---\n')
-
     return f'{header}\n\n{desc}\n\n{content}  ' + "\n  ".join(md_cmds)
 
 

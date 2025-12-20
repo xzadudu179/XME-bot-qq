@@ -8,14 +8,14 @@ from xme.xmetools import texttools
 alias = ['bot待办', 'show_bottodo']
 REMOVES = ("rm", 'remove', 'delete', 'del', '删除')
 __plugin_name__ = 'bottodo'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<待办名>',
     permissions=["无"],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):

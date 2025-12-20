@@ -37,7 +37,7 @@ arg_usage = shell_like_usage("OPTIONS", [
 
 game_list_str = "\n".join([f"- {k}\t{v['meta']['desc']}" for k, v in games.games.items()])
 
-docs = str(CommandDoc(
+docs = CommandDoc(
     name=cmd_name,
     desc=desc,
     introduction=get_message("plugins", cmd_name, 'introduction', games=game_list_str),
@@ -45,7 +45,7 @@ docs = str(CommandDoc(
     usage=f'(小游戏名) [OPTIONS]\n{arg_usage}',
     permissions=[],
     alias=alias
-))
+)
 
 def get_game_help(game_name) -> str | bool:
     result = games.games.get(game_name, False)

@@ -18,7 +18,7 @@ commands = ['wife']
 aliases = [
     wife_alias,
 ]
-__plugin_usage__ = str(PluginDoc(
+__plugin_usage__ = PluginDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc="今日老婆相关指令",
@@ -28,4 +28,4 @@ __plugin_usage__ = str(PluginDoc(
     usages=[f"{prop['name']} {prop['usage']}" for prop in command_properties],
     permissions=[prop['permission'] for prop in command_properties],
     alias_list=aliases
-))
+)

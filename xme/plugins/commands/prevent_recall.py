@@ -9,7 +9,7 @@ from character import get_message
 alias = ['防撤回', "precall", "防撤", '防撤回功能']
 permissions = ["在群内使用", "是 SUPERUSER"]
 __plugin_name__ = 'prevrecall'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, "desc"),
     # desc='防撤回',
@@ -18,7 +18,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'<开|关|T|F>',
     permissions=permissions,
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @permission(lambda sender: (sender.is_groupchat and sender.is_superuser), permission_help=" & ".join(permissions))

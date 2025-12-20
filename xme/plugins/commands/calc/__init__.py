@@ -14,14 +14,14 @@ from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
 alias = ['计算', 'cc']
 permissions = ["是 SUPERUSER"]
 __plugin_name__ = 'calc'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(算式)',
     permissions=permissions,
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: True)
 @permission(lambda sender: sender.is_superuser, permission_help=permissions)

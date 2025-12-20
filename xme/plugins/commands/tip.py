@@ -5,14 +5,14 @@ from character import get_message
 
 alias = ['提示']
 __plugin_name__ = 'tip'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     usage=f'<提示数>',
     permissions=["无"],
     alias=alias
-))
+)
 
 
 

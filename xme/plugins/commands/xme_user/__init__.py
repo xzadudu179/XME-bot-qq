@@ -21,7 +21,7 @@ usage = {
 
 commands = moduletools.get_module_funcs('cmd_name', 'usage', __name__)
 commands[cmd_name] = usage
-__plugin_usage__ = str(PluginDoc(
+__plugin_usage__ = PluginDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
@@ -30,7 +30,8 @@ __plugin_usage__ = str(PluginDoc(
     permissions=[prop['permissions'] for prop in commands.values()],
     alias_list=[prop['alias'] for prop in commands.values()],
     simple_output=True
-)) + "\n########\n" + get_message("plugins", __plugin_name__, 'help_suffix', help_cmd=f"{config.COMMAND_START[0]}{cmd_name} {usage['usage']}")
+)
+# print(__plugin_usage__)
 
 @on_command(cmd_name, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
@@ -45,7 +46,7 @@ async def _(session: CommandSession):
         await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name,'no_cmd', cmd=arg))
         return False
     message = get_userhelp(arg)
-    # message = str(CommandDoc(
+    # message = CommandDoc(
     #     **commands[arg]
     # ))
     await send_session_msg(session, message, at=False)

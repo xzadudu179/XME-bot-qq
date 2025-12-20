@@ -12,14 +12,14 @@ from xme.xmetools.imgtools import get_html_image, image_msg
 
 __plugin_name__ = "custom"
 alias = ['自定义', '样式', 'cus']
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<支持的功能>',
     permissions=["无"],
     alias=alias
-))
+)
 
 def get_custom_items_html(*keys, user: User, curr_custom: str, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧",default_value=""):
     html_head = """

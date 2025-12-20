@@ -28,7 +28,7 @@ arg_usage = shell_like_usage("OPTIONS", [
         "desc": get_message("plugins", __plugin_name__, 'arg_warns_desc'),
     }
 ])
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='查看系统状态',
@@ -37,7 +37,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'<地点名> [OPTIONS]\n{arg_usage}',
     permissions=["无"],
     alias=alias
-))
+)
 headers = {
     "X-QW-Api-Key": WEATHER_API_KEY
 }

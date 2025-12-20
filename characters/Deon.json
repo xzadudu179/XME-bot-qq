@@ -65,7 +65,7 @@
             "1049755354 是漠月 BOT 和漠星 BOT 的交流群哦！有什么想聊的或者问的都可以去聊聊呢",
             "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
             "你们要不要帮我想几个 tips（）我觉得很需要",
-            "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2087865718 哦，是漠星的 qq。",
+            "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2335097817 哦，是漠星的 qq。",
             "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}漠星的开发进度哦",
             "如果喜欢{bot_name}，在 https://afdian.com/a/xzadudu179 可以给九镹投喂哦~",
             "九九木有钱钱，饭饭（bushi",
@@ -76,7 +76,7 @@
             "我是 550W。",
             "使用 \"/pick\" 指令来捡漂流瓶~",
             "漂流瓶里有神秘的彩蛋瓶！大家可以试试找找呢",
-            "如果在群内不加好友私聊{bot_name}的话，{bot_name}会收不到你的消息哦，指令也都没有用呢",
+            "如果在群内不加好友私聊{bot_name}的话，{bot_name}有可能会收不到你的消息哦，指令也可能没有用呢",
             "点赞漂流瓶会让漂流瓶的混乱度减少一些哦",
             "请不要随意禁言 / 踢出 {bot_name} 哦~ 需要{bot_name}离开的话使用 \"bot_leave\" 指令就好，禁言 / 踢出容易造成风控",
             "闲着没事干可以找九九扩列呢（1795886524）",
@@ -711,7 +711,7 @@
     "plugins": {
         "answer": {
             "desc": "翻开答案之书",
-            "introduction": "让{bot_name}翻开答案之书的一页，并且读出内容\n\"心中默念你的问题，将会得到你的答案。\"",
+            "introduction": "让{bot_name}翻开答案之书的一页，并且读出内容\n\n\"心中默念你的问题，将会得到你的答案。\"",
             "default_error": [
                 "{negative}，书不见了...",
                 "{negative} 找不到书了...",
@@ -740,7 +740,7 @@
         },
         "choice": {
             "desc": "随机决定事情",
-            "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n{bot_name}会因情况的不同而返回不同的结果，例如：choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数\n其中，有一些可指定的全局变量，在choice里以{xxx}的方式使用即可调用：\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
+            "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n{bot_name}会因情况的不同而返回不同的结果，例如：在 choice 的参数中填写一个数字范围比如 `1~10` 会返回 1 ~ 10 的随机数\n其中，有一些可指定的全局变量，在choice里以{xxx}的方式使用即可调用：\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
             "no_args": [
                 "你还没有说我要决定的事情哦",
                 "{bot_name}还不知道决定什么诶",
@@ -1474,7 +1474,7 @@
         },
         "XME 宇宙": {
             "desc": "XME 宇宙功能相关",
-            "introduction": "需要获取用户信息的功能, 使用 /userhelp <功能名> 来查看详细的帮助。",
+            "introduction": "需要获取用户信息的功能, 使用 `/userhelp <功能名>` 来查看详细的帮助。",
             "userhelp": {
                 "desc": "XME 宇宙用户功能帮助",
                 "introduction": "查看某一用户功能指令的详细帮助",
@@ -1482,7 +1482,7 @@
             },
             "achievement": {
                 "desc": "查看成就列表",
-                "introduction": "查看所有成就，使用 \"/achi 成就名\" 可以查看指定名称的成就详情。",
+                "introduction": "查看所有成就，使用 `/achi 成就名` 可以查看指定名称的成就详情。",
                 "get_achievement": "以下是成就列表哦{positive_punc} {positive}\n--------------第 [{page_now} / {total_pages}] 页--------------\n{achievement_items}\n--------------------\n使用 \"/achi 成就关键词或序号\" 来查看指定成就的详情{positive_punc}",
                 "turn_page_tips": "\n你可以发送 \"<\" \">\" 来向前/后翻页哦",
                 "achievement_item": "- {achi_name} (奖励 {award} {coin_pronoun}{coin_name})\n  {achi_desc}",
@@ -1644,7 +1644,7 @@
             },
             "sendcoin": {
                 "desc": "给人{coin_name}",
-                "introduction": "at 一个人并且给他指定数量的{coin_name}{positive_punc}",
+                "introduction": "at 一个人并且给他指定数量的{coin_name}，星币数以空格分隔，最后会加起来",
                 "no_arg": [
                     "请在参数里 at 你要送给的用户哦",
                     "嗷呜，请在参数里 at 你要送给的用户哦",
@@ -1731,7 +1731,7 @@
             },
             "describe": {
                 "desc": "个人介绍",
-                "introduction": "设置自己在 \"/info\" 指令下可被看到的个人介绍",
+                "introduction": "设置自己在 `/info` 指令下可被看到的个人介绍",
                 "no_arg": [
                     "请在参数里输入你的个人介绍哦 {neutral}\n用法为 \"/desc 个人介绍内容\"",
                     "你要在参数里写上你的个人介绍哦 {neutral}\n用法为 \"/desc 个人介绍内容\"",

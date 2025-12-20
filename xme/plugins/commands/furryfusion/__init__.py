@@ -14,14 +14,14 @@ from character import get_message
 
 alias = ['兽聚汇总', '兽聚', 'fus']
 __plugin_name__ = 'furfusion'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     usage=f'<方法，不填则为兽聚倒计时>',
     permissions=["无"],
     alias=alias
-))
+)
 
 search_state = {
     0: "正常运行中",

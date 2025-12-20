@@ -15,14 +15,14 @@ from character import get_message
 
 alias = ["星币商店" , "商店"]
 
-__plugin_usage__= str(CommandDoc(
+__plugin_usage__= CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'shop <物品序号>',
     permissions=[],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @using_user(save_data=True)

@@ -15,14 +15,14 @@ from xme.xmetools.bottools import get_stranger_name, get_group_name
 
 alias = ['公告', 'anno']
 __plugin_name__ = 'announce'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<(SUPERUSER)公告内容>',
     permissions=["无"],
     alias=alias
-))
+)
 
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)

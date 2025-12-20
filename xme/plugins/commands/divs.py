@@ -8,14 +8,14 @@ from xme.xmetools.numtools import divs
 
 alias = ['divides']
 __plugin_name__ = 'divs'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'(数字)',
     permissions=[],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):

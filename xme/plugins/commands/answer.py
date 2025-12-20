@@ -12,7 +12,7 @@ from character import get_message
 
 alias = ['答案之书', 'ans', '550w']
 __plugin_name__ = 'answer'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     # desc='查看答案之书',
     desc=get_message("plugins", __plugin_name__, "desc"),
@@ -21,7 +21,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'',
     permissions=["无"],
     alias=alias
-))
+)
 
 
 @randtools.change_seed(curr_days())

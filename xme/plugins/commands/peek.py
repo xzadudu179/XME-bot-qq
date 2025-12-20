@@ -15,14 +15,14 @@ from xme.xmetools.msgtools import send_session_msg
 
 alias = ['视奸', '视奸179', 'peekbot']
 __plugin_name__ = 'peek'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<显示器序号>',
     permissions=['在可视奸的群组内'],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):

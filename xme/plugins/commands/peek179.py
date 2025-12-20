@@ -11,14 +11,14 @@ from datetime import datetime
 
 alias = ['peek99', 'kk99', 'kk179']
 __plugin_name__ = 'peek179'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'',
     permissions=["无"],
     alias=alias
-))
+)
 
 PEEK_PATH = rf"./static/img/179"
 images = os.listdir(PEEK_PATH)

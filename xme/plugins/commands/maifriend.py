@@ -27,14 +27,14 @@ async def gen_maifriend(qq, size=640):
 
 alias = ['旅行伙伴', 'maif']
 __plugin_name__ = 'maifriend'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     usage=f'<at 用户>',
     permissions=["无"],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):

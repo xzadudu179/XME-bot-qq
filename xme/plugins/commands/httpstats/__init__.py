@@ -7,7 +7,7 @@ from xme.xmetools.reqtools import fetch_data
 
 alias = ['http', 'http状态码']
 __plugin_name__ = 'httpcode'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='查询状态码',
@@ -16,7 +16,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'<状态码>',
     permissions=[],
     alias=alias
-))
+)
 
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)

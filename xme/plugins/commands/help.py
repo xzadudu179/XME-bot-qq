@@ -1,6 +1,6 @@
 import nonebot
 import config
-from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.doctools import CommandDoc, PluginDoc, Doc
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.timetools import TimeUnit
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
@@ -17,7 +17,7 @@ from xme.xmetools.texttools import most_similarity_str
 alias = ["usage", "docs", "帮助", "h"]
 __plugin_name__ = 'help'
 
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     # desc='显示帮助',
     desc=get_message("plugins", __plugin_name__, 'desc'),
@@ -26,7 +26,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'<功能名>',
     permissions=["无"],
     alias=alias
-))
+)
 
 async def arg_help(arg, plugins, session):
     if arg[0] in config.COMMAND_START:
@@ -41,13 +41,16 @@ async def arg_help(arg, plugins, session):
     if not ask_for_help:
         return False
     for pl in plugins:
-        if f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
+        if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0] for i in pl.usage.usages]:
+            ask_for_help = pl.name.lower()
+        elif isinstance(pl.usage, str) and f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
             ask_for_help = pl.name.lower()
         if pl.name.lower() != ask_for_help: continue
         if pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
             print("发送用户帮助")
             return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
-        return await send_session_msg(session, pl.usage.split("/////OUTER/////")[0].replace("\n\n", "\n") if pl.usage.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
+        u = str(pl.usage)
+        return await send_session_msg(session, u.split("/////OUTER/////")[0].replace("\n\n", "\n") if u.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
@@ -69,11 +72,15 @@ async def _(session: CommandSession, user: u.User):
     for p in plugins:
         index += 1
         try:
-            if p.usage.split(']')[0] in '[指令':
-                total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
-                continue
             page = ""
-            if p.usage.split(']')[0] in '[插件':
+            if isinstance(p.usage, CommandDoc):
+                total_pages += "\n" + f"[指令] /{p.name}    {p.usage.desc}"
+                continue
+            elif isinstance(p.usage, PluginDoc):
+                ...
+                page += f"\n[插件] {p.name}    {p.usage.desc}"
+                # for i, u in enumerate(p.usage.usages)
+            elif p.usage.split(']')[0] in '[插件':
                 page += "\n" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
                 # 插件内 cmds 统计
                 cmd_usages = p.usage.split("##内容##：\n")[1].split("\n##所有指令用法##")[0].split("\n")
@@ -86,6 +93,10 @@ async def _(session: CommandSession, user: u.User):
                     page += f"\n        | /{u.split(':')[0].strip().split(' ')[0]}    {u.split(':')[1].strip()}"
                 page += "\n        --------"
             plugin_pages += page
+            if p.usage.split(']')[0] in '[指令':
+                total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+                continue
+
         except:
             print_exc()
             plugin_pages += "\n" + f"[未知] {p.name}"

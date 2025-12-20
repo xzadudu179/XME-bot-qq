@@ -12,7 +12,7 @@ from xme.xmetools.msgtools import send_session_msg
 
 alias = ['选择', 'cho', '决定']
 __plugin_name__ = 'choice'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     # desc='随机决定事情',
     desc=get_message("plugins", __plugin_name__, "desc"),
@@ -21,7 +21,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'(事情列表或是任意选择语句)',
     permissions=[],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
@@ -47,6 +47,7 @@ async def _(session: CommandSession):
             another_or_choice(choices[0], "或"),
             is_or_not_choice(choices[0]),
             is_or_not_split_choice(choices[0]),
+            ends_can_choice(choices[0]),
             ends_is_or_not_choice(choices[0]),
             # has_or_not_choice(choices[0]),
         ]
@@ -139,6 +140,20 @@ def is_or_not_split_choice(text):
     splits = [prefix + split_str + suffix, prefix + pn + split_str + suffix]
     return splits
 
+def ends_can_choice(text):
+    print("text", text)
+    question_strings = ("否", "吗", "嘛")
+    if not texttools.remove_punctuation(text).endswith(question_strings):
+        return False
+    if "可以" not in text:
+        return False
+    prefix = text.split("可以")[0]
+    split_text = "可以".join(text.split("可以")[1:])
+    choices = [f'{prefix}不可以{split_text}', f'{prefix}可以{split_text}']
+    choices = [texttools.remove_punctuation(texttools.replace_all(*question_strings, text=c)) for c in choices]
+    print("ends choices", choices)
+    return choices
+
 def ends_is_or_not_choice(text):
     question_strings = ("否", "吗", "嘛")
     if not texttools.remove_punctuation(text).endswith(question_strings):
@@ -153,11 +168,10 @@ def ends_is_or_not_choice(text):
             prefix = "".join([t for t, _ in words[:i]])
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
-            if prefix.endswith("可以"):
-                prefix = prefix[:-2]
-                choices = [f"{prefix}{suffix}", f"{prefix}不可以{suffix}"]
-            else:
-                choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
+            # if prefix.endswith("可以"):
+                # prefix = prefix[:-2]
+                # choices = [f"{prefix}可以{suffix}", f"{prefix}不可以{suffix}"]
+            choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
             if suffix and suffix[0] == "有":
                 choices[1] = f"{prefix}没{suffix}"
             if suffix and suffix[0] in ["不", "没"]:

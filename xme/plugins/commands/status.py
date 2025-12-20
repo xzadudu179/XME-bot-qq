@@ -10,7 +10,7 @@ from xme.plugins.commands.xme_user.classes import user
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
-__plugin_usage__ = str(CommandDoc(
+__plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     # desc='查看系统状态',
@@ -19,7 +19,7 @@ __plugin_usage__ = str(CommandDoc(
     usage=f'',
     permissions=["无"],
     alias=alias
-))
+)
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):

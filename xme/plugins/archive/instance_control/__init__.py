@@ -10,7 +10,7 @@ command_properties = [
         'name': 'inst_kill',
         'introduction': get_message("plugins", __plugin_name__, 'kill_introduction'),
         # 'introduction': '杀死 bot 进程',
-        'permission': ["需要 @ bot 或是呼叫 bot", "是 SUPERUSER"],
+        'permission': ["需要 @ bot 或是呼叫 bot 且是 SUPERUSER"],
         'usage': ''
     }
 ]

@@ -1,6 +1,6 @@
 import nonebot
 import config
-from xme.xmetools.doctools import CommandDoc, PluginDoc, Doc
+from xme.xmetools.doctools import CommandDoc, PluginDoc, check_can_show
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.timetools import TimeUnit
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
@@ -41,7 +41,7 @@ async def arg_help(arg, plugins, session):
     if not ask_for_help:
         return False
     for pl in plugins:
-        if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0] for i in pl.usage.usages]:
+        if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0].strip() for i in pl.usage.usages]:
             ask_for_help = pl.name.lower()
         elif isinstance(pl.usage, str) and f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
             ask_for_help = pl.name.lower()
@@ -74,29 +74,23 @@ async def _(session: CommandSession, user: u.User):
         try:
             page = ""
             if isinstance(p.usage, CommandDoc):
+                if not check_can_show(p.usage.permissions):
+                    continue
                 total_pages += "\n" + f"[指令] /{p.name}    {p.usage.desc}"
                 continue
             elif isinstance(p.usage, PluginDoc):
-                ...
                 page += f"\n[插件] {p.name}    {p.usage.desc}"
-                # for i, u in enumerate(p.usage.usages)
-            elif p.usage.split(']')[0] in '[插件':
-                page += "\n" + f"{p.usage.split(']')[0]}] {p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
-                # 插件内 cmds 统计
-                cmd_usages = p.usage.split("##内容##：\n")[1].split("\n##所有指令用法##")[0].split("\n")
-                if "/////OUTER/////" in p.usage:
-                    cmd_usages = p.usage.split("##内容##：\n")[1].split("\n/////OUTER/////##所有指令用法##")[0].split("\n")
-
-                # print(cmd_usages)
-                for u in cmd_usages:
-                    print(u)
+                for i, u in enumerate(p.usage.contents):
+                # for u in p.usage.contents:
+                    perm = p.usage.permissions[i]
+                    # 忽略 SUPERUSER 指令
+                    show = check_can_show(perm)
+                    if not show:
+                        continue
                     page += f"\n        | /{u.split(':')[0].strip().split(' ')[0]}    {u.split(':')[1].strip()}"
                 page += "\n        --------"
-            plugin_pages += page
-            if p.usage.split(']')[0] in '[指令':
-                total_pages += "\n" + f"{p.usage.split(']')[0]}] {config.COMMAND_START[0] if p.usage.split(']')[0] in '[指令' else ''}{p.name}    " + p.usage.split('简介：')[1].split('\n')[0].strip()
+                plugin_pages += page
                 continue
-
         except:
             print_exc()
             plugin_pages += "\n" + f"[未知] {p.name}"

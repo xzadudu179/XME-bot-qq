@@ -3,6 +3,14 @@ import config
 
 DEFAULT_PERMISSIONS = "无/未标注"
 
+def check_can_show(perms):
+    show = True
+    for p in perms:
+        if p not in "是 SUPERUSER":
+            break
+        show = False
+    return show
+
 class Doc():
     def __init__(self, name: str, desc: str, introduction: str) -> None:
         self.name = name
@@ -10,7 +18,19 @@ class Doc():
         self.introduction = introduction
 
 class PluginDoc(Doc):
-    def __init__(self, name, desc, introduction, contents: Iterable[str], usages: Iterable[str], permissions: Iterable[Iterable[str]] = [[]], alias_list: Iterable[Iterable[str]] = [[]], simple_output: bool = False, other_info="") -> None:
+    def __init__(
+            self,
+            name,
+            desc,
+            introduction,
+            contents: Iterable[str],
+            usages: Iterable[str],
+            permissions: Iterable[Iterable[str]] = [[]],
+            alias_list: Iterable[Iterable[str]] = [[]],
+            simple_output: bool = False,
+            other_info="",
+            show_superuser_cmd=False
+        ) -> None:
         super().__init__(name, desc, introduction)
         self.permissions = permissions
         self.contents = contents
@@ -18,6 +38,7 @@ class PluginDoc(Doc):
         self.alias_list = alias_list
         self.simple_output = simple_output
         self.other_info = other_info
+        self.show_superuser_cmd = show_superuser_cmd
 
     def __str__(self) -> str:
         alias_lines = ""
@@ -25,6 +46,9 @@ class PluginDoc(Doc):
         contents_lines = ''
         permissions_lines = ""
         for i, content in enumerate(self.contents):
+            show = check_can_show(self.permissions[i])
+            if not show:
+                continue
             line_head = f'  {content.split(": ")[0]}: '
             try:
                 alias_lines += f"{line_head}{', '.join(self.alias_list[i])}\n"

@@ -243,7 +243,8 @@ from .seek import *
 aliases = [
     throw_alias,
     pickup_alias,
-    cthulhu_alias
+    cthulhu_alias,
+    seek_alias
 ]
 __plugin_usage__ = PluginDoc(
     name=__plugin_name__,
@@ -269,7 +270,6 @@ EXAMPLE_BOTTLE = DriftBottle(
     comments=[
         {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "好诶，是漠月~ 那我就在这里留下一条长长的评论吧~", "likes": 1},
         {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "摸摸漠月~ 第二次捡到了", "likes": 1}
-
     ],
 )
 

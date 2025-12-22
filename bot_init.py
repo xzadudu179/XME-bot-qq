@@ -37,8 +37,6 @@ USERS = {
 }
 
 BOT_SETTINGS = {
-    "prevent_recall": {
-    },
     "announcement": "",
     "latest_update": [],
     "locations": {

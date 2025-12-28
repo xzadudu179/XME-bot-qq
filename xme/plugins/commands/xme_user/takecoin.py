@@ -16,7 +16,7 @@ usage = {
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', ),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'(at目标用户) ({coin_name}数量 以空格分隔)',
-    "permissions": ["在群聊内", "是 SUPERUSER 或 是 bot 自己"],
+    "permissions": ["在群聊内 且是 SUPERUSER 或 是 bot 自己"],
     "alias": alias
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)

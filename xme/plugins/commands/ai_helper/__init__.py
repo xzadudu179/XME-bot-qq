@@ -107,8 +107,11 @@ async def _(session: CommandSession, user: u.User):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
         print("正常")
+        t = await talk(session, text, user)
+        if not t:
+            return False
         await send_session_msg(session,
-                               get_message("plugins", __plugin_name__, 'talk_result', talk=(await talk(session, text, user)), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
+                               get_message("plugins", __plugin_name__, 'talk_result', talk=(t), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
     except Exception as ex:
         print("错误：", ex)
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
@@ -173,7 +176,12 @@ async def talk(session: CommandSession, text, user: u.User):
         task_status = result_response.task_status
         await asyncio.sleep(0.5)
         get_cnt += 1
-    ans = result_response.choices[0].message.content
-    build_history(user=user, ask=text, ans=ans)
-    print("处理结果")
-    return result_response.choices[0].message.content
+    try:
+        ans = result_response.choices[0].message.content
+        build_history(user=user, ask=text, ans=ans)
+        print("处理结果")
+        return result_response.choices[0].message.content
+    except AttributeError as ex:
+        print("attribute 错误: ", ex)
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
+        return False

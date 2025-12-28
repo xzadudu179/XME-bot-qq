@@ -1,5 +1,6 @@
 # import config
 from xme.xmetools import jsontools
+from xme.xmetools.texttools import replace_formatted
 from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
 import config
@@ -83,7 +84,8 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     # print(feedbacks)
     try:
         # print(str(result))
-        return str(result).format(
+        return replace_formatted(
+            str(result),
             **kwargs,
             neutral=str_choice(feedbacks['neutral']),
             negative_plus=str_choice(feedbacks['negative_plus']),

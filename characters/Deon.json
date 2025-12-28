@@ -740,7 +740,7 @@
         },
         "choice": {
             "desc": "随机决定事情",
-            "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n{bot_name}会因情况的不同而返回不同的结果，例如：在 choice 的参数中填写一个数字范围比如 `1~10` 会返回 1 ~ 10 的随机数\n其中，有一些可指定的全局变量，在 choice 里以 `{xxx}` 的方式使用即可调用：\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
+            "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n\n{bot_name}会因情况的不同而返回不同的结果，例如：在 choice 的参数中填写一个数字范围比如 `1~10` 会返回 1 ~ 10 的随机数\n\n其中，有一些可指定的全局变量，在 choice 里以 `{xxx}` 的方式使用即可调用：\n\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
             "no_args": [
                 "你还没有说我要决定的事情哦",
                 "{bot_name}还不知道决定什么诶",
@@ -912,7 +912,7 @@
         },
         "今日老婆": {
             "desc": "今日老婆相关指令",
-            "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n注意：这个功能仅供娱乐 {negative}",
+            "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n注意：这个功能仅供娱乐 uwu",
             "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
             "wife_message": [
                 "{who}今日的群老婆是:\n{avatar}\n{name} ({user_id})",
@@ -1121,7 +1121,7 @@
         },
         "漂流瓶": {
             "desc": "漂流瓶相关指令",
-            "introduction": "扔/捡来自各个群组的漂流瓶{positive_punc} 每人每小时可以捡 30 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少 {positive}",
+            "introduction": "扔/捡来自各个群组的漂流瓶。每人每小时可以捡 30 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少",
             "throw_introduction": "扔一个漂流瓶（文本和图片）",
             "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
             "seek": {
@@ -2021,6 +2021,7 @@
             "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
             "talking_to_ai": "正在询问 AI！ {positive}",
             "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录",
+            "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
             "limited": "{negative}，你和 AI 对话的次数已经达到上限啦，下一小时再来吧...",
             "too_long": "你输入的语句太长啦！要在 {count} 字以内哦"
         },

@@ -45,10 +45,16 @@ async def arg_help(arg, plugins, session):
             ask_for_help = pl.name.lower()
         elif isinstance(pl.usage, str) and f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
             ask_for_help = pl.name.lower()
+        # print(ask_cmd, ask_for_help, pl.name.lower())
+        user_help = None
+        try:
+            user_help = get_userhelp(ask_cmd)
+            if user_help is not None and pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
+                print("发送用户帮助")
+                return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
+        except:
+            pass
         if pl.name.lower() != ask_for_help: continue
-        if pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
-            print("发送用户帮助")
-            return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
         u = str(pl.usage)
         return await send_session_msg(session, u.split("/////OUTER/////")[0].replace("\n\n", "\n") if u.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
 

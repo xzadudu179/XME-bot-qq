@@ -4,9 +4,11 @@ import config
 DEFAULT_PERMISSIONS = "无/未标注"
 
 def check_can_show(perms):
+    # print(perms)
     show = True
     for p in perms:
-        if p not in "是 SUPERUSER":
+        if "是 SUPERUSER" not in p:
+            # print(p, "不是superuser")
             break
         show = False
     return show

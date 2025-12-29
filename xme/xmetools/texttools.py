@@ -2,6 +2,7 @@ import re
 from pypinyin import lazy_pinyin
 import itertools
 import base64
+from nonebot import MessageSegment, Message
 import string
 import hashlib
 from difflib import SequenceMatcher
@@ -211,15 +212,41 @@ def remove_suffix(text: str, suffix: tuple | str) -> str:
             return text[:-len(p)]
     return text
 
+def is_chinese(c) -> bool:
+    pattern = r'[^\x00-\xff]'
+    if re.match(pattern=pattern, string=c):
+        return True
+    return False
+
+def get_msg_len(texts: Message) -> int:
+    """获取用于 qq 消息的长度，字母算 1， 中文算 2，会计算空行占用
+
+    Args:
+        text (str): qq 消息文本
+
+    Returns:
+        int: 消息总长度
+    """
+    def get_text_len(text):
+        format_text = text.strip().replace("\r", "\n")
+        total_line_count = 0
+        texts = text.split("\n")
+        if len(texts) <= 1:
+            return calc_len(format_text)
+        for t in texts[:-1]:
+            print(t)
+            total_line_count += 36 - calc_len(t) % 36
+        return total_line_count + calc_len(format_text.replace("\n", ""))
+    total = 0
+    for t in texts.extract_plain_text():
+        total += get_text_len(t)
+    return total
+
 # 中文占比
 def chinese_proportion(input_str) -> float:
     tfs = []
-    pattern = r'[^\x00-\xff]'
     for c in input_str:
-        if re.match(pattern=pattern, string=c):
-            tfs.append(True)
-        else:
-            tfs.append(False)
+        tfs.append(is_chinese(c))
 
     true_count = sum(tfs)
     total_count = len(tfs)
@@ -232,15 +259,12 @@ def calc_spacing(texts: list[str], target: str, padding: int=0) -> int:
     return calc_len(max(texts, key=lambda x: calc_len(x))) - calc_len(target) + padding
 
 def calc_len(text):
-    pattern = r'[^\x00-\xff]'
     length = 0
     for char in text:
         # 如果是中文字符，加2
-        if re.match(pattern, char):
-            # print(char)
+        if is_chinese(char):
             length += 2
         else:
-            # 如果是其他字符，加1
             length += 1
     return length
 

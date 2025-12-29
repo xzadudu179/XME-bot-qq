@@ -1,8 +1,8 @@
 from nonebot import MessageSegment, Message, NoneBot
-from aiocqhttp import Event
+from aiocqhttp import Event, ApiError
 import config
 import config
-import base64
+from xme.xmetools.texttools import get_msg_len
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
@@ -134,8 +134,9 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         return "CMD_END"
     return reply
 
-async def send_session_msg(session: BaseSession, message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, **kwargs):
-    message_result = message
+async def send_session_msg(session: BaseSession, message: Message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, **kwargs):
+    message_result = Message(message)
+    list_msg = message_result
     message_result = await msg_preprocesser(session, message)
     if not message_result or message_result == "":
         print(f"bot 要发送的消息 {message} 已被阻止/没东西")
@@ -148,8 +149,17 @@ async def send_session_msg(session: BaseSession, message, at=True, linebreak=Tru
     msg = str(message_result)
     if msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
-    # print(kwargs)
-    await session.send(debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_message("bot_info", "tips")), at_sender=at, **kwargs)
+    msg_dict = {
+        "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)
+    }
+    send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_message("bot_info", "tips"))
+    # 太长的消息用聊天记录发送
+    try:
+        if get_msg_len(list_msg) > 1200 and session.event.group_id is not None:
+            return await send_forward_msg(session.bot, session.event, [change_group_message_content(msg_dict, send_msg)])
+    except ApiError:
+        return
+    await session.send(send_msg, at_sender=at, **kwargs)
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

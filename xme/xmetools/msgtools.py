@@ -156,6 +156,8 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     # 太长的消息用聊天记录发送
     try:
         if get_msg_len(list_msg) > 1200 and session.event.group_id is not None:
+            if at:
+                await session.send("", at_sender=at, **kwargs)
             return await send_forward_msg(session.bot, session.event, [change_group_message_content(msg_dict, send_msg)])
     except ApiError:
         return

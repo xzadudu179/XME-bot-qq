@@ -138,7 +138,8 @@
       "不要往大海里扔重复或类似内容的瓶子哦，会被{bot_name}捞出来（？",
       "请输入文本",
       "其实你们用 \"/lot\" 亏的钱并没有消失，只是给{bot_name}了",
-      "报时功能里可以看更新日志哦~"
+      "报时功能里可以看更新日志哦~",
+      "想要查看更多 tips 的话，可以使用 \"/tip\" 指令（？"
     ]
   },
   "apis": {
@@ -621,7 +622,10 @@
     "time": "{period}好呀{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntip: {tips}",
     "hitokoto_error": "xwx 获取消息发生错误",
     "lottery_info": "昨天通过大家在抽奖机的抽奖，使我{get_lose_pron}了 {lottery_total} {coin_pronoun}{coin_name} {neutral} (+{lottery_get}, -{lottery_lose})",
-    "new_year": "新年好哇~！{positive_plus}"
+    "new_year": [
+      "新年好哇~！{positive_plus}",
+      "新年快乐！{positive_plus}"
+    ]
   },
   "event_parsers": {
     "private_message_copy_prefix": [

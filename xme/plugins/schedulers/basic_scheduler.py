@@ -85,6 +85,7 @@ async def _():
     print("新年报时")
     await msgtools.send_to_groups(bot, get_message("schedulers", "new_year"))
 
+
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
     if not (6 <= datetime.now().hour <= 24): return

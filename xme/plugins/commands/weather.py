@@ -1,12 +1,14 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
-from nonebot.argparse import ArgumentParser
+from xme.xmetools.bottools import XmeArgumentParser
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.timetools import TimeUnit, iso_format_time, get_time_difference, secs_to_ymdh, get_closest_time, get_time_now
 from xme.xmetools.reqtools import fetch_data
 from xme.plugins.commands.xme_user.classes import user as u
 import traceback
+from config import COMMAND_START
+
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.loctools import search_location, get_user_location
 from keys import WEATHER_API_KEY
@@ -47,7 +49,8 @@ headers = {
 @u.limit(__plugin_name__, 5, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.MINUTE, count_limit=5)
 async def _(session: CommandSession, user: u.User):
     # print(session.current_arg_text)
-    parser = ArgumentParser(session=session, usage=arg_usage)
+    parser = XmeArgumentParser(session=session, usage=arg_usage)
+    parser.exit_mssage = get_message("config", "arg_failed", command=f"{COMMAND_START[0]}{__plugin_name__} -h")
     parser.add_argument('-w', '--warn', action='store_true', default=False)
     parser.add_argument('text', nargs='*')
     # print(session.argv)

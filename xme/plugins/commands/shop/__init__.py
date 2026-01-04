@@ -19,7 +19,7 @@ __plugin_usage__= CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'shop <物品序号>',
+    usage=f'<物品序号>',
     permissions=[],
     alias=alias
 )

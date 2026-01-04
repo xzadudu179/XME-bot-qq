@@ -63,7 +63,7 @@ def get_game_help(game_name) -> str | bool:
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True, shell_like=True)
 @user.using_user(True)
 async def _(session: CommandSession, user: user.User):
-    parser = XmeArgumentParser(session=session, usage=docs)
+    parser = XmeArgumentParser(session=session, usage=str(docs))
     parser.exit_mssage = get_message("config", "arg_failed", command=f"{COMMAND_START[0]}{cmd_name} -h")
     parser.add_argument('-a', '--args', nargs='+')
     parser.add_argument('-i', '--info', action='store_true')

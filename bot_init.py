@@ -75,7 +75,7 @@ def gen_doc_md():
             traceback.print_exc()
             continue
     with open("docs.md", 'w', encoding='utf-8') as file:
-        file.write("\n\n".join(usages))
+        file.write("\n\n".join(usages.replace("\"", "`")))
 
 def parse_command_doc(doc_str, header_level=3):
     header = "#" * header_level + " " + doc_str.split("\n")[0]

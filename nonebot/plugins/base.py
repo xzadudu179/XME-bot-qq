@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession, permission as perm
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command, permission as perm
 from nonebot.message import unescape
 
 

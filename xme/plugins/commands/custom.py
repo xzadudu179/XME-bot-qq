@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.cmdtools import use_args, send_cmd

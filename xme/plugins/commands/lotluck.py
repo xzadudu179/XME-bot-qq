@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.jsontools import read_from_path
 from xme.plugins.commands.xme_user.classes.user import User, using_user

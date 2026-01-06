@@ -3,7 +3,8 @@ from xme.xmetools import jsontools
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.bottools import permission
 from . import DriftBottle
 

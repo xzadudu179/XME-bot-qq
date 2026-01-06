@@ -2,7 +2,8 @@
 from xme.xmetools.jsontools import change_json, get_json_value
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.doctools import CommandDoc
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.bottools import permission
 from character import get_message
 import config

@@ -1,7 +1,8 @@
 from xme.xmetools.rsstools import *
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.doctools import CommandDoc
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from character import get_message
 
 alias = ["九九文章", "rss179", "posts179", "blogposts", "posts", "post"]

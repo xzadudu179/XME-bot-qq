@@ -22,7 +22,8 @@ from .classes.player import Player
 from .classes.event import Event, SPECIAL_EVENTS
 random.seed()
 from .. import DriftBottle, get_random_bottle
-from nonebot import on_command, CommandSession, MessageSegment
+from nonebot import CommandSession, MessageSegment
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from uuid import uuid4
 hti = Html2Image()

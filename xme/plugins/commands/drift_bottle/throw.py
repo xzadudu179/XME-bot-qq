@@ -13,7 +13,8 @@ from traceback import format_exc
 import config
 import re
 import os
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'

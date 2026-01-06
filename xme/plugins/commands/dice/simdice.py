@@ -1,5 +1,6 @@
 # 简单骰子
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.plugins.commands.dice import __plugin_name__
 import config
 from xme.xmetools.msgtools import send_session_msg

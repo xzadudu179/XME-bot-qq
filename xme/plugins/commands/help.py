@@ -9,7 +9,9 @@ from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.xme_user import get_userhelp
 from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
 from xme.xmetools.imgtools import image_msg
-from nonebot import on_command, CommandSession, MessageSegment
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
+from nonebot import MessageSegment
 from traceback import print_exc
 from character import get_message
 from xme.xmetools.texttools import most_similarity_str

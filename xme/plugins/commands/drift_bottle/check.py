@@ -8,7 +8,8 @@ from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
 import random
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg
 from . import DriftBottle
 

@@ -1,6 +1,7 @@
 cmd_name = 'inventory'
 from xme.plugins.commands.xme_user import __plugin_name__
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg
 from ..classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun

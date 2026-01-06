@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from keys import JIANMAO_TOKEN, JIANMAO_QQ, generate_jwt
 import httpx

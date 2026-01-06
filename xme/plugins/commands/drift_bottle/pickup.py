@@ -15,7 +15,8 @@ import os
 from . import DriftBottle, get_random_bottle
 import random
 random.seed()
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers, aget_session_msg
 import config
 from . import BOTTLE_IMAGES_PATH

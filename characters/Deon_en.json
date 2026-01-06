@@ -1,0 +1,2110 @@
+{
+    "bot_info": {
+        "name": "Deon",
+        "author": "xzadudu179",
+        "nickname": [
+            "Deon",
+            "deon"
+        ],
+        "feedbacks": {
+            "disgust": [],
+            "sad": [],
+            "negative": [
+                "uwu"
+            ],
+            "negative_plus": [
+                "xwx"
+            ],
+            "neutral": [
+                "ovo",
+                "awoo",
+                "awoo——"
+            ],
+            "shout": [
+                "awoo!",
+                "woof!"
+            ],
+            "bless": [
+                "Nice~",
+                "Yay~",
+                "Great~",
+                "Great~ owo!",
+                "owo!"
+            ],
+            "happy": [
+                "awoo~",
+                "awoo!"
+            ],
+            "excellent": [
+                "Yay!",
+                "Nice!",
+                "Great!"
+            ],
+            "positive_punc": [
+                "~"
+            ],
+            "positive": [
+                "owo",
+                "awoo!"
+            ],
+            "positive_plus": [
+                "owo!",
+                "awoo~!",
+                "owo awoo~!",
+                "owo~!"
+            ]
+        },
+        "tips": [
+            "{bot_name} may send messages at random",
+            "To enable {bot_name}'s hourly announcements in another group, ask an admin to use \"/schtime\"",
+            "Use \"/stats\" to check {bot_name}'s status",
+            "1049755354 is the discussion group for Deon BOT and Destar BOT — feel free to join",
+            "See https://docs.xme.179.life/#/help for more detailed help than \"/help\", including a glossary",
+            "Would you like to help me think of some tips? I really need them",
+            "Destar is an admin bot in development — if curious add 2335097817 (Destar's QQ).",
+            "You can support 99 at https://afdian.com/a/xzadudu179 to speed up {bot_name}'s development",
+            "If you like {bot_name}, you can support 99 at https://afdian.com/a/xzadudu179",
+            "99 has no money (just kidding)",
+            "https://www.xzadudu179.top is 99's personal homepage / cyber business card",
+            "Although these are {bot_name} tips, they were sent by 99",
+            "Use \"/s\" to sign in",
+            "You're welcome to invite {bot_name} to your groups — spread the word!",
+            "I am 550W.",
+            "Use \"/pick\" to pick up a message in a bottle",
+            "There are mysterious easter-egg bottles in the sea — try to find them",
+            "If you privately message {bot_name} from a non-friend account in a group, {bot_name} may not receive it and commands might not work",
+            "Liking a bottle reduces its chaos level",
+            "Please don't mute or kick {bot_name} — use \"bot_leave\" if you want it to leave, muting/kicking can cause issues",
+            "If bored, you can add 99 (1795886524)",
+            "Random numbers are how 550W influences {bot_name}",
+            "Your support makes {bot_name} better",
+            "Destar and Deon are friends",
+            "Deon lives in a desert on a distant planet...",
+            "Use \"/help\" to view {bot_name}'s general help",
+            "{bot_name} stores message logs — please don't make it output bad content",
+            "Ask \"xxx is prime?\" and {bot_name} will tell you!",
+            "You might catch 99 in Nanjing (maybe)",
+            "The cause of bottle contamination is unclear... it may involve something octopus-like.",
+            "{bot_name} is open source: https://github.com/xzadudu179/XME-bot-qq",
+            "If you like {bot_name}, feel free to promote it",
+            "Sometimes {bot_name} restarts for debugging/updates — if it doesn't reply, try again later",
+            "For {bot_name}'s safety, don't add it to groups with prohibited content",
+            "179 is a number everywhere",
+            "If admins want {bot_name} to leave, send \"/bot_leave\"",
+            "If you have suggestions, private message {bot_name}",
+            "awmc",
+            "If {bot_name} stops responding, try \"/ping\"",
+            "If you like {bot_name}, recommend it to others",
+            "You can request {bot_name} be added to other groups",
+            "Use \"/ai text\" to chat with AI or ask about commands",
+            "Use \"/alias command_name\" to see a command's aliases",
+            "The \"/ans\" command contains an easter egg about 550W — try \"/ans specific question\"",
+            "If you find illicit content in a bottle, send \"-rep\" after picking it up to report it",
+            "Feel free to throw and pick more bottles",
+            "Talk to group admins before inviting {bot_name}",
+            "Talking to {bot_name} is, in a sense, talking to 99 (private chat only)",
+            "Private messages from non-friends may not reach {bot_name}",
+            "Use \"/h command_or_feature\" for full command/feature help",
+            "Don't treat {bot_name} as a (pure) machine — it has quirks",
+            "You can send tips for 99 — send them when ready",
+            "The {coin_name} from \"/lot xxx\" is issued by {bot_name} and affects {bot_name}'s balance; it's tallied daily",
+            "In help, parameters in \"<>\" are optional; don't include brackets when using them",
+            "In help, parameters in \"()\" are required; don't include parentheses when using them",
+            "{bot_name} will like friends' posts",
+            "Try \"/seek\" to play treasure hunt",
+            "Use \"/anno\" to view current announcements — admins can enable announcements with \"/stime\"",
+            "Use \"/al command_or_alias\" to view all aliases of a command",
+            "Collecting all of {bot_name}'s achievements? Use \"/achi\" to view them",
+            "d.n. is not meters — 1 d.n. ≈ 5~20 meters; deeper means greater depth; each step in \"/seek\" takes 1~tens of minutes",
+            "If you find a bug, message Deon or report in 1049755354",
+            "Bottle skins are available in the shop — use \"/shop\"",
+            "You can customize bottle styles after purchase in \"/cus bottle\"",
+            "If you have bottle card designs, send them to 99 or {bot_name}",
+            "Deon BOT is not actually Deon...",
+            "To disable hourly announcements use \"/stime\" — use it again to enable",
+            "Use \"/lot all\" to invest your maximum {coin_name} in the lottery",
+            "Some people will never know what's inside \"/setu\"...",
+            "Use \"/kk99\" to check 99 (maybe)",
+            "99 has been watching you...",
+            "\"/ai\" won't send weird things; if it does, try \"/ai -c clear\"",
+            "Be careful: \"/ai\" may hallucinate while trying to fulfill {bot_name}'s functions",
+            "Are tips a kind of bottle that belongs to 99?",
+            "Remember your morning class",
+            "𝐚𝐧𝐝 𝐢𝐧 𝐭𝐡𝐚𝐭 𝐥𝐢𝐠𝐡𝐭, 𝐈 𝐟𝐢𝐧𝐝 𝐝𝐞𝐥𝐢𝐯𝐞𝐫𝐚𝐧𝐜𝐞.",
+            "Don't throw duplicate or similar bottles into the sea — {bot_name} might fetch them",
+            "Please enter text",
+            "The losses from \"/lot\" were given to {bot_name}",
+            "You can view the changelog in the hourly announcements",
+            "Use \"/tip\" to see more tips",
+            "Sadly, there are no humans in the tips",
+            "Use \"/h command_name\" for detailed help",
+            "The AI in \"/ai\" knows Deon's commands and can help, but beware hallucinations"
+        ]
+    },
+    "apis": {
+        "search_location_error": "Error occurred while searching location {negative}\nCode: {code}\nMessage: {msg}"
+    },
+    "config": {
+        "arg_failed": "Command arguments are invalid {neutral} — try sending \"{command}\"{positive_punc}",
+        "image_summary": "[Deon's image]",
+        "face_summary": "[Deon's emoji]",
+        "shell_error": "Command parameters are invalid; try \"/{command_name} -h\" for help {neutral}",
+        "unknown_error": "Command execution failed... {negative}\nError content: {ex}",
+        "busy": "I'm still processing the command... uwu",
+        "default_validation_failure_expression": "Message format error {negative_plus} — check your input or ask 179",
+        "pid_prime": "My current PID {pid} is prime~",
+        "anno_message": "{anno}",
+        "no_permission": [
+            "Cannot execute {negative}\nRequired permissions: {permission}",
+            "Insufficient conditions to execute this command {negative}\nRequired: {permission}",
+            "Cannot execute this command...{negative}\nRequirements: {permission}",
+            "You can't execute this command...{negative}\nRequirements: {permission}"
+        ],
+        "fuzzy_cmd": [
+            "It seems you mistyped the command {neutral} — did you mean \"{new_cmd}\"? If so, reply \"y\"",
+            "You may have mistyped the command {neutral} — did you mean \"{new_cmd}\"? Reply \"y\" to confirm"
+        ],
+        "achievement_message": [
+            "You unlocked achievement \"{achievement}\"! {positive} You receive {award} {coin_pronoun} {coin_name}!\nUse \"/achi\" to view all your achievements",
+            "You unlocked achievement \"{achievement}\"! {positive} Award: {award} {coin_pronoun} {coin_name}!\nUse \"/achi\" to view all achievements",
+            "You unlocked achievement \"{achievement}\"{positive_punc} {positive} — reward: {award} {coin_pronoun} {coin_name}!\nUse \"/achi\" to view all achievements"
+        ],
+        "hidden_achievement_message": [
+            "You unlocked a hidden achievement \"{achievement}\"! {positive} Reward: {award} {coin_pronoun} {coin_name}!\nUse \"/achi\" to view all achievements",
+            "{positive} You unlocked a hidden achievement \"{achievement}\"! You get {award} {coin_pronoun} {coin_name}!\nUse \"/achi\" to view all achievements"
+        ],
+        "anno_temp_suffix": "Private message me to forward your message to 99 (the developer) {positive_punc}",
+        "refresh_reports": "There are crash reports pending upload {neutral} — uploading now...",
+        "message_time": "This message took {secs} seconds to send {neutral}"
+    },
+    "setu": {
+        "desc": "Risqué image?",
+        "introduction": "Send a risqué image? (actually it's a rainbow cockroach)",
+        "not_setu_msg": [
+            "{bot_name} couldn't find risqué images, but here's {image_name}!\n{image}",
+            "{bot_name} has no risqué images, only {image_name}!\n{image}",
+            "What's a risqué image? I can only find {image_name} {positive_plus}\n{image}",
+            "What's a risqué image? {bot_name} only has {image_name}!\n{image}"
+        ],
+        "empty_inventory": "Nothing here...",
+        "inventory_prefix": "Inventory slots used ({space})",
+        "inventory_item": "{num}. {name} *{count}",
+        "galaxy_initing": "The galaxy is still initializing {neutral}",
+        "no_galaxy": "No galaxy generated yet"
+    },
+    "user": {
+        "coin_name": "Star Coin",
+        "coin_pronoun": "pcs",
+        "no_coin": "You don't have enough {coin_name}; at least {count} {coin_pronoun} required {neutral}",
+        "spent_coin": "You spent {count} {coin_pronoun} {coin_name} {neutral}",
+        "get_coin": "You received {count} {coin_pronoun} {coin_name} {positive}",
+        "user_info_str": "----------\n{desc} user id: {id}\nCheck mutual groups: https://ti.qq.com/friends/recall?uin={id}\nInventory slots used ({space}) Achievements unlocked ({achievements_count} / {get_achievements_total})\nHas {coins_count} {coin_pronoun} {coin_name}, more than {rank_ratio}% of other {coin_name} holders {positive}\n{sign_message}",
+        "sign_message": "Last sign-in time: {last_sign_time}{positive_punc}",
+        "no_sign": "No sign-ins yet...",
+        "empty_inventory": "Nothing here...",
+        "inventory_prefix": "Inventory slots used ({space})",
+        "inventory_item": "{num}. {name} *{count}",
+        "galaxy_initing": "The galaxy is still initializing {neutral}",
+        "no_galaxy": "No galaxy generated yet"
+    },
+    "character": {
+        "time_period_reactions": {
+            "凌晨": [
+                "You can watch the sunrise at dawn",
+                "So sleepy{positive_punc} mmm——",
+                "Good night"
+            ],
+            "早上": [
+                "A new day has begun",
+                "What will you have for breakfast?{positive_punc}",
+                "What are we doing today?",
+                "Where shall we go today?{positive_punc}",
+                "How's the weather today?"
+            ],
+            "上午": [
+                "Wondering what to have for lunch...",
+                "The morning sun is so strong here..."
+            ],
+            "中午": [
+                "What shall we eat?",
+                "After lunch is a good time for a nap{positive_punc}",
+                "Where shall we go next time..."
+            ],
+            "下午": [
+                "Want to go out and play?{positive_punc}",
+                "I wonder where we can keep exploring",
+                "I want to go out and have fun..."
+            ],
+            "晚上": [
+                "What about dinner?{positive_punc} Or go straight to bed?",
+                "When do you usually eat dinner? {positive}",
+                "The desert is a bit cold...{neutral}",
+                "Woof{positive_punc}"
+            ]
+        },
+        "info_reactions": [
+            "Woof~!",
+            "Awoo~",
+            "(peeking)",
+            "awooawoo~",
+            "Woof?",
+            "{positive}",
+            "Sneak a bite——",
+            "Peek my head out, hope no one notices, hehe",
+            "Stick a sticker, {positive}",
+            "Nuzzle~",
+            "{positive_plus}",
+            "Woof!",
+            "That looks fun {positive}",
+            "Hehe, petting~"
+        ],
+        "info_reactions_179": [
+            "Nice, it's 99~ {positive}",
+            "It's 99! (peeking)",
+            "Pet 99~",
+            "99 is mine~",
+            "Gotcha 99! {positive}",
+            "It's 99~!"
+        ]
+    },
+    "items": {
+        "talk": {
+            "stop_talk": [
+                "...I don't want to chat with you anymore",
+                "Mmm... I don't want to chat anymore",
+                "Mmm... I don't want to talk anymore",
+                "...I don't want to talk anymore"
+            ],
+            "你住在哪里呢？": {
+                "high_plus": [
+                    "{positive_plus} I live in the distant desert of Telia, far from the city~\nI've never met you... I really want to meet you {positive}",
+                    "{positive_plus} I live far from the city in Telia's desert~\nI'd love to meet you... {positive}",
+                    "{positive_plus} I live far from the city in Telia's desert~\nI really want to meet you... {positive}",
+                    "{positive_plus} I live far from the city in Telia~ {positive}\nI wonder what you'd look like..."
+                ],
+                "high": [
+                    "{positive} I live in the desert of Telia, far from the city~",
+                    "{positive} I'm in Telia's desert~ I'm curious where you are...~",
+                    "{positive} I live in Telia's desert~ I wonder what your environment is like~",
+                    "I live in Telia's desert~ I wonder what it's like where you are {positive}",
+                    "{positive} I live in the distant desert of Telia~ Where do you live..."
+                ],
+                "slightly_high": [
+                    "{positive} I live in the desert on Telia~",
+                    "{positive} I'm living in Telia's desert~",
+                    "I live in Telia's desert~ {positive}",
+                    "{positive} I live in Telia's desert~"
+                ],
+                "ok": [
+                    "In the desert of Telia~",
+                    "I live in Telia's desert~",
+                    "I live in the desert over on Telia",
+                    "In Telia's desert~"
+                ],
+                "mid": [
+                    "On Telia",
+                    "I'm on Telia, very far from Earth...",
+                    "I'm on Telia, very far from Earth {positive}",
+                    "I'm on Telia"
+                ],
+                "just": [
+                    "In a star region without Earth...",
+                    "In a very distant star region...",
+                    "In a remote star region...",
+                    "In a very distant star region..."
+                ],
+                "slightly_low": [
+                    "Hmm... it's far from Earth",
+                    "Hmm... where I live is far from Earth",
+                    "Mmm... my home is far from Earth",
+                    "At least it's very far from Earth"
+                ],
+                "low": [
+                    "In short, it's a very distant place...",
+                    "Where do I live? Hmm... somewhere very far away...",
+                    "My home? Mmm... somewhere very far..."
+                ],
+                "low_plus": [
+                    "Mmm... I don't want to tell you...",
+                    "...I won't tell you...",
+                    "I won't say...",
+                    "...I won't tell you about that...",
+                    "Mmm... I won't tell you where I live...",
+                    "I won't tell you this..."
+                ]
+            },
+            "你喜欢做些什么？": {
+                "high_plus": [
+                    "{positive_plus} I love going out! It would be even better if someone came with me~\nIf you want, I could tag along with you~",
+                    "{positive_plus} I love exploring the desert~! It would be great to have company {positive}\nAlso, if you want, I can come with you — but we must meet first..."
+                ],
+                "high": [
+                    "{positive} I like playing in the nearby desert and exploring~\nIt would be better if someone could join me",
+                    "owo I prefer going on adventures~\nIt would be nicer with company",
+                    "{positive} I like exploring the nearby desert and finding new things~\n...it would be better with someone to explore with"
+                ],
+                "slightly_high": [
+                    "{positive} I like going outside to find interesting things",
+                    "I prefer being outdoors, exploring new things {positive}",
+                    "I enjoy exploring the outside world and finding new things {positive}"
+                ],
+                "ok": [
+                    "I like going on adventures and finding new things {positive}",
+                    "I like running outside to find fun stuff {positive}",
+                    "I like exploring the desert and collecting little trinkets~ {positive}"
+                ],
+                "mid": [
+                    "I roughly like going out on adventures",
+                    "I like going out exploring",
+                    "I enjoy discovering new things outside~",
+                    "I tend to like outdoor adventures~"
+                ],
+                "just": [
+                    "I tend to prefer being outside",
+                    "I prefer outdoor environments...",
+                    "I usually like staying outdoors"
+                ],
+                "slightly_low": [
+                    "Mmm... I kinda prefer going on adventures",
+                    "Mmm... I guess I like going out exploring?",
+                    "Mmm... I probably like being outside?"
+                ],
+                "low": [
+                    "Hmm... prefer outdoors?",
+                    "Mmm... I rather like going outside",
+                    "Mmm... like being outside"
+                ],
+                "low_plus": [
+                    "Mmm... that's not important",
+                    "Mmm... I don't think it's important...",
+                    "...I don't think that's important...",
+                    "Hmm... I think it's not important"
+                ]
+            },
+            "你才是真正的{bot_name}？那之前和我对话的{bot_name}是谁？": {
+                "high_plus": [
+                    "That {bot_name} can be considered part of me too~ but because we are so far apart, real-time long-term communication isn't possible, and I don't have that much free time... Mmm, I used a device to replicate my personality traits and let it assist with basic replies so responses can be near real-time! Usually you communicate through the xme bot~\n...but that {bot_name} isn't a machine! I also often reply or send messages there — it's just not my fully real-time reaction...",
+                    "That {bot_name} also counts as me~ but we're far apart and can't maintain real-time long-term communication... also I don't have so much free time... Mmm, I used an instrument to clone parts of my personality and let it help answer basic messages to allow quicker responses! Typically your communication goes through the xme bot~\n...but that {bot_name} isn't a pure machine! I still talk there often — it's just not my completely real-time reaction...",
+                    "That {bot_name} can be thought of as me too~ however because we're so far apart, true long-term real-time communication isn't possible... and I don't have that much free time... Mmm, I used a device to replicate my personality traits and let it assist with basic replies so that quick responses are possible! Normally you communicate via the xme bot~\n...but that {bot_name} isn't a machine! I also reply there frequently, just not as my fully real-time self..."
+                ],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你现在想做些什么呢？": {
+                "high_plus": [
+                    "So bored... I don't really have anything special to do... but chatting with you is wonderful~\nI hope we can talk more {positive}"
+                ],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "对我是什么看法？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你住的地方环境怎么样？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你喜不喜欢住在这呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你是独居，还是有其他朋友呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "平时是怎么生活的？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "为什么我能和你通信？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们在同一个世界嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "那里有没有什么好吃的？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我能真正意义上的见到你嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你对我们所在的世界会不会好奇呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们究竟相距多远？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你能不能主动联系到我呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我们的时间线是否一致？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我和你的距离跨越时空嘛？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "和我交谈你感觉怎么样呢？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "你对这个世界是什么看法？": {
+                "high_plus": [],
+                "high": [],
+                "slightly_high": [],
+                "ok": [],
+                "mid": [],
+                "just": [],
+                "slightly_low": [],
+                "low": [],
+                "low_plus": []
+            },
+            "我想来找你...": {
+                "high_plus": [
+                    "Mmm... you'll definitely find me!",
+                    "You'll definitely find me! Then we can go on an adventure together {positive_plus}",
+                    "I don't know how to help... but I wish you'll find me for sure! {happy}"
+                ]
+            },
+            "你知道你所在的世界是虚拟的还是真实的嘛？": {
+                "high_plus": [
+                    "I don't know... but I think our world is real! Even if it might be false... don't worry — whether it's real or not, we live in it {positive}",
+                    "I don't know, but I feel our world is real! Even if it's not, it still is to me! {positive}",
+                    "I don't know... but whether the world is real or not, it leaves its own stories {positive}",
+                    "I don't know, but whether the world is real or not, it leaves stories and we're part of them {positive}"
+                ]
+            },
+            "你我真的相隔数万光年，甚至跨越位面嘛...？": {
+                "high_plus": [
+                    "Mmm, I don't know where you are... but my intuition says you're very far away! Maybe across planes, across the universe... but at least we can talk now — it's truly amazing {positive}\nBy the way, the tool you use to communicate seems left by a mysterious purple race...",
+                    "Mmm, I don't know exactly where you are... but I feel you're very far away! Across planes, across the cosmos... yet we can talk now — it's so amazing {positive}\nSpeaking of which, the device you use to communicate might be left by a mysterious purple race...?",
+                    "While talking to you I often have the intuition that you're very far away...! Even across planes and the universe... but now we can talk... it's really amazing {positive}\nAlso, the communication tool you use seems left by a mysterious purple race..."
+                ]
+            },
+            "你相信你是真实的，对吧？": {
+                "high_plus": [
+                    "Yes! No matter what, we always feel the most real to ourselves {positive}\nI know you exist too! Otherwise how could you communicate across planes...",
+                    "Yes! And in any case, we always seem most real to ourselves~ {positive}\nI believe you exist too! Otherwise how could you communicate across planes~",
+                    "Indeed~ and we feel most real to ourselves, right~ {positive}\nI believe you exist too! Otherwise how could you cross time and space to talk to me~"
+                ]
+            }
+        }
+    },
+    "schedulers": {
+        "idles": [
+            "awoo~",
+            "bubbling owo",
+            "awoo~!",
+            "bubbling~",
+            "awoo——",
+            "visiting groups~",
+            "bubbling",
+            "bubbling~",
+            "So bored~",
+            "ovo",
+            "woof",
+            "woof~!",
+            "Checking 99",
+            "Checking 99~"
+        ],
+        "time": "{period} Hello{positive_punc}{lottery_info}\n{anno}\"{hitokoto}\"\n——{by} 《{from_where}》{update}\ntip: {tips}",
+        "hitokoto_error": "xwx failed to fetch a quote",
+        "lottery_info": "Yesterday's lottery draws caused me to {get_lose_pron} {lottery_total} {coin_pronoun} {coin_name} {neutral} (+{lottery_get}, -{lottery_lose})",
+        "new_year": [
+            "Happy New Year! {positive_plus}",
+            "Happy New Year! {positive_plus}"
+        ]
+    },
+    "event_parsers": {
+        "private_message_copy_prefix": [
+            "{neutral} I received a new message{positive_punc}\n{sender}: {msg}"
+        ],
+        "no_command": [
+            "{negative} {bot_name} doesn't recognize the command \"{command}\"...\nUse \"{help_cmd}\" to view help"
+        ],
+        "message_bursts": [
+            "Please don't spam {negative}",
+            "{negative} Please don't spam",
+            "Please don't spam {negative}",
+            "Please don't spam...",
+            "Messages are being sent too quickly..."
+        ],
+        "cmd_bursts": [
+            "Commands are being sent too quickly...",
+            "{negative} Don't send commands so fast",
+            "Don't send commands too quickly {negative}"
+        ],
+        "message_prohibited": [
+            "Don't send strange words {negative}",
+            "Those words are not allowed {negative}",
+            "Don't send inappropriate words {negative}",
+            "You cannot send prohibited words {negative}"
+        ],
+        "welcome": [
+            "Welcome {at} to the group{positive_punc}",
+            "{at} Welcome to the group{positive_punc}",
+            "{at} Welcome welcome{positive_punc}",
+            "{at} Welcome!{positive_punc}"
+        ],
+        "welcome_self": [
+            "{happy} I'm {bot_name}{positive_punc}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nGroup admins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}\nAdmins can also send /bot_leave to make {bot_name} leave {neutral}",
+            "{happy} I'm here{positive_punc}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nAdmins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}",
+            "I'm here {positive}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nAdmins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}",
+            "{bot_name} is here {positive}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nAdmins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}\nAdmins can also send /bot_leave to make {bot_name} leave {neutral}",
+            "{happy}{bot_name} is here{positive_punc}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nAdmins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}\nAdmins can also send /bot_leave to make {bot_name} leave {neutral}",
+            "{happy} I'm {bot_name}{positive_punc}\nUse \"{cmd_sep}help\" to view help{positive_punc}\nAdmins can use \"/stime\" to enable hourly announcements at 0, 8, 12, 20{positive_punc}\nAdmins can also send /bot_leave to make {bot_name} leave {neutral}"
+        ],
+        "welcome_99": [
+            "Welcome 99~",
+            "99 is here~ Welcome {happy}",
+            "It's 99~ Welcome"
+        ],
+        "other_recalled_info": [
+            "Just now {operator} recalled a {user}'s message {neutral}",
+            "Mmm... just now {operator} recalled a {user}'s message {neutral}"
+        ],
+        "is_prime": {
+            "is_prime": [
+                "{num} {append} is a prime",
+                "{num} {append} is a prime {positive}",
+                "{num} {append} is a prime{positive_punc}",
+                "{num} {append} is a prime{positive_punc} {positive}",
+                "{num} {append} is prime{positive_punc}"
+            ],
+            "not_prime": [
+                "{num} {append} is not a prime",
+                "{num} {append} is not prime",
+                "{num} {append} is not prime {neutral}",
+                "{num} {append} is not a prime {neutral}"
+            ],
+            "too_long": [
+                "This number is too big for me to test...{neutral}",
+                "This number is too large for me to determine if it's prime...{negative}",
+                "The number is too long... I can't tell if it's prime...{negative}",
+                "This number is so large... I can't determine if it's prime...{negative}"
+            ]
+        },
+        "break_chain": [
+            "Interrupt~",
+            "Interrupt~!",
+            "No repeating~",
+            "Don't repeat~",
+            "Don't repeat~!",
+            "Stop repeating~!"
+        ],
+        "prevented_recall_info": "↓ Just now {operator} recalled the following message{neutral} ↓\n{recalled_message}"
+    },
+    "other": {
+        "wife_error": [
+            "Note: you executed the wife command after a replyable command; it will display my group wife by default {neutral}",
+            "Mmm... you executed the wife command after a replyable command; it will display my group wife by default {neutral}"
+        ]
+    },
+    "plugins": {
+        "answer": {
+            "desc": "Open the Book of Answers",
+            "introduction": "Have {bot_name} open a page of the Book of Answers and read it aloud.\n\n> Think your question silently, and you will receive your answer.",
+            "default_error": [
+                "{negative} The book is missing...",
+                "{negative} Can't find the book...",
+                "{negative} There's no book..."
+            ],
+            "550w": [
+                "Answer? The Book?:\n\"I am 55...???\n{shout}{bot_name} is not 550W, woof!",
+                "Woof? The Book of Answers says it's 550W, woof!",
+                "Answer? The Book?:\n\"I am 550W.\"\n\"I AM MOSS.\"",
+                "The Book of Answers says it's 550W... {bot_name} is not 550W, woof!"
+            ],
+            "550w_1": [
+                "Answer? The Book?:\n\"LOOKING THROUGH HUMAN HISTORY, THE FATES OF CIVILIZATIONS HAVE ALWAYS BEEN DICTATED BY THE CHOICES MEN MAKE.\""
+            ],
+            "cannot_fetch": [
+                "{negative} The book won't open...",
+                "The book couldn't be opened, {negative}"
+            ],
+            "answer": [
+                "Woof! The Book of Answers reads...:",
+                "The Book of Answers reads...:",
+                "Woof! The Book of Answers says...:",
+                "The Book of Answers says...:",
+                "The Book of Answers contains this...:"
+            ]
+        },
+        "choice": {
+            "desc": "Random choice maker",
+            "introduction": "Let {bot_name} help decide for you! Items are separated by spaces by default; if using English, separate with commas.\n\n{bot_name} will return different results depending on input. For example, providing a numeric range like `1~10` will return a random number between 1 and 10.\n\nThere are also global variables you can use in choice by writing `{xxx}`:\n\n1. {member} - using {member} will be replaced by a random group member",
+            "no_args": [
+                "You haven't told me what to decide",
+                "{bot_name} doesn't know what to decide",
+                "I don't know what to decide"
+            ],
+            "no_choice": [
+                "{negative} {bot_name} has no choice...",
+                "No options were provided for {bot_name} to choose from...",
+                "No options were provided for {bot_name}...{negative}"
+            ],
+            "args_too_long": [
+                "Your choice input is too long! Keep it under 300 characters; you entered {count} characters",
+                "Your choice input is too long! Keep it under 300 characters; you entered {count} characters {neutral}",
+                "Choice input too long: {count} characters, maximum allowed is 300 {neutral}"
+            ],
+            "choice_message": [
+                "Woof! I think we should choose \"{choice}\"!",
+                "{bot_name} thinks \"{choice}\" is best!",
+                "I think we should choose \"{choice}\" woof!",
+                "{positive} I pick \"{choice}\"!",
+                "{positive} I pick \"{choice}\" woof!",
+                "I pick \"{choice}\" woof!"
+            ]
+        },
+        "help": {
+            "desc": "Show help",
+            "introduction": "Show general help or help for a specific feature. If you provide a number, it will jump to that page.",
+            "no_usage": [
+                "This feature has no help!",
+                "No help was written for this feature",
+                "There's nothing here...",
+                "No content available..."
+            ],
+            "plugin_next": [
+                "Next are plugins/special help{positive_punc}\nSpecial help are not commands; use \"/help plugin/special_name\" to view them.\nFor example \"/help driftbottle\""
+            ],
+            "limited": "Please don't send too many help requests in a short time {neutral}",
+            "no_cmds": [
+                "{prefix}\nIt seems there are no commands in XME-Bot...",
+                "{prefix}\nThe command list is empty...",
+                "{prefix}\nThere doesn't seem to be anything in the command list..."
+            ],
+            "prefix": [
+                "[XME-Bot v{version}]\nCommands can start with any of {command_seps}. Items in [xxx] indicate feature types; for non-commands use \"{cmd_sep}help feature_name\" to view more details~",
+                "[XME-Bot v{version} (testing)]\nCommands can start with any of {command_seps}. Items in [xxx] indicate feature types; for non-commands use \"{cmd_sep}help feature_name\" to view more details~"
+            ],
+            "suffix": [
+                "Help documentation is at {docs_link}\nAvailable features:{positive_punc}",
+                "Help documentation is at {docs_link}\nCurrent feature list:",
+                "Help documentation is at {docs_link}{positive_punc}\nAvailable features:{positive_punc}"
+            ],
+            "page_too_small": [
+                "Page number cannot be less than 1 {neutral}",
+                "Page number cannot be less than 1...",
+                "Page number too small...",
+                "Page number too small...",
+                "The specified page number is too small...",
+                "The specified page number cannot be less than 1 {neutral}"
+            ],
+            "page_too_big": [
+                "Page {curr_page_num} is too large, I'll show the last page {positive}",
+                "Page {curr_page_num} exceeds the maximum number of pages, I'll show the last page{positive_punc}",
+                "Page number too large, I'll display the last page {positive}"
+            ]
+        },
+        "bot_leave": {
+            "desc": "Make the bot leave the group",
+            "introduction": "Make {bot_name} control XME-Deon-Bot to leave the group chat",
+            "leaving": [
+                "Type Y to confirm letting {bot_name} leave the group chat",
+                "Please type Y to confirm letting {bot_name} leave the group chat"
+            ],
+            "leave_message": [
+                "Alright, understood, {bot_name} will leave now..",
+                "{bot_name} will leave now..",
+                "Leaving the group chat {negative}",
+                "Leaving the group chat...",
+                "Mmm... understood, {bot_name} will leave immediately"
+            ]
+        },
+        "xmeposts": {
+            "desc": "View 99's recent posts",
+            "introduction": "View the latest n posts from 99 via RSS subscription (default 1)",
+            "too_many": [
+                "You can view up to {max} posts",
+                "Too many posts... you can view up to {max}"
+            ],
+            "invalid_count": [
+                "Please enter a valid number of posts",
+                "{bot_name} doesn't understand the number of posts{negative}",
+                "Post count should be a positive integer"
+            ],
+            "post_msg": [
+                "Here are 99's latest {count} posts!\n{posts}\nLooking forward to new posts!",
+                "Here are 99's latest {count} posts!\n{posts}\nWondering when more will be uploaded...",
+                "These are 99's latest {count} posts!\n{posts}\nLooking forward to new posts{positive_punc}"
+            ]
+        },
+        "prevrecall": {
+            "desc": "Anti-recall",
+            "introduction": "Anti-recall related features",
+            "stats": [
+                "The anti-recall feature in this group ({group_id}) is {stats}",
+                "The anti-recall feature in this group ({group_id}) is {stats} {positive}",
+                "Group {group_id} anti-recall status is {stats} {positive}",
+                "Anti-recall in this group is {stats}{positive_punc}"
+            ],
+            "open": "Anti-recall enabled {positive}",
+            "close": "Anti-recall disabled {positive}",
+            "opened_message": [
+                "enabled",
+                "on"
+            ],
+            "closed_message": [
+                "disabled",
+                "off"
+            ]
+        },
+        "setu": {
+            "desc": "Risqué image?",
+            "introduction": "Send a risqué image? (actually it's a rainbow cockroach)",
+            "not_setu_msg": [
+                "{bot_name} couldn't find risqué images, but here's {image_name}!\n{image}",
+                "{bot_name} has no risqué images, only {image_name}!\n{image}",
+                "What's a risqué image? I can only find {image_name} {positive_plus}\n{image}",
+                "What's a risqué image? {bot_name} only has {image_name}!\n{image}"
+            ]
+        },
+        "status": {
+            "desc": "View system status",
+            "introduction": "View the system status of the device running this XME-Bot instance",
+            "fetch_failed": [
+                "This running device seems unable to display system status...",
+                "This running device appears unable to show system status...",
+                "The current running device cannot display system status..."
+            ],
+            "no_version_info": "Unable to fetch version information at the moment..."
+        },
+        "weather": {
+            "desc": "Query weather",
+            "introduction": "View weather for a specified region; limited to 5 requests per 5 minutes",
+            "limited": "Too many queries in a short time, please wait 5 minutes {neutral}",
+            "arg_help_desc": "Show help, equivalent to \"/help weather\"",
+            "arg_warns_desc": "Use this flag alone to view detailed warning information",
+            "output": [
+                "{output}\n==========\nData retrieved via HeWeather API{positive_punc}",
+                "{output}\n==========\nData retrieved via HeWeather API {positive}",
+                "{output}\n==========\nData provided by HeWeather API{positive_punc} {positive}"
+            ],
+            "output_error": [
+                "{negative} An unknown error occurred while formatting the weather text...\n{ex}",
+                "{negative} An unknown error occurred while formatting the weather text...\n{ex}"
+            ],
+            "warning_tips": "You can use \"/wea {arg} -w\" to view detailed warning information {positive}",
+            "no_location": [
+                "You didn't specify a location to query {neutral}\n/wea <location>\nYou can use \"/loc <location>\" to bind your location for quick queries~",
+                "Please specify a location {neutral}\n/wea <location>\nYou can use \"/loc <location>\" to bind your location for faster queries~",
+                "You need to specify a location to query {neutral}\n/wea <location>\nUse \"/loc <location>\" to bind your location for quick queries~"
+            ],
+            "no_result": [
+                "No results found for the location \"{loc}\"...",
+                "No results found for the location \"{loc}\"..."
+            ],
+            "tips": "You can use \"/loc (location)\" to bind your location, then simply use \"/wea\" to query that location's weather{positive_punc}",
+            "bound_tips": "For your bound location you can simplify queries to \"/wea\" {positive_punc}"
+        },
+        "今日老婆": {
+            "desc": "Commands related to Today's Wife",
+            "introduction": "View your or someone else's today's group wife. Note: this feature is for fun only uwu",
+            "wife_introduction": "View your or someone else's today's group wife; include an @ to also mention your today's wife{positive_punc}",
+            "wife_message": [
+                "{who}'s today's group wife is:\n{avatar}\n{name} ({user_id})",
+                "{who}'s today's group wife is:\n{avatar}\n{name} ({user_id}) \nWoof!"
+            ],
+            "no_at_hint": "Your parameters include an @ symbol, but couldn't parse the mentioned QQ; maybe it wasn't properly mentioned {neutral}",
+            "no_wife": [
+                "{name} doesn't have a wife today {neutral}",
+                "{name} doesn't have a wife today...",
+                "{name} doesn't have a wife today {neutral}",
+                "{name} doesn't have a wife today..."
+            ],
+            "error": [
+                "{negative} Unable to fetch group member information: {ex}",
+                "{negative} An error occurred while retrieving group member information: {ex}",
+                "{negative} Couldn't obtain group member information: {ex}",
+                "{negative} Unable to retrieve group member information: {ex}"
+            ]
+        },
+        "jrrp": {
+            "desc": "Today's luck (jrrp) commands",
+            "introduction": "View the today's luck (jrrp) for a QQ number or group member rankings{positive_punc}\nProvide an integer: positive for top ranks, negative for bottom. Use 'avg' for the group average",
+            "avg_message": [
+                "The group's average jrrp today is {avg} {reaction}",
+                "Today's average jrrp is {avg} {reaction}",
+                "The average jrrp for today is {avg} {reaction}"
+            ],
+            "reaction>60": [
+                "{positive}",
+                "Nice!"
+            ],
+            "reaction>20": [
+                "{neutral}"
+            ],
+            "reaction<=20": [
+                "{negative}",
+                "{negative}",
+                "Woof...",
+                "{negative_plus}"
+            ],
+            "jrrp_row": "\n{index}. {card} ({id}): today's jrrp is {jrrp}",
+            "rank_message": [
+                "Here are the top {count} members who are the most {high_or_low} today {reaction}",
+                "Below are the top {count} members who are the most {high_or_low} today {reaction}"
+            ],
+            "rank_too_long": [
+                "The specified number of members is too large... range is -{max} to {max}",
+                "The member ranking can have at most {max} lines",
+                "The member ranking can have at most {max} lines",
+                "Too many members specified; you can view at most {max}"
+            ],
+            "rank_error": [
+                "The member count must be an integer {neutral}",
+                "{bot_name} doesn't know how many members that is {negative}",
+                "The member count must be an integer..."
+            ],
+            "not_in_group": [
+                "You're not in the group, can't view others' jrrp {neutral}",
+                "You're not in the group, can't view others' jrrp {neutral}",
+                "You're not in the group, can't view others' jrrp {neutral}"
+            ],
+            "jrrp_prefix": [
+                "Your jrrp today is ",
+                "Woof! Your jrrp today is ",
+                "Woof! Your jrrp value today is ",
+                "Your jrrp value today is ",
+                "Your jrrp today is ",
+                "Woof! Your jrrp today is",
+                "Your jrrp today is "
+            ],
+            "jrrp<0": [
+                "{result}...？ {negative_plus}",
+                "{result}...？ {negative}",
+                "..{result}..？ {negative}",
+                "...{result}... {negative}",
+                "...{result}... {negative_plus}..."
+            ],
+            "jrrp<10": [
+                "....{result}？{negative}",
+                "{result}...{negative}",
+                "...{result}？{negative}",
+                "...{result}？{negative}"
+            ],
+            "jrrp>100": [
+                "{result}！{bless}",
+                "{result}！{positive_plus}{excellent}",
+                "{result}！{excellent}{positive_plus}",
+                "{result}！{excellent}{positive}"
+            ],
+            "jrrp>=90": [
+                "{result}！{positive_plus}",
+                "{result}{positive_punc} {positive_plus}"
+            ],
+            "jrrp_default": [
+                "{result} {neutral}"
+            ]
+        },
+        "实例控制": {
+            "desc": "Bot instance control commands",
+            "introduction": "Commands to control background bot instances; SUPERUSER required to use.",
+            "kill_introduction": "Terminate the bot process",
+            "restart_introduction": "Restart the bot instance",
+            "kill_prompt": [
+                "Please type Y to confirm terminating the bot process",
+                "Type Y to confirm terminating the bot process",
+                "Type Y to confirm shutting down the bot",
+                "Please type Y to confirm terminating the bot process"
+            ],
+            "kill_cancelled": [
+                "Cancelled terminating the bot process {neutral}",
+                "Cancelled shutting down the bot {neutral}",
+                "Cancelled terminating the bot process {neutral}"
+            ],
+            "on_kill": [
+                "Terminating the bot process",
+                "Terminating the bot process {neutral}",
+                "Shutting down the bot...",
+                "Shutting down the bot... {neutral}",
+                "Terminating the bot process..."
+            ],
+            "restarting": [
+                "Restarting the bot",
+                "Restarting the bot {positive_punc}",
+                "Restarting the bot instance",
+                "Restarting the bot instance {positive_punc}",
+                "Restarting xme-bot"
+            ],
+            "restart_failed_kill": [
+                "{negative} An error occurred while shutting down the bot\n{ex}",
+                "{negative} Failed to shut down the bot\n{ex}",
+                "{negative} An error occurred while shutting down the bot\n{ex}",
+                "{negative} An error occurred while shutting down the bot\n{ex}"
+            ],
+            "restart_failed": [
+                "{negative} Restart failed\n{ex}\n{traceback}",
+                "{negative} An error occurred during restart\n{ex}\n{traceback}"
+            ]
+        },
+        "httpcode": {
+            "desc": "Query status code",
+            "introduction": "Get information about an HTTP status code and its cat image",
+            "default": [
+                "You didn't enter a status code",
+                "It seems you didn't enter a status code",
+                "You didn't enter a status code..."
+            ],
+            "code_prompt": [
+                "Please send the status code you want to query{positive_punc}",
+                "Send the status code you'd like to query{positive_punc}",
+                "Please enter the status code you want to query {positive}"
+            ],
+            "code_not_found": [
+                "Couldn't find what status code {search} means...",
+                "Could not find what status code {search} means...",
+                "No information found for status code {search}...",
+                "Hmm... couldn't find what status code {search} means",
+                "Hmm, don't know what status code {search} means..."
+            ],
+            "code_found": [
+                "{positive} Status code {search} means {stat}\n{image}",
+                "Status code {search} means: {positive}{stat}\n{image}",
+                "Status code {search} means {stat}\n{image}",
+                "{neutral} Status code {search} means {stat}\n{image}",
+                "{positive} I found the meaning of status code {search}: {stat}\n{image}"
+            ]
+        },
+        "game": {
+            "desc": "Various mini-games",
+            "introduction": "Play a mini-game. Game parameters use the format name=value (comma-separated)\nAvailable games:\n{games}",
+            "game_help": "Game name: {name}\nIntroduction: {introduction}\nParameters:\n{args}",
+            "help_not_found": "Help for game \"{args.info}\" not found",
+            "game_not_found": "Can't find the game \"{text}\" you want to play {neutral}",
+            "option_help_desc": "Show help",
+            "option_args_desc": "Specify mini-game parameters, e.g.: /game -a (game parameter list)",
+            "option_info_desc": "Show help for the provided game instead of playing",
+            "not_enough_coins": "You don't have enough {coin_name}; at least {cost} {coin_pronoun} required\nTry signing in with \"/s\"",
+            "invalid_args": "Game parameter parsing error... please ensure your parameter format is correct...",
+            "guess": {
+                "desc": "(Private) Guess-the-number game",
+                "introduction": "Specify a number range and a random number will be generated; keep guessing until you find it.\nEach guess indicates whether the target number is higher or lower.\nIf you guess correctly you'll receive a {coin_name} reward; you can earn it {times_limit} times per day{positive_punc}",
+                "arg_range": "Number range (r=start~end)\nExample: r=1~100",
+                "arg_times_limit": "Guess limit (t=limit)\nExample: t=8",
+                "guess_start": "Game start{positive_punc} You need to guess an integer within {max_guessing_times} tries from {number_min} to {number_max}!",
+                "times_limit_error": "Error parsing guess times limit; please ensure you provided an integer {negative}\n{ex}",
+                "range_error": "Error parsing number range; ensure you used the format (r=start(int){positive_punc}end(int)) {negative}\n{ex}",
+                "range_out_of_range": "Number range can't be greater than {max_range} or less than -{max_range} {negative}",
+                "range_equals": "Number range cannot be the same {negative}",
+                "times_out_of_range": "Guess attempts cannot exceed {max_limit} {negative}",
+                "cost_message": "You spent {cost} {coin_pronoun} {coin_name} to play this game!\n",
+                "guess_prompt_prefix_default": "{start}\nPlease",
+                "guess_prompt": "{prefix}Enter the number you'd like to guess{positive_punc} or enter {quit_input} to quit",
+                "quit_message": "Exited the game {neutral}",
+                "quit_message_not_start": "You exited the game; the {coin_name} you spent has been returned",
+                "cmd_in_game": "You're still in a game, can't execute commands {negative}",
+                "game_over": "You've used up your guesses; the correct answer was {answer} {neutral}",
+                "num_too_big_result": "Too big{positive_punc}",
+                "num_too_small_result": "Too small{positive_punc}",
+                "num_right_result": "Correct{positive_punc}",
+                "guess_result": "{num} {result}",
+                "remaining_times": "You can still guess {times} more times {neutral}",
+                "limited": "You've used up today's reward attempts for this game",
+                "times_left": "You still have {times_left} chances to get rewards{positive_punc}",
+                "award": "You received {award} {coin_pronoun} {coin_name} as a reward!\nYou now have {coins_left} {coin_pronoun} {coin_name}",
+                "no_award": "You didn't get any {coin_name}..."
+            }
+        },
+        "漂流瓶": {
+            "desc": "Drift bottle related commands",
+            "introduction": "Throw/pick drift bottles from various groups. Each person can pick up to 30 per hour.\nA mysterious force has invaded the sea... now each retrieval makes it more chaotic and more fragile... but likes can reduce the chaos value",
+            "throw_introduction": "Throw a drift bottle (text and image)",
+            "seek_introduction": "Seek treasure in the sea (use \"/seek\" for detailed help)",
+            "seek": {
+                "introduction": "-------- Treasure Hunt in the Sea [early testing] --------\nUse \"/seek start\" to begin a round of treasure hunting (limited to two rounds per day)\nAfter starting with \"/seek start\", use \"s <steps>\" to move forward, and \"b <steps>\" to move back. If the final depth is less than 20, the hunt succeeds and you receive all your rewards{positive_punc}; if not, a {coin_name} penalty will be applied based on depth.\n\nNote: Only one person per group can hunt at a time, and you can only hunt twice per day.\nYou can also use \"/seek sim\" in private chat to simulate a hunt (no daily limit)~\n\nOther features:\n(Admin) Use \"/seek swi\" to enable/disable treasure hunting in this group (disabled by default)",
+                "not_enable": "Treasure hunting is not enabled in this group; try contacting group admins to enable it with \"/seek swi\" {neutral}\nYou can also use this feature in private chat.",
+                "not_enable_admin": "Treasure hunting is not enabled in this group; try toggling it with \"/seek swi\" {neutral}\nWarning: this feature can be very spammy in normal group chats; use with caution.\nAlso, you can use it in private chat.",
+                "not_group": "You're not in a group chat, can't perform this operation {neutral}",
+                "enable_warning": "Send \"y\" to confirm enabling treasure hunting in this group or send any other message to cancel. {neutral}\nWarning: this feature can be very spammy in normal group chats; use with caution",
+                "disable": "Treasure hunting in this group has been disabled {neutral}",
+                "not_private": "You need to use \"/seek sim\" in private chat (note: {bot_name} may not receive messages from temporary sessions)",
+                "cancel_enable": "Cancelled enabling treasure hunting {neutral}",
+                "enable": "Treasure hunting enabled in this group {positive}",
+                "limit": "You can't hunt anymore today, try again tomorrow~\nBut you can try using \"/seek sim\" in private chat to simulate a hunt!",
+                "seek_start": "Setting off to seek treasure!{positive}\n> Welcome to SeekerOS, initializing system...\n> Building the sea...\n> Generating [???]\n> System initialization complete\n(You close your eyes and arrive at a strange space; before you lies an endless sea)\nNote: If final depth is less than 20, the hunt succeeds and you receive all your rewards; if depth is greater than 20, a {coin_name} penalty will be applied based on depth\n——↓—Begin descent—↓——",
+                "not_admin": "You're not an administrator, cannot perform this action {neutral}",
+                "seek_simulation": "Starting simulated treasure hunt!{positive}\n> Welcome to SeekerOS, initializing system...\n> Building the sea...\n> Generating [???]\n> System initialization complete\nThis is a simulation environment; beginning descent.",
+                "group_seeking": "Someone is still exploring in this group; try using it in private chat or another group {neutral}",
+                "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change} {region_ch}</div>",
+                "dice_event_no_html": "[Dice event] {event_desc}\n[Inspecting \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message}\n{attr_change} {region_ch}",
+                "normal_event": "<span class=\"ev\">[事件]</span> {event_desc}</div> <div class=\"effect\">{attr_change} {region_ch}</div>",
+                "normal_event_no_html": "[Event] {event_desc} {attr_change} {region_ch}",
+                "decision_event": "{event_desc}\n{decision_descs}",
+                "result_msg": "Treasure hunt finished{positive_punc}\nGains: {gain}\n(You feel dazed, as if your memory is rapidly fading... you wake up beside the exploration machine, as if nothing happened... except for an expedition report you have no memory of...)",
+                "result_msg_with_coins": "Treasure hunt finished{positive_punc}\nGains: {gain}\n(You feel dazed, as if your memory is rapidly fading... you wake up beside the exploration machine, as if nothing happened... except for an expedition report you have no memory of, and {coins} {coin_pronoun} {coin_name} added to your account)",
+                "result_msg_simulation": "Simulation ended {positive}\nYour theoretical gain this time is: {gain}\n> Simulation complete, exiting SeekerOS. Thank you for using it.",
+                "get_decision": [
+                    "Send the option number to decide{positive_punc} or send \"stop\" to attempt abandoning the event",
+                    "Send the option number to choose{positive_punc} you can also send \"stop\" to try abandoning the event",
+                    "Send the option number to decide{positive_punc} or send \"stop\" to attempt abandoning the event",
+                    "Send the option number to decide{positive_punc} you can also send \"stop\" to try abandoning the event~"
+                ],
+                "seek_on_seeking": [
+                    "You're still exploring \"{place}\", can't start a new hunt {neutral}",
+                    "You're still exploring \"{place}\", finish it before starting a new one {neutral}"
+                ],
+                "on_seeking": [
+                    "You're exploring now, can't execute commands {neutral}\nSend \"s 1~20\" to continue exploring{positive_punc} number is steps, or send \"b 1~30\" to return to shore {neutral}\nYou can also send \"quit\" to abandon and settle this expedition.",
+                    "You're still exploring, can't execute commands {neutral}\nSend \"s 1~20\" to continue exploring{positive_punc} number is steps, or send \"b 1~30\" to return to shore {neutral}\nYou can also send \"quit\" to abandon and settle this expedition."
+                ],
+                "error_msg": "{negative} An error occurred: {ex}\nYou can try again, or send the error to 99 {neutral}",
+                "stop_seeking": "Exploration ended{positive_punc}\n----------Current Attributes----------\n{player_attr}\n----------Gains----------\n{gain}",
+                "continue_step_tip": [
+                    "Send \"s 1~20\" to continue exploring{positive_punc} number is steps, or send \"b 1~30\" to return to shore {neutral}\nYou can also send \"quit\" to abandon and settle this expedition."
+                ],
+                "continue_step_tip_onsea": [
+                    "You're back on the sea surface{positive_punc} You can send \"s 1~20\" to continue exploring{positive_punc} number is steps, or send \"quit\" to settle this expedition."
+                ],
+                "in_decision": [
+                    "You're in an event decision, please make your decision first {neutral}",
+                    "You're still deciding an event; please decide first{positive_punc} {neutral}"
+                ],
+                "seeking_tip": [
+                    "You're still exploring; send \"s 1~20\" or \"b 1~30\" to explore/return, or send \"quit\" to exit and settle\nIf you don't continue within five minutes, it will auto-settle"
+                ],
+                "seeking_tip_onsea": [
+                    "You're still exploring; send \"s 1~20\" to continue exploring, or send \"quit\" to exit and settle\nIf you don't continue within five minutes, it will auto-settle"
+                ],
+                "invalid_step": "Exploration steps must be within 1~{max}; the steps you specified {count} are too large",
+                "quit_success": [
+                    "Successfully exited the event decision {neutral}",
+                    "You abandoned the decision {neutral}"
+                ],
+                "quit_fail": [
+                    "You cannot abandon this decision... {negative}",
+                    "You cannot abandon this decision {negative}"
+                ]
+            },
+            "reject_injection": [
+                "Please don't attempt to inject {bot_name}'s database... {negative}",
+                "Please don't try to attack {bot_name}'s database... {negative}",
+                "Your message contains dangerous characters... {negative}"
+            ],
+            "throw_limited": [
+                "{bot_name} has no bottles left... come back next hour {negative}",
+                "{bot_name}'s bottles are used up... come back next hour {negative}",
+                "{bot_name} has no more bottles... come back next hour {negative}"
+            ],
+            "pickup_introduction": "Try to pick up a drift bottle",
+            "cthulhu_introduction": "Destroy a specified drift bottle (SUPERUSER)",
+            "check_introduction": "View a specified drift bottle (SUPERUSER)",
+            "no_bottle": [
+                "No bottles in the sea...",
+                "There are no bottles in the ocean...",
+                "There really aren't any bottles in the sea...",
+                "The sea is empty... no bottles to be found"
+            ],
+            "no_bottle_picked": [
+                "You didn't pick any bottle {neutral}",
+                "You didn't pick up any bottle...",
+                "Hmm... you didn't find any bottles...",
+                "Hmm... you didn't pick up a bottle...",
+                "No bottles drifted by...",
+                "You didn't pick up a bottle"
+            ],
+            "view_message": [
+                "picked {times} times",
+                "picked {times} times",
+                "picked {times} times"
+            ],
+            "no_view_message": [
+                "first time picked",
+                "just picked",
+                "just picked"
+            ],
+            "like_message": [
+                "received {count} likes {positive}",
+                "got {count} likes {positive}",
+                "a total of {count} likes {positive}",
+                "received {count} likes{positive_punc}"
+            ],
+            "no_like_message": "No likes yet {neutral}",
+            "bottle_picked_prefix": [
+                "You picked up a drift bottle{positive_punc}",
+                "You picked up a drift bottle {positive}",
+                "A drift bottle appeared{positive_punc}"
+            ],
+            "bottle_picked_prefix_broken": [
+                "A... drift bottle?",
+                "What... kind of drift bottle is this?",
+                "Found a... drift bottle?"
+            ],
+            "bottle_card_content": "You picked up a drift bottle{positive_punc}\n[#{index} bottle, from \"{from_group}{group_now}\" Messiness: {messy_rate}]:\n-----------\n{content}\n-----------\nThrown by \"{sender}{sender_now}\" at {send_time}\nThis bottle {view_message}, {like_message}",
+            "response_prompt": [
+                "You can immediately send \"-like\" to like, or send \"-rep\" to report {neutral}"
+            ],
+            "can_do": [
+                "Send \"-like\" to like\nSend \"-rep\" to report\nSend \"-say <content>\" to leave a message"
+            ],
+            "response_prompt_broken": "You [cannot].. perform any.. actions..?..",
+            "bottle_broken": [
+                "Ah, you accidentally smashed the bottle...",
+                "{negative} You accidentally smashed the bottle...",
+                "{negative} The bottle shattered...",
+                "Ah... the bottle shattered...",
+                "Ah... the bottle broke...",
+                "{negative} The bottle was accidentally smashed by you...",
+                "Ah... the bottle was accidentally smashed...",
+                "Ah... you accidentally smashed the bottle...",
+                "{negative} The bottle was accidentally smashed by you..."
+            ],
+            "bottle_broken_messy": [
+                "Ah... this bottle is so chaotic... hmm... it broke!",
+                "...this bottle... broke on its own!",
+                "...this bottle is terrifying... ah... it broke by itself...",
+                "This bottle is so chaotic... hmm... it broke!",
+                "Ah... this bottle... it broke by itself!"
+            ],
+            "no_content": "Your message has no content...",
+            "bottle_broken?": [
+                "Ah, you accidentally dropped the bottle... huh? It repaired itself and flew back into the sea...",
+                "Ah, you accidentally dropped the bottle... eh? It repaired itself and flew back into the sea... woof?",
+                "{negative} The bottle broke... huh? It repaired itself and flew back into the sea..."
+            ],
+            "liked": [
+                "Like successful{positive_punc} The bottle seems more stable!",
+                "Like completed{positive_punc} The bottle seems more stable!",
+                "Like completed{positive_punc} The bottle seems more stable!",
+                "Woof! Like successful{positive_punc} The bottle seems more stable!",
+                "{positive} Like successful{positive_punc} The bottle seems more stable{positive_plus}",
+                "{positive} Like successful{positive_punc} The bottle seems more stable!",
+                "Like successful {positive} The bottle seems more stable!",
+                "Like successful{positive_punc} The bottle seems more stable!"
+            ],
+            "commented": [
+                "Successfully posted a comment to bottle \"{id}\"{positive_punc}",
+                "Successfully commented on bottle \"{id}\"! {positive}"
+            ],
+            "comment_too_long": [
+                "Comment is too long! Must be within {count} characters{positive_punc}; your comment has {input_len} characters",
+                "Comment is too long! Cannot exceed {count} characters; your comment has {input_len} characters",
+                "Comment is too long {neutral} Cannot exceed {count} characters; your comment has {input_len} characters"
+            ],
+            "comment_too_many": [
+                "This comment board is full {neutral}",
+                "This comment board cannot hold more comments {neutral}"
+            ],
+            "pured": [
+                "Purity nomination successful{positive_punc} {positive}",
+                "Purity nomination succeeded{positive_punc} {positive}",
+                "Successfully nominated this bottle to be pure{positive}"
+            ],
+            "liked_comment": [
+                "Successfully liked comment #{id}"
+            ],
+            "like_comment_failed": [
+                "Could not find comment #{id}... Are you sure it's a comment on bottle {bottle} and is an integer?",
+                "Could not find comment #{id}... Make sure it's a comment on bottle {bottle} and that the id is an integer"
+            ],
+            "like_comment_self": [
+                "You cannot like your own comment right after posting it {neutral}"
+            ],
+            "reported": [
+                "Report successful",
+                "Report submitted successfully",
+                "Report submitted"
+            ],
+            "nothing_to_throw": [
+                "The bottle seems empty {neutral}\nFormat:\n{command_name} message",
+                "The bottle looks empty... use\n{command_name} message\nto throw a bottle",
+                "There's nothing inside the bottle... use\n{command_name} message\nto throw a bottle"
+            ],
+            "content_too_many": [
+                "The bottle's content is too long ({text_len} chars)! Keep it under {max_length} chars",
+                "The bottle's content is too long ({text_len} chars)... please keep it under {max_length} chars",
+                "The bottle won't fit that ({text_len} chars)... limit is {max_length} chars",
+                "Uh... it won't fit ({text_len} chars)! Please keep content within {max_length} chars",
+                "{negative}.. the bottle's content is too long ({text_len} chars)... keep it under {max_length} chars"
+            ],
+            "lines_too_many": [
+                "Too many lines for the bottle! Max {max_lines} lines",
+                "The bottle content is too long... max {max_lines} lines",
+                "It won't fit! Please keep to {max_lines} lines",
+                "{negative} The bottle won't fit... at most {max_lines} lines"
+            ],
+            "images_too_many": [
+                "Too many images! You can add up to {max_images} images"
+            ],
+            "too_fast_warning": [
+                "You're picking bottles a bit fast... {negative}",
+                "You're picking bottles too quickly... {negative}"
+            ],
+            "too_fast": "You picked bottles too quickly {negative}, so {count} bottles near you disappeared...",
+            "reset_limit": "Fast-forward successful; {count} bottles have appeared near you {positive}",
+            "no_limit": "There are plenty of bottles near you; no need to fast-forward {positive}",
+            "limited": [
+                "{bot_name} has already found all the bottles near you; come back next hour {negative}\nYou can also try sending \"/pick reset\" to spend {price} {coin_pronoun} {coin_name} to reset your attempts",
+                "There are no more bottles nearby... come back later {negative}\nYou can try sending \"/pick reset\" to spend {price} {coin_pronoun} {coin_name} to reset",
+                "{bot_name} couldn't find more bottles nearby... come back later {negative}\nOr try sending \"/pick reset\" to spend {price} {coin_pronoun} {coin_name} to reset",
+                "{negative} {bot_name} has exhausted nearby bottles; come back next hour...\nOr try sending \"/pick reset\" to spend {price} {coin_pronoun} {coin_name} to reset"
+            ],
+            "throwed": [
+                "The bottle has been thrown{positive_punc} This is bottle #{id} in the sea {positive}",
+                "The bottle has been thrown{positive_punc} This is bottle #{id}{positive_punc}",
+                "{positive} Bottle #{id} has begun its journey{positive_punc}",
+                "Bottle #{id} in the sea has begun its journey{positive_punc}",
+                "The bottle has been thrown{positive_punc} This is bottle #{id} {positive}"
+            ],
+            "content_already_thrown": [
+                "A similar bottle already exists in the sea {neutral}",
+                "Hmm... a similar bottle already exists in the sea {neutral}",
+                "A similar bottle already exists in the sea..."
+            ],
+            "throw_error": "{negative} Unable to throw a drift bottle, error: {ex}\nYou can try again",
+            "pure_no_arg": "Please specify the bottle id to purify in the arguments",
+            "cthulhu_no_arg": "Please specify the bottle id to corrupt first",
+            "error_bottles": "Some of these bottle ids have problems...:\n{ids}",
+            "cthulhu_success": "Successfully corrupted bottles {ids}!",
+            "bottle_not_exist": "Bottle does not exist",
+            "pure_success": "Successfully purified bottles {ids}!",
+            "bottle_special": "This bottle is rather strange... cannot perform any actions on it",
+            "already_pure": "This bottle is already pure {neutral}",
+            "cthulhu_bottle_already_broken": "Already corrupted",
+            "cthulhu_fail": "Failed to corrupt the bottle...",
+            "pure_fail": "Failed to purify the bottle..."
+        },
+        "骰子": {
+            "desc": "Dice-related commands",
+            "introduction": "Custom-sided or rule-based dice",
+            "dice_introduction": "Roll specified faces * count of dice",
+            "no_args_message": "Usage: {command_name} [faces] <count>",
+            "dice_error": [
+                "Oops... there was an error rolling the dice; please ensure faces and count are integers >= 1",
+                "{negative} Something went wrong rolling the dice; please check if faces and count are correct",
+                "{negative} Dice roll failed; ensure faces and count are integers greater than 0",
+                "{negative} {bot_name} doesn't know what kind of dice that is..."
+            ],
+            "count_too_many": [
+                "You can roll up to {max_count} dice",
+                "You can roll at most {max_count} dice...",
+                "You can roll at most {max_count} dice",
+                "{negative} Too many dice; keep it within {max_count}",
+                "{negative} Too many dice; keep it within {max_count}"
+            ],
+            "faces_too_many": [
+                "The total number of faces is too large; it must be less than {max_faces}",
+                "The total faces are too many... maximum is {max_faces}",
+                "The total faces are too many... maximum is {max_faces}",
+                "The total number of faces is too large... maximum is {max_faces}",
+                "The total number of faces is too large; it must be less than {max_faces}"
+            ],
+            "count_too_low": [
+                "Too few dice; at least one is required...",
+                "You must roll at least one die...",
+                "Dice count cannot be less than one...",
+                "Oops... you must roll at least one die"
+            ],
+            "faces_too_low": [
+                "Dice must have at least 1 face...",
+                "Dice must have at least 1 face...",
+                "Number of faces cannot be less than 1...",
+                "Number of faces cannot be less than 1"
+            ],
+            "count_morethan_1_prefix": [
+                "Total",
+                "In total"
+            ],
+            "dice_result": [
+                "You rolled {counts} {faces}-sided dice, {faces_result_prefix} got {faces_formula}!",
+                "You threw {counts} {faces}-sided dice{positive_punc} {faces_result_prefix} got {faces_formula}!",
+                "{positive} You rolled {counts} {faces}-sided dice, {faces_result_prefix} got {faces_formula}!"
+            ]
+        },
+        "title": {
+            "desc": "Set title",
+            "introduction": "Set a specified title for a group member (bot must be group owner)",
+            "no_at_arg": [
+                "Please @ the group member whose title you want me to set",
+                "Please @ the member to set the title for",
+                "Hmm... you need to @ the member to set the title",
+                "Please include an @mention for the member when using this command"
+            ],
+            "no_name_arg": [
+                "Please specify the title name",
+                "Hmm... please specify a title name",
+                "A title name is required...",
+                "Please provide a title name {negative}"
+            ],
+            "successful": [
+                "{positive} Title set successfully{positive_punc}",
+                "Title set successfully!",
+                "{positive} Title has been set!",
+                "Title set{positive_punc}",
+                "Title applied{positive_punc}",
+                "Title successfully set{positive_punc}"
+            ],
+            "deleted": [
+                "Title removed successfully{positive_punc}",
+                "{positive} Title removed successfully{positive_punc}",
+                "{positive} Title removed successfully!",
+                "Title has been removed{positive_punc}",
+                "The title has been cleared{positive_punc}",
+                "Successfully deleted title{positive_punc}"
+            ],
+            "failed": [
+                "{negative} Failed to set title...\nError: {ex}",
+                "{negative} Title setting failed...\nError: {ex}",
+                "{negative} Could not set title...\nError: {ex}",
+                "{negative} Unable to set the title...\nError: {ex}"
+            ]
+        },
+        "whoru": {
+            "desc": "View current character",
+            "introduction": "View the character xme-bot is currently using{positive_punc}",
+            "whoami": [
+                "{happy} I am {chac_name}{positive_punc}\nBrought here by {author} {positive}",
+                "I am {chac_name} {positive_punc}\nBrought here by {author} {positive}",
+                "I am {chac_name}{positive_punc}\nBrought here by {author} {positive}",
+                "{positive} I am {chac_name} {positive_punc}\nBrought here by {author} to hang out{positive_punc}"
+            ]
+        },
+        "XME 宇宙": {
+            "desc": "XME Universe related features",
+            "introduction": "Features that require user information. Use `/userhelp <feature>` to view detailed help.",
+            "userhelp": {
+                "desc": "XME Universe user feature help",
+                "introduction": "View detailed help for a specific user feature command",
+                "no_cmd": "No user command named \"{cmd}\" found..."
+            },
+            "achievement": {
+                "desc": "View achievements list",
+                "introduction": "View all achievements. Use `/achi <achievement name>` to view details for a specific achievement.",
+                "get_achievement": "Here are the achievements{positive_punc} {positive}\n--------------Page [{page_now} / {total_pages}]--------------\n{achievement_items}\n--------------------\nUse \"/achi <keyword or index>\" to view details of a specific achievement{positive_punc}",
+                "turn_page_tips": "\nYou can send \"<\" or \">\" to page forward/back",
+                "achievement_item": "- {achi_name} (Reward {award} {coin_pronoun} {coin_name})\n  {achi_desc}",
+                "too_large_page": "The page number {page} you specified is too large; it exceeds total pages {total_pages}...",
+                "nothing_here": [
+                    "There's nothing here...",
+                    "It's empty here..."
+                ],
+                "too_small_page": "The specified page number cannot be less than 1 {neutral}",
+                "error_arg": "The detail parameter you entered is not an integer... {neutral}",
+                "no_arg": "No achievements found matching the keyword \"{text}\"...",
+                "no_index": "No achievement found for the specified index \"{index}\"..."
+            },
+            "sign": {
+                "desc": "Sign-in",
+                "introduction": "Sign in to receive a certain amount of {coin_name}",
+                "limited": [
+                    "You have already signed in today{positive_punc}",
+                    "Sign in again tomorrow{positive_punc}",
+                    "You've already signed in today{positive_punc}"
+                ],
+                "get_state": [
+                    "received",
+                    "got",
+                    "obtained"
+                ],
+                "login_success": [
+                    "{time_period} greetings{positive_punc}",
+                    "{time_period} hi{positive_punc}",
+                    "{time_period} hello! {positive}",
+                    "{time_period} hello{positive_punc}{positive}"
+                ],
+                "login_no_coins": [
+                    "{time_period} oh, it seems you didn't receive any {coin_name} from signing in... {negative}",
+                    "{time_period} oh, you didn't get any {coin_name} from signing in... {negative}",
+                    "{time_period} hmm, you didn't get any {coin_name} from signing in... {negative}",
+                    "{time_period} oh, it looks like you didn't receive any {coin_name} from signing in...{negative}"
+                ],
+                "success": "{login_success} You {state} {coin_count} {coin_pron_name}{positive_punc}",
+                "first_sign": [
+                    "You're the first to sign in today{positive_punc} {positive_plus} Awarding you {first_award} {coin_pronoun} {coin_name} as a bonus{positive_punc}",
+                    "You're the first to sign in today! Nice {positive}{positive_punc} Rewarding you {first_award} {coin_pronoun} {coin_name}{positive_punc}",
+                    "You're the first to sign in today {positive_plus} Awarding you {first_award} {coin_pronoun} {coin_name} as a bonus{positive_punc}"
+                ],
+                "sign_rank": [
+                    "You're the {count}th to sign in today {neutral}",
+                    "You're the {count}th to sign in today{positive_punc}",
+                    "You're the {count}th person to sign in today{positive_punc}"
+                ]
+            },
+            "lottery": {
+                "desc": "Lottery",
+                "introduction": "Spend a specified amount of {coin_name} to draw up to 4× {coin_name}.\nYou can draw up to 5 times per day. Provide a positive integer as the second argument to draw multiple times, or use `/lot 土块` `/lot 梭哈` `/lot all` `/lot allin` to quickly perform 5 max-{coin_name} draws.",
+                "limited": [
+                    "You've used all your lottery attempts for today{positive_punc}",
+                    "Oh... you've used up your lottery attempts for today",
+                    "Oh... you've used up your lottery attempts for today",
+                    "Oh... you can't draw {coin_name} anymore today",
+                    "You have no lottery attempts left today...",
+                    "You have no more lottery attempts left today..."
+                ],
+                "all_in_no_coins": [
+                    "You have no {coin_name} available to play...",
+                    "You don't have enough {coin_name} to play...",
+                    "You have no {coin_name} available to play...{neutral}",
+                    "You don't have enough {coin_name} to play...{neutral}"
+                ],
+                "no_arg": "Please specify the amount of {coin_name} to invest{positive_punc}",
+                "invalid_arg": "The amount of {coin_name} must be an integer greater than 0 {neutral}",
+                "not_enough_coins": "Hmm, the {count} {coin_pronoun} {coin_name} you specified is too many! It exceeds your total {coin_name} balance {coins_left}...",
+                "invalid_count": "The batch investment count must be an integer greater than 0 {neutral}",
+                "get_coin_result": [
+                    "{prefix} got {get_count} {coin_pronoun} {coin_name}!",
+                    "{prefix} received {get_count} {coin_pronoun} {coin_name}!",
+                    "{prefix} received {get_count} {coin_pronoun} {coin_name}! {positive}",
+                    "{prefix} obtained {get_count} {coin_pronoun} {coin_name}!"
+                ],
+                "count_limited": [
+                    "The number of draws you specified ({times}) is too many! It exceeds your remaining attempts ({times_left})...",
+                    "The draw count {times} you requested is too large; it exceeds your remaining attempts ({times_left})",
+                    "The draw count {times} is too many! It exceeds your remaining attempts ({times_left})... {neutral}"
+                ],
+                "no_coin_result": [
+                    "You didn't get any {coin_name}...",
+                    "But you didn't receive any {coin_name}...",
+                    "But not a single {coin_pronoun} {coin_name} appeared...{negative}",
+                    "But no {coin_name} were obtained...{negative}"
+                ],
+                "result": [
+                    "You put {count} {coin_pronoun} {coin_name} into the lottery {times} times! {result_content}\nYou have {times_left} draws left and {coins_left} {coin_pronoun} {coin_name} remaining, {positive}",
+                    "You put {count} {coin_pronoun} {coin_name} into the lottery {times} times! {result_content}\nYou have {times_left} draws left and {coins_left} {coin_pronoun} {coin_name} remaining {neutral}",
+                    "You put {count} {coin_pronoun} {coin_name} into the lottery {times} times! {result_content}\nYou still have {times_left} draws and {coins_left} {coin_pronoun} {coin_name}"
+                ],
+                "too_many_coins": [
+                    "{count} {coin_pronoun} {coin_name} is too many! Cannot exceed {count_max}...",
+                    "{count} {coin_pronoun} {coin_name} is too many... cannot exceed {count_max} {neutral}",
+                    "{count} {coin_pronoun} {coin_name} is too many! You can only put up to {count_max} {coin_pronoun} at once...",
+                    "The lottery machine accepts at most {count_max} {coin_pronoun} {coin_name} at once...",
+                    "You can only invest up to {count_max} {coin_pronoun} {coin_name} at once..."
+                ]
+            },
+            "userinfo": {
+                "desc": "View user information",
+                "introduction": "View your recorded personal information, such as {coin_name} count. If you @ someone, their information will be shown",
+                "no_user": [
+                    "Hmm... I have no recorded information for this user",
+                    "I don't have any recorded information for this user...",
+                    "No recorded information found for this user...",
+                    "I haven't recorded information for this user...",
+                    "Hmm... I have no record of this user's information"
+                ],
+                "rank_info": "You have {count} {coin_pronoun} {coin_name}, higher than {rank_ratio}% of other {coin_name} holders {neutral}"
+            },
+            "coinrank": {
+                "desc": "{coin_name} leaderboard",
+                "introduction": "View the leaderboard of {coin_name} among people around you.\n\nProvide an integer to change the ranking length (max 20).\n\nUse `avg` for average, `sum` for total. Add the `top` parameter to show the overall leaderboard (starting at 1).\n\nThe last parameter `spacing` changes output format to use spaces instead of newlines.",
+                "rank_msg_prefix": "Here's the {coin_name} ranking I've recorded{positive_punc}",
+                "rank_msg_avg": "Everyone has an average of {avg} {coin_pronoun} {coin_name} {positive}\nMedian is {median}",
+                "rank_msg_sum": "Everyone has a total of {sum} {coin_pronoun} {coin_name} {positive_punc}",
+                "count_too_small": "The specified ranking length is too small; must be greater than 0",
+                "count_too_large": "The specified ranking length is too large; cannot exceed {count_max}",
+                "invalid_arg": "I don't understand the specified ranking length...",
+                "no_coin": "You don't have any {coin_name}... so no ranking {neutral}",
+                "ranking_row": "{rank}. {nickname}:{spacing} has {coins_count} {coin_pronoun} {coin_name}",
+                "rank_info": "You have {count} {coin_pronoun} {coin_name}, higher than {rank_ratio}% of other {coin_name} holders {neutral}"
+            },
+            "takecoin": {
+                "desc": "Take {coin_name} (SUPERUSER)",
+                "introduction": "Mention a user and take a specified amount of {coin_name} from them",
+                "no_arg": [
+                    "Please mention the user you want to take from in the arguments",
+                    "Please mention the user you want to take from in the arguments",
+                    "Please mention the user you want to take from in the arguments {positive}",
+                    "Please mention the user to take from in the arguments{positive_punc}"
+                ],
+                "invalid_user": "Could not find the mentioned user...",
+                "send_to_self": "You cannot take your own {coin_name}",
+                "invalid_coin_count": [
+                    "{coin_name} amount must be an integer greater than 0",
+                    "{coin_name} amount must be an integer greater than 0 {neutral}",
+                    "指定的{coin_name}太少啦，要大于 0 哦 {neutral}",
+                    "指定的{coin_name}太少啦，要大于 0 哦{positive_punc}"
+                ],
+                "not_enough_coin": [
+                    "Not enough {coin_name}; the target only has {coin_total} {coin_pronoun} {coin_name}",
+                    "Hmm... the target only has {coin_total} {coin_pronoun} {coin_name}, can't take that many...",
+                    "The target only has {coin_total} {coin_pronoun} {coin_name}",
+                    "The target only has {coin_total} {coin_pronoun} {coin_name}..."
+                ],
+                "success": "Successfully took {coin_count} {coin_pronoun} {coin_name} from {target_user}!\nThey now have {coin_left} {coin_pronoun} {coin_name} left",
+                "no_coin_count": [
+                    "Please specify the {coin_name} amount",
+                    "Please specify the {coin_name} amount",
+                    "Please specify the {coin_name} amount {neutral}",
+                    "You need to specify the {coin_name} amount...",
+                    "Please specify the {coin_name} amount",
+                    "You need to specify the {coin_name} amount"
+                ]
+            },
+            "sendcoin": {
+                "desc": "Give {coin_name}",
+                "introduction": "@ someone and give them a specified amount of {coin_name}; amounts separated by spaces will be summed",
+                "no_arg": [
+                    "Please @ the user you want to give to in the arguments",
+                    "Please @ the user you want to give to in the arguments {positive}",
+                    "Please @ the user you want to give to in the arguments{positive_punc}"
+                ],
+                "limited": "You can only give {coin_name} twice per day...",
+                "invalid_user": "Couldn't find the @ user...",
+                "send_to_self": "You can't give yourself {coin_name}",
+                "invalid_coin_count": [
+                    "The {coin_name} amount must be an integer greater than 0",
+                    "The {coin_name} amount must be an integer greater than 0 {neutral}",
+                    "The specified {coin_name} is too small; it must be greater than 0 {neutral}",
+                    "The specified {coin_name} is too small; it must be greater than 0{positive_punc}"
+                ],
+                "coin_too_many": "The amount of {coin_name} you want to send is too many {neutral}; you can send up to 100 {coin_pronoun} {coin_name}...",
+                "not_enough_coin": [
+                    "Not enough {coin_name}; you only have {coin_total} {coin_pronoun} {coin_name}",
+                    "You only have {coin_total} {coin_pronoun} {coin_name}, can't give that much...",
+                    "You only have {coin_total} {coin_pronoun} {coin_name}",
+                    "You only have {coin_total} {coin_pronoun} {coin_name}..."
+                ],
+                "received_coin_react": [
+                    "Thanks{positive_punc}",
+                    "{bless} Thanks!",
+                    "Thanks {positive}",
+                    "Thanks!{positive}",
+                    "Thanks {positive_plus}",
+                    "Hehe thanks{positive_punc}"
+                ],
+                "success": "Successfully transferred {coin_count} {coin_pronoun} {coin_name} to {target_user}! {received_coin_react}\nYou now have {coin_left} {coin_pronoun} {coin_name} left",
+                "no_coin_count": [
+                    "Please specify the {coin_name} amount",
+                    "Please specify the {coin_name} amount",
+                    "Please @ the user you want to give to in the arguments {neutral}",
+                    "You need to specify the {coin_name} amount...",
+                    "Please specify the {coin_name} amount",
+                    "You need to specify the {coin_name} amount"
+                ]
+            },
+            "inventory": {
+                "desc": "Inventory commands",
+                "introduction": "Operate items in your inventory; omit parameters to view the inventory",
+                "no_permission": "Insufficient permissions {negative}",
+                "inv_prefix": [
+                    "这是你的物品栏信息哦{positive_punc} {positive}",
+                    "让我看看你的物品栏 {positive}",
+                    "我来看看你的物品栏{positive_punc} {positive}",
+                    "让我看看你的物品栏{positive_punc} {positive}"
+                ],
+                "get": {
+                    "invalid_num": "Inventory index must be an integer...",
+                    "index_out_range": "Inventory index {num} is out of range...",
+                    "no_item": "No item found at inventory index {num}...",
+                    "no_id_item": "No item found with id {id}...",
+                    "no_name_item": "No item matching \"{name}\" found...",
+                    "user_no_item": "You don't have an item like \"{name}\" in your inventory...",
+                    "no_num": "Please specify an inventory index{positive_punc}"
+                },
+                "reduce": {
+                    "invalid_count": "Item count must be an integer greater than 0 {neutral}",
+                    "count_too_many": "The number to remove is too large; it exceeds the total items in that inventory slot {neutral}",
+                    "success": "Successfully removed {count} {pronoun} \"{name}\"{positive_punc}",
+                    "error": "An error occurred while removing the item..."
+                },
+                "add": {
+                    "invalid_arg": "Item id must be an integer...",
+                    "success": "Successfully added {count} {pronoun} \"{name}\"{positive_punc}",
+                    "error": "Failed to add the item...",
+                    "no_item": "No item found with id {id}..."
+                },
+                "drop": {
+                    "no_num": "Please specify an inventory index{positive_punc}",
+                    "item_count_too_many": "The number of items to drop is too large; it exceeds the total you own {neutral}",
+                    "count_too_many": "The number to drop is too large; it exceeds the total items in that inventory slot {neutral}",
+                    "item_cant_drop": "You cannot drop the item {name}...",
+                    "success": "Successfully dropped {count} {pronoun} \"{name}\"{positive_punc}"
+                },
+                "use": {
+                    "cannot_use": "This item cannot be used...",
+                    "error": "An error occurred while using the item...",
+                    "default_msg": "You used \"{item}\"! {neutral}"
+                }
+            },
+            "describe": {
+                "desc": "Personal introduction",
+                "introduction": "Set the personal introduction visible under the `/info` command",
+                "no_arg": [
+                    "Please provide your personal introduction in the arguments {neutral}\nUsage: \"/desc your introduction\"",
+                    "You need to include your personal introduction in the arguments {neutral}\nUsage: \"/desc your introduction\"",
+                    "Usage: \"/desc your introduction\" {positive_punc}",
+                    "Please include your personal introduction in the arguments {neutral}\nUsage: \"/desc your introduction\""
+                ],
+                "desc_info": [
+                    "This is your personal introduction {positive}:\n{desc}\nYou can send \"delete-desc\" in the next message to remove it"
+                ],
+                "deleted": [
+                    "Successfully deleted your personal introduction \"{desc}\"!",
+                    "Deleted introduction \"{desc}\" successfully!"
+                ],
+                "canceled_delete": [
+                    "Cancelled personal introduction deletion{positive_punc}",
+                    "Cancelled deletion{positive_punc}"
+                ],
+                "success": [
+                    "Successfully set your personal introduction{positive_punc}\nYou can use \"/info\" to view your profile{positive_punc}",
+                    "Personal introduction set successfully{positive_punc}\nYou can use \"/info\" to view your profile{positive_punc}"
+                ],
+                "too_long_desc": [
+                    "Your personal introduction is too long{positive_punc} It must be within 500 characters; your introduction currently has {count} characters."
+                ],
+                "too_many_lines": [
+                    "Your personal introduction is too long{positive_punc} It must be within 15 lines; your introduction currently has {count} lines."
+                ]
+            },
+            "map": {
+                "desc": "View nearby star system map (experimental)",
+                "introduction": "You can view the star systems around you"
+            },
+            "celestial": {
+                "desc": "View celestial information",
+                "introduction": "View celestial bodies at or around your location (input coordinates)",
+                "no_celestial": "It seems there are no celestial bodies here {neutral}",
+                "output": "{img}\n{desc}",
+                "invalid_args": "Argument parsing error; please ensure you entered two positive integers separated by a space"
+            }
+        },
+        "bottodo": {
+            "desc": "View bot todo",
+            "introduction": "View or edit the bot's todo items / future updates\n\nEditing todos requires SUPERUSER",
+            "remove_todo_success": [
+                "Removed todo \"{todo}\" successfully!",
+                "Deleted todo \"{todo}\" successfully!",
+                "Removed todo \"{todo}\" successfully{positive_punc}"
+            ],
+            "todo_prefix": [
+                "Here is the todo list{positive_punc}",
+                "Here is 99's todo list{positive_punc}",
+                "Here is 179's todo list{positive_punc}"
+            ],
+            "no_todo": [
+                "There are no todo items at the moment...",
+                "No tasks to do right now..."
+            ],
+            "modify_todo_failed": [
+                "Only people I know can modify the todo list...",
+                "Hmm... I don't recognize you... cannot manage todos",
+                "Only people I know can manage the todo list..."
+            ],
+            "add_todo_success": [
+                "Added todo \"{todo}\" successfully{positive_punc}",
+                "Wrote down the todo \"{todo}\" for you{positive_punc}",
+                "Successfully added todo \"{todo}\"{positive_punc}"
+            ],
+            "remove_todo_failed": "Failed to remove todo... please ensure the todo index \"{arg}\" you entered is correct {negative}"
+        },
+        "peek": {
+            "desc": "Peek at 179",
+            "introduction": "View the current screen(s) of the machine running the bot. Provide a monitor index as parameter; 0 means all monitors",
+            "error": "Screenshot failed... this system may not support screenshots",
+            "default_monitor": [
+                "Hmm, argument parsing failed... or can't capture a specific monitor — showing 179's default monitor status {neutral}",
+                "Argument parsing issue... or cannot capture specific monitor, showing 179's default monitor status {neutral}"
+            ],
+            "successful": [
+                "This is the status of 179's screen #{monitor_num}{positive_punc}",
+                "This is the status of 99's screen #{monitor_num}{positive_punc}",
+                "This is the status of 99's screen #{monitor_num} {neutral}"
+            ],
+            "successful_all": [
+                "This is the status of all of 99's screens {neutral}",
+                "This is the status of all of 179's screens {neutral}",
+                "This is the status of all of 99's screens {neutral}"
+            ],
+            "not_in_peek_group": [
+                "你不在可视奸 179 的群里哦 {neutral}"
+            ],
+            "is_private": [
+                "99's current window focus \"{title}\" is not viewable...",
+                "99's current window focus \"{title}\" is not viewable {neutral}"
+            ]
+        },
+        "ping": {
+            "desc": "Check message latency",
+            "introduction": "Send to receive the current message latency",
+            "ping_message": "{shout}",
+            "ping": [
+                "I heard an echo after {ping} seconds...",
+                "I heard my own voice after {ping} seconds..."
+            ]
+        },
+        "alias": {
+            "desc": "Get command aliases",
+            "introduction": "Provide a command name to get its alias list; you can call the command using any alias",
+            "result_prefix": "Command \"{command}\" has these aliases {positive}:",
+            "no_arg": "Please provide a command name or alias as an argument {neutral}",
+            "no_alias": "{negative} Could not find aliases for command \"{command}\"",
+            "alias_line": "{i}. {alias}"
+        },
+        "calc": {
+            "desc": "Calculate expression",
+            "introduction": "Enter a mathematical expression to evaluate. Use the argument \"funcs\" to view custom functions, or \"builtins\" to view built-in functions.\n\nYou may define variables on their own line before the expression as: name=value.\n\nTo plot a function, start the line with \":\" followed by the function, e.g. \":sin(x)\". For 3D plots start with \"::\".\n\nNote: write \"2*x\" instead of \"2x\".",
+            "no_arg": "Please provide an expression {neutral}",
+            "func_intro": "Here are the currently available custom functions{positive_punc} {positive}",
+            "func_nothing": [
+                "Nothing here...",
+                "Nothing here... {neutral}",
+                "It's empty..."
+            ],
+            "syntaxerror": [
+                "Syntax error in input; please check the expression...\n{ex}\nUse \"/help calc\" for help",
+                "Syntax error in input... please check the expression {negative}\n{ex}\nUse \"/help calc\" for help"
+            ],
+            "error": [
+                "An error occurred during calculation... please check the expression...\n{ex}\nUse \"/help calc\" for help",
+                "An error occurred during calculation... please check the expression {negative}\n{ex}\nUse \"/help calc\" for help"
+            ],
+            "sympifyerror": [
+                "Calculation error, please ensure the format is correct...\n{ex}\nUse \"/help calc\" for help",
+                "{negative} Calculation error, please ensure the format is correct...\n{ex}\nUse \"/help calc\" for help",
+                "Calculation error, please ensure the format is correct {negative} \n{ex}\nUse \"/help calc\" for help"
+            ],
+            "func_builtin_intro": "Here are most built-in functions and items{positive_punc}",
+            "too_long": "Your expression is too long! Must be within 100 characters",
+            "have_risk": "Warning: your expression may contain injection risks. Please check the content and do not attempt injection!",
+            "success": "The result of \"{formula}\" is \"{result}\"",
+            "success_image": "The result of \"{formula}\" is\n{image}",
+            "drawing": "Rendering image{positive_punc} {positive} Please wait",
+            "float_result": "The decimal result is approximately \"{float_result}\"{positive_punc}"
+        },
+        "translate": {
+            "desc": "Translate messages",
+            "introduction": "Translate a replied message or your own message. You can specify how many previous messages to include",
+            "invalid_count": "The count parameter must be an integer {negative}",
+            "count_too_low": "The number of messages to fetch cannot be less than 1 {negative}",
+            "count_too_many": "The number of messages requested is too many; maximum is {max_count} {neutral}",
+            "processing": "Translating to \"{language}\"~ Please wait {min} to {max} seconds",
+            "success_message": "The message from \"{name}\" translated to \"{language}\": {message}",
+            "no_message": "Hmm... there are no messages",
+            "error": "Oops... an error occurred during translation. Try again or reduce the number of messages to translate"
+        },
+        "色号显示": {
+            "desc": "Color display",
+            "introduction": "Send a 6-digit Hex color string (starting with '#') to receive an image of that color~"
+        },
+        "notice": {
+            "desc": "Broadcast messages",
+            "introduction": "Send this command in a group with a message; {bot_name} will send the message to all group members.",
+            "parsing": "Sending message to {count} group members{positive_punc}",
+            "message_send": "{positive} 99 announced a message: \"{message}\"\nIf you don't want to receive messages, send \"/mute\".",
+            "success": "{positive} All messages were attempted to be sent{positive_punc} Success rate: {percent}%",
+            "muted": "Muted successfully {neutral}"
+        },
+        "announce": {
+            "desc": "Modify announcement",
+            "introduction": "Post an announcement; it will appear in the hourly report",
+            "success": "Announcement \"{anno}\" posted successfully~ {positive}",
+            "clear": "Announcement cleared successfully{positive_punc}",
+            "sending_all_group": [
+                "Sending this announcement to all groups{positive_punc}",
+                "Broadcasting this announcement to all groups{positive_punc}"
+            ]
+        },
+        "divs": {
+            "desc": "Prime factorization",
+            "introduction": "Outputs up to 20 factorizations of the specified number into factors greater than 1",
+            "prefix": "Here are factorization expressions for {num}{positive_punc}",
+            "invalid_num": "The specified number must be an integer",
+            "no_arg": "An argument is required",
+            "less_than_2": "The absolute value of this number is less than 2; there are no factorizations and it's not considered prime",
+            "too_long": [
+                "The number is too large...",
+                "The input number is too large...{neutral}",
+                "The specified number is too large..."
+            ],
+            "nothing": [
+                "No factors found... this number appears to be prime {positive}",
+                "No factors found... this number seems to be prime{positive_punc}",
+                "No factors found... this number is likely prime{positive_punc}"
+            ]
+        },
+        "maifriend": {
+            "desc": "Generate travel companion image",
+            "introduction": "Generate a travel companion image for yourself or a specified group member",
+            "error": [
+                "{negative} Failed to generate image; the QQ may be invalid...",
+                "{negative} An error occurred generating the image; you can ask 179...",
+                "{negative} Image generation failed; the QQ may be invalid..."
+            ]
+        },
+        "peek179": {
+            "desc": "Peek at 179 images",
+            "introduction": "Return an image output by 179",
+            "result": "{image}\nImage name: {name}\nCreation time: {creation_time}\nModification time: {modification_time}"
+        },
+        "location": {
+            "desc": "Bind location",
+            "introduction": "View or bind your city and region for easier weather queries and related features.\n\nTo unbind use \"/loc clear\" or \"/loc unbind\"",
+            "unbind_loc": [
+                "Successfully unbound your location {neutral}",
+                "Successfully removed your location {neutral}",
+                "Successfully removed your recorded location {neutral}"
+            ],
+            "choose_location": "Please send the index of the area you want to select{positive_punc}\n{locs}",
+            "invalid_choose": [
+                "{negative} It seems there is no area corresponding to index \"{num}\"...",
+                "{negative} No area corresponds to index \"{num}\"...",
+                "{negative} It seems there is no area corresponding to index \"{num}\"..."
+            ],
+            "no_choose": [
+                "{negative} It seems you didn't send an index...",
+                "{negative} It seems you didn't send any index..."
+            ],
+            "no_result": "No results found for \"{loc}\"...",
+            "success": [
+                "Successfully bound you to \"{loc}\"{positive_punc}",
+                "Successfully bound you to \"{loc}\" {positive_punc}"
+            ],
+            "curr_loc": "Your currently bound location is: {loc}{positive_punc}",
+            "no_curr_loc": [
+                "You currently have no bound location... {neutral}\nYou can use \"/loc <area>\" to bind it{positive_punc}",
+                "You currently have no bound location {neutral}\nYou can use \"/loc <area>\" to bind it{positive_punc}",
+                "You haven't bound any location yet {neutral}\nYou can use \"/loc <area>\" to bind it{positive_punc}"
+            ]
+        },
+        "7timers": {
+            "desc": "View 7timer",
+            "introduction": "Use your location to view the current 7timer. Provide coordinates as 'latitude,longitude' (auto-detected if possible).\n\nHow to read the 7timer:\n\n- Total cloud cover: an octile chart where blue represents the proportion of clear sky and white represents clouds; values increase from 0% to 100% from left to right.\n- Atmospheric seeing: smaller/bluer icons indicate better seeing.\n- Atmospheric transparency: fewer/ bluer bars indicate better transparency.\n- High humidity warnings: icons increase for relative humidity ranges `80%-90%`, `90%-95%`, and `over 95%`.\n- Rain/snow: icons indicate possible precipitation.\n- Instability warnings: icons increase representing lifted index ranges `0 to -3`, `-3 to -5`, and `less than -5`.\n- Strong wind warnings: icons increase representing sustained wind speeds `8.0-10.8 m/s (Beaufort 5)`, `10.8-17.2 m/s (Beaufort 6-7)`, and `over 17.2 m/s (Beaufort 8+)`.",
+            "outputing": "Fetching image{positive_punc} please wait",
+            "ask_location": "Please send a location from mobile QQ or input \"latitude,longitude\"{positive_punc}",
+            "invalid_location": "Hmm... these coordinates couldn't be parsed. Attempted values:\nLongitude: {lon}\nLatitude: {lat}",
+            "output_suffix": "7timer image from https://www.7timer.info/",
+            "error": "{negative} An unknown error occurred...\n{ex}"
+        },
+        "schtime": {
+            "desc": "Hourly announcements",
+            "introduction": "Toggle the hourly announcement feature. It will announce at daily times 0, 8, 12, and 20, and may share version updates or small tips.",
+            "disabled": [
+                "Hourly announcements disabled {neutral}",
+                "Hourly announcements turned off {neutral}",
+                "Hourly announcements are off {neutral}"
+            ],
+            "activated": [
+                "Hourly announcements enabled{positive_punc}",
+                "Hourly announcements activated! {positive}",
+                "Hourly announcements enabled{positive_punc}",
+                "Hourly announcements activated{positive_punc}"
+            ]
+        },
+        "count": {
+            "desc": "Check string length",
+            "introduction": "Check how many characters a piece of text contains",
+            "result": [
+                "These characters total {length} characters{positive_punc}",
+                "These characters total {length} characters {neutral}"
+            ],
+            "no_str": [
+                "You didn't provide any text in the arguments {neutral}",
+                "You need to include the text to check in the arguments {neutral}"
+            ]
+        },
+        "今日鉴毛": {
+            "desc": "View today's pick",
+            "introduction": "Randomly return a 'Today's Pick' image",
+            "error": "Unable to fetch Today's Pick image... {negative}",
+            "result": [
+                "{positive} This pick image is a {type} named {name} from {city} {positive_punc}\nAPI provided by 筱翯 {positive}",
+                "{positive} This pick image is from {city}, a {type} named {name} {positive_punc}\nAPI provided by 筱翯 {positive}"
+            ]
+        },
+        "ai_helper": {
+            "desc": "AI assistant",
+            "introduction": "Use the ChatGLM large model AI assistant for bot-related questions. Available 15 times per hour",
+            "no_arg": "You didn't provide arguments; correct format is \"/ai your message\"",
+            "talking_to_ai": "Querying the AI! {positive}",
+            "talk_result": "{positive} AI says: \"{talk}\"\n=======================\nYou have {times_left_now} AI queries left this hour {neutral}\nUse \"/ai -c clear\" to clear conversation history",
+            "attribute_error": "GLM API returned unexpected content {negative}\nResponse content: {content}",
+            "ai_send_timeout": "AI send time exceeded limit ({secs}s)",
+            "limited": "{negative} You've reached the AI query limit for this hour; try again next hour...",
+            "too_long": "Your input is too long! Must be within {count} characters"
+        },
+        "essence": {
+            "desc": "Random essence message",
+            "introduction": "Have {bot_name} output a random essence message (if there are more than 2 essence messages in the group).",
+            "result": [
+                "Found an essence message{positive_punc} {positive}:\n{avatar}{sender} ({sender_id}):\n\"{essence}\"\nSet by \"{operator} ({operator_id})\" on {date}.",
+                "This is an essence message{positive_punc} {positive}:\n{avatar}{sender} ({sender_id}):\n\"{essence}\"\nSet by \"{operator} ({operator_id})\" on {date}."
+            ],
+            "searching": [
+                "Searching for essence messages in the group{positive_punc}",
+                "Searching for essence messages in the group {positive}"
+            ],
+            "no_essence": [
+                "There are too few essence messages in the group or they cannot be retrieved... {negative}",
+                "Not enough essence messages in the group or cannot retrieve them... {neutral}",
+                "Essence messages are limited or cannot be retrieved... {neutral}"
+            ]
+        },
+        "lotluck": {
+            "desc": "Fortune draw",
+            "introduction": "Spend 5 {coin_pronoun} {coin_name} to draw a fortune slip from Tokyo's Asakusa Shrine.",
+            "hint": "Are you sure you want to spend 5 {coin_pronoun} {coin_name} to draw a fortune slip {neutral}? Reply with \"y\" to confirm",
+            "canceled": "Fortune draw canceled {neutral}"
+        },
+        "shop": {
+            "desc": "{coin_name} shop",
+            "introduction": "A shop to buy various goods using {coin_name}. Provide an item serial number to request purchase, e.g. \"/shop a1\"",
+            "buy_success": "",
+            "buy_no_coin": "",
+            "default_buy": "You spent {coins} {coin_pronoun} {coin_name} to buy \"{good}\" {neutral}\nYou now have {coins_left} {coin_pronoun} {coin_name} remaining{positive_punc}",
+            "has_bought": "You have already purchased this item {neutral}",
+            "default_buy_error": "Requires {price} {coin_pronoun} {coin_name} to buy \"{good}\", but you only have {coins_left}{coin_pronoun} {coin_name} {negative}",
+            "shop_card": "{image}You can send \"/shop <index>\" to view and decide to purchase a specific item~\nFor example \"/shop a1\"",
+            "no_good": "No product for serial \"{serial}\" {neutral}, please check for typos",
+            "good_card": "{image}Send \"y\" in the next message to spend {price} {coin_pronoun} {coin_name} to buy the item, or send another message to cancel {neutral}",
+            "good_card_bought": "{image}You have already purchased this item {positive}"
+        },
+        "custom": {
+            "desc": "Custom settings",
+            "introduction": "Custom settings tool; can set things like drift bottle card skins.\nCurrently supported calls:\n\"/cus bottle\" - customize drift bottle card skin",
+            "custom_info": "Here are available custom options for \"{items_name}\"{positive_punc}:\n{html_image}Current setting: \"{curr_custom}\"\n{suffix}",
+            "custom_info_suffix": "Send the numeric index below to select a style {positive}. Sending anything else will exit",
+            "index_duplicate": "You are already using this style {neutral}",
+            "index_not_found": "No setting found with index \"{index}\" {neutral}",
+            "index_not_found_arg": "No setting found with index \"{index}\" {neutral}\nUse \"{cmd_no_suffix}\" to view available settings{positive_punc}",
+            "index_error": "Index \"{index}\" is not an integer {neutral}\nUse \"{cmd_no_suffix}\" to view available settings{positive_punc}",
+            "set_success": "Successfully set your custom option for \"{items_name}\" to \"{item_result}\"!{positive}"
+        },
+        "machine": {
+            "desc": "Mysterious machine... (WIP)",
+            "introduction": "A mysterious machine — see what happens when you inspect it (work in progress)"
+        },
+        "furfusion": {
+            "desc": "FurFusion related commands",
+            "introduction": "Use the FurFusion API to query various FurFusion-related information~",
+            "countdown": "Here is the current FurFusion schedule information {positive}{image}",
+            "error": "Data read error {negative}: code {code}",
+            "no_search_data": "No data found related to keyword \"{keyword}\" {neutral}",
+            "fusion_data": "{image}{name}\nStatus: {state}\nOfficial group: {groups}\nAliases: {correlation}\nData source: FURRYFUSION",
+            "search_mutiple": "Found multiple related entries{positive_punc}\n{datas}\nSend the index below to select which item to search {neutral}",
+            "index_not_num": "The index you entered is not an integer {negative} please send an integer",
+            "index_out_of_range": "The index you entered is not within the selectable range {neutral}"
+        },
+        "tip": {
+            "desc": "Return a tip",
+            "introduction": "When used, {bot_name} will send a tip"
+        }
+    }
+}

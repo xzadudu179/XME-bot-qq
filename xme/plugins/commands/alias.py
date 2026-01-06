@@ -1,7 +1,8 @@
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.cmdtools import get_alias_by_cmd, get_cmd_by_alias
 from xme.xmetools.msgtools import send_session_msg
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from character import get_message
 
 alias = ["别名", "al"]

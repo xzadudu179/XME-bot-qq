@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession
+from nonebot import CommandSession
+from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
 from character import get_message

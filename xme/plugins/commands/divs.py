@@ -31,4 +31,13 @@ async def _(session: CommandSession):
     num = abs(original_num)
     if num < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'less_than_2'), tips=True)
-    return await send_session_msg(session, get_message("plugins", __plugin_name__, 'prefix', num=original_num) + "\n" + (("\n".join([f"{i + 1}. {item}" for i, item in enumerate(x) if item != "..."]) + ("\n..." if x[-1] == "..." else "")) if len(x:=divs(num)) >= 1 else get_message("plugins", __plugin_name__, 'nothing')), tips=True)
+    # return await send_session_msg(session, get_message("plugins", __plugin_name__, 'prefix', num=original_num) + "\n" + (("\n".join([f"{i + 1}. {item}" for i, item in enumerate(x) if item != "..."]) + ("\n..." if x[-1] == "..." else "")) if len(x:=divs(num)) >= 1 else get_message("plugins", __plugin_name__, 'nothing')), tips=True)
+    x = divs(num)
+    if len(x) >= 1:
+        items = [f"{i + 1}. {item}" for i, item in enumerate(x) if item != "..."]
+        body = "\n".join(items) + ("\n..." if x[-1] == "..." else "")
+    else:
+        body = get_message("plugins", __plugin_name__, 'nothing')
+
+    message = get_message("plugins", __plugin_name__, 'prefix', num=original_num) + "\n" + body
+    return await send_session_msg(session, message, tips=True)

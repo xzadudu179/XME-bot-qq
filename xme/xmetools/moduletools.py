@@ -15,7 +15,6 @@ def get_module_funcs(key, value, name):
         # print(module, isinstance(module, types.ModuleType))
         if isinstance(module, types.ModuleType):
             funcs[getattr(module, key, None)] = getattr(module, value, None)
-
     # 删除 None 键值对（如果子模块缺少属性会返回 None）
     # print(funcs)
     funcs = {k: v for k, v in funcs.items() if k is not None and v is not None}

@@ -45,6 +45,7 @@ def load_plugins_list(*args: list[str, str]):
 if __name__ == '__main__':
     random.seed()
     print("正在启动...")
+    # TODO: 每日备份 data/ 文件
     bot_init.saving_log(logger)
     nonebot.init(config)
     load_plugins_list(

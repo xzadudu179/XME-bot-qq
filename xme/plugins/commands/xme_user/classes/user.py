@@ -2,6 +2,7 @@ from character import get_message
 coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
 
+import time
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
 from .achievements import get_achievements, has_achievement
@@ -92,6 +93,11 @@ class User:
         self.counters = counters
         self.plugin_datas: dict = plugin_datas
         # self.timers = timers
+        # 注册时间
+        datas = self.plugin_datas.get("datas", {})
+        reg_time = datas.get("register_time", -1)
+        if reg_time == -1:
+            self.plugin_datas["datas"]["register_time"] = time.time()
         self.achievements = achievements
         self.ai_history = ai_history
         # print(self.ai_history)

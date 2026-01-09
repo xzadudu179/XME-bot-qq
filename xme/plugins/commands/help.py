@@ -113,7 +113,7 @@ async def _(session: CommandSession, user: u.User):
     # print(pages)
     prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '"、"'.join(config.COMMAND_START) + '"', version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
-    suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="http://docs.xme.xzadudu179.top/#/help")
+    suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="https://docs.xme.179.life/")
     new_messages: list[MessageSegment] = []
     msg_dict = {
         "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)

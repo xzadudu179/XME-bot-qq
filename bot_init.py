@@ -47,6 +47,7 @@ BOT_SETTINGS = {
     "schtime_groups": []
 }
 
+# XXX: 更换为解析 Document 类 而非字符串处理
 def gen_doc_md():
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     plugins.sort(key=lambda p: lazy_pinyin(p.name))
@@ -69,13 +70,13 @@ def gen_doc_md():
             else:
                 # print(pl.name, "是特殊插件，不处理")
                 ...
-            usages.append(md_usage)
+            usages.append(md_usage.replace("\"", "`"))
         except Exception as ex:
             print("处理", pl.name, "插件出错:", ex)
             traceback.print_exc()
             continue
     with open("docs.md", 'w', encoding='utf-8') as file:
-        file.write("\n\n".join(usages.replace("\"", "`")))
+        file.write("\n\n".join(usages))
 
 def parse_command_doc(doc_str, header_level=3):
     header = "#" * header_level + " " + doc_str.split("\n")[0]

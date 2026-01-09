@@ -298,7 +298,6 @@ class Event:
         fail: dict,
         big_fail: dict,
         html: bool = True,
-        # TODO region change
         ) -> str:
         from .. import command_name
         """掷骰判定事件

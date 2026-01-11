@@ -20,6 +20,23 @@ async def _(session: CommandSession):
     arg = session.current_arg.strip()
     at_id = 0
     prefix = ""
+    # support "/wife change" to change caller's wife
+    # if arg.startswith("change"):
+    #     at_id = session.event.user_id
+    #     # attempt change
+    #     new_partner = await change_wife(wifeinfo, group_id, at_id, session)
+    #     if new_partner is None:
+    #         message = get_message("plugins", w.__plugin_name__, "no_more_wife")
+    #     else:
+    #         who = "你"
+    #         name = (x if (x:=new_partner.get('card', None)) else new_partner['nickname']) if new_partner['user_id'] != session.self_id else "我"
+    #         message = get_message("plugins", w.__plugin_name__, "wife_message",
+    #             who=who,
+    #             avatar=f"[CQ:image,file=https://q1.qlogo.cn/g?b=qq&nk={new_partner['user_id']}&s=640]",
+    #             name=name,
+    #             user_id=str(new_partner['user_id']))
+    #     await send_session_msg(session, message, tips=True, tips_percent=60)
+    #     return
     if arg.startswith("[CQ:at,qq="):
         # at_id = int(arg.split("[CQ:at,qq=")[-1].split("]")[0].split(",")[0])
         at_id = get_at_id(arg)

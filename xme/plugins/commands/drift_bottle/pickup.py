@@ -297,8 +297,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             await user.achieve_achievement(session, "纯洁无暇！")
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         elif index != "-179":
-            broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
-            broken_bottles[index] = bottle.to_dict()
+            # broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
+            # broken_bottles[index] = bottle.to_dict()
             # jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
             # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()

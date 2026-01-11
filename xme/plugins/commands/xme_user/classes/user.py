@@ -3,6 +3,7 @@ coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
 
 import time
+from datetime import datetime
 from xme.xmetools import timetools
 from xme.xmetools import dicttools
 from .achievements import get_achievements, has_achievement
@@ -94,10 +95,9 @@ class User:
         self.plugin_datas: dict = plugin_datas
         # self.timers = timers
         # 注册时间
-        datas = self.plugin_datas.get("datas", {})
-        reg_time = datas.get("register_time", -1)
-        if reg_time == -1:
-            self.plugin_datas["datas"]["register_time"] = time.time()
+        # datas = self.plugin_datas.get("datas", {})
+        # reg_time = datas.get("register_time", -1)
+
         self.achievements = achievements
         self.ai_history = ai_history
         # print(self.ai_history)
@@ -105,18 +105,22 @@ class User:
         # print("dbid", self.db_id)
         self.celestial_uid = celestial_uid
         self.celestial = None
-        if not gen_starfield:
-            return
-        # if celestial_uid is not None:
+        self.get_reg_time()
+        # if reg_time == -1:
+        #     self.plugin_datas["datas"] = {}
+        #     self.plugin_datas["datas"]["register_time"] = time.time()
+        #     self.save()
+        # self.reg_time = self.plugin_datas["datas"]["register_time"]
 
-        # if self.celestial is None:
-        #     self.gen_celestial()
-        # if self.celestial is not None:
-        #     starfield = self.get_starfield()
-        #     if starfield is None:
-        #         print("用户星域坐标无效")
-        #         self.celestial = None
-        #         self.gen_celestial()
+    def get_reg_time(self):
+        time_now = time.time()
+        v: float | None = dicttools.get_value("datas", "register_time", search_dict=self.plugin_datas)
+        if v is None:
+            dicttools.set_value("datas", "register_time", search_dict=self.plugin_datas, set_method=lambda _: time_now)
+            # self.reg_time = time_now
+            self.save()
+            return time_now
+        return v
 
     def get_celestial(self):
         # print("uid:", self.celestial_uid)
@@ -214,15 +218,17 @@ class User:
             print("无法获取到合适的行星")
 
     def __str__(self):
+        # print("self.get_reg_time()", self.get_reg_time())
         try:
             # last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
-            last_sign_time = galaxy_date_tools.get_galaxy_date(int(timetools.get_valuetime(self.counters['sign']["time"], timetools.TimeUnit.DAY)))
-            sign_message = get_message("user", "sign_message", last_sign_time="星历" + last_sign_time)
+            last_sign_time = timetools.int_to_date(int(timetools.get_valuetime(self.counters['sign']["time"], timetools.TimeUnit.DAY)))
+            sign_message = get_message("user", "sign_message", last_sign_time=last_sign_time)
         except:
             sign_message = get_message("user", "no_sign")
         _, rank_ratio, _ = get_user_rank(self.id)
         return get_message("user", "user_info_str",
             id=str(self.id),
+            reg_time=datetime.strftime(datetime.fromtimestamp(self.get_reg_time()), format=r"%Y-%m-%d %H:%M:%S"),
             coins_count=self.coins,
             achievements_count=len([a for a in self.achievements if has_achievement(a.get("name", ""))]),
             get_achievements_total=len(get_achievements().items()),
@@ -307,10 +313,12 @@ class User:
 
     @staticmethod
     def load(id: int, create_default_user=True):
-        c = DATABASE.load_class(select_keys=(id,), query='SELECT * FROM {table_name} WHERE user_id = ?', cl=User)
+        c: User = DATABASE.load_class(select_keys=(id,), query='SELECT * FROM {table_name} WHERE user_id = ?', cl=User)
         if c is None and create_default_user:
             print("创建一个新用户")
             return User(user_id=id)
+        elif c is not None:
+            c.get_reg_time()
         return c
 
     def save(self):

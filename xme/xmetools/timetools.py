@@ -14,6 +14,8 @@ class TimeUnit(Enum):
     YEAR = 60 * 60 * 24 * 365
 
 def get_valuetime(time_float, unit: TimeUnit):
+    if unit in [TimeUnit.DAY, TimeUnit.MONTH, TimeUnit.YEAR] and time_float < 50000:
+        return time_float
     return math.floor(time_float / unit.value)
 
 def get_closest_time(times: list, target_time="NOW", format="%Y-%m-%d %H:%M:%S"):

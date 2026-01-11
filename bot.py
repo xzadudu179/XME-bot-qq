@@ -10,7 +10,7 @@ import nonebot
 from os import path
 from xme.xmetools import colortools as c
 # from xme.xmetools import jsontools
-# from xme.plugins.commands.xme_user.classes.user import User, try_load
+from xme.plugins.commands.xme_user.classes.user import User, try_load
 import random
 random.seed()
 import os

@@ -189,7 +189,7 @@
     "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
-    "user_info_str": "----------\n{desc}用户 id: {id}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
+    "user_info_str": "----------\n{desc}用户 id: {id}\n注册时间: {reg_time}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
     "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
     "no_sign": "没有签过到呢...",
     "empty_inventory": "什么也没有呢...",
@@ -923,6 +923,7 @@
       "desc": "今日老婆相关指令",
       "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n注意：这个功能仅供娱乐 uwu",
       "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
+      "no_more_wife": "没有老婆可以更换了呢... {negative}",
       "wife_message": [
         "{who}今日的群老婆是:\n{avatar}\n{name} ({user_id})",
         "{who}今天的群老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"

@@ -49,12 +49,6 @@ class XmeDatabase:
         fields = {k: v for k, v in cls.to_dict().items() if k != 'id' and k != 'database'}
         # types = ['TEXT' if isinstance(value, str) else 'INTEGER' if isinstance(value, int) else 'BLOB' for value in fields.values()]
         self.create_table_from_values(table_name, fields.keys(),  fields.values())
-        # for field, py_type in annotations.items():
-        #     sql_type = XmeDatabase.python_type_to_sql(py_type)
-        #     columns.append(f"{field} {sql_type}")
-
-        # sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(columns)});"
-        # self.exec_query(sql)
         return table_name
 
 

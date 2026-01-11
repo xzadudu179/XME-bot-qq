@@ -3,6 +3,7 @@ from pypinyin import lazy_pinyin
 import itertools
 import base64
 from nonebot import MessageSegment, Message
+import jieba
 import string
 import hashlib
 from difflib import SequenceMatcher
@@ -24,6 +25,24 @@ def replace_formatted(s: str, **formats):
     for k, v in formats.items():
         result = result.replace("{" + k + "}", str(v))
     return result
+
+def protect_quoted_text(text, tag='nz'):
+    """
+    将引号内的内容替换为占位符，并注册为 jieba 词典词
+    返回：新文本 + 占位符映射表
+    """
+    mapping = {}
+
+    def repl(match):
+        content = match.group(1)
+        key = f"__QUOTE_{len(mapping)}__"
+        mapping[key] = content
+        jieba.add_word(key, tag=tag)  # 强制词性：nz / n / x 都行
+        return key
+
+    # 支持中英文引号
+    new_text = re.sub(r'[“"]([^”"]+)[”"]', repl, text)
+    return new_text, mapping
 
 
 class FormatDict(dict):

@@ -3,7 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict, replace_formatted, chinese_proportion
+from xme.xmetools.texttools import FormatDict, replace_formatted, protect_quoted_text
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
@@ -160,26 +160,34 @@ def ends_is_or_not_choice(text):
     if not texttools.remove_punctuation(text).endswith(question_strings):
         return False
     # 使用jieba进行词性标注
-    words = list(pseg.cut(text))
+    protected_text, quote_map = protect_quoted_text(text, tag='nz')
+    words = list(pseg.cut(protected_text))
     # choice = random.randint(0, 1)
+    words = [
+        (quote_map.get(w, w), flag)
+        for w, flag in words
+    ]
     print(words)
     # 寻找动词作为分割点
-    for i, (_, flag) in enumerate(words):
-        if flag == 'v':
+    for i, (w, flag) in enumerate(words):
+        print(w, flag)
+        if 'v' in flag:
+            # print(w)
             prefix = "".join([t for t, _ in words[:i]])
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
+            suffix_not = suffix
+            if w == "能" and suffix.endswith("了"):
+                suffix_not = suffix[:-1]
             # if prefix.endswith("可以"):
                 # prefix = prefix[:-2]
                 # choices = [f"{prefix}可以{suffix}", f"{prefix}不可以{suffix}"]
-            choices = [f"{prefix}{suffix}", f"{prefix}不{suffix}"]
+            choices = [f"{prefix}{suffix}", f"{prefix}不{suffix_not}"]
             if suffix and suffix[0] == "有":
                 choices[1] = f"{prefix}没{suffix}"
             if suffix and suffix[0] in ["不", "没"]:
                 choices[1] = f"{prefix}{suffix[1:]}"
             return choices
-            # return ("".join([t for t, _ in words[:i]]), text_tools.remove_punctuation(text_tools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]]))))
-
     # 如果没有找到特殊标志词，则返回
     return False
 

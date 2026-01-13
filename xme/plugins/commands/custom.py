@@ -6,6 +6,7 @@ from xme.xmetools.cmdtools import use_args, send_cmd
 from xme.xmetools.typetools import try_parse
 from config import COMMAND_START
 from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
+from nonebot.log import logger
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from character import get_message
@@ -153,7 +154,7 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
     setting = arg_list[0]
     if not setting:
         # 发送帮助之类的
-        await send_session_msg(session, __plugin_usage__)
+        await send_session_msg(session, str(__plugin_usage__))
         return False
 
     keys = ()
@@ -167,7 +168,7 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
         # user.plugin_datas[__plugin_name__].get(bottle_plugin_name)
     else:
         # 发送帮助
-        await send_session_msg(session, __plugin_usage__)
+        await send_session_msg(session, str(__plugin_usage__))
         return False
     setting_index: int | str = arg_list[1]
     cmd_no_suffix = f"{COMMAND_START[0]}{__plugin_name__} {setting}"
@@ -185,7 +186,7 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
             return False
         # 选择项
         async def cmd_func(reply):
-            print("执行指令")
+            logger.debug("执行指令")
             user.save()
             await send_cmd(reply, session)
             return None

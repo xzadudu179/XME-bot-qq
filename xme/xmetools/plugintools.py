@@ -6,6 +6,67 @@ from nonebot import permission as perm
 from nonebot.command import Command, CommandManager, CommandSession
 from nonebot.typing import CommandName_T, CommandHandler_T, Patterns_T, PermissionPolicy_T
 from nonebot.plugin import Plugin
+from xme.xmetools.msgtools import send_to_superusers, send_session_msg
+from character import get_message
+from traceback import format_exc
+import functools
+from nonebot.log import logger
+import time
+from xme.xmetools.dbtools import DATABASE
+
+class PluginCallData:
+    def __init__(
+            self,
+            name: str,
+            call_time: float,
+            from_user_id: int,
+            call_group: str,
+            success: bool,
+            time_cost: float,
+            db_id: int = -1
+        ):
+        self.name = name
+        self.call_time = call_time
+        self.from_user_id = from_user_id
+        self.call_group = call_group if call_group is not None else -1
+        self.success = success
+        self.time_cost = time_cost
+        self.id = db_id
+
+    def get_table_name():
+        return PluginCallData.__name__
+
+    def save(self):
+        self.id = DATABASE.save_to_db(self)
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "call_time": self.call_time,
+            "from_user_id": self.from_user_id,
+            "call_group": self.call_group,
+            "success": self.success,
+            "time_cost": self.time_cost,
+            "id": self.id
+        }
+
+    @staticmethod
+    def get(db_id: int) -> 'PluginCallData':
+        result = DATABASE.load_class(select_keys=(db_id,), query="SELECT * FROM {table_name} WHERE id = ?", cl=PluginCallData)
+        if result is None:
+            return None
+        return result
+
+    def form_dict(data: dict) -> 'PluginCallData':
+        return PluginCallData(
+            name=data["name"],
+            call_time=data["call_time"],
+            from_user_id=data["from_user_id"],
+            call_group=data["call_group"],
+            success=data["success"],
+            time_cost=data["time_cost"],
+            db_id=data["id"]
+        )
 
 def on_command(
     name: Union[str, CommandName_T],
@@ -51,9 +112,41 @@ def on_command(
                 'session_class must be a subclass of CommandSession')
 
         cmd_name = (name,) if isinstance(name, str) else name
+        @functools.wraps(func)
+        async def wrapper(session: CommandSession, *args, **kwargs):
+            start = time.monotonic()
+            call_time = time.time()
+            success = False
+            try:
+                result = await func(session, *args, **kwargs)
+                success = True
+                return result
+            except TimeoutError:
+                pass
+            except Exception:
+                logger.exception(f"Command {cmd_name} failed")
+                try:
+                    msg = get_message("config", "unknown_error", ex=format_exc())
+                    await send_session_msg(session, msg)
+                    await send_to_superusers(session.bot, msg + f"\n来自群 {session.event.group_id}，调用者 {session.event.user_id}")
+                except:
+                    pass
+                raise
+            finally:
+                cost = time.monotonic() - start
+                data = PluginCallData(
+                        cmd_name[0],
+                        call_time=call_time,
+                        from_user_id=session.event.user_id,
+                        call_group=session.event.group_id,
+                        success=success,
+                        time_cost=cost,
+                    )
+                logger.debug("存储指令调用数据：", data.to_dict())
+                data.save()
 
         cmd = Command(name=cmd_name,
-                      func=func,
+                      func=wrapper,
                       only_to_me=only_to_me,
                       privileged=privileged,
                       permission=real_permission,

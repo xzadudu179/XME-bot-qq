@@ -7,6 +7,7 @@ from xme.xmetools.bottools import permission
 from xme.plugins.commands.xme_user.classes import user
 # from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
+from nonebot.log import logger
 import random
 random.seed()
 import math
@@ -42,14 +43,14 @@ class GuessNum(Game):
         self.answer_num = -1
         self.guessing_times = 0
         self.max_guessing_times = max_guessing_times
-        # print("准备好开始了")
+        # logger.debug("准备好开始了")
 
     def start(self):
         """游戏开始的方法
         """
         # self.starting = True
         self.answer_num = random.randint(self.number_range[0], self.number_range[1])
-        # print("答案:", self.answer_num)
+        # logger.debug("答案:", self.answer_num)
         self.guessing_times = 0
         return get_message("plugins", cmd_name, name, 'guess_start',
             max_guessing_times=self.max_guessing_times,
@@ -91,9 +92,9 @@ def calc_award(basic, game: GuessNum):
 
 
 async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
-    print(args, kwargs)
+    logger.debug(args, kwargs)
     result = await func(session, user, *args, **kwargs)
-    print(result)
+    logger.debug(result)
     if result['state'] == 'OK':
         result['data']['limited'] = True
     return result
@@ -155,7 +156,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
             num = int(user_input)
             ask_to_guess = True
         except:
-            print("忽略")
+            logger.debug("忽略")
             ask_to_guess = False
             # if get_cmd_by_alias(user_input) != False:
             if is_command(user_input):

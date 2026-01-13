@@ -6,6 +6,7 @@ from xme.xmetools.randtools import messy_image
 from xme.xmetools.texttools import only_positional_fields, replace_formatted
 from character import get_message
 from traceback import print_exc
+from nonebot.log import logger
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
 from xme.xmetools.texttools import FormatDict, html_text
@@ -13,7 +14,7 @@ import json
 BOTTLE_IMAGES_PATH = "./data/images/driftbottle/"
 
 class DriftBottle:
-    def __init__(self, bottle_id: str="我是妖妻酒", id=-1, content='', sender='', likes=0, views=0, from_group='', send_time='', sender_id=0, comments: list=[], group_id=0, is_broken=False, skin="", images=[]):
+    def __init__(self, bottle_id: str = "我是妖妻酒", id=-1, content: str = '', sender: str = '', likes: int = 0, views: int = 0, from_group: str = '', send_time: str = '', sender_id: int = 0, comments: list | None = None, group_id: int = 0, is_broken: bool = False, skin: str = "", images: list | None = None):
         self.id = id
         self.bottle_id: str = bottle_id
         self.content: str = content
@@ -23,12 +24,13 @@ class DriftBottle:
         self.from_group = from_group
         self.send_time = send_time
         self.sender_id = sender_id
-        self.comments = comments
+        # avoid shared mutable defaults
+        self.comments = comments if comments is not None else []
         self.group_id = group_id
         self.is_broken = is_broken
         self.skin = skin
         # 存储图片文件名
-        self.images = images
+        self.images = images if images is not None else []
 
     def get_formatted_content(self, messy_rate_str, messy_rate):
         try:
@@ -98,10 +100,10 @@ class DriftBottle:
             # 克苏鲁瓶子
             if bottle.views >= 114514 and (bottle.likes <= bottle.views // 2):
                 continue
-            print("查重", bottle.bottle_id)
+            logger.debug("查重", bottle.bottle_id)
             for image in bottle.images:
                 result = phash_compare(path_or_image, BOTTLE_IMAGES_PATH + image, threshold=999)
-                print("图片查重result", result)
+                logger.debug("图片查重result", result)
                 if result <= 12:
                     return {
                     "status": False,
@@ -129,7 +131,7 @@ class DriftBottle:
                     FROM {DriftBottle.__name__}
                     WHERE bottle_id GLOB '[0-9]*';"""
         result = DriftBottle.exec_query(query=query, dict_data=True)[0]
-        print(result)
+        logger.debug(result)
         return int(result['COALESCE(MAX(CAST(bottle_id AS REAL)), 0)'])
 
     @staticmethod
@@ -146,7 +148,7 @@ class DriftBottle:
         DATABASE.update_db(obj=self, id=self.id, **update_method(self))
 
     def form_dict(data: dict) -> 'DriftBottle':
-        # print(data)
+        # logger.debug(data)
         images = data.get('images', '[]')
         if images is None:
             images = '[]'
@@ -230,8 +232,8 @@ command_properties = [
         'permission': ''
     }
 ]
-DATABASE.create_class_table(DriftBottle())
-
+# Avoid creating a DriftBottle instance at import time; call this during startup if needed.
+# DATABASE.create_class_table(DriftBottle())
 
 from .throw import *
 from .pickup import *
@@ -258,31 +260,33 @@ __plugin_usage__ = PluginDoc(
     alias_list=aliases
 )
 
-EXAMPLE_BOTTLE = DriftBottle(
-    bottle_id="1179?",
-    content="这是一个用来演示漂流瓶卡片效果的瓶子~\n\n这个瓶子是虚拟的哦",
-    sender="漠月和他的550W",
-    likes=5,
-    views=10,
-    from_group="世界之外的一个神秘区域...",
-    send_time="2025年11月11日 11:23:45",
-    sender_id=0,
-    comments=[
-        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "好诶，是漠月~ 那我就在这里留下一条长长的评论吧~", "likes": 1},
-        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "摸摸漠月~ 第二次捡到了", "likes": 1}
-    ],
-)
-
-ERROR_BOTTLE = DriftBottle(
-    bottle_id="6066",
-    content="xwx 你好我是妖妻酒\n\n其实你们并不能看到这个瓶子的任何消息",
-    sender="妖妻酒和他的妖妻酒",
-    likes=0,
-    views=114514,
-    from_group="ono妈咪何意味...",
-    send_time="1145年01月04日 11:45:14",
-    sender_id=0,
-    comments=[
-        {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "嗷呜", "likes": 0}
-    ],
-)
+def create_example_bottles():
+    return {
+        "EXAMPLE_BOTTLE": DriftBottle(
+            bottle_id="1179?",
+            content="这是一个用来演示漂流瓶卡片效果的瓶子~\n\n这个瓶子是虚拟的哦",
+            sender="漠月和他的550W",
+            likes=5,
+            views=10,
+            from_group="世界之外的一个神秘区域...",
+            send_time="2025年11月11日 11:23:45",
+            sender_id=0,
+            comments=[
+                {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "好诶，是漠月~ 那我就在这里留下一条长长的评论吧~", "likes": 1},
+                {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "摸摸漠月~ 第二次捡到了", "likes": 1}
+            ],
+        ),
+        "ERROR_BOTTLE": DriftBottle(
+            bottle_id="6066",
+            content="xwx 你好我是妖妻酒\n\n其实你们并不能看到这个瓶子的任何消息",
+            sender="妖妻酒和他的妖妻酒",
+            likes=0,
+            views=114514,
+            from_group="ono妈咪何意味...",
+            send_time="1145年01月04日 11:45:14",
+            sender_id=0,
+            comments=[
+                {"sender": "九镹_xzadudu179", "sender_id": 1795886524, "content": "嗷呜", "likes": 0}
+            ],
+        )
+    }

@@ -7,6 +7,7 @@ from xme.xmetools.bottools import XmeArgumentParser
 from .commands import clear_history
 import cn2an
 from traceback import format_exc
+from nonebot.log import logger
 import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path, save_to_path
@@ -107,14 +108,14 @@ async def _(session: CommandSession, user: u.User):
         return False
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
-        print("正常")
+        # print("正常")
         t = await talk(session, text, user)
         if not t:
             return False
         await send_session_msg(session,
                                get_message("plugins", __plugin_name__, 'talk_result', talk=(t), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
-    except Exception as ex:
-        print("错误：", ex)
+    except Exception:
+        logger.error("错误：", format_exc())
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     return True
@@ -184,9 +185,9 @@ async def talk(session: CommandSession, text, user: u.User):
             return False
         ans = result_response.choices[0].message.content
         build_history(user=user, ask=text, ans=ans)
-        print("处理结果")
+        logger.debug("处理结果")
         return result_response.choices[0].message.content
     except AttributeError as ex:
-        print("attribute 错误: ", ex)
+        logger.error("attribute 错误: ", ex)
         await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
         return False

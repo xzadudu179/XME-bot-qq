@@ -31,10 +31,10 @@ async def _(session: CommandSession):
                 location_info = location.split("[CQ:location,")[1].split(",title")[0].replace(",", "&")
         elif user_location_info and not args:
             lat, lon = user_location_info["lat"], user_location_info["lon"]
-            print(user_location_info)
+            # print(user_location_info)
             location_info = f'lat={lat}&lon={lon}'
         elif args or "[CQ:location" not in location:
-            print(location)
+            # print(location)
             loc = [try_parse(l, float, None) for l in location.split(",")]
             if len(loc) < 2:
                 loc.append(0)
@@ -45,7 +45,7 @@ async def _(session: CommandSession):
             location_info = f'lat={loc[0]}&lon={loc[1]}'
         astro_image_url = f"https://www.7timer.info/bin/astro.php?{location_info}&ac=0&lang=zh-CN&unit=metric&tzshift=0"
         # meteo_image_url = f"https://www.7timer.info/bin/meteo.php?{location_info}&ac=0&lang=zh-CN&unit=metric&tzshift=0"
-        print(location_info)
+        # print(location_info)
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'outputing'))
         await send_session_msg(session, f"[CQ:image,file={astro_image_url}]" + get_message("plugins", __plugin_name__, 'output_suffix'), tips=True)
     except Exception as ex:

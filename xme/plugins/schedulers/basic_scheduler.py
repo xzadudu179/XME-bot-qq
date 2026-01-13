@@ -8,7 +8,9 @@ from xme.xmetools.bottools import bot_call_action
 from xme.xmetools import randtools
 from aiocqhttp import MessageSegment
 from xme.xmetools.jsontools import read_from_path, save_to_path
+from nonebot.log import logger
 from xme.xmetools import timetools
+from xme.xmetools.filetools import backup_data_dir
 from xme.xmetools import msgtools
 from character import get_character_item, get_message
 import random
@@ -28,7 +30,7 @@ def calc_lottery():
     get_coins, lose_coins = vars["lottery_get_coins"], vars["lottery_lose_coins"]
     vars["lottery_get_coins"] = 0
     vars["lottery_lose_coins"] = 0
-    print(vars)
+    logger.debug(vars)
     save_to_path("data/bot_vars.json", vars)
     user.save()
     return get_coins, lose_coins
@@ -36,6 +38,7 @@ def calc_lottery():
 async def send_time_message(new_day=False):
     scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
     if new_day:
+        log.logger.log("数据已备份至: " + str(backup_data_dir()))
         get_coins, lose_coins = calc_lottery()
     for group in scheduler_groups:
         say = random.choice(read_from_path("./static/hitokoto.json"))
@@ -82,7 +85,7 @@ async def send_time_message(new_day=False):
     year="*",
 )
 async def _():
-    print("新年报时")
+    logger.info("新年报时")
     await msgtools.send_to_groups(bot, get_message("schedulers", "new_year"))
 
 
@@ -100,13 +103,13 @@ async def _():
         faces = await bot_call_action(bot, "fetch_custom_face")
     except:
         has_faces = False
-    # print(faces)
+    # logger.debug(faces)
     # 随机发表情
     messages = get_character_item("schedulers", "idles")
     if has_faces:
         messages += faces
     message = random.choice(messages)
-    # print(has_faces, messages)
+    # logger.debug(has_faces, messages)
     if message in faces:
         # message = f"[CQ:image,file={message},summary={get_message('config', 'face_summary')}]"
         message = MessageSegment(type_="image", data={
@@ -128,25 +131,25 @@ async def _():
 
 @nonebot.scheduler.scheduled_job('cron', hour='12')
 async def _():
-    print("报时")
+    logger.info("报时")
     await send_time_message()
 
 # @nonebot.scheduler.scheduled_job('cron', minute='*')
 # async def _():
-#     print("测试报时")
+#     logger.info("测试报时")
 #     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='8')
 async def _():
-    print("报时")
+    logger.info("报时")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='20')
 async def _():
-    print("报时")
+    logger.info("报时")
     await send_time_message()
 
 @nonebot.scheduler.scheduled_job('cron', hour='0')
 async def _():
-    print("报时")
+    logger.info("报时")
     await send_time_message(True)

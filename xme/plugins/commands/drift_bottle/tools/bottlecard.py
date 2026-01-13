@@ -5,6 +5,8 @@ from xme.xmetools.imgtools import get_html_image
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 from keys import BOTTLE_IMAGE_KEY
+from nonebot.log import logger
+
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
     item = CARD_SKINS.get(skin_name, CARD_SKINS["默认卡片"]).get(item_name, CARD_SKINS["默认卡片"][item_name])
     return item
@@ -42,7 +44,6 @@ def get_comment_html(messy_rate: int | float, messy_rate_str: str, comment_list:
     ]
     # comment_html = """<p><span class="colored">{info0}</span>{info1}<span class="colored small-like">{info2}</span></p>"""
     comment_suffix = get_card_item("comment_suffix", skin_name)
-    # print(comment_html)
     if len(comment_list) < 1:
         comment_content = no_comment.format(content=html_messy_string('什么都没有呢...', messy_rate))
         return comment_content
@@ -84,8 +85,9 @@ def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认�
     return bottle_card
 
 def get_example_bottle(skin_name="默认卡片"):
-    from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
-    return get_class_bottle_card_html(EXAMPLE_BOTTLE, skin_name=skin_name)
+    # from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
+    from xme.plugins.commands.drift_bottle import create_example_bottles
+    return get_class_bottle_card_html(create_example_bottles()["EXAMPLE_BOTTLE"], skin_name=skin_name)
 
 def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片", html_render=False):
     if messy_rate is None:
@@ -119,7 +121,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
         content = ""
         # 防止注入html的问题
         if c.startswith(f'<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,') and len(images) > 0 and image_item_count < len(images):
-            print("处理图片")
+            logger.debug("处理图片")
             content = f'<p>{c}</p>'
             image_item_count += 1
             formatted_content.append(content)

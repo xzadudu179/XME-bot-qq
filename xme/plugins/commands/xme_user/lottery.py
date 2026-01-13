@@ -7,6 +7,7 @@ from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.jsontools import save_to_path, read_from_path
 import random
 random.seed()
+from nonebot.log import logger
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
@@ -54,7 +55,7 @@ async def _(session: CommandSession, user: User):
         count = min(times_left_now, count)
         while user.coins - count * arg < 0:
             arg -= 1
-        print("count is", count)
+        logger.debug("count is", count)
     if len(arg_list) > 1 and not all_in:
         arg = arg_list[0]
         if arg_list[1].isdigit() and int(arg_list[1]) > 0:
@@ -78,8 +79,8 @@ async def _(session: CommandSession, user: User):
                 await send_session_msg(session, message, tips=True)
                 return False
         except ValueError as ex:
-            print(ex)
-            print(traceback.format_exc())
+            logger.error(ex)
+            logger.exception(traceback.format_exc())
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_arg', )
             await send_session_msg(session, message, tips=True)
             return False
@@ -125,7 +126,7 @@ async def _(session: CommandSession, user: User):
     )
 
     await send_session_msg(session, message, tips=True)
-    print("result", result, calc_count * 2, calc_count)
+    logger.debug("result", result, calc_count * 2, calc_count)
     if result >= calc_count * 2 and calc_count >= 200:
         await user.achieve_achievement(session, "土块")
     return True

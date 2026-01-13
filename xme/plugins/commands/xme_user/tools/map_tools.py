@@ -202,7 +202,6 @@ def draw_galaxy_map():
 
     # 计算图像宽高
     width, height = int(zoom_width * 2 * zoom_factor + padding * 2) * img_zoom, int(zoom_height * 2 * zoom_factor + padding * 2) * img_zoom
-    print(width, height)
     # 坐标点列表，(x, y)
     regular_points = []
     # 随便绘制一些物体的位置

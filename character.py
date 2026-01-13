@@ -5,6 +5,7 @@ from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
 import config
 import os
+from nonebot.log import logger
 # 其实这就是 i18n
 CHARACTER = 'Deon'
 DEFAULT_CHARACTER = 'Deon'
@@ -105,10 +106,10 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
             cmd_sep=config.COMMAND_START[0]
         )
     except KeyError as ex:
-        print(f"keyerror: {ex}")
+        logger.warning(f"keyerror: {ex}")
         return str(result)
     except ValueError as ex:
-        print(f"ValueError: {ex}")
+        logger.warning(f"ValueError: {ex}")
         return str(result)
 
 

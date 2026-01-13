@@ -206,5 +206,3 @@ def split_string(s, group_count):
 
 if __name__ == "__main__":
     gra_text = gradient_text("#FF5555", "#FFFF55", "#55FF55", "#55FFFF", "#5555FF", "#FF55FF", text="测试一下渐变字符串的效果嗷呜, 测试")
-    print(gra_text)
-    print(invent_color("#1f1e33"))

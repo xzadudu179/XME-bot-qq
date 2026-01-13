@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import json
+from nonebot.log import logger
 
 async def get_weather(city: str) -> dict:
     response = await fetch_data(f"https://restapi.amap.com/v3/weather/weatherInfo?key=***&city={city}&extensions=all")
@@ -15,7 +16,7 @@ async def fetch_data_post(url, params, *args, **kwargs):
                 data = await response.json()
                 return data
     except Exception as e:
-        print(e)
+        logger.exception(e)
         return None
 
 async def fetch_data(url, response_type="json", *args, **kwargs):

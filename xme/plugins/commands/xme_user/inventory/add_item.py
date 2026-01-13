@@ -20,7 +20,6 @@ async def add(session, user: u.User, arg):
     except TypeError:
         pass
     try:
-        print(user)
         if user.inventory.add_item(id, count):
             item = Item.get_item(id)
             await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "success", count=count, name=item, pronoun=item.pronoun))

@@ -32,7 +32,6 @@ async def _(session: CommandSession):
         else:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_at_arg'))
             return
-        print(at_id, name)
         await session.bot.set_group_special_title(group_id=session.event.group_id, user_id=at_id, special_title=name if name != "-delete" else "", duration=0)
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'successful' if name != "-delete" else 'deleted'))
     except Exception as e:

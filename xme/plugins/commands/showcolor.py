@@ -8,6 +8,7 @@ from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import fullwidth_to_halfwidth
 from xme.xmetools.filetools import has_file
 from xme.xmetools.imgtools import image_msg
+from nonebot.log import logger
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']
@@ -38,7 +39,7 @@ def gen_color_image(color_num, size=(300, 200)):
     name = f"color_{color_num}.png"
     path = f"./data/images/temp/{name}"
     if has_file(path):
-        print("使用缓存")
+        logger.debug("使用缓存")
         return path
     width, height = size
     color = f"#{color_num}"
@@ -52,15 +53,10 @@ def gen_color_image(color_num, size=(300, 200)):
     text_height = text_bbox[3] - text_bbox[1]
     text_x = (width - text_width) // 2
     text_y = (height - text_height) // 2 - (font_size // 8)
-    # print("aaa")
     # 文字颜色
     text_color = c.invent_color(color)
-    # print("bbb")
     if c.get_color_differences(text_color, color) < 30:
-        # print("ccc")
         text_color = "#000000" if c.get_color_luminance(color) > 128 else "#FFFFFF"
-    # print("con")
-
     # 绘制文字
     draw.text((text_x, text_y), color, fill=text_color, font=font)
     image.save(path)

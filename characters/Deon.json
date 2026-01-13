@@ -187,7 +187,7 @@
   "user": {
     "coin_name": "星币",
     "coin_pronoun": "枚",
-    "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
+    "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}\n可以尝试用 \"/s\" 指令签到获取{coin_name}{positive_punc}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
     "user_info_str": "----------\n{desc}用户 id: {id}\n注册时间: {reg_time}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",

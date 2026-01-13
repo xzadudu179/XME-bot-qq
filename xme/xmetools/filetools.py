@@ -1,6 +1,44 @@
 from nonebot import log
 import os
 import base64
+from pathlib import Path
+from datetime import datetime
+import shutil
+
+def cleanup_old_backups(
+        backup_root: Path,
+        keep: int = 500
+    ):
+    if not backup_root.exists():
+        return
+    backups = sorted(
+        (p for p in backup_root.iterdir() if p.is_dir()),
+        key=lambda p: p.name
+    )
+    excess = len(backups) - keep
+    if excess <= 0:
+        return
+    for old in backups[:excess]:
+        shutil.rmtree(old)
+
+def backup_data_dir(
+        data_dir: Path = Path("data"),
+        backup_root: Path = Path(".backup"),
+        max_backups: int = 500
+    ) -> Path:
+    """
+    将 data 目录备份到 .backup/datas-YYYY-MM-DD_HH-MM-SS
+
+    返回：备份目录路径
+    """
+    data_dir.mkdir(parents=True, exist_ok=True)
+    backup_root.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    backup_dir = backup_root / "datas-" + timestamp
+    shutil.copytree(data_dir, backup_dir)
+    cleanup_old_backups(backup_root, keep=max_backups)
+    return backup_dir
+
 
 def b64_encode_file(file_path):
     with open(file_path, "rb") as f:

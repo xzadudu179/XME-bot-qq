@@ -24,15 +24,8 @@ __plugin_usage__ = CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @using_user(True)
 async def _(session: CommandSession, u: User):
-    reply: str = await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, "hint"))
-    if reply.lower().strip() != "y":
-        return await send_session_msg(session, get_message("plugins", __plugin_name__, "canceled"), tips=True)
-    result = await u.try_spend(session, 5)
-    if not result:
-        return
     lots: list = read_from_path("./static/lot.json")
     lot = random.choice(lots)
     num_str = an2cn(lot["num"])
-    result = f"第{num_str}签 {lot['type']}\n{lot['content']}"
-    return await send_session_msg(session, result)
-    # if coins < 15:
+    lot_msg = f"第{num_str}签 {lot['type']}\n{lot['content']}"
+    await u.try_spend(session, 5, spent_message=get_message("user", "spent_coin") + "\n" + lot_msg)

@@ -23,4 +23,4 @@ async def private_message_copy(bot: NoneBot, event: aiocqhttp.Event, plugin_mana
     if not cmdtools.get_cmd_by_alias(raw_msg.split(" ")[0]):
         # await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f'{await get_stranger_name(event.user_id)}({event.user_id})'))
         return
-    print("被私聊发送了指令")
+    # 私聊指令

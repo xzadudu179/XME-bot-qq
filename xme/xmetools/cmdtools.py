@@ -20,7 +20,6 @@ async def event_send_cmd(cmd_string, bot, event, check_permission=True):
     # if name == "wife" and '[CQ:at,qq=' not in args:
         # await event_send_msg(bot, event, get_message('other', 'wife_error'))
         # await send_msg(session, "注意：你在一个可回复的指令后面执行了 wife 指令，会默认显示我的老婆 uwu")
-    print(f"parse command: {name} | {args}")
     await call_command(
         bot=bot,
         event=event,

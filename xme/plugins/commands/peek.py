@@ -2,7 +2,7 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
-from aiocqhttp import MessageSegment
+from nonebot.log import logger
 from xme.xmetools import jsontools
 from xme.xmetools import colortools as c
 import traceback
@@ -37,7 +37,6 @@ async def _(session: CommandSession):
     is_private = False
     if current_window:
         for name in private_window_names:
-            print(name, isinstance(name, list))
             if isinstance(name, list):
                 if current_window.title not in name: continue
                 is_private = True
@@ -60,18 +59,14 @@ async def _(session: CommandSession):
     try:
         path, state = imgtools.take_screenshot(monitor_num)
     except:
-        print(traceback.format_exc())
-        print("无法截图")
+        logger.error("无法截图: ")
+        logger.exception(traceback.format_exc())
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'))
-    # path = "file:///" + path.split(":")[0] + ":\\" + path.split(":")[1]
-    # path = f'http://server.xzadudu179.top:17980/screenshot'
     if arg_state and monitor_num != 0:
         message = get_message("plugins", __plugin_name__, 'successful', monitor_num=monitor_num)
     elif state and arg_state and monitor_num == 0:
         message = get_message("plugins", __plugin_name__, 'successful_all', monitor_num=monitor_num)
     else:
         message = get_message("plugins", __plugin_name__, 'default_monitor')
-    # image_msg = f"[CQ:image,file={path}]"
     image_msg = await imgtools.image_msg(path)
-    # print(image_msg)
     await send_session_msg(session, message + '\n' + image_msg)

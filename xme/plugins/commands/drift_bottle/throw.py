@@ -12,6 +12,7 @@ from xme.xmetools.imgtools import get_image, limit_size, get_image_format
 from traceback import format_exc
 import config
 import re
+from nonebot.log import logger
 import os
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
@@ -29,7 +30,7 @@ async def _(session: CommandSession, user):
 
     arg = session.current_arg.strip()
 
-    print(arg)
+    logger.debug(arg)
     try:
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
         matches = re.findall(pattern, arg)
@@ -39,18 +40,18 @@ async def _(session: CommandSession, user):
         image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_paths)]
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
-        print("error", format_exc())
+        logger.exception(format_exc())
 
     for i, image_cq in enumerate(matches):
         filename = ".".join(image_filenames[i].split(".")[:-1])
-        print("filename", filename)
+        logger.debug("filename", filename)
         arg = arg.replace(image_cq, "{" + filename + "}")
     arg = re.sub(r"\[[^\[\]]*\]", "", arg).replace("&#91;", "[").replace("&#93;", "]").strip()
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False
     check = DriftBottle.check_duplicate_bottle(arg)
-    print("查重", check['content'])
+    logger.debug("查重", check['content'])
     if check['status'] == False:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
         return False
@@ -58,7 +59,7 @@ async def _(session: CommandSession, user):
     user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
     group = await session.bot.get_group_info(group_id=session.event.group_id)
     bottle_id = DriftBottle.get_max_bottle_id() + 1
-    print(bottle_id)
+    logger.debug(bottle_id)
     bottle_content = {
         "id": -1,
         "bottle_id": bottle_id,
@@ -78,8 +79,8 @@ async def _(session: CommandSession, user):
 
     bottle: DriftBottle = DriftBottle.form_dict(bottle_content)
     formatted_arg = bottle.get_formatted_content("0%", 0)
-    # print(formatted_arg, len(formatted_arg))
-    # print(arg, len(arg))
+    # logger.debug(formatted_arg, len(formatted_arg))
+    # logger.debug(arg, len(arg))
     if len(formatted_arg) > MAX_LENGTH:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg)))
         return False
@@ -99,14 +100,14 @@ async def _(session: CommandSession, user):
         check_image = DriftBottle.check_duplicate_image(image)
         if check_image["status"] == False:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
-            print("查重图片：", check_image)
+            logger.debug("查重图片：", check_image)
             return False
         # 存储图片
         image.save(path)
 
     bottle.images = image_filenames
     bottle.save()
-    print(bottle)
+    logger.debug(bottle)
 
     await report(session, bottle, user['user_id'], "发送了一个漂流瓶", False)
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'throwed', id=bottle_id), tips=True)

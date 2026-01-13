@@ -13,6 +13,7 @@ from xme.xmetools.imgtools import crop_transparent_area, image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time
+from nonebot.log import logger
 import asyncio
 import os
 from xme.plugins.commands.xme_user.classes import user
@@ -117,7 +118,7 @@ class Seek:
             # await send_session_msg(session, result)
         self.total_steps += steps_result['count']
         if steps_result["over"]:
-            print("OVER 探险结束")
+            logger.debug("OVER 探险结束")
             # self.status = "stop"
         if steps_result['is_die']:
             steps += Seek.special_message(f"你已被迫结束探险。原因：{steps_result['die_reason']}", html_class="die")
@@ -285,7 +286,7 @@ def get_img_msg(
         <main>
     """
     html_str = md_str
-    # print(html_body)
+    # logger.debug(html_body)
     html_content = html_body + html_str + """\n
             </main>
     </body>
@@ -305,7 +306,7 @@ class SeekStep:
     # def parse_step():
 
     def gen_step(self, events, player: Player, is_sim) -> str | dict:
-        # print(player.region)
+        # logger.debug(player.region)
         return self.event.gen_event(events, player.region.value, is_sim=is_sim)
 
     def gen_event_step(self, event_dict: dict, player: Player):
@@ -335,9 +336,9 @@ seeking_players = {
 
 
 async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
-    # print(args, kwargs)
+    # logger.debug(args, kwargs)
     result = await func(session, user, *args, **kwargs)
-    # print(result)
+    # logger.debug(result)
     if result['state'] == 'OK':
         result['data']['limited'] = True
     return result
@@ -536,7 +537,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             prefix = "----------阶段总结[剩余 {chance} 次机会]----------"
             player.chance.change(lambda v: v - 1)
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')
-            # print(player.chance.value, seek.status)
+            # logger.debug(player.chance.value, seek.status)
     except TimeoutError as ex:
         seek.status = "exit"
     except Exception as ex:
@@ -544,11 +545,11 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             try:
                 seeking_groups.remove(session.event.group_id)
             except:
-                print(f"无法移除群 id {session.event.group_id} 因为不存在。")
+                logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
         try:
             del seeking_players[session.event.user_id]
         except:
-            print(f"无法移除用户 id {session.event.user_id} 因为不存在。")
+            logger.error(f"无法移除用户 id {session.event.user_id} 因为不存在。")
         traceback.print_exc()
         return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'error_msg', ex=traceback.format_exc()))
     # await sleep(10)
@@ -584,12 +585,12 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     try:
         del seeking_players[session.event.user_id]
     except:
-        print(f"无法移除用户 {session.event.user_id} 因为不存在。")
+        logger.error(f"无法移除用户 {session.event.user_id} 因为不存在。")
     if sender.is_groupchat:
         try:
             seeking_groups.remove(session.event.group_id)
         except:
-            print(f"无法移除群 id {session.event.group_id} 因为不存在。")
+            logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
     if is_sim:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg_simulation', gain=f"{coins_str}"))
         return

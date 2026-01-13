@@ -3,6 +3,7 @@ from aiocqhttp import MessageSegment
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 import asyncio
+from nonebot.log import logger
 
 increase_people = {}
 
@@ -13,7 +14,7 @@ async def _(session: NoticeSession):
     # 发送欢迎消息
     # 如果是自己换一种欢迎方法
     if session.event.user_id == session.self_id:
-        print("欢迎自己")
+        logger.debug("欢迎自己")
         return await send_session_msg(session, get_message("event_parsers", "welcome_self"), at=False)
     # 指定秒内加群的人会被一起计算
     group = session.event.group_id
@@ -22,15 +23,15 @@ async def _(session: NoticeSession):
         increase_people[group].append(str(MessageSegment.at(session.event.user_id)))
     else:
         return await send_session_msg(session, get_message("event_parsers", "welcome_99"), at=False)
-    # print(increase_people)
-    # print(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
+    # logger.debug(increase_people)
+    # logger.debug(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
     people = increase_people[group]
     await asyncio.sleep(4)
-    # print(increase_people)
+    # logger.debug(increase_people)
     if len(people) == len(increase_people[group]):
         at = " ".join(increase_people[group])
         increase_people[group] = []
-        print(get_message("event_parsers", "welcome", at=" ".join(str(s) for s in increase_people[group])))
+        logger.debug(get_message("event_parsers", "welcome", at=" ".join(str(s) for s in increase_people[group])))
         await send_session_msg(session, get_message("event_parsers", "welcome", at=at), False)
         # await send_session_msg(session, get_message("event_parsers", "welcome", at=''), False)
         return

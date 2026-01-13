@@ -12,7 +12,8 @@ from xme.xmetools.imgtools import image_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from nonebot import MessageSegment
-from traceback import print_exc
+from nonebot.log import logger
+from traceback import format_exc
 from character import get_message
 from xme.xmetools.texttools import most_similarity_str
 
@@ -38,7 +39,7 @@ async def arg_help(arg, plugins, session):
         ask_for_help = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
     else:
         ask_for_help = ask_for_help.name[0]
-    print(ask_for_help)
+    logger.debug(ask_for_help)
     ask_cmd = ask_for_help
     if not ask_for_help:
         return False
@@ -47,12 +48,12 @@ async def arg_help(arg, plugins, session):
             ask_for_help = pl.name.lower()
         elif isinstance(pl.usage, str) and f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
             ask_for_help = pl.name.lower()
-        # print(ask_cmd, ask_for_help, pl.name.lower())
+        # logger.debug(ask_cmd, ask_for_help, pl.name.lower())
         user_help = None
         try:
             user_help = get_userhelp(ask_cmd)
             if user_help is not None and pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
-                print("发送用户帮助")
+                logger.debug("发送用户帮助")
                 return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
         except:
             pass
@@ -67,7 +68,7 @@ async def _(session: CommandSession, user: u.User):
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     arg = session.current_arg_text.strip().lower()
     # 如果发了参数则发送相应命令的使用帮助
-    print("发送帮助")
+    logger.debug("发送帮助")
     if arg and await arg_help(arg, plugins, session) != False: return False
     # help_list_str = ""
     PAGE_LENGTH = 20
@@ -100,7 +101,7 @@ async def _(session: CommandSession, user: u.User):
                 plugin_pages += page
                 continue
         except:
-            print_exc()
+            logger.exception(format_exc())
             plugin_pages += "\n" + f"[未知] {p.name}"
 
     if len(total_pages.split("\n")) < 1:
@@ -110,7 +111,7 @@ async def _(session: CommandSession, user: u.User):
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], PAGE_LENGTH)]
     pages_plugin = ['\n'.join(item) for item in split_list(plugin_pages.split("\n")[1:], PAGE_LENGTH)]
-    # print(pages)
+    # logger.debug(pages)
     prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '"、"'.join(config.COMMAND_START) + '"', version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="https://docs.xme.179.life/")
@@ -127,5 +128,8 @@ async def _(session: CommandSession, user: u.User):
     # new_messages.append(change_group_message_content(msg_dict, get_message("plugins", __plugin_name__, "other_help_2")))
     # await send_session_msg(session, await image_msg(IMG_PATH + "/other_help.png"), at=False)
     # await send_session_msg(session, "注：如果没有看到即将发送的聊天记录，可以尝试私聊发送 /help", at=False)
-    await send_forward_msg(session.bot, session.event, new_messages)
+    try:
+        await send_forward_msg(session.bot, session.event, new_messages)
+    except:
+        pass
     return True

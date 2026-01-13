@@ -24,7 +24,7 @@ __plugin_usage__ = CommandDoc(
 async def _(session: CommandSession):
 
     result = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, 'leaving')))
-    print("result", result)
+    # print("result", result)
     if result != "Y":
         return
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'leave_message'))

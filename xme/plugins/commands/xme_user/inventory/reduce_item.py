@@ -57,7 +57,6 @@ async def reduce_item_by_id(
     """
     count = 1
     item_get: Item = await inv_get.get_item_by_id(session, id_str, silent=silent)
-    print(type(item_get))
     if not item_get:
         return default
 

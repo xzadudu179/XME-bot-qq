@@ -28,7 +28,6 @@ usage = {
 # @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     arg = session.current_arg
-    print("arg", arg)
     at_id = 0
     if arg.startswith("[CQ:at,qq="):
         # at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])

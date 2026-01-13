@@ -4,6 +4,7 @@ from xme.xmetools.doctools import CommandDoc
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from character import get_message
+from nonebot.log import logger
 
 alias = ["九九文章", "rss179", "posts179", "blogposts", "posts", "post"]
 __plugin_name__ = 'xmeposts'
@@ -33,5 +34,5 @@ async def _(session: CommandSession):
     except:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
         # return await send_msg(session, f"请输入正确的文章数量哦")
-    print("rss" + show_rss(catch_179rss(), count))
+    logger.debug("rss" + show_rss(catch_179rss(), count))
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'post_msg', count=count, posts=show_rss(catch_179rss(), count).replace("xzadudu179.github.io", "blog.xzadudu179.top")), tips=True, tips_percent=20)

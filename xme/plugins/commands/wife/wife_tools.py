@@ -4,6 +4,7 @@ from xme.xmetools import listtools as lt
 from xme.xmetools import timetools as d
 import json
 import random
+from nonebot.log import logger
 
 # members = []
 
@@ -17,21 +18,6 @@ async def group_init(group_id: str) -> dict:
         dict: 群组老婆信息
     """
     return wife_update(group_id)
-    # global members
-    # members_full = await nonebot.get_bot().get_group_member_list(group_id=group_id)
-    # members = [member['user_id'] for member in members_full]
-    # # load or create wifeinfo entry for this group
-    # with open("./data/wife.json", 'r', encoding='utf-8') as file:
-    #     wifeinfo = json.load(file)
-    # if group_id not in wifeinfo:
-    #     wifeinfo[group_id] = {
-    #         "days": d.curr_days(),
-    #         "members": []
-    #     }
-    #     with open("./data/wife.json", 'w', encoding='utf-8') as file:
-    #         file.write(json.dumps(wifeinfo))
-    # return wifeinfo
-
 
 def wife_update(group_id: str) -> dict:
     """更新老婆数据并且返回wifeinfo
@@ -46,7 +32,7 @@ def wife_update(group_id: str) -> dict:
     days = d.curr_days()
     with open("./data/wife.json", 'r', encoding='utf-8') as file:
         wifeinfo = json.load(file)
-    print(days, wifeinfo[group_id]['days'], days > wifeinfo[group_id]['days'])
+    logger.debug(days, wifeinfo[group_id]['days'], days > wifeinfo[group_id]['days'])
     if group_id not in wifeinfo or days > wifeinfo[group_id]['days']:
         wifeinfo[group_id] = {"days": days, "members": []}
         with open("./data/wife.json", 'w', encoding='utf-8') as file:

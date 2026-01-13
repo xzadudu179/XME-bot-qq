@@ -77,7 +77,6 @@ def run_with_timeout(func, timeout_seconds, error_message="函数执行超时", 
         Any: 函数结果
     """
     # 使用 multiprocessing.Pool 来执行长时间计算
-    print("running....")
     with multiprocessing.Pool(1) as pool:
         result = pool.apply_async(func, args=args, kwds=kwargs)
         try:

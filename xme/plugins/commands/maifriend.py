@@ -1,4 +1,5 @@
 from nonebot import CommandSession
+from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
@@ -46,6 +47,6 @@ async def _(session: CommandSession):
             qq_id = get_at_id(arg)
         image = await gen_maifriend(qq_id)
     except:
-        traceback.print_exc()
+        logger.exception(traceback.format_exc())
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'), tips=True)
     return await send_session_msg(session, await image_msg(image), tips=True, tips_percent=20)

@@ -5,14 +5,14 @@ from character import get_message
 class Inventory:
     """物品栏类
     """
-    def __init__(self, length=20, inv_list: list[dict]=[]):
+    def __init__(self, length=20, inv_list: list[dict] | None = None):
         self.inv_items: list[InvItem] = []
-        if inv_list:
+        if inv_list is not None:
             for item in inv_list:
                 self.inv_items.append(InvItem.get_invitem(item))
             return
         for _ in range(length):
-           self.inv_items.append(InvItem())
+            self.inv_items.append(InvItem())
 
     def __list__(self):
         self.sort_items()

@@ -12,7 +12,6 @@ from functools import wraps
 from aiocqhttp import ActionFailed
 import json
 from xme.xmetools.msgtools import send_to_superusers
-from xme.xmetools.bottools import bot_call_action
 from nonebot import get_bot
 from ..tools.map_tools import *
 import inspect
@@ -20,10 +19,8 @@ from xme.xmetools.imgtools import hash_image
 import math
 from xme.xmetools.msgtools import send_session_msg
 from .inventory import Inventory
-from .celestial.star import Star
-from .celestial.planet import Planet, PlanetType
+from nonebot.log import logger
 from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
-from ..tools import galaxy_date_tools
 from xme.xmetools.dbtools import DATABASE
 
 
@@ -42,15 +39,15 @@ class User:
     def get_table_name():
         return User.__name__
 
-    async def try_spend(self, session: BaseSession, count, out_of_range_zero=False, message="", spent_message=""):
+    async def try_spend(self, session: BaseSession, count, out_of_range_zero=False, no_coin_message="", spent_message=""):
         if count < 0:
             raise ValueError(f"花费的{coin_name}不能小于 0")
         if self.coins < count:
-            await send_session_msg(session, (get_message("user", "no_coin", count=count) if not message else message))
+            await send_session_msg(session, (get_message("user", "no_coin", count=count) if not no_coin_message else no_coin_message.format(count=count)))
             return False
         r, spend = self.spend_coins(count, out_of_range_zero)
         if r:
-            await send_session_msg(session, (get_message("user", "spent_coin", count=spend) if not spent_message else spent_message))
+            await send_session_msg(session, (get_message("user", "spent_coin", count=spend) if not spent_message else spent_message.format(count=spend)))
             return True
         return False
 
@@ -72,37 +69,38 @@ class User:
             user_id: int,
             id: int = -1,
             coins: int = 0,
-            inventory: Inventory = Inventory(),
-            talked_to_bot: list = [],
+            inventory: Inventory | None = None,
+            talked_to_bot: list | None = None,
             desc: str = "",
             celestial_uid=None,
             xme_favorability=0,
-            counters: dict = {},
+            counters: dict | None = None,
             # timers: dict = {},
-            plugin_datas = {}, # 插件数据，比如 weather 保存用户位置之类的
-            achievements: list = [],
-            ai_history: list[dict] = [],
+            plugin_datas: dict | None = None, # 插件数据，比如 weather 保存用户位置之类的
+            achievements: list | None = None,
+            ai_history: list[dict] | None = None,
             gen_starfield = True,
         ):
         self.db_id = id
         self.id = user_id
         self.desc = desc
-        self.inventory = inventory
+        # avoid shared mutable defaults
+        self.inventory = inventory if inventory is not None else Inventory()
         self.coins = coins
         self.xme_favorability = xme_favorability
-        self.talked_to_bot = talked_to_bot
-        self.counters = counters
-        self.plugin_datas: dict = plugin_datas
+        self.talked_to_bot = talked_to_bot if talked_to_bot is not None else []
+        self.counters = counters if counters is not None else {}
+        self.plugin_datas: dict = plugin_datas if plugin_datas is not None else {}
         # self.timers = timers
         # 注册时间
         # datas = self.plugin_datas.get("datas", {})
         # reg_time = datas.get("register_time", -1)
 
-        self.achievements = achievements
-        self.ai_history = ai_history
-        # print(self.ai_history)
+        self.achievements = achievements if achievements is not None else []
+        self.ai_history = ai_history if ai_history is not None else []
+        # logger.debug(self.ai_history)
         # 用户所在天体
-        # print("dbid", self.db_id)
+        # logger.debug("dbid", self.db_id)
         self.celestial_uid = celestial_uid
         self.celestial = None
         self.get_reg_time()
@@ -123,10 +121,10 @@ class User:
         return v
 
     def get_celestial(self):
-        # print("uid:", self.celestial_uid)
+        # logger.debug("uid:", self.celestial_uid)
         if self.celestial_uid is not None:
             self.celestial = get_celestial_from_uid(self.celestial_uid)
-        # print("uid:", self.celestial_uid)
+        # logger.debug("uid:", self.celestial_uid)
         if self.celestial is None:
             self.gen_celestial()
         return self.celestial
@@ -135,7 +133,7 @@ class User:
         return get_starfield_map(self.get_celestial().galaxy_location)
 
     def get_achievement(self, achievement_name) -> dict | bool:
-        # print("achievement_name:", achievement_name)
+        # logger.debug("achievement_name:", achievement_name)
         achi = get_achievements().get(achievement_name, False)
         if not achi:
             raise ValueError(f"无该成就名 \"{achievement_name}\"")
@@ -156,7 +154,7 @@ class User:
             raise ValueError(f"无该成就名 \"{achievement_name}\"")
         if achievement_name in [a["name"] for a in self.achievements]:
             # 已经有成就就不管了
-            print("已达成成就，不执行")
+            logger.debug("已达成成就，不执行")
             return
         self.achievements.append({
             "name": achievement_name,
@@ -174,9 +172,9 @@ class User:
         except ActionFailed:
             pass
         if self.id != -1:
-            print("更新database")
+            logger.debug("更新database")
             rows = DATABASE.update_db(obj=self, id=self.db_id, coins=self.coins, achievements=json.dumps(self.achievements, ensure_ascii=False))
-            print("受影响的行数:", rows)
+            logger.debug("受影响的行数:", rows)
         sent = False
         while not sent:
             try:
@@ -185,40 +183,40 @@ class User:
             except ActionFailed:
                 continue
 
-    def gen_celestial(self):
-        """随机获取出生星体
-        """
-        map = get_galaxymap()
-        if not map:
-            print("地图未生成")
-            return
-        choice_celestials = []
-        print("随机生成出生星体中")
-        # print("USERRRRRRRRRRRRRRR", map.starfields)
-        for starfield in map.starfields.values():
-            if starfield.calc_faction().id != 1:
-                continue
-            for c in starfield.celestials.values():
-                if isinstance(c, Star):
-                    continue
-                if isinstance(c, Planet):
-                    if c.planet_type not in [
-                        PlanetType.CITY,
-                        PlanetType.DESOLATE,
-                        PlanetType.DRY,
-                        PlanetType.SEA,
-                        PlanetType.TERRESTRIAL,
-                    ]:
-                        continue
-                choice_celestials.append(c)
-        if choice_celestials:
-            self.celestial = random.choice(choice_celestials)
-            # self.save()
-        else:
-            print("无法获取到合适的行星")
+    # def gen_celestial(self):
+    #     """随机获取出生星体
+    #     """
+    #     map = get_galaxymap()
+    #     if not map:
+    #         logger.debug("地图未生成")
+    #         return
+    #     choice_celestials = []
+    #     logger.debug("随机生成出生星体中")
+    #     # logger.debug("USERRRRRRRRRRRRRRR", map.starfields)
+    #     for starfield in map.starfields.values():
+    #         if starfield.calc_faction().id != 1:
+    #             continue
+    #         for c in starfield.celestials.values():
+    #             if isinstance(c, Star):
+    #                 continue
+    #             if isinstance(c, Planet):
+    #                 if c.planet_type not in [
+    #                     PlanetType.CITY,
+    #                     PlanetType.DESOLATE,
+    #                     PlanetType.DRY,
+    #                     PlanetType.SEA,
+    #                     PlanetType.TERRESTRIAL,
+    #                 ]:
+    #                     continue
+    #             choice_celestials.append(c)
+    #     if choice_celestials:
+    #         self.celestial = random.choice(choice_celestials)
+    #         # self.save()
+    #     else:
+    #         logger.debug("无法获取到合适的行星")
 
     def __str__(self):
-        # print("self.get_reg_time()", self.get_reg_time())
+        # logger.debug("self.get_reg_time()", self.get_reg_time())
         try:
             # last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
             last_sign_time = timetools.int_to_date(int(timetools.get_valuetime(self.counters['sign']["time"], timetools.TimeUnit.DAY)))
@@ -296,7 +294,7 @@ class User:
 
     def add_coins(self, amount: int) -> bool:
         amount = int(amount)
-        print("amount", amount)
+        logger.debug("amount", amount)
         if amount < 0:
             return False
         self.coins += amount
@@ -315,7 +313,7 @@ class User:
     def load(id: int, create_default_user=True):
         c: User = DATABASE.load_class(select_keys=(id,), query='SELECT * FROM {table_name} WHERE user_id = ?', cl=User)
         if c is None and create_default_user:
-            print("创建一个新用户")
+            logger.debug("创建一个新用户")
             return User(user_id=id)
         elif c is not None:
             c.get_reg_time()
@@ -351,7 +349,7 @@ class User:
         zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
         append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
         point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
-        # print("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
+        # logger.debug("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
         mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
         # 保存图片
         path = f'data/images/temp/{hash_image(map_img)}.png'
@@ -361,12 +359,14 @@ class User:
         # 显示图片
         # map_img.show()
 
-DATABASE.create_class_table(User(0))
+# Avoid creating User(0) at import time — this can construct heavy objects and
+# interfere with multithreaded GC. Call this during startup if needed.
+# DATABASE.create_class_table(User(0))
 
 def try_load(id):
     u = User.load(id)
     if u is None:
-        print("USER IS NONE")
+        logger.info("没有用户，正在尝试创建新用户。")
         u = User(id)
     return u
 
@@ -423,7 +423,7 @@ def get_user_rank(user):
     sender_index = None
     for index, item in enumerate(rank_items):
         if int(item[0]) != user: continue
-        print("匹配到了")
+        logger.debug("匹配到了")
         sender_coins_count = item[1]
         sender_index = index
     rank_ratio = 0
@@ -453,20 +453,20 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     time_now = time_now if not floor_float else math.floor(time_now)
     # True 禁止继续使用指令 因为已受到限制
     time_limit, c_limit = False, False
-    # print(time_now)
-    # print(user.counters[name]["time"])
-    # print(timetools.get_valuetime(user.counters[name]["time"], unit))
-    # print(limit)
+    # logger.debug(time_now)
+    # logger.debug(user.counters[name]["time"])
+    # logger.debug(timetools.get_valuetime(user.counters[name]["time"], unit))
+    # logger.debug(limit)
     if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < limit:
-        print("时间受限制")
+        logger.debug("时间受限制")
         time_limit = True
     else:
-        print("时间过了 刷新")
+        logger.debug("时间过了 刷新")
         reset_limit(user, name, floor_float)
         return False
         # return (True, True)
     if user.counters[name]["count"] >= count_limit:
-        print("次数受限制")
+        logger.debug("次数受限制")
         c_limit = True
     if time_limit and c_limit:
         # reset_limit(user, name, unit, floor_float)
@@ -503,7 +503,7 @@ def get_rank(*rank_item_key, key=None, excluding_zero=False):
     # users: dict = jsontools.read_from_path(config.USER_PATH)['users']
     users = User.get_users()
     for v in users:
-        # print(f"item: {v}")
+        # logger.debug(f"item: {v}")
         value = dicttools.get_value(*rank_item_key, search_dict=v)
         if value == None: continue
         rank[v["user_id"]] = value
@@ -511,9 +511,9 @@ def get_rank(*rank_item_key, key=None, excluding_zero=False):
         rank_values = [r for r in rank.items() if r[1] > 0]
     else:
         rank_values = [r for r in rank.items()]
-    # print(rank_values)
+    # logger.debug(rank_values)
     rank_values.sort(reverse=True, key=lambda x: key(x[1]) if key else x[1])
-    # print(rank)
+    # logger.debug(rank)
     return rank_values
 
 
@@ -541,7 +541,7 @@ def limit(limit_name: str,
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
-            # print(user.counters)
+            # logger.debug(user.counters)
             if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                 if not limit_func:
@@ -552,12 +552,12 @@ def limit(limit_name: str,
                 else:
                     return limit_func(func, session, user, *args, **kwargs)
             # user = try_load(session.event.user_id, User(session.event.user_id))
-            # print(user.counters)
+            # logger.debug(user.counters)
             result = await func(session, user, *args, **kwargs)
-            # print(f"result: {result}")
+            # logger.debug(f"result: {result}")
             if not fails(result):
-                print("保存用户数据, 增加计数")
-                print("coins", user.coins)
+                logger.debug("保存用户数据, 增加计数")
+                logger.debug("coins", user.coins)
                 limit_count_tick(user, limit_name)
                 user.save()
             if isinstance(result, str):
@@ -588,24 +588,24 @@ def custom_limit(limit_name: str,
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
-            # print(user.counters)
+            # logger.debug(user.counters)
             def count_tick():
-                print("保存用户数据, 增加计数")
+                logger.debug("保存用户数据, 增加计数")
                 limit_count_tick(user, limit_name)
                 user.save()
             def validate():
                 if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                     # 已受限
-                    print("受到限制")
+                    logger.debug("受到限制")
                     return True
                 # 未受限
-                print("无限制")
+                logger.debug("无限制")
                 return False
             # user = try_load(session.event.user_id, User(session.event.user_id))
-            # print(user.counters)
+            # logger.debug(user.counters)
             result = await func(session, user, validate, count_tick, *args, **kwargs)
-            print(f"result: {result}")
+            logger.debug(f"result: {result}")
             # if not fails(result):
 
             # if isinstance(result, str):
@@ -625,12 +625,12 @@ def using_user(save_data=False, id=0):
             user_id = id
             if not id:
                 user_id = session.event.user_id
-            print(user_id)
+            logger.debug(user_id)
             user = try_load(user_id)
             result = await func(session, user, *args, **kwargs)
-            # print(f"result: {result}")
+            # logger.debug(f"result: {result}")
             if save_data and result != False:
-                print("保存用户数据中")
+                logger.debug("保存用户数据中")
                 user.save()
             return result
 
@@ -640,7 +640,7 @@ def using_user(save_data=False, id=0):
 
 def load_dict_user(data: dict):
     inventory_data = None
-    # print(celestial)
+    # logger.debug(celestial)
     plugin_datas = {}
     counters = {}
     ai_history = []
@@ -657,14 +657,14 @@ def load_dict_user(data: dict):
         achievements = json.loads(achievements)
         talked_to_bot = json.loads(data.get('talked_to_bot', "[]"))
     except Exception as ex:
-        print(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错")
+        logger.error(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错")
         raise ex
-    # print(counters)
+    # logger.debug(counters)
     inventory = Inventory()
-    # print(inventory_data)
+    # logger.debug(inventory_data)
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
-    # print(data)
+    # logger.debug(data)
     celestial = data.get('celestial', None)
 
     return {
@@ -685,16 +685,16 @@ def load_dict_user(data: dict):
 def load_from_dict(data: dict, id: int) -> User:
     inventory_data = json.loads(data.get('inventory', None))
     inventory = Inventory()
-    # print(inventory_data)
+    # logger.debug(inventory_data)
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
-    # print(data)
+    # logger.debug(data)
     celestial = data.get('celestial', None)
-    print("celestial", celestial)
-    # print(celestial)
+    logger.debug("celestial", celestial)
+    # logger.debug(celestial)
     counters = json.loads(data.get('counters', "{}"))
     # timers = json.loads(data.get('timers', "{}"))
-    # print(counters)
+    # logger.debug(counters)
     achis = data.get('achievements', "[]")
     plugin_datas = json.loads(data.get('plugin_datas', "{}"))
     if not achis:

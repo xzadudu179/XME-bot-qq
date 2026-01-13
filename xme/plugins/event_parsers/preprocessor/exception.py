@@ -8,7 +8,7 @@ from character import get_message
 import config
 
 @message_preprocessor
-async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+async def _(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     # print("111")
     # print(event)
     raw_msg = event.raw_message

@@ -2,11 +2,12 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 import traceback
 import xme.plugins.commands.wife as w
+from nonebot.log import logger
 from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import *
 from xme.xmetools.texttools import get_at_id
-from xme.xmetools.bottools import permission, bot_call_action
+from xme.xmetools.bottools import permission
 from xme.xmetools.msgtools import send_session_msg
 
 wife_alias = ['今日老婆', 'kklp', '看看老婆', 'w']
@@ -16,7 +17,7 @@ async def _(session: CommandSession):
     # user_id = session.event.user_id
     group_id = str(session.event.group_id)
     wifeinfo = await group_init(group_id)
-    print(session.current_key)
+    logger.debug(session.current_key)
     arg = session.current_arg.strip()
     at_id = 0
     prefix = ""
@@ -48,9 +49,9 @@ async def _(session: CommandSession):
         at_name = "你"
         at_id = session.event.user_id
         # return
-        print(at_id, session.self_id, group_id)
+        logger.debug(at_id, session.self_id, group_id)
         wife = await search_wife(wifeinfo, group_id, at_id, session)
-        # print(wife)
+        # logger.debug(wife)
     if at_id == session.self_id:
         # at_id = session.self_id
         at_name = "我"
@@ -68,7 +69,7 @@ async def _(session: CommandSession):
         message = get_message("plugins", w.__plugin_name__, "no_wife", name=at_name)
         # message = f"{at_name}今天并没有老婆ovo"
         if wife:
-            # print(pair_user)
+            # logger.debug(pair_user)
             name = (x if (x:=wife.get('card', None)) else wife['nickname']) if wife['user_id'] != session.self_id else "我"
             who = f"{at_name}"
             message = prefix + get_message("plugins", w.__plugin_name__, "wife_message",
@@ -81,6 +82,6 @@ async def _(session: CommandSession):
     except Exception as ex:
         message = get_message("plugins", w.__plugin_name__, "error", ex=ex)
         # message = f"呜呜，无法获取到群员信息：{ex}"
-        print(traceback.format_exc())
+        logger.exception(traceback.format_exc())
     await send_session_msg(session, message, tips=True, tips_percent=60)
 

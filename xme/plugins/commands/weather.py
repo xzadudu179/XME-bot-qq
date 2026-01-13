@@ -9,7 +9,7 @@ from xme.xmetools.reqtools import fetch_data
 from xme.plugins.commands.xme_user.classes import user as u
 import traceback
 from config import COMMAND_START
-
+from nonebot.log import logger
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.loctools import search_location, get_user_location
 from keys import WEATHER_API_KEY
@@ -76,7 +76,7 @@ async def _(session: CommandSession, user: u.User):
             return await get_warnings_now(session, location_info, warnings)
         return await get_weather_now(session, location_info, user_location_info, user_search, warnings, location_text if len(location_text) > 0 else "")
     except Exception as ex:
-        traceback.print_exc()
+        logger.exception(traceback.format_exc())
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'output_error', ex=f"{type(ex)}: {traceback.format_exc()}"), tips=True)
         return False
 
@@ -109,7 +109,7 @@ async def get_weather_now(session, location_info, user_location_info, user_searc
 def ouptut_weather_now(weather, air, moon):
     data = weather["now"]
     #  数据更新时间
-    print("data:", data)
+    # print("data:", data)
     obs_time = iso_format_time(data["obsTime"], '%Y年%m月%d日 %H:%M')
     temp = data["temp"]
     feels_temp = data["feelsLike"]
@@ -128,9 +128,9 @@ def ouptut_weather_now(weather, air, moon):
 
     moonrise = moon.get("moonrise", None)
     moonset = moon.get("moonset", None)
-    print(moon)
-    print("moonrise", moonrise)
-    print("moonset", moonset)
+    # print(moon)
+    # print("moonrise", moonrise)
+    # print("moonset", moonset)
     moon_phase = moon.get("moonPhase", None)
     moon_info = "今日月相未知"
     if moon_phase is not None:

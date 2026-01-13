@@ -52,7 +52,7 @@ def gen_doc_md():
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     plugins.sort(key=lambda p: lazy_pinyin(p.name))
     # print([p.name for p in plugins])
-    print("正在生成文档文件")
+    logger.info("正在生成文档文件")
     usages = []
     for pl in plugins:
         try:
@@ -72,8 +72,8 @@ def gen_doc_md():
                 ...
             usages.append(md_usage.replace("\"", "`"))
         except Exception as ex:
-            print("处理", pl.name, "插件出错:", ex)
-            traceback.print_exc()
+            logger.error("处理", pl.name, "插件出错:", traceback.format_exc())
+            # lotraceback.print_exc()
             continue
     with open("docs.md", 'w', encoding='utf-8') as file:
         file.write("\n\n".join(usages))

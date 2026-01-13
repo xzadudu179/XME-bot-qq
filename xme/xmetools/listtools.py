@@ -58,7 +58,7 @@ def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5, key=l
         list[str]: 前k个字符串
     """
     # 相似查找
-    print(f"被解析的列表：{list(map(key, l))}")
+    # print(f"被解析的列表：{list(map(key, l))}")
     sim_topk_items = sorted(str_list_sim(list(map(key, l)), target_str).items(), key=lambda item: item[1], reverse=True)[:k]
     sim_topk_items = [item for item in sim_topk_items if item[1] >= min]
     return sim_topk_items

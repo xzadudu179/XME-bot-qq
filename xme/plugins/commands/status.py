@@ -27,7 +27,6 @@ async def _(session: CommandSession):
     message = ""
     no_info = get_message("plugins", __plugin_name__, 'no_version_info')
     info = await bot_call_action(session.bot, "get_version_info", error_action=lambda _: no_info)
-    print(info)
     if info != no_info and isinstance(info, dict):
         info = f'- bot 实例 APP: {info["app_name"]} v{info["app_version"]}'
     try:
@@ -36,13 +35,6 @@ async def _(session: CommandSession):
         message = get_message("plugins", __plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
     vars = read_from_path("data/bot_vars.json")
-    # usage: dict = read_from_path("data/usage_stats.json")["usages"]
-    # call_sum = 0
-    # for k, v in usage.items():
-        # print(k, len(v["calls"]))
-        # call_sum += len(v["calls"])
-    # top_k_usage = heapq.nlargest(3, usage, key=lambda k: len(usage[k]["calls"]))
-    # top_k_str = '\n'.join([f'{i + 1}、' + u + f"\t 被调用了 {len(usage[u]['calls']):,} 次。" for i, u in enumerate(top_k_usage)])
     save_to_path("data/bot_vars.json", vars)
     # user_datas = read_from_path("./data/users.json")
     user_count = len(user.User.get_users())

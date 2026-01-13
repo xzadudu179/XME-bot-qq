@@ -253,7 +253,6 @@ def get_msg_len(texts: Message) -> int:
         if len(texts) <= 1:
             return calc_len(format_text)
         for t in texts[:-1]:
-            print(t)
             total_line_count += 36 - calc_len(t) % 36
         return total_line_count + calc_len(format_text.replace("\n", ""))
     total = 0

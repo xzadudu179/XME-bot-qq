@@ -2,7 +2,6 @@ from nonebot import on_request, RequestSession
 from xme.xmetools import bottools
 from xme.xmetools import colortools as c
 
-# 将函数注册为群请求处理器
 @on_request('friend')
 async def _(session: RequestSession):
     # 判断验证信息是否符合要求

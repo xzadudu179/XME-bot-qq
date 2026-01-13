@@ -1,5 +1,6 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
+from nonebot.log import logger
 from xme.xmetools.doctools import CommandDoc
 import os
 from character import get_message
@@ -37,19 +38,18 @@ async def _(session: CommandSession):
     index: int = indexs.get(str(session.event.group_id), {}).get("index", 0)
     img_list: list = indexs.get(str(session.event.group_id), {}).get("img_list", [])
     if len(images) != len(os.listdir(PEEK_PATH)) or index == len(img_list) or not img_list:
-        print("刷新图片列表")
+        logger.debug("刷新图片列表")
         img_list = os.listdir(PEEK_PATH)
         random.shuffle(img_list)
         indexs[str(session.event.group_id)]["img_list"] = img_list
     if index == len(img_list):
         index = 0
     name = img_list[index]
-    # print(indexs, index)
     index += 1
     path = PEEK_PATH + "/" + name
     file_path = Path(path)
     creation_time = datetime.fromtimestamp(file_path.stat().st_ctime)
     modification_time = datetime.fromtimestamp(file_path.stat().st_mtime)
-    print(path)
+    logger.debug(path)
     indexs[str(session.event.group_id)]["index"] = index
     return await send_session_msg(session, get_message("plugins", __plugin_name__, 'result', image=await image_msg(path, 1200), name=name, creation_time=creation_time, modification_time=modification_time), tips=True, tips_percent=30)

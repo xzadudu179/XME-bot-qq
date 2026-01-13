@@ -7,6 +7,7 @@ from .classes import user as u
 from datetime import datetime
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
+from nonebot.log import logger
 from xme.xmetools.texttools import get_at_id
 
 alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin', 'v']
@@ -26,7 +27,7 @@ usage = {
 async def _(session: CommandSession, user: User):
     message = ''
     arg_text = session.current_arg.strip() if session.current_arg else ""
-    print(arg_text)
+    logger.debug(arg_text)
     args = arg_text.split(" ")
     coin_count = 0
     at_id = 0

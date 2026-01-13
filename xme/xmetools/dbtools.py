@@ -96,10 +96,11 @@ class XmeDatabase:
             except Exception as ex:
                 if connection:
                     connection.rollback()
-                log.logger.error(f"ERROR: XME 数据库控制出现问题: {ex}\n{traceback.format_exc()}")
+                log.logger.error(f"ERROR: XME 数据库控制出现问题: {ex}")
+                log.logger.exception(traceback.format_exc())
                 raise
             finally:
-                print("关闭连接")
+                log.logger.debug("关闭连接")
                 connection.close()
         return wrapper
 
@@ -156,7 +157,7 @@ class XmeDatabase:
         placeholders_msg = ", ".join(placeholders)
         values.append(id)
         sql = f"UPDATE {obj.__class__.get_table_name()} SET {placeholders_msg} WHERE id = ?"
-        print(sql, values)
+        # print(sql, values)
         cursor.execute(sql, tuple(values))
         return cursor.rowcount
 
@@ -218,7 +219,7 @@ class XmeDatabase:
             table_name = type.__name__.lower()
         # sql = f"SELECT * FROM {table_name} WHERE id = ?"
         sql = query.format(table_name=table_name)
-        print("正在通过语句加载内容:\n", sql, select_keys)
+        log.logger.debug("正在通过语句加载内容:\n", sql, select_keys)
         cursor.execute(sql, select_keys)
         row = cursor.fetchone()
         if not row: return None
@@ -250,7 +251,7 @@ class XmeDatabase:
             list[tuple]: 查询结果
         """
         query = query
-        print("正在执行语句:\n", query, params)
+        log.logger.debug("正在执行语句:\n", query, params)
         cursor.execute(query, params)
         if not dict_data:
             return cursor.fetchall()

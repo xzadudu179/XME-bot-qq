@@ -7,6 +7,8 @@ from argparse import ArgumentParser
 from nonebot.argparse import ParserExit
 from character import get_message
 import json
+from traceback import format_exc
+from nonebot.log import logger
 from functools import wraps
 
 class XmeArgumentParser(ArgumentParser):
@@ -36,6 +38,12 @@ class XmeArgumentParser(ArgumentParser):
                 self._session_finish(self.usage or self.format_help())
             else:
                 self._session_finish(self.exit_mssage)
+
+async def get_user_name(user_id, group_id=None, default=None):
+    if group_id is not None:
+        return await get_group_member_name(group_id=group_id, user_id=user_id, card=True, default=default)
+    return await get_stranger_name(user_id=user_id, default=default)
+
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名
@@ -82,13 +90,14 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs
         Any: 调用结束返回的值
     """
     try:
-        # print("call action")
+        # logger.debug("call action")
         return await bot.api.call_action(action=action, **kwargs)
     except Exception as ex:
-        print(f"bot 调用接口出现错误： {ex}")
+        logger.error(f"bot 调用接口出现错误： {ex}")
+        logger.exception(format_exc())
         if error_action is None:
             raise ex
-        print("error action")
+        logger.error("error action")
         return error_action
 
 async def get_group_name(group_id, default=None):
@@ -108,7 +117,7 @@ def permission(perm_func: PermissionPolicy_T, permission_help: str = "未知", n
             msg = no_perm_message
             if not msg:
                 msg = get_message("config", "no_permission", permission=permission_help)
-            print("perm func", perm_func(sender))
+            logger.debug("perm func", perm_func(sender))
             if perm_func(sender):
                 result = await func(session, *args, **kwargs)
             else:

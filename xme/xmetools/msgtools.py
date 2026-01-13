@@ -5,7 +5,9 @@ import config
 from xme.xmetools.texttools import get_msg_len
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
+from xme.xmetools.bottools import get_user_name
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
+from nonebot.log import logger
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from character import get_message
@@ -42,12 +44,15 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         event (Event): 消息事件
         messages (list[MessageSegment]): 消息列表
     """
-    from xme.xmetools.bottools import bot_call_action
-    if event.group_id is not None:
-        res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
-    else:
-        res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
-    return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
+    try:
+        from xme.xmetools.bottools import bot_call_action
+        if event.group_id is not None:
+            res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
+        else:
+            res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
+        return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
+    except ApiError:
+        return
 
 def get_pure_text_message(message: dict) -> str:
     """获取纯文本消息
@@ -139,7 +144,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     list_msg = message_result
     message_result = await msg_preprocesser(session, message)
     if not message_result or message_result == "":
-        print(f"bot 要发送的消息 {message} 已被阻止/没东西")
+        logger.warning(f"bot 要发送的消息 {message} 已被阻止/没东西")
         await session.send(f"[ERROR] BOT 即将发送的消息已被阻止/为空")
         return
     debug_prefix = "" if not debug else "[DEBUG] "
@@ -156,9 +161,23 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     # 太长的消息用聊天记录发送
     try:
         if get_msg_len(list_msg) > 1200 and session.event.group_id is not None:
-            if at:
-                await session.send("", at_sender=at, **kwargs)
-            return await send_forward_msg(session.bot, session.event, [change_group_message_content(msg_dict, send_msg)])
+            # if at:
+            #     await session.send("", at_sender=at, **kwargs)
+            return await send_forward_msg(
+                session.bot,
+                session.event,
+                [
+                    change_group_message_content(
+                        msg_dict, send_msg.strip(),
+                        user_id=session.event.user_id,
+                        nickname=await get_user_name(
+                            session.event.user_id,
+                            group_id=session.event.group_id,
+                            default="user"
+                        )
+                    )
+                ]
+            )
     except ApiError:
         return
     await session.send(send_msg, at_sender=at, **kwargs)

@@ -10,6 +10,7 @@ import imagehash
 from collections import defaultdict
 from xme.xmetools.reqtools import fetch_data
 import traceback
+from nonebot.log import logger
 try:
     import pyautogui
 except Exception:
@@ -26,9 +27,9 @@ hti = Html2Image()
 def get_hash(path_or_image):
     try:
         return imagehash.phash(get_image(path_or_image))
-    except Exception as ex:
-        # traceback.print_exc()
-        print(ex)
+    except Exception:
+        # traceback.logger.debug_exc()
+        logger.exception(traceback.format_exc())
         return None
 
 def phash_compare_folder(path_or_image, folder, threshold=5) -> list[tuple[str, int]]:
@@ -59,7 +60,7 @@ def phash_compare_folder(path_or_image, folder, threshold=5) -> list[tuple[str, 
     return result
 
 def phash_compare(target_image: str | Image.Image, compare_image: str| Image.Image, threshold=5):
-    # print("比较", target_image, compare_image)
+    # logger.debug("比较", target_image, compare_image)
     target_hash = get_hash(target_image)
     h = get_hash(compare_image)
     result = 999
@@ -178,19 +179,19 @@ def get_image_format(image: Image.Image, default="PNG") -> str:
 
 def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
     output_buffer = BytesIO()
-    print("正在将图片转为base64")
+    logger.debug("正在将图片转为base64")
     if img.mode in ["RGBA", "P"] or not to_jpeg:
         img_mode_dict = {
             "RGBA": "PNG",
             "P": "GIF"
         }
-        print("save to normal")
+        logger.debug("save to normal")
         img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
     else:
         img.save(output_buffer, format="JPEG", quality=75)
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
-    print("result len", len(base64_str))
+    logger.debug("result len", len(base64_str))
     return base64_str
 
 def gif_to_base64(img, frames: list[Image.Image]):
@@ -212,7 +213,7 @@ def gif_to_base64(img, frames: list[Image.Image]):
     )
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
-    print("result len", len(base64_str))
+    logger.debug("result len", len(base64_str))
     return base64_str
 
 def limit_size(image: Image.Image, max_value) -> Image.Image:
@@ -236,13 +237,14 @@ async def gif_msg(input_path, scale=1):
         )  # 放大2倍
         frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
     b64 = gif_to_base64(img, frames)
-    print("gif b64 success")
+    logger.debug("gif b64 success")
     try:
         # 将消息发送的同步方法放到后台线程执行
         result = await asyncio.to_thread(create_image_message, b64)
         return result
     except Exception as e:
-        print(f"发生错误: {e}")
+        logger.error(f"发生错误: {e}")
+        logger.exception(traceback.format_exc())
         return MessageSegment.text(f"[图片加载失败]")
 
 
@@ -261,25 +263,26 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     is_image = False
     if not isinstance(path_or_image, str):
         is_image = True
-    print(is_image)
+    logger.debug(is_image)
     try:
         image = path_or_image if is_image else Image.open(path_or_image)
     except:
         image = await get_url_image(path_or_image)
     # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
     if max_size > 0:
-        print("重新缩放")
+        logger.debug("重新缩放")
         image = limit_size(image, max_size)
-    # print(image)
+    # logger.debug(image)
     b64 = image_to_base64(image, to_jpeg)
-    print("b64 success")
+    logger.debug("b64 success")
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:
         # 将消息发送的同步方法放到后台线程执行
         result = await asyncio.to_thread(create_image_message, b64, summary=summary)
         return result
     except Exception as e:
-        print(f"发生错误: {e}")
+        logger.error(f"发生错误: {e}")
+        logger.exception(traceback.format_exc())
         return MessageSegment.text(f"[图片加载失败]")
 
 def create_image_message(b64: str, summary: str="[漠月的图片~]"):
@@ -293,7 +296,8 @@ def create_image_message(b64: str, summary: str="[漠月的图片~]"):
             'summary': summary,
         })
     except Exception as e:
-        print(f"发送图片时出错: {e}")
+        logger.error(f"发送图片时出错: {e}")
+        logger.exception(traceback.format_exc())
         raise e
 
 if __name__ == "__main__":

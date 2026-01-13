@@ -12,7 +12,7 @@ import math
 from xme.plugins.commands.xme_user.classes.user import User
 from character import get_message
 from xme.plugins.commands.xme_user.classes.achievements import get_achievements, get_achievement_details
-
+from nonebot.log import logger
 
 alias = ['查看成就', '成就', 'achi']
 cmd_name = 'achievement'
@@ -24,129 +24,6 @@ usage = {
     "permissions": [],
     "alias": alias
 }
-
-# def get_custom_items_html(*keys, user: User, curr_custom: str, none_message = "什么都没有呢...使用 \"/shop\" 去商店看看吧",default_value=""):
-#     html_head = """
-#     <!DOCTYPE html>
-#         <html lang="en">
-#             <head>
-#                 <meta charset="UTF-8">
-#                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-#                 <title>shop</title>
-#                 <style>
-#     """ + HIUN_COLORS + FONTS_STYLE + """
-#             * {
-#                 margin: 0;
-#                 padding: 0;
-#                 box-sizing: border-box;
-#             }
-
-#             body {
-#                 font-family: "Geist Variable", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Heiti SC", "WenQuanYi Micro Hei", sans-serif;
-#                 background: transparent;
-#                 color: var(--text-color);
-#             }
-
-#             main {
-#                 background: var(--bg-color);
-#                 width: 1000px;
-#                 /* min-height: 600px; */
-#                 border-radius: 30px;
-#                 padding: 30px;
-#                 /* border: 4px solid var(--border-color); */
-#             }
-
-#             .colored {
-#                 color: var(--color-primary);
-#             }
-
-#             h1 {
-#                 text-align: center;
-#                 font-size: 2em;
-#                 margin: 0;
-#                 font-weight: normal;
-#             }
-
-#             h2 {
-#                 font-weight: normal;
-#                 margin: 0;
-#             }
-
-#             .items {
-#                 display: grid;
-#                 grid-template-columns: repeat(3, minmax(0, 1fr));
-#                 gap: 12px;
-#                 border-radius: 10px;
-#                 padding: 10px 0;
-#                 border: 2px solid var(--border-color);
-#                 border-top: 0;
-#                 border-bottom: 0;
-#             }
-
-#             .title {
-#                 margin-bottom: 30px;
-#             }
-
-#             .item {
-#                 /* border: 1px solid red; */
-#                 padding: 5px 0;
-#                 margin: 0 20px;
-#                 font-size: 1.2rem;
-#                 display: flex;
-#                 justify-content: space-between;
-#                 align-items: center;
-#             }
-
-#             .center {
-#                 text-align: center;
-#                 border-radius: 10px;
-#                 padding: 10px 0;
-#                 border: 2px solid var(--border-color);
-#                 border-top: 0;
-#                 border-bottom: 0;
-#             }
-#         </style>
-#     </head>
-#     """
-#     items_value: list | None = get_value(*keys, search_dict=user.plugin_datas)
-#     if items_value is None:
-#         return (False, html_head + """
-#     <body>
-#         <main class="melete">
-#             <div class="title">
-#                 <h1>-- CUSTOMS --</h1>
-#             </div>
-#             <div class="center orbitron">
-#                 <p>什么都没有呢...</p>
-#             </div>
-#             </main>
-#         </body>
-#     </html>
-#     """)
-#     results = []
-#     index = 0
-#     if default_value:
-#         v = 'colored' if default_value == curr_custom else ''
-#         results.append(f'<div class="item"><p class="{v}"><span class="colored">{index + 1}. </span>{default_value}</p></div>')
-#         index += 1
-#     for item in items_value:
-#         v = 'colored' if item == curr_custom else ''
-#         results.append(f'<div class="item"><p class="{v}"><span class="colored">{index + 1}. </span>{item}</p></div>')
-#         index += 1
-#     html_body = """
-#     <body>
-#         <main class="melete">
-#             <div class="title">
-#                 <h1>-- CUSTOMS --</h1>
-#             </div>
-#             <div class="items orbitron">
-#     """ + "\n".join(results) + """
-#                 </div>
-#             </main>
-#         </body>
-#     </html>
-#     """
-#     return (True, html_head + html_body)
 
 def get_achievement_items(achievements: list):
     total_achievements: dict = get_achievements()
@@ -197,7 +74,7 @@ async def _(session: CommandSession, user: User):
     page = 1
     achievements: list = [a["name"] for a in user.achievements]
     achi_items_total, achi_dict = get_achievement_items(achievements)
-    print("d", achi_dict)
+    logger.debug("d", achi_dict)
     if arg:
         if (arg_int:=try_parse(arg, int)) is not None:
             try:

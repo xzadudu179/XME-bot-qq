@@ -14,7 +14,6 @@ async def use(session, user, arg):
         await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "cannot_use"))
         return False
     state, result = await inv_item.try_use_item("use", True, session=session, user=user)
-    print(f"result: {result}")
     if not state or not result.get("state", True):
         if not result.get("silent", False):
             await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "error"))

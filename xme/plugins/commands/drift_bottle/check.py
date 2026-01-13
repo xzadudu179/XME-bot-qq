@@ -8,6 +8,7 @@ from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
 import random
+from nonebot.log import logger
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg
@@ -34,7 +35,7 @@ async def _(session: CommandSession, user: u.User):
     if not bottle:
         return await send_session_msg(session, "这个编号没有瓶子哦")
     index = bottle.bottle_id
-    print("捡到了瓶子")
+    logger.info("捡到了瓶子")
     index_is_int = index.isdigit()
     # 混乱值根据浏览量计算
     messy_rate: float = min(100, max(0, bottle.views * 2 - bottle.likes * 3)) if index_is_int or index != '-179' else 0
@@ -56,7 +57,7 @@ async def _(session: CommandSession, user: u.User):
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100
-    print(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
+    logger.info(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     # broken = randtools.random_percent(broken_rate)
     # if index_is_int and str(index) != "-179":
     #     # 普通瓶子会越来越混乱

@@ -2,7 +2,6 @@
 
 def _if(c, t, f):
     from xme.plugins.commands.calc.parser import parse_polynomial
-    print(c, t, f)
     return t if bool(parse_polynomial(str(c))[1]) else f
 
 func_name = "if"

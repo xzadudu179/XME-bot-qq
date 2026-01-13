@@ -4,6 +4,7 @@ import random
 from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools.colortools import mix_hex_color_lab
+from nonebot.log import logger
 
 # 寻宝区域
 class SeekRegion(Enum):
@@ -38,17 +39,17 @@ class PlayerAttr:
 
     def custom_change(self, set_method, return_method, assign=True):
         # 自定义修改属性值
-        print("assign", assign)
+        logger.debug("assign", assign)
         if assign:
             changed_value = set_method(self.value)
             self.value = changed_value
-            print("value1", self.value)
-            print("return_method1", return_method(self.value))
+            logger.debug("value1", self.value)
+            logger.debug("return_method1", return_method(self.value))
             return return_method(changed_value)
         else:
             set_method(self)
-            print("value2", self)
-            print("return_method2", return_method(self))
+            logger.debug("value2", self)
+            logger.debug("return_method2", return_method(self))
             return return_method(self)
 
     def change(self, set_method) -> int:
@@ -382,7 +383,7 @@ class Player:
 
 
     def change_attr(self, changes: dict, html=True, blank=True):
-        # print("changes", changes)
+        # logger.debug("changes", changes)
         result_strs = []
         for k, v in changes.items():
             change_value: PlayerAttr = use_attribute(self, k)
@@ -410,7 +411,7 @@ class Player:
                 # 此时需要保证是字典类型
                 if not isinstance(v, dict):
                     raise ValueError(f"自定义修改类型 \"{v}\" 不是字典")
-                # print("getgetget", v.get("assign", True), v)
+                # logger.debug("getgetget", v.get("assign", True), v)
                 result_strs.append(self.custom_change_attr(v["change_func"], v["return_func"], change_value, v.get("return_msg", "{name}: {value}"), assign=v.get("assign", True)))
                 continue
             value_diff = new_value - old_value
@@ -448,7 +449,7 @@ class Player:
         result = ""
         for v in self.__dict__.values():
             # 只显示整数
-            # print(f"[DEBUG] type={type(v)}, value={v}")
+            # logger.debug(f"[DEBUG] type={type(v)}, value={v}")
             if not isinstance(v, PlayerAttr): continue
             if not isinstance(v.value, int) and not isinstance(v.value, SeekRegion): continue
             # if v.name == "上个区域": continue
@@ -484,7 +485,7 @@ class Player:
                 index += 1
                 result += r
                 continue
-            # print(index)
+            # logger.debug(index)
             if index % 2 == 0:
                 result += "\n"
             if detailed and name != "深度" and v.detail:

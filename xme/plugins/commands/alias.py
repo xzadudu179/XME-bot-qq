@@ -28,7 +28,7 @@ async def _(session: CommandSession):
     else:
         cmd = cmd.name[0]
     aliases = get_alias_by_cmd(cmd)
-    print(cmd, aliases)
+    # print(cmd, aliases)
     if not aliases:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_alias', command=cmd))
     message = get_message("plugins", __plugin_name__, 'result_prefix', command=cmd) + "\n"

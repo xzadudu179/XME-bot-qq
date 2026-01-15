@@ -133,6 +133,8 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
         Command | bool: 返回的结果（指令或False）
     """
     name = input_string.split(" ")[0]
+    if len(name) <= 0:
+        return False
     if name[0] in config.COMMAND_START:
         name = name[1:]
     elif name[0] not in config.COMMAND_START:

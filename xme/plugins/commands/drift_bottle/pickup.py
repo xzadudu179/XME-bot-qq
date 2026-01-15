@@ -309,54 +309,53 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, content)
         count_tick()
         return True
-    else:
-        operated = {
-            "like": False,
-            "rep": False,
-            "say": False,
-            "pure": False,
-            "likesay": False,
-        }
-        while_index = 0
-        while True:
-            if while_index > 4:
-                return True
-            async def cmd_func(reply):
-                logger.debug("执行指令")
-                # 手动计数，防止递归调用不计数问题
-                u.limit_count_tick(user, command_name)
-                user.save()
-                logger.debug("增加计数")
-                await send_cmd(reply, session)
-                return "CMD_OVER"
-            try:
-                reply = await aget_session_msg(session=session, can_use_command=True, command_func=cmd_func)
-            except TimeoutError:
-                # 超时不处理异常
-                return True
-            if reply == "CMD_OVER":
-                return False
-            if reply == '-like' and not operated["like"]:
-                operated["like"] = True
-                await like(session, bottle.bottle_id)
-                continue
-            elif reply.split(" ")[0] == '-rep' and not operated["rep"]:
-                operated["rep"] = True
-                await report(session, bottle, user_id, report_content=reply.split(" ")[1] if len(reply.split(" ")) > 1 else "")
-                continue
-            elif reply.split(" ")[0] == '-say' and not operated["say"]:
-                result = await comment(session, bottle.bottle_id, user_id, " ".join(reply.split(" ")[1:]))
-                if result:
-                    operated["say"] = True
-                continue
-            elif reply.split(" ")[0] == '-pure'  and not operated["pure"]:
-                operated["pure"] = True
-                await report(session, bottle, user_id, "申请了一个纯洁无暇的漂流瓶", False)
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
-                continue
-            elif reply.split(" ")[0] == '-likesay' and not operated["likesay"]:
-                result = await likesay(session, bottle.bottle_id, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
-                if result:
-                    operated["likesay"] = True
-                continue
-            while_index += 1
+    operated = {
+        "like": False,
+        "rep": False,
+        "say": False,
+        "pure": False,
+        "likesay": False,
+    }
+    while_index = 0
+    while True:
+        if while_index > 4:
+            return True
+        async def cmd_func(reply):
+            logger.debug("执行指令")
+            # 手动计数，防止递归调用不计数问题
+            u.limit_count_tick(user, command_name)
+            user.save()
+            logger.debug("增加计数")
+            await send_cmd(reply, session)
+            return "CMD_OVER"
+        try:
+            reply = await aget_session_msg(session=session, can_use_command=True, command_func=cmd_func)
+        except TimeoutError:
+            # 超时不处理异常
+            return True
+        if reply == "CMD_OVER":
+            return False
+        if reply == '-like' and not operated["like"]:
+            operated["like"] = True
+            await like(session, bottle.bottle_id)
+            continue
+        elif reply.split(" ")[0] == '-rep' and not operated["rep"]:
+            operated["rep"] = True
+            await report(session, bottle, user_id, report_content=reply.split(" ")[1] if len(reply.split(" ")) > 1 else "")
+            continue
+        elif reply.split(" ")[0] == '-say' and not operated["say"]:
+            result = await comment(session, bottle.bottle_id, user_id, " ".join(reply.split(" ")[1:]))
+            if result:
+                operated["say"] = True
+            continue
+        elif reply.split(" ")[0] == '-pure'  and not operated["pure"]:
+            operated["pure"] = True
+            await report(session, bottle, user_id, "申请了一个纯洁无暇的漂流瓶", False)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
+            continue
+        elif reply.split(" ")[0] == '-likesay' and not operated["likesay"]:
+            result = await likesay(session, bottle.bottle_id, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
+            if result:
+                operated["likesay"] = True
+            continue
+        while_index += 1

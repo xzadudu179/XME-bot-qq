@@ -9,6 +9,7 @@ from nonebot.plugin import Plugin
 from xme.xmetools.msgtools import send_to_superusers, send_session_msg
 from character import get_message
 from traceback import format_exc
+from nonebot.command import _FinishException
 import functools
 from nonebot.log import logger
 import time
@@ -36,6 +37,10 @@ class PluginCallData:
     def get_table_name():
         return PluginCallData.__name__
 
+    @staticmethod
+    def get_datas():
+        return [PluginCallData.form_dict(d) for d in DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}")]
+
     def save(self):
         self.id = DATABASE.save_to_db(self)
 
@@ -57,6 +62,7 @@ class PluginCallData:
             return None
         return result
 
+    @staticmethod
     def form_dict(data: dict) -> 'PluginCallData':
         return PluginCallData(
             name=data["name"],
@@ -121,10 +127,13 @@ def on_command(
                 result = await func(session, *args, **kwargs)
                 success = True
                 return result
+            except _FinishException:
+                success = True
+                return result
             except TimeoutError:
                 pass
             except Exception:
-                logger.exception(f"Command {cmd_name} failed")
+                logger.error(f"Command {cmd_name[0]} failed")
                 try:
                     msg = get_message("config", "unknown_error", ex=format_exc())
                     await send_session_msg(session, msg)
@@ -142,7 +151,7 @@ def on_command(
                         success=success,
                         time_cost=cost,
                     )
-                logger.debug("存储指令调用数据：", data.to_dict())
+                logger.info(f"存储指令调用数据：{data.to_dict()}")
                 data.save()
 
         cmd = Command(name=cmd_name,

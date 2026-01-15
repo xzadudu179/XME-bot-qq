@@ -3,6 +3,7 @@ from pypinyin import lazy_pinyin
 import itertools
 import base64
 from nonebot import MessageSegment, Message
+import jieba.posseg as pseg
 import jieba
 import string
 import hashlib
@@ -24,11 +25,12 @@ def replace_formatted(s: str, **formats):
     result = s
     for k, v in formats.items():
         result = result.replace("{" + k + "}", str(v))
+
     return result
 
-def protect_quoted_text(text, tag='nz'):
+def protect_special_word_and_quoted_text(text, tag='nz'):
     """
-    将引号内的内容替换为占位符，并注册为 jieba 词典词
+    将引号内的内容替换为占位符，并注册为 jieba 词典词，以及忽略自带词典
     返回：新文本 + 占位符映射表
     """
     mapping = {}
@@ -39,6 +41,11 @@ def protect_quoted_text(text, tag='nz'):
         mapping[key] = content
         jieba.add_word(key, tag=tag)  # 强制词性：nz / n / x 都行
         return key
+
+    from character import get_character_item
+    jieba.add_word(get_character_item("bot_info", "name"), tag=tag)
+    for n in get_character_item("bot_info", "nickname"):
+        jieba.add_word(n, tag=tag)
 
     # 支持中英文引号
     new_text = re.sub(r'[“"]([^”"]+)[”"]', repl, text)
@@ -414,9 +421,18 @@ def replace_chinese_punctuation(text: str) -> str:
     return text
 
 def me_to_you(content: str) -> str:
-    content = content.replace("你", "<>WO1-<>").replace("我", "你").replace("<>WO1-<>", "我")
-    content = content.replace("敌众你寡", "敌众我寡").replace("我追你赶", "你追我赶").replace("彼竭你盈", "彼竭我盈").replace("自你意识", "自我意识").replace("自我意识到", "自你意识到")
-    return content
+    protected_text, quote_map = protect_special_word_and_quoted_text(content, tag='nz')
+    words = list(pseg.cut(protected_text))
+    # choice = random.randint(0, 1)
+    words = [
+        quote_map.get(w, w)
+        for w, _ in words
+    ]
+    return ''.join(
+        "你" if w == "我" else
+        "我" if w == "你" else w
+        for w in words
+    )
 
 def doubt_to_excl(content):
     content = replace_chinese_punctuation(content)

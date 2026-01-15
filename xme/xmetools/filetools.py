@@ -7,7 +7,7 @@ import shutil
 
 def cleanup_old_backups(
         backup_root: Path,
-        keep: int = 500
+        keep: int = 100
     ):
     if not backup_root.exists():
         return
@@ -24,7 +24,7 @@ def cleanup_old_backups(
 def backup_data_dir(
         data_dir: Path = Path("data"),
         backup_root: Path = Path(".backup"),
-        max_backups: int = 500
+        max_backups: int = 100
     ) -> Path:
     """
     将 data 目录备份到 .backup/datas-YYYY-MM-DD_HH-MM-SS
@@ -34,7 +34,7 @@ def backup_data_dir(
     data_dir.mkdir(parents=True, exist_ok=True)
     backup_root.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_dir = backup_root / "datas-" + timestamp
+    backup_dir = backup_root / ("datas-" + timestamp)
     shutil.copytree(data_dir, backup_dir)
     cleanup_old_backups(backup_root, keep=max_backups)
     return backup_dir
@@ -52,9 +52,10 @@ def delete_files_in_folder(folder_path):
     """
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-            log.logger.info(f"删除文件: {file_path}")
+        if not os.path.isfile(file_path):
+            continue
+        os.remove(file_path)
+        log.logger.info(f"删除文件: {file_path}")
 
 def has_file(path) -> bool:
     """判断是否有文件存在

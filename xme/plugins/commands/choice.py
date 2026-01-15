@@ -3,7 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict, replace_formatted, protect_quoted_text
+from xme.xmetools.texttools import FormatDict, replace_formatted, protect_special_word_and_quoted_text
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
@@ -49,7 +49,9 @@ async def _(session: CommandSession):
             another_or_choice(choices[0], "或"),
             is_or_not_choice(choices[0]),
             is_or_not_split_choice(choices[0]),
-            ends_can_choice(choices[0]),
+            ends_can_choice(choices[0], word="可以"),
+            ends_can_choice(choices[0], word="会"),
+            ends_can_choice(choices[0], word="在"),
             ends_is_or_not_choice(choices[0]),
             # has_or_not_choice(choices[0]),
         ]
@@ -142,18 +144,18 @@ def is_or_not_split_choice(text):
     splits = [prefix + split_str + suffix, prefix + pn + split_str + suffix]
     return splits
 
-def ends_can_choice(text):
+def ends_can_choice(text, word="可以"):
     logger.debug("text", text)
     question_strings = ("否", "吗", "嘛")
     if not texttools.remove_punctuation(text).endswith(question_strings):
         return False
-    if "可以" not in text:
+    if word not in text:
         return False
-    prefix = text.split("可以")[0]
-    split_text = "可以".join(text.split("可以")[1:])
-    choices = [f'{prefix}不可以{split_text}', f'{prefix}可以{split_text}']
+    prefix = text.split(word)[0]
+    split_text = word.join(text.split(word)[1:])
+    choices = [f'{prefix}不{word}{split_text}', f'{prefix}{word}{split_text}']
     choices = [texttools.remove_punctuation(texttools.replace_all(*question_strings, text=c)) for c in choices]
-    logger.debug("ends choices", choices)
+    logger.debug("en    ds choices", choices)
     return choices
 
 def ends_is_or_not_choice(text):
@@ -161,7 +163,7 @@ def ends_is_or_not_choice(text):
     if not texttools.remove_punctuation(text).endswith(question_strings):
         return False
     # 使用jieba进行词性标注
-    protected_text, quote_map = protect_quoted_text(text, tag='nz')
+    protected_text, quote_map = protect_special_word_and_quoted_text(text, tag='nz')
     words = list(pseg.cut(protected_text))
     # choice = random.randint(0, 1)
     words = [

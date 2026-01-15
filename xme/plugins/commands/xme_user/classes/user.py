@@ -79,7 +79,6 @@ class User:
             plugin_datas: dict | None = None, # 插件数据，比如 weather 保存用户位置之类的
             achievements: list | None = None,
             ai_history: list[dict] | None = None,
-            gen_starfield = True,
         ):
         self.db_id = id
         self.id = user_id
@@ -660,10 +659,11 @@ def load_dict_user(data: dict):
         logger.error(f"加载用户 {data.get('user_id', '未知')} id:{data.get('id', -1)} 出错")
         raise ex
     # logger.debug(counters)
-    inventory = Inventory()
-    # logger.debug(inventory_data)
-    if inventory_data:
-        inventory = Inventory.get_inventory(inventory_data)
+    # Do NOT instantiate Inventory objects here during bulk loads to avoid
+    # creating many InvItem instances which can increase GC pressure.
+    # Keep raw inventory data and construct Inventory objects only when
+    # loading a single user via load_from_dict.
+    inventory = inventory_data
     # logger.debug(data)
     celestial = data.get('celestial', None)
 

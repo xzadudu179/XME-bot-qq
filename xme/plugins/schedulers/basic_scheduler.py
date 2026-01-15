@@ -14,6 +14,8 @@ from xme.xmetools.filetools import backup_data_dir
 from xme.xmetools import msgtools
 from character import get_character_item, get_message
 import random
+import traceback
+
 random.seed()
 bot = nonebot.get_bot()
 
@@ -40,7 +42,15 @@ async def send_time_message(new_day=False):
     if new_day:
         log.logger.log("数据已备份至: " + str(backup_data_dir()))
         get_coins, lose_coins = calc_lottery()
+    try:
+        groups = await bot.get_group_list()
+    except CQHttpError as ex:
+        logger.error("无法获取群列表：", ex)
+        logger.exception(traceback.format_exc())
+        groups = []
     for group in scheduler_groups:
+        if group not in groups["group_id"]:
+            continue
         say = random.choice(read_from_path("./static/hitokoto.json"))
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
         latest = read_from_path(config.BOT_SETTINGS_PATH).get("latest_update", "")

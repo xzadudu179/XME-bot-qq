@@ -11,6 +11,8 @@ T_DbReadWriteable = TypeVar("T", bound="DbReadWriteable")
 
 @runtime_checkable
 class DbReadWriteable(Protocol):
+    id: int
+
     @classmethod
     def form_dict(data: dict) -> T_DbReadWriteable:
         """由 dict 转换为类
@@ -20,7 +22,8 @@ class DbReadWriteable(Protocol):
         """
         ...
 
-    def get_table_name():
+    @classmethod
+    def get_table_name(cls) -> str:
         ...
 
     def to_dict(self):
@@ -45,7 +48,7 @@ class XmeDatabase:
         self.exec_query(query=f"DELETE FROM {table_name} WHERE {condition}")
 
     def create_class_table(self, cls: T_DbReadWriteable):
-        table_name = cls.__class__.get_table_name()
+        table_name = cls.get_table_name()
         fields = {k: v for k, v in cls.to_dict().items() if k != 'id' and k != 'database'}
         # types = ['TEXT' if isinstance(value, str) else 'INTEGER' if isinstance(value, int) else 'BLOB' for value in fields.values()]
         self.create_table_from_values(table_name, fields.keys(),  fields.values())
@@ -103,6 +106,25 @@ class XmeDatabase:
                 log.logger.debug("关闭连接")
                 connection.close()
         return wrapper
+
+    def create_table_from_class(self, cls: type[DbReadWriteable]):
+        hints = get_type_hints(cls)
+        columns = []
+
+        for name, typ in hints.items():
+            if name == "id":
+                continue
+            sql_type = self.python_type_to_sql(typ)
+            columns.append(f"{name} {sql_type}")
+
+        sql = f"""
+        CREATE TABLE IF NOT EXISTS {cls.get_table_name()} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            {", ".join(columns)}
+        )
+        """
+        self.exec_query(sql)
+
 
     def create_table_from_values(self, name, keys, values):
         adapt_values = [self.adapt_value(v) for v in values]

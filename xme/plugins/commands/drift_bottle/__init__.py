@@ -15,22 +15,22 @@ BOTTLE_IMAGES_PATH = "./data/images/driftbottle/"
 
 class DriftBottle:
     def __init__(self, bottle_id: str = "我是妖妻酒", id=-1, content: str = '', sender: str = '', likes: int = 0, views: int = 0, from_group: str = '', send_time: str = '', sender_id: int = 0, comments: list | None = None, group_id: int = 0, is_broken: bool = False, skin: str = "", images: list | None = None):
-        self.id = id
+        self.id: int = id
         self.bottle_id: str = bottle_id
         self.content: str = content
-        self.sender = sender
-        self.likes = likes
-        self.views = views
-        self.from_group = from_group
-        self.send_time = send_time
-        self.sender_id = sender_id
+        self.sender: str = sender
+        self.likes: int = likes
+        self.views: int = views
+        self.from_group: str = from_group
+        self.send_time: str = send_time
+        self.sender_id: int = sender_id
         # avoid shared mutable defaults
-        self.comments = comments if comments is not None else []
-        self.group_id = group_id
-        self.is_broken = is_broken
-        self.skin = skin
+        self.comments: list = comments if comments is not None else []
+        self.group_id: int = group_id
+        self.is_broken: bool = is_broken
+        self.skin: str = skin
         # 存储图片文件名
-        self.images = images if images is not None else []
+        self.images: list = images if images is not None else []
 
     def get_formatted_content(self, messy_rate_str, messy_rate):
         try:
@@ -48,7 +48,8 @@ class DriftBottle:
             print_exc()
             return self.content
 
-    def get_table_name():
+    @classmethod
+    def get_table_name(cls):
         return DriftBottle.__name__
 
     def to_dict(self) -> dict:

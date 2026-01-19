@@ -34,7 +34,8 @@ class PluginCallData:
         self.time_cost = time_cost
         self.id = db_id
 
-    def get_table_name():
+    @classmethod
+    def get_table_name(cls):
         return PluginCallData.__name__
 
     @staticmethod

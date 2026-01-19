@@ -36,7 +36,8 @@ class User:
     def form_dict(data: dict):
         return load_from_dict(data, id=data["user_id"])
 
-    def get_table_name():
+    @classmethod
+    def get_table_name(cls):
         return User.__name__
 
     async def try_spend(self, session: BaseSession, count, out_of_range_zero=False, no_coin_message="", spent_message=""):
@@ -67,7 +68,7 @@ class User:
     def __init__(
             self,
             user_id: int,
-            id: int = -1,
+            db_id: int = -1,
             coins: int = 0,
             inventory: Inventory | None = None,
             talked_to_bot: list | None = None,
@@ -80,28 +81,28 @@ class User:
             achievements: list | None = None,
             ai_history: list[dict] | None = None,
         ):
-        self.db_id = id
-        self.id = user_id
-        self.desc = desc
+        self.db_id: int = db_id
+        self.id: int = user_id
+        self.desc: str = desc
         # avoid shared mutable defaults
-        self.inventory = inventory if inventory is not None else Inventory()
-        self.coins = coins
-        self.xme_favorability = xme_favorability
-        self.talked_to_bot = talked_to_bot if talked_to_bot is not None else []
-        self.counters = counters if counters is not None else {}
+        self.inventory: Inventory = inventory if inventory is not None else Inventory()
+        self.coins: int = coins
+        self.xme_favorability: int = xme_favorability
+        self.talked_to_bot: list = talked_to_bot if talked_to_bot is not None else []
+        self.counters: dict = counters if counters is not None else {}
         self.plugin_datas: dict = plugin_datas if plugin_datas is not None else {}
         # self.timers = timers
         # 注册时间
         # datas = self.plugin_datas.get("datas", {})
         # reg_time = datas.get("register_time", -1)
 
-        self.achievements = achievements if achievements is not None else []
-        self.ai_history = ai_history if ai_history is not None else []
+        self.achievements: list = achievements if achievements is not None else []
+        self.ai_history: list = ai_history if ai_history is not None else []
         # logger.debug(self.ai_history)
         # 用户所在天体
         # logger.debug("dbid", self.db_id)
-        self.celestial_uid = celestial_uid
-        self.celestial = None
+        # self.celestial_uid = celestial_uid
+        # self.celestial = None
         self.get_reg_time()
         # if reg_time == -1:
         #     self.plugin_datas["datas"] = {}
@@ -119,17 +120,17 @@ class User:
             return time_now
         return v
 
-    def get_celestial(self):
-        # logger.debug("uid:", self.celestial_uid)
-        if self.celestial_uid is not None:
-            self.celestial = get_celestial_from_uid(self.celestial_uid)
-        # logger.debug("uid:", self.celestial_uid)
-        if self.celestial is None:
-            self.gen_celestial()
-        return self.celestial
+    # def get_celestial(self):
+    #     # logger.debug("uid:", self.celestial_uid)
+    #     if self.celestial_uid is not None:
+    #         self.celestial = get_celestial_from_uid(self.celestial_uid)
+    #     # logger.debug("uid:", self.celestial_uid)
+    #     if self.celestial is None:
+    #         self.gen_celestial()
+    #     return self.celestial
 
-    def get_starfield(self):
-        return get_starfield_map(self.get_celestial().galaxy_location)
+    # def get_starfield(self):
+    #     return get_starfield_map(self.get_celestial().galaxy_location)
 
     def get_achievement(self, achievement_name) -> dict | bool:
         # logger.debug("achievement_name:", achievement_name)
@@ -284,7 +285,6 @@ class User:
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
             "achievements": self.achievements,
-            "celestial": self.celestial.uid if self.celestial else "",
             "ai_history": self.ai_history,
         }
 
@@ -700,7 +700,7 @@ def load_from_dict(data: dict, id: int) -> User:
     if not achis:
         achis = "[]"
     user = User(
-        id=data.get('id', -1),
+        db_id=data.get('id', -1),
         user_id=id,
         coins=data.get('coins', 0),
         inventory=inventory,

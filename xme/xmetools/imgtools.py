@@ -186,8 +186,10 @@ def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
             "P": "GIF"
         }
         logger.debug("save to normal")
+        logger.info("使用 PNG 存储")
         img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
     else:
+        logger.info("使用 JPEG 格式")
         img.save(output_buffer, format="JPEG", quality=75)
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()

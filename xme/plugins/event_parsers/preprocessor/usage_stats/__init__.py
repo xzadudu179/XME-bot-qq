@@ -5,13 +5,12 @@ class CmdUsage:
     def __init__(self, cmd_name: str, from_user: int, call_time: str):
         pass
 
-
-
     @classmethod
     def from_dict(data: dict):
         ...
 
-    def get_table_name():
+    @classmethod
+    def get_table_name(cls):
         return CmdUsage.__name__
 
     def to_dict(self):

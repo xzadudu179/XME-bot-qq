@@ -11,6 +11,7 @@ from character import get_message
 from traceback import format_exc
 from nonebot.command import _FinishException
 import functools
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import time
 from xme.xmetools.dbtools import DATABASE

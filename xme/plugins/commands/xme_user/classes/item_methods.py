@@ -3,6 +3,7 @@ from xme.xmetools import randtools
 from character import get_message
 from asyncio import sleep
 from nonebot import CommandSession
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import random
 random.seed()
@@ -52,7 +53,7 @@ async def talk_to_bot(_, session: CommandSession, user):
             "silent": True,
         }
     what_can_talk = []
-    logger.debug(len(what_to_talk_list), len(what_to_talk_list) - 5, int(len(what_to_talk_list) * 0.8))
+    debug_msg(len(what_to_talk_list), len(what_to_talk_list) - 5, int(len(what_to_talk_list) * 0.8))
     if len(what_to_talk_list) < 3:
         what_can_talk = what_to_talk_list
     else:
@@ -65,7 +66,7 @@ async def talk_to_bot(_, session: CommandSession, user):
         else:
             what_can_talk = [i for i in what_to_talk_list if int(i[0]) <= 0]
     prompts_count = min(3, len(what_can_talk))
-    logger.debug(f"what can talk: {what_can_talk}")
+    debug_msg(f"what can talk: {what_can_talk}")
     talk_prompt = random.sample(what_can_talk, prompts_count)
     prompt = f"[嗯...你联系上了{get_message('bot_info', 'name')}，你现在可以向他询问{'最后' if prompts_count == 1 else ''} {prompts_count} 个问题...]\n" + '\n'.join([f'{i + 1}. {item[1:]}' for i, item in enumerate(talk_prompt)])
     prompt += "\n[在下面发送问题的序号吧...如果不想问也可以发送 quit]"
@@ -73,7 +74,7 @@ async def talk_to_bot(_, session: CommandSession, user):
     result = ''
     result_int = 0
     while not is_result_legal:
-        logger.debug(f"result: {result}")
+        debug_msg(f"result: {result}")
         result = await aget_session_msg(session, prompt=prompt if prompt else None)
         if result == "quit":
             await send_session_msg(session, "[正在取消通讯...]")
@@ -129,7 +130,7 @@ async def talk_to_bot(_, session: CommandSession, user):
     else:
         user.add_favorability(10 - abs(user.xme_favorability // 10) * (-1 if user.xme_favorability < 0 else 1))
     await send_session_msg(session, f"[{get_message('bot_info', 'name')}正在准备对你的回应...请耐心等待]")
-    logger.debug(f"总字数：{len(message)}")
+    debug_msg(f"总字数：{len(message)}")
     await sleep(random.randint(int(len(message) * 0.6), int(len(message) * 0.8)))
     await send_session_msg(session, message)
     return {

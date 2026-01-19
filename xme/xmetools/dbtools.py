@@ -4,6 +4,7 @@ from nonebot import log
 from functools import wraps
 from typing import Protocol, TypeVar, Type, Union, runtime_checkable
 from typing import Any, get_type_hints
+from xme.xmetools.debugtools import debug_msg
 from typing import get_origin, get_args
 import json
 
@@ -103,7 +104,7 @@ class XmeDatabase:
                 log.logger.exception(traceback.format_exc())
                 raise
             finally:
-                log.logger.debug("关闭连接")
+                debug_msg("关闭连接")
                 connection.close()
         return wrapper
 
@@ -158,7 +159,6 @@ class XmeDatabase:
         Returns:
             Any: 能够直接存入数据库的类型
         """
-        # print("数据是", value)
         if value is None: return None
         if isinstance(value, (str, int, float, bytes, bytearray)): return value
         if isinstance(value, bool): return int(value)
@@ -241,7 +241,7 @@ class XmeDatabase:
             table_name = type.__name__.lower()
         # sql = f"SELECT * FROM {table_name} WHERE id = ?"
         sql = query.format(table_name=table_name)
-        log.logger.debug("正在通过语句加载内容:\n", sql, select_keys)
+        debug_msg("正在通过语句加载内容:\n", sql, select_keys)
         cursor.execute(sql, select_keys)
         row = cursor.fetchone()
         if not row: return None
@@ -273,7 +273,7 @@ class XmeDatabase:
             list[tuple]: 查询结果
         """
         query = query
-        log.logger.debug("正在执行语句:\n", query, params)
+        debug_msg("正在执行语句:\n", query, params)
         cursor.execute(query, params)
         if not dict_data:
             return cursor.fetchall()

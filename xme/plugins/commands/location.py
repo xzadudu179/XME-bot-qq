@@ -36,6 +36,8 @@ async def _(session: CommandSession, user: User):
     elif loc in ["clear", "unbind"]:
         # del data["locations"][str(session.event.user_id)]
         # save_to_path(config.BOT_SETTINGS_PATH, data)
+        if user.plugin_datas.get("location", None):
+            return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_curr_loc'), tips=True)
         del user.plugin_datas["location"]
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'unbind_loc'), tips=True)
         return True

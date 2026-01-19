@@ -13,6 +13,7 @@ from xme.xmetools.imgtools import crop_transparent_area, image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import asyncio
 import os
@@ -118,7 +119,7 @@ class Seek:
             # await send_session_msg(session, result)
         self.total_steps += steps_result['count']
         if steps_result["over"]:
-            logger.debug("OVER 探险结束")
+            debug_msg("OVER 探险结束")
             # self.status = "stop"
         if steps_result['is_die']:
             steps += Seek.special_message(f"你已被迫结束探险。原因：{steps_result['die_reason']}", html_class="die")
@@ -286,7 +287,7 @@ def get_img_msg(
         <main>
     """
     html_str = md_str
-    # logger.debug(html_body)
+    # debug_msg(html_body)
     html_content = html_body + html_str + """\n
             </main>
     </body>
@@ -306,7 +307,7 @@ class SeekStep:
     # def parse_step():
 
     def gen_step(self, events, player: Player, is_sim) -> str | dict:
-        # logger.debug(player.region)
+        # debug_msg(player.region)
         return self.event.gen_event(events, player.region.value, is_sim=is_sim)
 
     def gen_event_step(self, event_dict: dict, player: Player):
@@ -336,9 +337,9 @@ seeking_players = {
 
 
 async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
-    # logger.debug(args, kwargs)
+    # debug_msg(args, kwargs)
     result = await func(session, user, *args, **kwargs)
-    # logger.debug(result)
+    # debug_msg(result)
     if result['state'] == 'OK':
         result['data']['limited'] = True
     return result
@@ -537,7 +538,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             prefix = "----------阶段总结[剩余 {chance} 次机会]----------"
             player.chance.change(lambda v: v - 1)
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')
-            # logger.debug(player.chance.value, seek.status)
+            # debug_msg(player.chance.value, seek.status)
     except TimeoutError as ex:
         seek.status = "exit"
     except Exception as ex:

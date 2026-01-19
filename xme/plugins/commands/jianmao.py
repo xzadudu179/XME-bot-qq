@@ -1,4 +1,5 @@
 from nonebot import CommandSession
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc

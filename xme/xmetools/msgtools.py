@@ -7,6 +7,7 @@ from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
 from xme.xmetools.bottools import get_user_name
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession

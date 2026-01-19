@@ -3,6 +3,7 @@ import inspect
 from . import item_methods
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools import listtools
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 class Rarity(Enum):
@@ -84,7 +85,7 @@ class Item:
 
     @staticmethod
     def get_item_by_name(name: str, fuzzy: bool = False, fuzzy_threshold: float = 80.0, items: list | None = None, key=lambda x: x.name):
-        logger.debug(f"name: {name}")
+        debug_msg(f"name: {name}")
         if items is None:
             items = list(item_table.values())
         if not fuzzy:

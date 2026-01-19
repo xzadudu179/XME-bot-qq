@@ -12,6 +12,7 @@ from xme.xmetools.dicttools import set_value, get_value
 from character import get_message
 from xme.xmetools import randtools
 import os
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from . import DriftBottle, get_random_bottle
 import random
@@ -34,8 +35,8 @@ async def like(session, bottle_id):
         # "likes": bottle.likes
     # })
     bottle.save()
-    logger.debug("点赞了")
-    # logger.debug(bottles_dict['bottles'][index])
+    debug_msg("点赞了")
+    # debug_msg(bottles_dict['bottles'][index])
     await send_session_msg(session, content)
     return
 
@@ -74,8 +75,8 @@ async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
     #     "comments": bottle.comments
     # })
     # bottle.save()
-    logger.debug("点赞了评论")
-    # logger.debug(bottle)
+    debug_msg("点赞了评论")
+    # debug_msg(bottle)
     await send_session_msg(session, get_message("plugins", __plugin_name__, "liked_comment", id=comment_index))
     return True
 
@@ -109,10 +110,10 @@ async def comment(session, bottle_id, user_id, comment_content):
         "likes": 0
     })
     bottle.save()
-    logger.debug("评论了")
+    debug_msg("评论了")
     for superuser in config.SUPERUSERS:
         await session.bot.send_private_msg(user_id=superuser,message=f"{sender} ({user_id}) 评论了 {index} 号漂流瓶：{comment_content}")
-    # logger.debug(bottle)
+    # debug_msg(bottle)
     await send_session_msg(session, content)
     return True
 
@@ -167,17 +168,17 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     pick_up_users[user_id]["last_time"] = time.time()
     if pick_up_users[user_id]["times"] > 3:
         pick_up_users[user_id]["too_fast"] = True
-        logger.debug(f"{user_id}捡瓶子太快了")
+        debug_msg(f"{user_id}捡瓶子太快了")
         lose_bottle_count = random.randint(5, 10)
         for _ in range(lose_bottle_count):
             count_tick()
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_fast', count=lose_bottle_count))
         return
-    logger.debug(pick_up_users)
+    debug_msg(pick_up_users)
 
     # 普通瓶子
     table_name = DriftBottle.get_table_name()
-    logger.debug("捡瓶子中")
+    debug_msg("捡瓶子中")
     # 没捡到瓶子
     if not DriftBottle.exec_query(query=f"SELECT 1 FROM {table_name} WHERE is_broken != TRUE LIMIT 1", dict_data=True):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_bottle"), linebreak=False)
@@ -192,8 +193,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     # 幽灵瓶子 只在 23 点 ~ 3点出现
     is_broken_bottle = randtools.random_percent(1.2) if (datetime.now().hour < 4 or datetime.now().hour >= 22) else False
     is_cthulhu_bottle = randtools.random_percent(0.7)
-    logger.debug("时间段", (datetime.now().hour < 4 or datetime.now().hour >= 22))
-    logger.debug("isbroken", is_broken_bottle)
+    debug_msg("时间段 " + str(datetime.now().hour < 4 or datetime.now().hour >= 22))
+    debug_msg("isbroken" + str(is_broken_bottle))
     if is_broken_bottle:
         broken = get_random_broken_bottle()
     else:
@@ -202,7 +203,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     f"""SELECT * FROM {table_name}
     WHERE (CAST(bottle_id AS TEXT) != CAST(bottle_id AS INTEGER) OR bottle_id == "-179") AND is_broken != TRUE
     AND bottle_id NOT LIKE '%PURE%'""", dict_data=True)
-    # logger.debug(random.choice(special))
+    # debug_msg(random.choice(special))
     have_special_bottle = False
     # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
     bottle: DriftBottle = get_random_bottle()
@@ -215,15 +216,15 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         have_special_bottle
     if is_broken_bottle:
         bottle = broken
-        logger.debug("捡到了碎瓶子")
+        debug_msg("捡到了碎瓶子")
         bottle.skin = "幽灵"
         # await user.achieve_achievement(session, "幽灵瓶")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个幽灵瓶子~")
     elif is_special_bottle and special or have_special_bottle and not is_broken_bottle:
         if not have_special_bottle:
-            # logger.debug(random.choice(special))
+            # debug_msg(random.choice(special))
             bottle: DriftBottle = DriftBottle.form_dict(random.choice(special))
-        logger.debug("捡到了彩蛋瓶子")
+        debug_msg("捡到了彩蛋瓶子")
         # await user.achieve_achievement(session, "彩蛋瓶")
         if bottle.bottle_id in ["550W", "MOSS"]:
             await user.achieve_achievement(session, "MOSS")
@@ -232,10 +233,10 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
         # bottle: DriftBottle = DriftBottle.form_dict(DriftBottle.exec_query(query=f"SELECT * FROM {table_name} ORDER BY RANDOM() LIMIT 1", dict_data=True)[0])
-        logger.debug(bottle)
+        debug_msg(bottle)
         # if bottle.sender_id == session.event.user_id and bottle.views == 0:
             # await user.achieve_achievement(session, "回旋瓶")
-        logger.debug("捡到了瓶子")
+        debug_msg("捡到了瓶子")
     # 瓶子自己的皮肤
     if bottle.skin:
         skin_name = bottle.skin
@@ -267,7 +268,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix_broken")
     await send_session_msg(session, prefix_message + (await image_msg(bottle_card)) + warning_text, linebreak=False, tips=True)
     if is_broken_bottle:
-        logger.debug("破碎的瓶子直接返回")
+        debug_msg("破碎的瓶子直接返回")
         count_tick()
         return False
     content = ""
@@ -295,7 +296,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             await send_session_msg(session, content)
             return True
         if str(index) == "-179" or not index_is_int:
-            logger.debug("瓶子碎了？")
+            debug_msg("瓶子碎了？")
             await user.achieve_achievement(session, "纯洁无暇！")
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         elif index != "-179":
@@ -304,7 +305,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             # jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
             # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()
-            logger.debug("瓶子碎了")
+            debug_msg("瓶子碎了")
 
         await send_session_msg(session, content)
         count_tick()
@@ -321,11 +322,11 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         if while_index > 4:
             return True
         async def cmd_func(reply):
-            logger.debug("执行指令")
+            debug_msg("执行指令")
             # 手动计数，防止递归调用不计数问题
             u.limit_count_tick(user, command_name)
             user.save()
-            logger.debug("增加计数")
+            debug_msg("增加计数")
             await send_cmd(reply, session)
             return "CMD_OVER"
         try:

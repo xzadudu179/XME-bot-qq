@@ -8,6 +8,7 @@ from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
 import random
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
@@ -48,8 +49,6 @@ async def _(session: CommandSession, user: u.User):
         messy_rate = 0
     else:
         messy_rate_string = f"{messy_rate}%"
-    # sender_now = await get_stranger_name(bottle['sender_id'])
-    # group_now = await get_group_name(bottle['group_id'])
     suffix = ""
     # 瓶子自己的皮肤
     if bottle.skin:
@@ -58,10 +57,6 @@ async def _(session: CommandSession, user: u.User):
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100
     logger.info(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
-    # broken = randtools.random_percent(broken_rate)
-    # if index_is_int and str(index) != "-179":
-    #     # 普通瓶子会越来越混乱
-    #     bottle_card = randtools.messy_string(bottle_card, messy_rate)
     if str(index) == "-179":
         # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
         suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'

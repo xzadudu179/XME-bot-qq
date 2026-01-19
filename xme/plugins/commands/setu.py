@@ -3,6 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools import reqtools
 from character import get_message
 from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import random
 random.seed()

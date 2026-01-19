@@ -4,12 +4,38 @@ from xme.xmetools import listtools as lt
 from xme.xmetools import timetools as d
 import json
 import random
-from nonebot.log import logger
+from typing import List, Optional, Tuple
 
-# members = []
+import random
+from typing import List, Optional, Tuple
 
-async def group_init(group_id: str) -> dict:
-    """初始化且更新群组老婆信息
+def add_random_pair(
+    pairs: List[List[int]],
+    candidates: List[int],
+    new_value: int
+) -> Tuple[Optional[List[List[int]]], Optional[int]]:
+
+    used_numbers = {num for pair in pairs for num in pair}
+    unused = [n for n in candidates if n not in used_numbers]
+
+    if unused == [new_value]:
+        pairs.append([new_value, new_value])
+        return pairs, -1
+
+    if new_value in used_numbers:
+        return None, None
+    available = [n for n in unused if n != new_value]
+
+    if not available:
+        return None, None
+
+    partner = random.choice(available)
+    pairs.append([new_value, partner])
+    return pairs, partner
+
+
+def group_init(group_id: str) -> dict:
+    """初始化且群组老婆信息
 
     Args:
         group_id (str): 群号
@@ -17,119 +43,88 @@ async def group_init(group_id: str) -> dict:
     Returns:
         dict: 群组老婆信息
     """
-    return wife_update(group_id)
-
-def wife_update(group_id: str) -> dict:
-    """更新老婆数据并且返回wifeinfo
-
-    Args:
-        group_id (str): 群号
-        members: 群员数据
-    Returns:
-        群员老婆数据
-    """
     # Keep for backward compatibility but do not auto-generate pairs anymore.
     days = d.curr_days()
     with open("./data/wife.json", 'r', encoding='utf-8') as file:
         wifeinfo = json.load(file)
-    logger.debug(days, wifeinfo[group_id]['days'], days > wifeinfo[group_id]['days'])
+    # debug_msg(days, wifeinfo[group_id]['days'], days > wifeinfo[group_id]['days'])
     if group_id not in wifeinfo or days > wifeinfo[group_id]['days']:
         wifeinfo[group_id] = {"days": days, "members": []}
         with open("./data/wife.json", 'w', encoding='utf-8') as file:
             file.write(json.dumps(wifeinfo))
     return wifeinfo
 
+def find_pair_value(pairs, target):
+    for a, b in pairs:
+        if a == target:
+            return b
+        if b == target:
+            return a
+    return None
 
-def _save_wifeinfo(wifeinfo: dict):
-    with open("./data/wife.json", 'w', encoding='utf-8') as file:
-        file.write(json.dumps(wifeinfo))
+def get_wife_id(group_id, user_id, group_members, can_gen=True):
+    w_info: dict = group_init(group_id)
+    group_wife_info = w_info[group_id]
+    ms = group_wife_info["members"]
+    wife_id = find_pair_value(ms, user_id)
+    print(group_id, user_id, can_gen)
+    if wife_id == user_id:
+        return "NO_WIFE"
+    if wife_id is not None:
+        return wife_id
+    if not can_gen:
+        return "CANT_GEN"
+    new_ms, wife_id = add_random_pair(ms, group_members, user_id)
+    if new_ms is not None:
+        with open("./data/wife.json", 'w', encoding='utf-8') as file:
+            group_wife_info["members"] = new_ms
+            file.write(json.dumps(w_info))
+        if wife_id == -1:
+            return "NO_WIFE"
+        return wife_id
+    return "NO_WIFE"
 
 
-def _load_wifeinfo() -> dict:
-    with open("./data/wife.json", 'r', encoding='utf-8') as file:
-        return json.load(file)
-
-
-async def search_wife(wifeinfo: dict, group_id: str, user_id: int, session: BaseSession):
-    """查找老婆
-
-    Args:
-        wifeinfo (dict): 老婆信息字典
-        group_id (str): 群号
-        user_id (int): qq号
-        session (BaseSession): bot session
-
-    Returns:
-        用户信息
-    """
-    members_full = await nonebot.get_bot().get_group_member_list(group_id=group_id)
-    members = [member['user_id'] for member in members_full]
-    pairs = wifeinfo.get(group_id, {}).get("members", [])
-    pair = lt.find_pair(pairs, user_id)
-    # print(f"pair: {pair}")
-    if pair != "":
-        try:
-            pair_user = await session.bot.get_group_member_info(group_id=group_id, user_id=pair)
-        except:
-            pair_user = await session.bot.get_stranger_info(user_id=pair)
-        return pair_user
-
-    # No existing partner: try to assign one for the caller
-    paired_ids = set()
-    for p in pairs:
-        for x in p:
-            paired_ids.add(x)
-    candidates = [m for m in members if m not in paired_ids and m != user_id]
-    # print("candidates", candidates)
-    # print("paired_ids", paired_ids)
-    if not candidates:
+def change_wife(
+    pairs: List[List[int]],
+    candidates: List[int],
+    user_id: int
+) -> Optional[int]:
+    old_pair = None
+    for pair in pairs:
+        if user_id in pair:
+            old_pair = pair
+            break
+    if old_pair is None:
         return None
-    random.seed()
-    partner = random.choice(candidates)
-    pairs.append((user_id, partner))
-    wifeinfo[group_id]['members'] = pairs
-    _save_wifeinfo(wifeinfo)
-    try:
-        pair_user = await session.bot.get_group_member_info(group_id=group_id, user_id=partner)
-    except:
-        pair_user = await session.bot.get_stranger_info(user_id=partner)
-    return pair_user
+
+    old_wife = old_pair[1] if old_pair[0] == user_id else old_pair[0]
+    pairs.remove(old_pair)
+    used_numbers = {num for pair in pairs for num in pair}
+    used_numbers.add(user_id)
+    available = [
+        n for n in candidates
+        if n not in used_numbers and n != old_wife
+    ]
+
+    if len(available) <= 1:
+        return None
+
+    new_wife = random.choice(available)
+    pairs.append([user_id, new_wife])
+    return new_wife
 
 
-# async def change_wife(wifeinfo: dict, group_id: str, user_id: int, session: BaseSession):
-#     """Change the caller's wife to a new random unpaired member.
+def change_wife_id(group_id, user_id, group_members):
+    w_info = group_init(group_id)
+    group_wife_info = w_info[group_id]
+    ms = group_wife_info["members"]
 
-#     Returns the new partner user object, or None if no wife to change or no candidates.
-#     """
-#     pairs = wifeinfo.get(group_id, {}).get("members", [])
-#     current_partner = lt.find_pair(pairs, user_id)
-#     if current_partner == "":
-#         return None
+    new_wife = change_wife(ms, group_members, user_id)
+    if new_wife is None:
+        return None
 
-#     # Build set of currently paired ids
-#     paired_ids = set()
-#     for p in pairs:
-#         for x in p:
-#             paired_ids.add(x)
+    with open("./data/wife.json", 'w', encoding='utf-8') as file:
+        file.write(json.dumps(w_info))
 
-#     # Exclude current partner so the new one is different
-#     candidates = [m for m in members if m not in paired_ids and m != user_id]
-#     if not candidates:
-#         return None
-
-#     random.seed()
-#     new_partner = random.choice(candidates)
-
-#     # remove existing pair containing user_id
-#     for i, p in enumerate(pairs):
-#         if user_id in p:
-#             pairs.pop(i)
-#             break
-#     pairs.append((user_id, new_partner))
-#     wifeinfo[group_id]['members'] = pairs
-#     _save_wifeinfo(wifeinfo)
-#     try:
-#         partner_user = await session.bot.get_group_member_info(group_id=group_id, user_id=new_partner)
-#     except:
-#         partner_user = await session.bot.get_stranger_info(user_id=new_partner)
-#     return partner_user
+    return new_wife

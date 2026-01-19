@@ -6,6 +6,7 @@ from xme.xmetools.randtools import messy_image
 from xme.xmetools.texttools import only_positional_fields, replace_formatted
 from character import get_message
 from traceback import print_exc
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
@@ -101,10 +102,10 @@ class DriftBottle:
             # 克苏鲁瓶子
             if bottle.views >= 114514 and (bottle.likes <= bottle.views // 2):
                 continue
-            logger.debug("查重", bottle.bottle_id)
+            debug_msg("查重 " + str(bottle.bottle_id))
             for image in bottle.images:
                 result = phash_compare(path_or_image, BOTTLE_IMAGES_PATH + image, threshold=999)
-                logger.debug("图片查重result", result)
+                debug_msg("图片查重result " + str(result))
                 if result <= 12:
                     return {
                     "status": False,
@@ -132,7 +133,7 @@ class DriftBottle:
                     FROM {DriftBottle.__name__}
                     WHERE bottle_id GLOB '[0-9]*';"""
         result = DriftBottle.exec_query(query=query, dict_data=True)[0]
-        logger.debug(result)
+        debug_msg(result)
         return int(result['COALESCE(MAX(CAST(bottle_id AS REAL)), 0)'])
 
     @staticmethod
@@ -149,7 +150,7 @@ class DriftBottle:
         DATABASE.update_db(obj=self, id=self.id, **update_method(self))
 
     def form_dict(data: dict) -> 'DriftBottle':
-        # logger.debug(data)
+        # debug_msg(data)
         images = data.get('images', '[]')
         if images is None:
             images = '[]'

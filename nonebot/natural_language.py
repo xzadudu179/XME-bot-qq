@@ -29,7 +29,7 @@ class NLProcessor:
         self.allow_empty_message = allow_empty_message
         self.permission = permission  # includes EllipsisType
 
-    async def test(self, session: 'NLPSession', 
+    async def test(self, session: 'NLPSession',
                    msg_text_length: Optional[int] = None) -> bool:
         """
         Test whether the session matches this (self) NL processor.
@@ -87,7 +87,7 @@ class NLPManager:
     @classmethod
     def add_nl_processor(cls, processor: NLProcessor) -> None:
         """Register a natural language processor
-        
+
         Args:
             processor (NLProcessor): Processor object
         """
@@ -99,10 +99,10 @@ class NLPManager:
     @classmethod
     def remove_nl_processor(cls, processor: NLProcessor) -> bool:
         """Remove a natural language processor globally
-        
+
         Args:
             processor (NLProcessor): Processor to remove
-        
+
         Returns:
             bool: Success or not
         """
@@ -117,10 +117,10 @@ class NLPManager:
                                   state: Optional[bool] = None
                                   ) -> Optional[bool]:
         """Remove or add a natural language processor globally
-        
+
         Args:
             processor (NLProcessor): Processor object
-        
+
         Returns:
             bool: True if removed, False if added
         """
@@ -135,10 +135,10 @@ class NLPManager:
                            processor: NLProcessor,
                            state: Optional[bool] = None) -> Optional[bool]:
         """Remove or add a natural language processor
-        
+
         Args:
             processor (NLProcessor): Processor to remove
-        
+
         Returns:
             bool: True if removed, False if added
         """

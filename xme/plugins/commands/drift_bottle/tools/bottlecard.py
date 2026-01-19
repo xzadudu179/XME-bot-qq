@@ -5,6 +5,7 @@ from xme.xmetools.imgtools import get_html_image
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 from keys import BOTTLE_IMAGE_KEY
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
@@ -121,7 +122,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
         content = ""
         # 防止注入html的问题
         if c.startswith(f'<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,') and len(images) > 0 and image_item_count < len(images):
-            logger.debug("处理图片")
+            debug_msg("处理图片")
             content = f'<p>{c}</p>'
             image_item_count += 1
             formatted_content.append(content)

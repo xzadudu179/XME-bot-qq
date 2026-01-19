@@ -12,6 +12,7 @@ from xme.xmetools.imgtools import image_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from nonebot import MessageSegment
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from traceback import format_exc
 from character import get_message
@@ -35,31 +36,40 @@ async def arg_help(arg, plugins, session):
     if arg[0] in config.COMMAND_START:
         arg = arg[1:]
     ask_for_help = get_cmd_by_alias(arg, False)
+    debug_msg("ask", ask_for_help)
+    debug_msg("arg", arg)
+    debug_msg("plugins", [p.name.lower() for p in plugins])
     if not ask_for_help:
         ask_for_help = x[-1][0] if (x:=most_similarity_str(arg, [p.name.lower() for p in plugins], 0.65)) else None
     else:
         ask_for_help = ask_for_help.name[0]
-    logger.debug(ask_for_help)
+    debug_msg(ask_for_help)
     ask_cmd = ask_for_help
+    target_plugin = None
     if not ask_for_help:
         return False
     for pl in plugins:
-        if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0].strip() for i in pl.usage.usages]:
-            ask_for_help = pl.name.lower()
+        if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.usages]:
+            # ask_for_help = pl.name.lower()
+            target_plugin = pl.name.lower()
         elif isinstance(pl.usage, str) and f"{pl.usage.split(']')[0]}]" in ["[插件]"] and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n")[:] if i]:
-            ask_for_help = pl.name.lower()
-        # logger.debug(ask_cmd, ask_for_help, pl.name.lower())
+            target_plugin = pl.name.lower()
+        # if isinstance(pl.usage, PluginDoc):
+        #     debug_msg("plugins", [i.split(":")[0].strip() for i in pl.usage.usages], ask_for_help in [i.split(":")[0].strip() for i in pl.usage.usages], ask_for_help)
+        debug_msg(ask_cmd, target_plugin, pl.name.lower())
         user_help = None
         try:
             user_help = get_userhelp(ask_cmd)
             if user_help is not None and pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
-                logger.debug("发送用户帮助")
+                debug_msg("发送用户帮助")
                 return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
         except:
             pass
-        if pl.name.lower() != ask_for_help: continue
+        if pl.name.lower() != target_plugin: continue
         u = str(pl.usage)
+        debug_msg(u)
         return await send_session_msg(session, u.split("/////OUTER/////")[0].replace("\n\n", "\n") if u.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
+    return False
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
@@ -68,7 +78,7 @@ async def _(session: CommandSession, user: u.User):
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     arg = session.current_arg_text.strip().lower()
     # 如果发了参数则发送相应命令的使用帮助
-    logger.debug("发送帮助")
+    debug_msg("发送帮助")
     if arg and await arg_help(arg, plugins, session) != False: return False
     # help_list_str = ""
     PAGE_LENGTH = 20
@@ -111,7 +121,7 @@ async def _(session: CommandSession, user: u.User):
 
     pages = ['\n'.join(item) for item in split_list(total_pages.split("\n")[1:], PAGE_LENGTH)]
     pages_plugin = ['\n'.join(item) for item in split_list(plugin_pages.split("\n")[1:], PAGE_LENGTH)]
-    # logger.debug(pages)
+    # debug_msg(pages)
     prefix = get_message("plugins", __plugin_name__, 'prefix', command_seps='"' + '"、"'.join(config.COMMAND_START) + '"', version=config.VERSION)
     # prefix = f'[XME-Bot V0.1.2]\n指令以 {" ".join(config.COMMAND_START)} 中任意字符开头\n当前功能列表'
     suffix = get_message("plugins", __plugin_name__, 'suffix', docs_link="https://docs.xme.179.life/")

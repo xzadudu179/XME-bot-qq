@@ -14,6 +14,7 @@ random.seed()
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 alias = ['签到', 'register', 's']
@@ -34,7 +35,7 @@ async def _(session: CommandSession, user: User):
     FIRST_AWARD = 20
     message = ""
     # message = get_message("plugins", __plugin_name__, cmd_name, 'failed')
-    logger.debug("USER IS", user)
+    debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
     user.add_coins(append_coins)
     users: list[dict] = User.get_users()
@@ -64,5 +65,5 @@ async def _(session: CommandSession, user: User):
     message += "\n" + sign_message + reaction
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()
-    logger.debug("保存用户数据")
+    debug_msg("保存用户数据")
     return message

@@ -9,6 +9,7 @@ from .celestial.star import Star
 from .celestial.ship import Ship
 from .celestial.tools import load_celestial
 from xme.xmetools import jsontools
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.randtools import random_percent
 import random

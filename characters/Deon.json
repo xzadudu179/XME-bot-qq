@@ -922,7 +922,7 @@
     },
     "今日老婆": {
       "desc": "今日老婆相关指令",
-      "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n注意：这个功能仅供娱乐 uwu",
+      "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n使用 \"/w ch\" 可以更换老婆\n注意：这个功能仅供娱乐 uwu",
       "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
       "no_more_wife": "没有老婆可以更换了呢... {negative}",
       "wife_message": [
@@ -930,12 +930,21 @@
         "{who}今天的群老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
       ],
       "no_at_hint": "你的参数里有 @ 符号，但是解析不到 at 的 QQ，可能没 at 上哦 {neutral}，",
+      "no_wife_yet": [
+        "{name}今天还没有获取自己的老婆哦 {neutral}",
+        "{name}今天还没有查看过自己的老婆哦 {neutral}"
+      ],
       "no_wife": [
         "{name}今天并没有老婆 {neutral}",
         "{name}今天没有老婆...",
         "{name}今天没有老婆 {neutral}",
         "{name}今天没有老婆诶..."
       ],
+      "cannot_change_wife": [
+        "你今天换不了老婆啦...{negative}",
+        "你今天没法再换老婆啦...{negative}"
+      ],
+      "change_wife_success_prefix": "更换老婆成功啦 {neutral} ",
       "error": [
         "{negative}，无法获取到群员信息：{ex}",
         "{negative}，获取群员信息的时候出错了...：{ex}",

@@ -7,6 +7,7 @@ from xme.xmetools.bottools import XmeArgumentParser
 from .commands import clear_history
 import cn2an
 from traceback import format_exc
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import httpx
 # from xme.xmetools.texttools import dec_to_chinese
@@ -185,7 +186,7 @@ async def talk(session: CommandSession, text, user: u.User):
             return False
         ans = result_response.choices[0].message.content
         build_history(user=user, ask=text, ans=ans)
-        logger.debug("处理结果")
+        debug_msg("处理结果")
         return result_response.choices[0].message.content
     except AttributeError as ex:
         logger.error("attribute 错误: ", ex)

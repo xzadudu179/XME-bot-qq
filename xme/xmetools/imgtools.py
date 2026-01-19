@@ -10,6 +10,7 @@ import imagehash
 from collections import defaultdict
 from xme.xmetools.reqtools import fetch_data
 import traceback
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 try:
     import pyautogui
@@ -60,7 +61,7 @@ def phash_compare_folder(path_or_image, folder, threshold=5) -> list[tuple[str, 
     return result
 
 def phash_compare(target_image: str | Image.Image, compare_image: str| Image.Image, threshold=5):
-    # logger.debug("比较", target_image, compare_image)
+    # debug_msg("比较", target_image, compare_image)
     target_hash = get_hash(target_image)
     h = get_hash(compare_image)
     result = 999
@@ -179,13 +180,13 @@ def get_image_format(image: Image.Image, default="PNG") -> str:
 
 def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
     output_buffer = BytesIO()
-    logger.debug("正在将图片转为base64")
+    debug_msg("正在将图片转为base64")
     if img.mode in ["RGBA", "P"] or not to_jpeg:
         img_mode_dict = {
             "RGBA": "PNG",
             "P": "GIF"
         }
-        logger.debug("save to normal")
+        debug_msg("save to normal")
         logger.info("使用 PNG 存储")
         img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
     else:
@@ -193,7 +194,7 @@ def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
         img.save(output_buffer, format="JPEG", quality=75)
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
-    logger.debug("result len", len(base64_str))
+    debug_msg("result len", len(base64_str))
     return base64_str
 
 def gif_to_base64(img, frames: list[Image.Image]):
@@ -215,7 +216,7 @@ def gif_to_base64(img, frames: list[Image.Image]):
     )
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
-    logger.debug("result len", len(base64_str))
+    debug_msg("result len", len(base64_str))
     return base64_str
 
 def limit_size(image: Image.Image, max_value) -> Image.Image:
@@ -239,7 +240,7 @@ async def gif_msg(input_path, scale=1):
         )  # 放大2倍
         frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
     b64 = gif_to_base64(img, frames)
-    logger.debug("gif b64 success")
+    debug_msg("gif b64 success")
     try:
         # 将消息发送的同步方法放到后台线程执行
         result = await asyncio.to_thread(create_image_message, b64)
@@ -265,18 +266,18 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     is_image = False
     if not isinstance(path_or_image, str):
         is_image = True
-    logger.debug(is_image)
+    debug_msg(is_image)
     try:
         image = path_or_image if is_image else Image.open(path_or_image)
     except:
         image = await get_url_image(path_or_image)
     # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
     if max_size > 0:
-        logger.debug("重新缩放")
+        debug_msg("重新缩放")
         image = limit_size(image, max_size)
-    # logger.debug(image)
+    # debug_msg(image)
     b64 = image_to_base64(image, to_jpeg)
-    logger.debug("b64 success")
+    debug_msg("b64 success")
     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:
         # 将消息发送的同步方法放到后台线程执行

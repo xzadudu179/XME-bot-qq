@@ -9,6 +9,7 @@ from xme.xmetools.reqtools import fetch_data
 from xme.plugins.commands.xme_user.classes import user as u
 import traceback
 from config import COMMAND_START
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.loctools import search_location, get_user_location

@@ -8,6 +8,7 @@ from nonebot.argparse import ParserExit
 from character import get_message
 import json
 from traceback import format_exc
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from functools import wraps
 
@@ -90,7 +91,7 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs
         Any: 调用结束返回的值
     """
     try:
-        # logger.debug("call action")
+        # debug_msg("call action")
         return await bot.api.call_action(action=action, **kwargs)
     except Exception as ex:
         logger.error(f"bot 调用接口出现错误： {ex}")
@@ -117,7 +118,7 @@ def permission(perm_func: PermissionPolicy_T, permission_help: str = "未知", n
             msg = no_perm_message
             if not msg:
                 msg = get_message("config", "no_permission", permission=permission_help)
-            logger.debug("perm func", perm_func(sender))
+            debug_msg("perm func", perm_func(sender))
             if perm_func(sender):
                 result = await func(session, *args, **kwargs)
             else:

@@ -6,20 +6,21 @@ import matplotlib.pyplot as plt
 import matplotlib as mpt
 from matplotlib import font_manager
 import numpy as np
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 bg_color = (4 / 255, 23 / 255, 32 / 255)
 path = rf"./static/fonts/Cubic_11.ttf"
 prop = font_manager.FontProperties(fname=path)
 font_manager.fontManager.addfont(path)
-logger.debug("字体名:", prop.get_name())
+debug_msg("字体名: " + prop.get_name())
 mpt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
 
 def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):
     expr = sp.sympify(expr_str,  evaluate=False)
     free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
-    logger.debug("free symbols", free_symbols)
+    debug_msg("free symbols", free_symbols)
     if len(free_symbols) == 1:
         x = free_symbols[0]
         f_num = sp.lambdify(x, expr, "numpy")
@@ -37,7 +38,7 @@ def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), ran
         z = f_num(X, Y)
         contains_invalid = np.any(np.isnan(z)) or np.any(np.isinf(z))
         if contains_invalid:
-            logger.debug("有无效值")
+            debug_msg("有无效值")
             plt.text(10, 11 - 0.8 * len(labels), "警告：函数有无效值", color=color, fontsize=8)
         z = np.nan_to_num(z, nan=0.0)
         plt.contour(X, Y, z, levels=[0], colors=color, linewidths=2)
@@ -47,16 +48,16 @@ def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), ran
     return labels
 
 def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 100), range_y=None, labels=[]):
-    logger.debug("绘制3D")
+    debug_msg("绘制3D")
     # expr = sp.sympify(expr_str)
     # fig = plt.figure()
     expr = sp.sympify(expr_str,  evaluate=False)
     free_symbols = [s for s in expr.free_symbols if s.name in ('x', 'y')]
-    logger.debug(free_symbols)
+    debug_msg(free_symbols)
     if len(free_symbols) == 1:
         free_symbols = free_symbols, None
     x, y = free_symbols
-    logger.debug(free_symbols)
+    debug_msg(free_symbols)
     if range_y is None:
         range_y = range_x  # 如果未指定 y 的范围，使用 x 的范围
     f_num = sp.lambdify((x, y) if y is not None else x, expr, "numpy")
@@ -65,11 +66,11 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     y_vals = np.linspace(*range_y) if y is not None else np.zeros_like(x_vals)
     X, Y = np.meshgrid(x_vals, y_vals)
     z = f_num(X, Y) if y is not None else f_num(X)
-    logger.debug("xyz", X, Y, z)
+    debug_msg("xyz", X, Y, z)
     # 检查无效值并处理
     contains_invalid = np.any(np.isnan(z)) or np.any(np.isinf(z))
     if contains_invalid:
-        logger.debug("有无效值")
+        debug_msg("有无效值")
         expr_str = "(有无效值) " + expr_str
 
         # ax.text(-72 + 1.5 * len(labels) * 1.5, 44 - 2 * 2 * 1.5, z=0, s="WARNING: INVALID", color=color, fontsize=8)
@@ -80,7 +81,7 @@ def draw_3d_expr(expr_str, ax, color: str | tuple = "blue", range_x=(-10, 10, 10
     return labels
 
 def draw_3d_exprs(*expr_strs, path_folder="./data/images/temp"):
-    logger.debug("3d:exprs", expr_strs)
+    debug_msg("3d:exprs", expr_strs)
     ax = FIG.add_subplot(111, projection='3d')
     return draw_exprs(*expr_strs, path_folder=path_folder, draw_function=draw_3d_expr, ax=ax, label_ax=ax, pre="3dfunc_image", parse_func=parse_3d_exprs_label)
 
@@ -141,12 +142,12 @@ def parse_3d_exprs_label(title, font_size, font_color, bg_color, grid_color, lab
 
 def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_expr, parse_func=parse_exprs_label, label_ax="default", pre="func_image", **draw_kwargs):
     global bg_color
-    logger.debug("exprstrs:", expr_strs)
+    debug_msg("exprstrs:", expr_strs)
     title = f"{limit_str_len(','.join([es for es in expr_strs]), 30)} 的结果"
     name = hash_text(f"{pre}_{title}") + ".png"
     path = path_folder + "/" + name
     if has_file(path):
-        logger.debug("使用缓存")
+        debug_msg("使用缓存")
         return path, True
 
     font_size = 16
@@ -156,7 +157,7 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     labels = []
 
     colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#448fff", len(expr_strs))]
-    # logger.debug(colors)
+    # debug_msg(colors)
     # 绘制图像
     for i, s in enumerate(expr_strs):
         # draw_expr(s, colors[i], labels=labels)

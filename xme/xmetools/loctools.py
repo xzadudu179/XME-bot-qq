@@ -3,6 +3,7 @@ from character import get_message
 from keys import WEATHER_API_KEY
 import config
 from xme.plugins.commands.xme_user.classes.user import try_load, User
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.jsontools import read_from_path, save_to_path
 
@@ -20,8 +21,8 @@ async def search_location(loc: str, headers: dict = {"X-QW-Api-Key": WEATHER_API
     city = f"https://mb3h2ky7r9.re.qweatherapi.com/geo/v2/city/lookup?location={loc}"
     city_info = await fetch_data(city, headers=headers)
     if city_info.get("code", "") != "200":
-        logger.debug(city_info)
-        logger.debug("无法搜索")
+        debug_msg(city_info)
+        debug_msg("无法搜索")
         if dict_output:
             return city_info
         return get_message("apis", "search_location_error", code=city_info.get('code', '未知'), msg=city_info.get('detail', '未知'))
@@ -46,7 +47,7 @@ async def get_user_location(user_id, location_text="") -> tuple[list[dict], dict
     # user_location_info = data["locations"].get(str(user_id), None)
     locations = []
     if location_text:
-        logger.debug("搜索城市中...")
+        debug_msg("搜索城市中...")
         search = await search_location(location_text, dict_output=True)
         locations = search.get("location", [])
     else:

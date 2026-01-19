@@ -8,6 +8,7 @@ from character import get_message
 from nonebot import message_preprocessor
 from nonebot import NoneBot
 import time
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import config
 # import asyncio
@@ -41,8 +42,8 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         message = message.split(" ")[0]
         message = message[1:] if message[0] in config.COMMAND_START else message
     if time.time() - last_messages['refresh_time'] > (SEC_AVG_MSGS * MSG_COUNT_THRESHOLD * 2) and last_messages['refresh_time'] > 0:
-        # logger.debug(last_messages)
-        # logger.debug(f"正在清除以上消息的缓存...")
+        # debug_msg(last_messages)
+        # debug_msg(f"正在清除以上消息的缓存...")
         last_messages = {
             "refresh_time": time.time()
         }
@@ -51,12 +52,12 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
     last_messages.setdefault(key, {}).setdefault(message, {})
     last_messages[key][message].setdefault("count", 0)
     if not last_messages[key][message].get("start_time", False):
-        # logger.debug(f"记录新语句: {message}")
+        # debug_msg(f"记录新语句: {message}")
         last_messages[key][message]["start_time"] = time.time()
     last_messages[key][message]['count'] += 1
     if not last_messages[key][message].get("banned", False):
         last_messages[key][message]["banned"] = False
-    # logger.debug(last_messages)
+    # debug_msg(last_messages)
 
     if last_messages[key][message]['count'] >= MSG_COUNT_THRESHOLD or (event['user_id'] == event.self_id and last_messages[key][message]['count'] >= 2):
         # 刷屏了
@@ -75,11 +76,11 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
             logger.warning(f"消息 \"{message}\" 刷屏了")
             last_messages[key][message]["banned"] = True
             # if event['group_id'] in config.ANTI_MESSAGEBURST_GROUP and time_period <= (SEC_AVG_MSGS * last_messages[key][message]['count']):
-            #     logger.debug(f"尝试禁言群员")
+            #     debug_msg(f"尝试禁言群员")
             #     await bot.api.set_group_ban(group_id=event['group_id'], user_id=event['user_id'], duration=120)
             # if event['group_id'] in config.ANTI_MESSAGEBURST_GROUP or is_cmd:
             if is_cmd:
-                logger.debug("提醒群员")
+                debug_msg("提醒群员")
                 await send_event_msg(bot, event, message=get_message("event_parsers", "cmd_bursts"))
                 # await bot.send_group_msg(message=get_message("event_parsers", "cmd_bursts" if is_cmd else "message_bursts"), group_id=event['group_id'])
         raise CanceledException(f"消息 \"{event.raw_message}\" 刷屏，不处理")

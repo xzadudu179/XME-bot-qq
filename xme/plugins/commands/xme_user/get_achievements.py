@@ -12,6 +12,7 @@ import math
 from xme.plugins.commands.xme_user.classes.user import User
 from character import get_message
 from xme.plugins.commands.xme_user.classes.achievements import get_achievements, get_achievement_details
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 alias = ['查看成就', '成就', 'achi']
@@ -74,7 +75,7 @@ async def _(session: CommandSession, user: User):
     page = 1
     achievements: list = [a["name"] for a in user.achievements]
     achi_items_total, achi_dict = get_achievement_items(achievements)
-    logger.debug("d", achi_dict)
+    debug_msg("d", achi_dict)
     if arg:
         if (arg_int:=try_parse(arg, int)) is not None:
             try:

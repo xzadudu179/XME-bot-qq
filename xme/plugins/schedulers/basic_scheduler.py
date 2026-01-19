@@ -8,6 +8,7 @@ from xme.xmetools.bottools import bot_call_action
 from xme.xmetools import randtools
 from aiocqhttp import MessageSegment
 from xme.xmetools.jsontools import read_from_path, save_to_path
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools import timetools
 from xme.xmetools.filetools import backup_data_dir
@@ -32,7 +33,7 @@ def calc_lottery():
     get_coins, lose_coins = vars["lottery_get_coins"], vars["lottery_lose_coins"]
     vars["lottery_get_coins"] = 0
     vars["lottery_lose_coins"] = 0
-    logger.debug(vars)
+    debug_msg(vars)
     save_to_path("data/bot_vars.json", vars)
     user.save()
     return get_coins, lose_coins
@@ -49,7 +50,7 @@ async def send_time_message(new_day=False):
         logger.exception(traceback.format_exc())
         groups = []
     for group in scheduler_groups:
-        if group not in groups["group_id"]:
+        if group not in [g["group_id"] for g in groups]:
             continue
         say = random.choice(read_from_path("./static/hitokoto.json"))
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()
@@ -113,13 +114,13 @@ async def _():
         faces = await bot_call_action(bot, "fetch_custom_face")
     except:
         has_faces = False
-    # logger.debug(faces)
+    # debug_msg(faces)
     # 随机发表情
     messages = get_character_item("schedulers", "idles")
     if has_faces:
         messages += faces
     message = random.choice(messages)
-    # logger.debug(has_faces, messages)
+    # debug_msg(has_faces, messages)
     if message in faces:
         # message = f"[CQ:image,file={message},summary={get_message('config', 'face_summary')}]"
         message = MessageSegment(type_="image", data={

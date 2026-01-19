@@ -8,6 +8,7 @@ from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import fullwidth_to_halfwidth
 from xme.xmetools.filetools import has_file
 from xme.xmetools.imgtools import image_msg
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from PIL import Image, ImageDraw, ImageFont
 
@@ -39,7 +40,7 @@ def gen_color_image(color_num, size=(300, 200)):
     name = f"color_{color_num}.png"
     path = f"./data/images/temp/{name}"
     if has_file(path):
-        logger.debug("使用缓存")
+        debug_msg("使用缓存")
         return path
     width, height = size
     color = f"#{color_num}"

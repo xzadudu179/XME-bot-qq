@@ -7,6 +7,7 @@ from xme.xmetools.texttools import FormatDict, replace_formatted, protect_specia
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 random.seed()
 import re
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools import texttools
 from character import get_message
@@ -56,7 +57,7 @@ async def _(session: CommandSession):
             # has_or_not_choice(choices[0]),
         ]
         for c in special_choices:
-            logger.debug(c)
+            debug_msg(c)
             if c:
                 # if all(x == c[0] for x in c):
                 #     return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
@@ -64,23 +65,23 @@ async def _(session: CommandSession):
                 item = random.choice(c)
                 choice, can_choice = parse_num_choice(item)
                 break
-    logger.debug("choice is", choice)
+    debug_msg("choice is " + choice)
     if not choice:
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
         choice, can_choice = parse_num_choice(item)
-        logger.debug("choice", choice, "canchoice", can_choice)
+        debug_msg("choice " + choice + " canchoice " + can_choice)
     formats = FormatDict(
         member=await get_random_group_member(session, session.event.group_id)
     )
-    logger.debug(all(x == choices[0] for x in choices), can_choice, choices, has_valid_placeholders(choice, ['member']))
+    debug_msg(all(x == choices[0] for x in choices), can_choice, choices, has_valid_placeholders(choice, ['member']))
     if all(x == choices[0] for x in choices) and not can_choice and not has_valid_placeholders(choice, ["member"]):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
     choice = replace_formatted(texttools.me_to_you(str(choice)), **formats)
     # try:
     #     choice = choice.format_map(formats)
     # except ValueError as ex:
-    #     logger.debug("error", ex)
+    #     debug_msg("error", ex)
     #     pass
     await send_session_msg(
             session,
@@ -97,10 +98,10 @@ async def _(session: CommandSession):
 def has_valid_placeholders(s: str, allowed: list[str]) -> bool:
     # 匹配是否有指定的字符串format
     matches = re.findall(r"{([^{}]+)}", s)
-    # logger.debug(matches)
+    # debug_msg(matches)
     if not matches:
         return False
-    logger.debug([m in allowed for m in matches])
+    debug_msg([m in allowed for m in matches])
     return len([m for m in matches if m in allowed ]) > 0
 
 async def get_random_group_member(session: CommandSession, group_id):
@@ -128,24 +129,24 @@ def another_or_choice(input_str, another_text="还是"):
     return [r.replace("?", "").replace("？", "") for r in result]
 
 def is_or_not_split_choice(text):
-    logger.debug("isornot")
+    debug_msg("isornot")
     pn = "不"
     split_str, index = texttools.find_symmetric_around(text, "不")
     if not split_str:
         split_str, index = texttools.find_symmetric_around(text, "没")
         pn = "没"
-    logger.debug(split_str)
-    logger.debug(len(split_str))
+    debug_msg(split_str)
+    debug_msg(len(split_str))
     if not split_str:
         return False
     prefix = text[:index - len(split_str)]
     suffix = text[index + 1 + len(split_str):]
-    logger.debug(prefix, suffix)
+    debug_msg(prefix, suffix)
     splits = [prefix + split_str + suffix, prefix + pn + split_str + suffix]
     return splits
 
 def ends_can_choice(text, word="可以"):
-    logger.debug("text", text)
+    debug_msg("text " + text)
     question_strings = ("否", "吗", "嘛")
     if not texttools.remove_punctuation(text).endswith(question_strings):
         return False
@@ -155,7 +156,7 @@ def ends_can_choice(text, word="可以"):
     split_text = word.join(text.split(word)[1:])
     choices = [f'{prefix}不{word}{split_text}', f'{prefix}{word}{split_text}']
     choices = [texttools.remove_punctuation(texttools.replace_all(*question_strings, text=c)) for c in choices]
-    logger.debug("en    ds choices", choices)
+    debug_msg("ends choices " + choices)
     return choices
 
 def ends_is_or_not_choice(text):
@@ -170,12 +171,12 @@ def ends_is_or_not_choice(text):
         (quote_map.get(w, w), flag)
         for w, flag in words
     ]
-    logger.debug(words)
+    debug_msg(words)
     # 寻找动词作为分割点
     for i, (w, flag) in enumerate(words):
-        logger.debug(w, flag)
+        debug_msg(w, flag)
         if 'v' in flag:
-            # logger.debug(w)
+            # debug_msg(w)
             prefix = "".join([t for t, _ in words[:i]])
             # is_or_not = "" if choice else "不"
             suffix = texttools.remove_punctuation(texttools.replace_all(*question_strings, "", text="".join([t for t, _ in words[i:]])))
@@ -197,7 +198,7 @@ def ends_is_or_not_choice(text):
 def is_or_not_choice(input_str):
     # 是否
     splits = input_str.split("是否")
-    # logger.debug(splits)
+    # debug_msg(splits)
     if len(splits) <= 1 or "是否".join(splits[1:]) == '':
         return False
     is_not = "是否".join(splits[1:])
@@ -212,7 +213,7 @@ def is_or_not_choice(input_str):
 
 def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)
-    logger.debug("numchoice " + s)
+    debug_msg("numchoice " + s)
     def ra_int(match):
         start, end = map(int, match.group().replace("-", "~").split("~"))
         if end > 10000000000000000000000000000000000:
@@ -223,10 +224,10 @@ def parse_num_choice(s):
         return str(result)
     try:
         if re.search(r'-?\d+~-?\d+', s):
-            logger.debug("匹配", re.match(r'-?\d+~-?\d+', s))
+            debug_msg("匹配 " + str(re.match(r'-?\d+~-?\d+', s)))
             return re.sub(r'-?\d+~-?\d+', ra_int, s), True
-        logger.debug("无匹配")
+        debug_msg("无匹配")
         return s, False
     except Exception as ex:
-        logger.debug(ex)
+        debug_msg(ex)
         return s, False

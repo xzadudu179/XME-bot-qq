@@ -10,6 +10,7 @@ from aiocqhttp import ActionFailed
 from xme.xmetools.imgtools import get_qq_avatar
 from xme.xmetools.bottools import bot_call_action
 from nonebot import Message
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 alias = ['ess']
 __plugin_name__ = 'essence'
@@ -30,10 +31,10 @@ async def _(session: CommandSession):
     except ActionFailed:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
     essence = random.choice(essences)
-    logger.debug("精华消息数量：", len(essences))
+    debug_msg("精华消息数量：" + str(len(essences)))
     if len(essences) < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
-    logger.debug("ESSENCE", essence)
+    debug_msg("ESSENCE", str(essence))
     await send_session_msg(session, get_message(
         "plugins",
         __plugin_name__,

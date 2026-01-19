@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import json
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 async def get_weather(city: str) -> dict:

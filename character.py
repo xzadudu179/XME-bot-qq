@@ -5,6 +5,7 @@ from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
 import config
 import os
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 # 其实这就是 i18n
 CHARACTER = 'Deon'

@@ -6,6 +6,7 @@ from xme.xmetools.cmdtools import use_args, send_cmd
 from xme.xmetools.typetools import try_parse
 from config import COMMAND_START
 from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
@@ -186,7 +187,7 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
             return False
         # 选择项
         async def cmd_func(reply):
-            logger.debug("执行指令")
+            debug_msg("执行指令")
             user.save()
             await send_cmd(reply, session)
             return None

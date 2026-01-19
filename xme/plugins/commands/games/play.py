@@ -7,6 +7,7 @@ from character import get_message
 from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from xme.plugins.commands.xme_user.classes import user
 from config import COMMAND_START
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import xme.xmetools.texttools as t
 from xme.xmetools.msgtools import send_session_msg
@@ -78,7 +79,7 @@ async def _(session: CommandSession, user: user.User):
             game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
         except:
             return await send_session_msg(session, get_message("plugins", cmd_name, 'invalid_args'))
-    logger.debug(game_args)
+    debug_msg(game_args)
     if args.info:
         info = get_game_help(text)
         if not info:
@@ -86,7 +87,7 @@ async def _(session: CommandSession, user: user.User):
         return await send_session_msg(session, info)
 
     game_to_play = games.games.get(text, False)
-    logger.debug(text)
+    debug_msg(text)
     if not game_to_play:
         await send_session_msg(session, get_message("plugins", cmd_name, 'game_not_found', text=text))
         return
@@ -95,10 +96,10 @@ async def _(session: CommandSession, user: user.User):
     if not user.spend_coins(cost)[0]:
         return await send_session_msg(session, get_message("plugins", cmd_name, 'not_enough_coins', cost=cost,  ))
     # 游戏以后会返回东西
-    # logger.debug("游玩前coin", user.coins)
+    # debug_msg("游玩前coin", user.coins)
     game_return = await game_to_play['func'](session, user, game_args)
-    # logger.debug("游玩后coin", user.coins)
-    logger.debug(game_return)
+    # debug_msg("游玩后coin", user.coins)
+    debug_msg(game_return)
     if game_return['message']:
         await send_session_msg(session, game_return['message'])
     if game_return['state'] in ['EXITED', 'ERROR']:
@@ -120,8 +121,8 @@ async def _(session: CommandSession, user: user.User):
     elif limited or times_left <= 0:
         messages.append(game_to_play['meta']['limited_message'])
     message = '\n'.join(messages)
-    logger.debug("结束时coin", user.coins)
-    logger.debug(messages)
+    debug_msg("结束时coin", user.coins)
+    debug_msg(messages)
     if message:
         await send_session_msg(session, message)
     return True

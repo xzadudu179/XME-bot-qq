@@ -3,6 +3,7 @@ from xme.xmetools.bottools import bot_call_action
 bot = nonebot.get_bot()
 import asyncio
 import config
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 
 @nonebot.scheduler.scheduled_job('cron', day='*')

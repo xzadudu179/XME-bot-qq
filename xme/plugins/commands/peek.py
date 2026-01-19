@@ -2,6 +2,7 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools import jsontools
 from xme.xmetools import colortools as c

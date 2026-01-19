@@ -7,6 +7,7 @@ from xme.xmetools.xmefunctools import run_with_timeout
 from xme.xmetools.bottools import permission
 from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from .func import funcs
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers
@@ -63,12 +64,12 @@ async def _(session: CommandSession):
                 path, _ = run_with_timeout(draw_3d_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
                 # path, _ = linux_draw_3d_exprs(*result)
             # message = get_message("plugins", __plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{path}]", formula=formula)
-            logger.debug("正在发送完成消息...")
+            debug_msg("正在发送完成消息...")
             # message = get_message("plugins", __plugin_name__, 'success_image', image=str(image_msg(path)), formula=formula)
             message = await image_msg(path)
-            # logger.debug(message)
+            # debug_msg(message)
             await send_session_msg(session, message)
-            logger.debug("发送完成")
+            debug_msg("发送完成")
             return
         else:
             message = get_message("plugins", __plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
@@ -76,7 +77,7 @@ async def _(session: CommandSession):
             float_result = str(float(result.doit()))
         except Exception as ex:
             logger.exception(ex)
-            logger.debug(result)
+            debug_msg(result)
             float_result = None
         if float_result:
             message += '\n' + get_message("plugins", __plugin_name__, 'float_result', float_result=float_result)

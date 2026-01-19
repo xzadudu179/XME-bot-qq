@@ -1,4 +1,5 @@
 from nonebot import CommandSession
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
@@ -37,25 +38,25 @@ async def _(session: CommandSession, u: User):
     message = get_message("plugins", __plugin_name__, "default_error")
     # message = "呜呜，书突然找不到了"
     args = session.current_arg_text.strip()
-    logger.debug(args.upper())
+    debug_msg(args.upper())
 
     if args and '550W' in args.upper():
-        logger.debug("有人在询问 550W")
+        debug_msg("有人在询问 550W")
         # random.seed(curr_days())
         percent = get_current_days_550w_percent()
         random.seed()
         # random.seed(time.time())
-        logger.debug(f"今天是 550w 的概率是 {percent}%")
+        debug_msg(f"今天是 550w 的概率是 {percent}%")
         if randtools.random_percent(percent):
-            logger.debug("没错，我是 550W")
+            debug_msg("没错，我是 550W")
             await send_session_msg(session, f"\n" + get_message("plugins", __plugin_name__, "550w"))
             await u.achieve_achievement(session, "550W")
             return
         else:
-            logger.debug("550W 还没来")
+            debug_msg("550W 还没来")
     elif args and texttools.remove_punctuation(args) in ['人类能活下来吗', '人类能活下来嘛']:
         if randtools.random_percent(25):
-            logger.debug("触发 550W 彩蛋 01")
+            debug_msg("触发 550W 彩蛋 01")
             await send_session_msg(session, randtools.messy_string(f"\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
             await u.achieve_achievement(session, "550W")
             return

@@ -1,5 +1,6 @@
 import json
 import os
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import nonebot
 from logging.handlers import TimedRotatingFileHandler

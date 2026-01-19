@@ -15,6 +15,7 @@ from xme.plugins.commands.xme_user.classes.user import User, try_load
 import random
 random.seed()
 import os
+from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import bot_variables
 import config

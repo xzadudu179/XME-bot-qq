@@ -1680,7 +1680,7 @@
           "指定的{coin_name}太少啦，要大于 0 哦 {neutral}",
           "指定的{coin_name}太少啦，要大于 0 哦{positive_punc}"
         ],
-        "coin_too_many": "你要发送的{coin_name}太多啦 {neutral}，最多只能发送 100 {coin_pronoun}{coin_name} 呢...",
+        "coin_too_many": "你要发送的{coin_name}太多啦 {neutral}，最多只能发送 {max} {coin_pronoun}{coin_name} 呢...",
         "not_enough_coin": [
           "{coin_name}数量不足诶，你只有 {coin_total} {coin_pronoun}{coin_name}哦",
           "诶...你只有 {coin_total} {coin_pronoun}{coin_name}，没法给这么多呢...",

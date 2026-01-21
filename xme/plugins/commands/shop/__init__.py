@@ -7,7 +7,7 @@ from .static.shop import SHOP
 
 random.seed()
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.imgtools import get_html_image

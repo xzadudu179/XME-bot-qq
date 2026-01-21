@@ -7,7 +7,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.dicttools import set_value, get_value
 from character import get_message
 from xme.xmetools import randtools

@@ -7,7 +7,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import fullwidth_to_halfwidth
 from xme.xmetools.filetools import has_file
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from PIL import Image, ImageDraw, ImageFont

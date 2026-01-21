@@ -13,7 +13,7 @@ except:
     pass
 import config
 from character import get_message
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, image_msg
 
 alias = ['视奸', '视奸179', 'peekbot']
 __plugin_name__ = 'peek'
@@ -69,5 +69,5 @@ async def _(session: CommandSession):
         message = get_message("plugins", __plugin_name__, 'successful_all', monitor_num=monitor_num)
     else:
         message = get_message("plugins", __plugin_name__, 'default_monitor')
-    image_msg = await imgtools.image_msg(path)
-    await send_session_msg(session, message + '\n' + image_msg)
+    img = await image_msg(path)
+    await send_session_msg(session, message + '\n' + img)

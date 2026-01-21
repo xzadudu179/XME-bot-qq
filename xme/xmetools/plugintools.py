@@ -144,6 +144,8 @@ def on_command(
                     pass
                 raise
             finally:
+                if cmd_name[0] == "test":
+                    return result
                 cost = time.monotonic() - start
                 data = PluginCallData(
                         cmd_name[0],

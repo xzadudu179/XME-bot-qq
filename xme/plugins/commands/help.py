@@ -8,7 +8,7 @@ from xme.xmetools.listtools import split_list
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.xme_user import get_userhelp
 from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from nonebot import MessageSegment
@@ -45,7 +45,7 @@ async def arg_help(arg, plugins, session):
         ask_for_help = ask_for_help.name[0]
     debug_msg(ask_for_help)
     ask_cmd = ask_for_help
-    target_plugin = None
+    target_plugin = ask_cmd
     if not ask_for_help:
         return False
     for pl in plugins:

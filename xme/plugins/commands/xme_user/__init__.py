@@ -1,5 +1,5 @@
 __plugin_name__ = 'XME 宇宙'
-from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, galaxymap, inventory, describe, celestial, get_achievements
+from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, inventory, describe, get_achievements
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg

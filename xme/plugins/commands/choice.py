@@ -65,12 +65,12 @@ async def _(session: CommandSession):
                 item = random.choice(c)
                 choice, can_choice = parse_num_choice(item)
                 break
-    debug_msg("choice is " + choice)
+    debug_msg("choice is", choice)
     if not choice:
         item = random.choice(choices)
         # choice = x if (x:=num_choice(item)) else item
         choice, can_choice = parse_num_choice(item)
-        debug_msg("choice " + choice + " canchoice " + can_choice)
+        debug_msg("choice", choice, "canchoice", can_choice)
     formats = FormatDict(
         member=await get_random_group_member(session, session.event.group_id)
     )
@@ -146,7 +146,7 @@ def is_or_not_split_choice(text):
     return splits
 
 def ends_can_choice(text, word="可以"):
-    debug_msg("text " + text)
+    debug_msg("text", text)
     question_strings = ("否", "吗", "嘛")
     if not texttools.remove_punctuation(text).endswith(question_strings):
         return False
@@ -156,7 +156,7 @@ def ends_can_choice(text, word="可以"):
     split_text = word.join(text.split(word)[1:])
     choices = [f'{prefix}不{word}{split_text}', f'{prefix}{word}{split_text}']
     choices = [texttools.remove_punctuation(texttools.replace_all(*question_strings, text=c)) for c in choices]
-    debug_msg("ends choices " + choices)
+    debug_msg("ends choices", choices)
     return choices
 
 def ends_is_or_not_choice(text):
@@ -213,7 +213,7 @@ def is_or_not_choice(input_str):
 
 def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)
-    debug_msg("numchoice " + s)
+    debug_msg("numchoice", s)
     def ra_int(match):
         start, end = map(int, match.group().replace("-", "~").split("~"))
         if end > 10000000000000000000000000000000000:

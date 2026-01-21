@@ -3,7 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from datetime import datetime
 from character import get_message
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.msgtools import send_session_msg
 import random
 from aiocqhttp import ActionFailed

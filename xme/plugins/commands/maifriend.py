@@ -6,7 +6,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
 from character import get_message
 from xme.xmetools.texttools import get_at_id
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.msgtools import send_session_msg
 import traceback
 from PIL import Image

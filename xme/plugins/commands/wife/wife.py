@@ -1,16 +1,14 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-import traceback
 import xme.plugins.commands.wife as w
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
 from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import *
-from xme.xmetools.dicttools import get_value
 from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission, get_group_member_name
-from xme.xmetools.imgtools import get_qq_avatar, image_msg
+from xme.xmetools.imgtools import get_qq_avatar
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools import timetools as t
 from xme.plugins.commands.xme_user.classes.user import using_user, User, custom_limit

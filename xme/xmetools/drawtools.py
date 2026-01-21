@@ -13,7 +13,7 @@ bg_color = (4 / 255, 23 / 255, 32 / 255)
 path = rf"./static/fonts/Cubic_11.ttf"
 prop = font_manager.FontProperties(fname=path)
 font_manager.fontManager.addfont(path)
-debug_msg("字体名: " + prop.get_name())
+debug_msg("字体名:", prop.get_name())
 mpt.rcParams['font.family'] = prop.get_name()
 FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
 

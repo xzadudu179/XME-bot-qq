@@ -21,11 +21,14 @@ usage = {
     "permissions": ["在群聊内"],
     "alias": alias
 }
+
+COUNT_LIMIT = 200
+
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=True)
-@u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited'), count_limit=2)
+@u.custom_limit(cmd_name, 1, count_limit=COUNT_LIMIT)
 @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
-async def _(session: CommandSession, user: User):
+async def _(session: CommandSession, user: User, check_invalid, count_tick):
     message = ''
     arg_text = session.current_arg.strip() if session.current_arg else ""
     debug_msg(arg_text)
@@ -60,10 +63,13 @@ async def _(session: CommandSession, user: User):
         message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_coin_count', )
         await send_session_msg(session, message, tips=True)
         return False
-    if coin_count > 100:
-        message = get_message("plugins", __plugin_name__, cmd_name, 'coin_too_many', )
+    _, limit_c = u.get_limit_info(user, cmd_name)
+    can_give_count = COUNT_LIMIT - limit_c
+    if coin_count > can_give_count:
+        message = get_message("plugins", __plugin_name__, cmd_name, 'coin_too_many', max=can_give_count)
         await send_session_msg(session, message, tips=True)
         return False
+
     # 验证用户是否存在
     is_real_user = False
     at_bot_self = at_id == session.self_id
@@ -96,4 +102,5 @@ async def _(session: CommandSession, user: User):
     # print(datetime.today().weekday(), at_bot_self, coin_count)
     if at_bot_self and coin_count == 50 and datetime.today().weekday() == 3:
         await user.achieve_achievement(session, "V我50")
+    count_tick(coin_count)
     return True

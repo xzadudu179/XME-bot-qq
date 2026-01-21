@@ -2,10 +2,7 @@ from concurrent.futures import TimeoutError, ThreadPoolExecutor
 import multiprocessing
 from functools import wraps
 from xme.xmetools.jsontools import read_from_path, change_json
-import config
 import signal
-import asyncio
-import copy
 multiprocessing.set_start_method('spawn', force=True)
 
 def thread_set_timeout(seconds=10, timeout_message="函数执行超时", callback=None):

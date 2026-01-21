@@ -49,8 +49,9 @@ async def send_time_message(new_day=False):
         logger.error("无法获取群列表：", ex)
         logger.exception(traceback.format_exc())
         groups = []
+    print([g["group_id"] for g in groups])
     for group in scheduler_groups:
-        if group not in [g["group_id"] for g in groups]:
+        if str(group) not in [str(g["group_id"]) for g in groups]:
             continue
         say = random.choice(read_from_path("./static/hitokoto.json"))
         anno = read_from_path(config.BOT_SETTINGS_PATH).get("announcement", "").strip()

@@ -7,7 +7,7 @@ from keys import JIANMAO_TOKEN, JIANMAO_QQ, generate_jwt
 import httpx
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 
 alias = ['鉴毛', 'jianmao', 'jrjm']
 __plugin_name__ = '今日鉴毛'

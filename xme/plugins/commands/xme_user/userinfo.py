@@ -3,7 +3,7 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import permission
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools import randtools
 import random
 from .classes import user as u

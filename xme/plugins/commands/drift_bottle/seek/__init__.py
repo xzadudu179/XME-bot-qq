@@ -9,7 +9,8 @@ from config import BOT_SETTINGS_PATH
 from html2image import Html2Image
 from xme.xmetools.randtools import html_messy_string, messy_image
 from character import get_message
-from xme.xmetools.imgtools import crop_transparent_area, image_msg
+from xme.xmetools.imgtools import crop_transparent_area
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time

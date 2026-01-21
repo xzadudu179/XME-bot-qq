@@ -11,7 +11,7 @@ from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from .func import funcs
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
 
 alias = ['计算', 'cc']

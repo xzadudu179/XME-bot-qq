@@ -180,6 +180,8 @@ def get_image_format(image: Image.Image, default="PNG") -> str:
 
 def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
     output_buffer = BytesIO()
+    if img.mode == "P":
+        img = img.convert("RGBA")
     debug_msg("正在将图片转为base64")
     if img.mode in ["RGBA", "P"] or not to_jpeg:
         img_mode_dict = {
@@ -229,79 +231,79 @@ def limit_size(image: Image.Image, max_value) -> Image.Image:
     image_resized = image.resize((new_width, new_height))
     return image_resized
 
-async def gif_msg(input_path, scale=1):
-    img = Image.open(input_path)
+# async def gif_msg(input_path, scale=1):
+#     img = Image.open(input_path)
 
-    frames = []
-    for frame in range(img.n_frames):
-        img.seek(frame)  # 选中当前帧
-        resized_frame = img.resize(
-            (img.width * scale, img.height * scale), Image.Resampling.NEAREST
-        )  # 放大2倍
-        frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
-    b64 = gif_to_base64(img, frames)
-    debug_msg("gif b64 success")
-    try:
-        # 将消息发送的同步方法放到后台线程执行
-        result = await asyncio.to_thread(create_image_message, b64)
-        return result
-    except Exception as e:
-        logger.error(f"发生错误: {e}")
-        logger.exception(traceback.format_exc())
-        return MessageSegment.text(f"[图片加载失败]")
+#     frames = []
+#     for frame in range(img.n_frames):
+#         img.seek(frame)  # 选中当前帧
+#         resized_frame = img.resize(
+#             (img.width * scale, img.height * scale), Image.Resampling.NEAREST
+#         )  # 放大2倍
+#         frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
+#     b64 = gif_to_base64(img, frames)
+#     debug_msg("gif b64 success")
+#     try:
+#         # 将消息发送的同步方法放到后台线程执行
+#         result = await asyncio.to_thread(create_image_message, b64)
+#         return result
+#     except Exception as e:
+#         logger.error(f"发生错误: {e}")
+#         logger.exception(traceback.format_exc())
+#         return MessageSegment.text(f"[图片加载失败]")
 
 
-async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message("config", "image_summary")):
-    """获得可以直接发送的图片消息
+# async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message("config", "image_summary")):
+#     """获得可以直接发送的图片消息
 
-    Args:
-        path_or_image (str): 图片路径或图片
-        max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
-        to_jpeg (bool): 是否转换为 Jpeg 格式
-        summary (str): 图片消息预览
+#     Args:
+#         path_or_image (str): 图片路径或图片
+#         max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
+#         to_jpeg (bool): 是否转换为 Jpeg 格式
+#         summary (str): 图片消息预览
 
-    Returns:
-        MessageSegment: 消息段
-    """
-    is_image = False
-    if not isinstance(path_or_image, str):
-        is_image = True
-    debug_msg(is_image)
-    try:
-        image = path_or_image if is_image else Image.open(path_or_image)
-    except:
-        image = await get_url_image(path_or_image)
-    # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
-    if max_size > 0:
-        debug_msg("重新缩放")
-        image = limit_size(image, max_size)
-    # debug_msg(image)
-    b64 = image_to_base64(image, to_jpeg)
-    debug_msg("b64 success")
-    # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
-    try:
-        # 将消息发送的同步方法放到后台线程执行
-        result = await asyncio.to_thread(create_image_message, b64, summary=summary)
-        return result
-    except Exception as e:
-        logger.error(f"发生错误: {e}")
-        logger.exception(traceback.format_exc())
-        return MessageSegment.text(f"[图片加载失败]")
+#     Returns:
+#         MessageSegment: 消息段
+#     """
+#     is_image = False
+#     if not isinstance(path_or_image, str):
+#         is_image = True
+#     debug_msg(is_image)
+#     try:
+#         image = path_or_image if is_image else Image.open(path_or_image)
+#     except:
+#         image = await get_url_image(path_or_image)
+#     # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
+#     if max_size > 0:
+#         debug_msg("重新缩放")
+#         image = limit_size(image, max_size)
+#     debug_msg(image)
+#     b64 = image_to_base64(image, to_jpeg)
+#     debug_msg("b64 success")
+#     # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
+#     try:
+#         # 将消息发送的同步方法放到后台线程执行
+#         result = await asyncio.to_thread(create_image_message, b64, summary=summary)
+#         return result
+#     except Exception as e:
+#         logger.error(f"发生错误: {e}")
+#         logger.exception(traceback.format_exc())
+#         return MessageSegment.text(f"[图片加载失败]")
 
-def create_image_message(b64: str, summary: str="[漠月的图片~]"):
-    """同步发送图片消息"""
-    try:
-        # return MessageSegment.image(f'base64://{b64}', cache=True, timeout=10)
-        return MessageSegment(type_="image", data={
-            'file': f"base64://{b64}",
-            'cache': 1,
-            'timeout': 10,
-            'summary': summary,
-        })
-    except Exception as e:
-        logger.error(f"发送图片时出错: {e}")
-        logger.exception(traceback.format_exc())
-        raise e
+# def create_image_message(b64: str, summary: str="[漠月的图片~]"):
+#     """同步发送图片消息"""
+#     try:
+#         # return MessageSegment.image(f'base64://{b64}', cache=True, timeout=10)
+#         return MessageSegment(type_="image", data={
+#             'file': f"base64://{b64}",
+#             'cache': 1,
+#             'timeout': 10,
+#             'summary': summary,
+#         })
+#     except Exception as e:
+#         logger.error(f"发送图片时出错: {e}")
+#         logger.exception(traceback.format_exc())
+#         raise e
 
 if __name__ == "__main__":
     os.makedirs("./data/images/screenshots", exist_ok=True)

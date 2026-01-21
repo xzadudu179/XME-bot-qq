@@ -10,7 +10,7 @@ from xme.xmetools.typetools import try_parse
 import random
 random.seed()
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 from character import get_message
 
 alias = ['兽聚汇总', '兽聚', 'fus']

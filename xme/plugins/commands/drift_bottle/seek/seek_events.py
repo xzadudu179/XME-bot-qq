@@ -3,7 +3,7 @@ from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 import random
 from .. import get_random_broken_bottle, DriftBottle
 from ..tools.bottlecard import get_pickedup_bottle_card
-from xme.xmetools.imgtools import image_msg
+from xme.xmetools.msgtools import image_msg
 
 def shark_post(p: Player):
   if p.is_die()[0] and p.region.value == SeekRegion.SHALLOW_SEA:

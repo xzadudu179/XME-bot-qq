@@ -433,7 +433,7 @@ def get_user_rank(user):
     return sender_coins_count, rank_ratio, sender_index
 
 
-def validate_limit(user: User, name: str, limit: float | int, count_limit: int = 1,
+def detect_limit(user: User, name: str, interval: float | int, count_limit: int = 1,
                    unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True) -> tuple[bool, bool]:
     """是否在时间 / 数量限制内，如果找不到时间限制名则创建
 
@@ -454,11 +454,7 @@ def validate_limit(user: User, name: str, limit: float | int, count_limit: int =
     time_now = time_now if not floor_float else math.floor(time_now)
     # True 禁止继续使用指令 因为已受到限制
     time_limit, c_limit = False, False
-    # debug_msg(time_now)
-    # debug_msg(user.counters[name]["time"])
-    # debug_msg(timetools.get_valuetime(user.counters[name]["time"], unit))
-    # debug_msg(limit)
-    if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < limit:
+    if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < interval:
         debug_msg("时间受限制")
         time_limit = True
     else:
@@ -519,7 +515,7 @@ def get_rank(*rank_item_key, key=None, excluding_zero=False):
 
 
 def limit(limit_name: str,
-          limit: float | int,
+          interval: float | int,
           limit_message: str,
           count_limit: int = 1,
           unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
@@ -530,7 +526,7 @@ def limit(limit_name: str,
 
     Args:
         limit_name (str): 限制名
-        limit (float | int): 多少时间单位后刷新限制
+        interval (float | int): 多少时间单位后刷新限制
         limit_message (str): 限制时返回的消息
         count_limit (int, optional): 时间内限制次数. Defaults to 1.
         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
@@ -543,7 +539,7 @@ def limit(limit_name: str,
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
             # debug_msg(user.counters)
-            if validate_limit(user=user, name=limit_name, limit=limit, count_limit=count_limit, unit=unit,
+            if detect_limit(user=user, name=limit_name, interval=interval, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                 if not limit_func:
                     return await send_session_msg(session, limit_message)
@@ -570,7 +566,7 @@ def limit(limit_name: str,
     return decorator
 
 def custom_limit(limit_name: str | FunctionType,
-          limit: float | int,
+          interval: float | int,
           count_limit: int = 1,
           unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
           floor_float: bool = True,):
@@ -578,7 +574,7 @@ def custom_limit(limit_name: str | FunctionType,
 
     Args:
         limit_name (str): 限制名
-        limit (float | int): 多少时间单位后刷新限制
+        interval (float | int): 多少时间单位后刷新限制
         limit_message (str): 限制时返回的消息
         count_limit (int, optional): 时间内限制次数. Defaults to 1.
         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
@@ -589,17 +585,16 @@ def custom_limit(limit_name: str | FunctionType,
     def decorator(func):
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
-            # debug_msg(user.counters)
             if inspect.isfunction(limit_name):
                 name = limit_name(session, user, *args, **kwargs)
             else:
                 name = limit_name
-            def count_tick():
+            def count_tick(count=1):
                 debug_msg("保存用户数据, 增加计数")
-                limit_count_tick(user, name)
+                limit_count_tick(user, name, count)
                 user.save()
-            def validate():
-                if validate_limit(user=user, name=name, limit=limit, count_limit=count_limit, unit=unit,
+            def check_invalid():
+                if detect_limit(user=user, name=name, interval=interval, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                     # 已受限
                     debug_msg("受到限制")
@@ -607,14 +602,8 @@ def custom_limit(limit_name: str | FunctionType,
                 # 未受限
                 debug_msg("无限制")
                 return False
-            # user = try_load(session.event.user_id, User(session.event.user_id))
-            # debug_msg(user.counters)
-            result = await func(session, user, validate, count_tick, *args, **kwargs)
+            result = await func(session, user, check_invalid, count_tick, *args, **kwargs)
             debug_msg(f"result: {result}")
-            # if not fails(result):
-
-            # if isinstance(result, str):
-            #     await send_session_msg(session, result)
             return result
 
         return wrapper

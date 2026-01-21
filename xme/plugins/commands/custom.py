@@ -11,7 +11,8 @@ from nonebot.log import logger
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from character import get_message
-from xme.xmetools.imgtools import get_html_image, image_msg
+from xme.xmetools.imgtools import get_html_image
+from xme.xmetools.msgtools import image_msg
 
 __plugin_name__ = "custom"
 alias = ['自定义', '样式', 'cus']

@@ -3,7 +3,7 @@ jieba
 pillow
 psutil
 sympy
-enchant
+pyenchant
 pypinyin
 pytz
 psutil

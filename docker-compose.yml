@@ -1,0 +1,11 @@
+version: "3"
+services:
+  bot:
+    image: xme-deon-bot
+    container_name: xme-bot
+    networks:
+      - napcat-net
+
+networks:
+  napcat-net:
+    external: true

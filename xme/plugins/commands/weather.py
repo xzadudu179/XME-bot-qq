@@ -164,8 +164,9 @@ def ouptut_weather_now(weather, air, moon):
 def output_warning(warning):
     # print("warnings", warning)
     datas = warning.get("warning", None)
+    code = warning.get("code", "???")
     if datas is None:
-        return f"获取预警消息错误：http {warning['code']}", f"获取预警消息错误：http {warning['code']}"
+        return f"获取预警消息错误：http {code}", f"获取预警消息错误：http {code}"
     lines = []
     details = []
     for data in datas:

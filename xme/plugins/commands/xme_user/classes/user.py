@@ -12,6 +12,7 @@ from functools import wraps
 from aiocqhttp import ActionFailed
 import json
 from types import FunctionType
+from xme.xmetools.dicttools import get_value
 from xme.xmetools.msgtools import send_to_superusers
 from nonebot import get_bot
 from ..tools.map_tools import *
@@ -407,6 +408,9 @@ def limit_count_tick(user: User, name: str, count=1):
         name (str): 时间限制名
         count (int): 次数. Defaults to 1.
     """
+    if get_value(name, "count", search_dict=user.counters) is None:
+        user.counters[name] = {}
+        user.counters[name]["count"] = 0
     user.counters[name]["count"] += count
     # user.save()
 
@@ -484,7 +488,11 @@ def get_limit_info(user, name):
     Returns:
         tuple(int | float, int): (当前记录时间, 当前记录次数)
     """
-    return (user.counters[name]["time"], user.counters[name]["count"])
+    return (
+        get_value(name, "time", search_dict=user.counters, default=0),
+        get_value(name, "count", search_dict=user.counters, default=0)
+    )
+    # return (user.counters[name]["time"], user.counters[name]["count"])
 
 
 def get_rank(*rank_item_key, key=None, excluding_zero=False):

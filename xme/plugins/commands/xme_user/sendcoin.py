@@ -36,6 +36,10 @@ async def _(session: CommandSession, user: User, check_invalid, count_tick):
     coin_count = 0
     at_id = 0
     # 是否有参数并且 at 了用户
+    if check_invalid():
+        message = get_message("plugins", __plugin_name__, cmd_name, 'limited', max_count=COUNT_LIMIT)
+        await send_session_msg(session, message, tips=True)
+        return False
     if arg_text and args[0].startswith("[CQ:at,qq="):
         # at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
         at_id = get_at_id(args[0])

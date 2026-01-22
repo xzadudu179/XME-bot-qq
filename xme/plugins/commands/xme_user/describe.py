@@ -46,6 +46,6 @@ async def _(session: CommandSession, user: User):
         return False
     user.desc = desc
     await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'success'))
-    if is_danger_sql(user.desc):
-        await user.achieve_achievement(session, "想注入漠月")
+    # if is_danger_sql(user.desc):
+        # await user.achieve_achievement(session, "想注入漠月")
     return True

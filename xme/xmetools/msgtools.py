@@ -1,5 +1,5 @@
 from nonebot import MessageSegment, Message, NoneBot
-from aiocqhttp import Event, ApiError
+from aiocqhttp import Event, ApiError, ActionFailed
 import config
 import config
 from xme.xmetools.texttools import get_msg_len
@@ -276,4 +276,7 @@ async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = No
             g = group['group_id']
         else:
             g = group
-        await bot.send_group_msg(group_id=g, message=message)
+        try:
+            await bot.send_group_msg(group_id=g, message=message)
+        except ActionFailed:
+            continue

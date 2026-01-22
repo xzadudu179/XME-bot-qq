@@ -3,7 +3,8 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import permission
 from .tools.bottlecard import get_class_bottle_card_html
-from xme.xmetools.msgtools import image_msg, get_html_image
+from xme.xmetools.msgtools import image_msg
+from xme.xmetools.imgtools import get_html_image
 from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle

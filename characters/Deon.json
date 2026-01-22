@@ -1671,7 +1671,7 @@
           "请在参数里 at 你要送的用户哦 {positive}",
           "请在参数里 at 你要送的用户哦{positive_punc}"
         ],
-        "limited": "一天只能给两次{coin_name}呢...",
+        "limited": "一天只能给{max_count}{coin_pronoun}{coin_name}呢...",
         "invalid_user": "找不到 at 的用户呢...",
         "send_to_self": "你不能给自己{coin_name}哦",
         "invalid_coin_count": [

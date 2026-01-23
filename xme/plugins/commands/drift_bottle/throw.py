@@ -42,6 +42,7 @@ async def _(session: CommandSession, user):
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
         logger.exception(format_exc())
+        return False
 
     for i, image_cq in enumerate(matches):
         filename = ".".join(image_filenames[i].split(".")[:-1])

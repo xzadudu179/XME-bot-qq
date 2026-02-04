@@ -1,4 +1,4 @@
-from . import *
+from . import Celestial, CanDevelop, StarType, star_probabilities, star_thermal_luminosity_range
 import math
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.jsontools import read_from_path, save_to_path

@@ -1,13 +1,13 @@
-import nonebot
-from nonebot.session import BaseSession
-from xme.xmetools import listtools as lt
+
+# from nonebot.session import BaseSession
+# from xme.xmetools import listtools as lt
 from xme.xmetools import timetools as d
 import json
 import random
 from typing import List, Optional, Tuple
 
-import random
-from typing import List, Optional, Tuple
+# import random
+# from typing import List, Optional, Tuple
 
 def add_random_pair(
     pairs: List[List[int]],

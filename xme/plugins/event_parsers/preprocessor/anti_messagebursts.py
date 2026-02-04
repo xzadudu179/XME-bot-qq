@@ -6,7 +6,7 @@ from xme.xmetools.msgtools import send_event_msg
 import aiocqhttp
 from character import get_message
 from nonebot import message_preprocessor
-from nonebot import NoneBot
+# from nonebot import NoneBot
 import time
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -25,7 +25,7 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
     SEC_AVG_MSGS = 1
     try:
         key = f"{event['user_id']}{event['group_id']}"
-    except:
+    except Exception:
         return
     # if event['user_id'] == event.self_id:
     #     return
@@ -68,7 +68,8 @@ async def anti_bursts_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manag
         # 如果在 x 秒内发的消息超过这么多则算刷屏
         time_period = time.time() - last_messages[key][message]["start_time"]
         logger.warning(f'在 {time_period:.2f} 秒发了 {last_messages[key][message]["count"]} 条消息 {message}，{"是" if is_cmd else "不是"}指令，平均条消息间隔 {(time_period / last_messages[key][message]["count"]):.2f} 秒\n刷屏限制为一条间隔 {SEC_AVG_MSGS / rate} 秒')
-        if time_period > (SEC_AVG_MSGS * rate * last_messages[key][message]['count']): return
+        if time_period > (SEC_AVG_MSGS * rate * last_messages[key][message]['count']):
+            return
         if last_messages[key][message]['count'] < MSG_COUNT_THRESHOLD * 4:
             last_messages['refresh_time'] = time.time()
         if not last_messages[key][message]["banned"]:

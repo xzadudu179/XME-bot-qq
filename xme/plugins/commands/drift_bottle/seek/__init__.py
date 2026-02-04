@@ -1,10 +1,10 @@
-from xme.xmetools.timetools import *
+from xme.xmetools import timetools as t
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import is_command
 from .classes.player import SeekRegion
 from xme.xmetools.bottools import get_group_name
-from xme.xmetools.filetools import b64_encode_file
-from xme.xmetools.timetools import TimeUnit
+# from xme.xmetools.filetools import b64_encode_file
+# from xme.xmetools.timetools import TimeUnit
 from config import BOT_SETTINGS_PATH
 from html2image import Html2Image
 from xme.xmetools.randtools import html_messy_string, messy_image
@@ -23,12 +23,12 @@ import random
 import traceback
 from .classes.player import Player
 from .classes.event import Event, SPECIAL_EVENTS
-random.seed()
-from .. import DriftBottle, get_random_bottle
-from nonebot import CommandSession, MessageSegment
+# from .. import DriftBottle, get_random_bottle
+from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from uuid import uuid4
+random.seed()
 hti = Html2Image()
 
 
@@ -365,7 +365,7 @@ def validate_player(session: CommandSession) -> bool:
 @on_command(command_name, aliases=seek_alias, only_to_me=False, permission=lambda _: True)
 @user.using_user(save_data=True)
 # @permission(lambda sender: sender.from_group(727949269) or sender.is_superuser, permission_help="在 179 的主群使用 或 是 SUPERUSER")
-@user.custom_limit(command_name, 1, TIMES_LIMIT, TimeUnit.DAY)
+@user.custom_limit(command_name, 1, TIMES_LIMIT, t.TimeUnit.DAY)
 async def _(session: CommandSession, u: user.User, validate, count_tick):
     try:
         global seeking_groups
@@ -540,17 +540,17 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             player.chance.change(lambda v: v - 1)
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')
             # debug_msg(player.chance.value, seek.status)
-    except TimeoutError as ex:
+    except TimeoutError:
         seek.status = "exit"
-    except Exception as ex:
+    except Exception:
         if sender.is_groupchat:
             try:
                 seeking_groups.remove(session.event.group_id)
-            except:
+            except Exception:
                 logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
         try:
             del seeking_players[session.event.user_id]
-        except:
+        except Exception:
             logger.error(f"无法移除用户 id {session.event.user_id} 因为不存在。")
         traceback.print_exc()
         return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'error_msg', ex=traceback.format_exc()))
@@ -586,12 +586,12 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         await u.achieve_achievement(session, "满载无归")
     try:
         del seeking_players[session.event.user_id]
-    except:
+    except Exception:
         logger.error(f"无法移除用户 {session.event.user_id} 因为不存在。")
     if sender.is_groupchat:
         try:
             seeking_groups.remove(session.event.group_id)
-        except:
+        except Exception:
             logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
     if is_sim:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg_simulation', gain=f"{coins_str}"))

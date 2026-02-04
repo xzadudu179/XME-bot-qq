@@ -1,6 +1,6 @@
 from .event import Event
 from typing import Callable
-import random
+# import random
 
 # 道具
 class Tool:

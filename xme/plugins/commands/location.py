@@ -3,10 +3,10 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from character import get_message
-import config
+# import config
 from xme.xmetools.loctools import search_location
-import re
-from xme.xmetools.jsontools import read_from_path, save_to_path
+# import re
+# from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.plugins.commands.xme_user.classes.user import using_user, User
 
 alias = ['绑定位置', '设置位置', '定位', 'loc']
@@ -15,7 +15,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(地点)',
+    usage='(地点)',
     permissions=["无"],
     alias=alias
 )
@@ -49,7 +49,7 @@ async def _(session: CommandSession, user: User):
     choose = {}
     if len(locations) > 1:
         has_target = False
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'choose_location', locs="\n".join([f'{i + 1}. {l["country"]} {l["adm1"]} {l["adm2"]} {l["name"]}' for i, l in enumerate(locations)])))  # noqa: E741
         times = 0
         while not has_target and times < 3:
             target: str = await aget_session_msg(session, can_use_command=True)

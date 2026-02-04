@@ -5,7 +5,7 @@ from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
 import config
 import os
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 # 其实这就是 i18n
 CHARACTER = 'Deon'
@@ -17,7 +17,7 @@ def get_character(default=DEFAULT_CHARACTER, target='') -> dict:
     target = target if target != '' else CHARACTER
     try:
         chacs = jsontools.read_from_path(f"./characters/{target}.json")
-    except:
+    except Exception:
         chacs = False
     result = chacs if chacs else False
     if target == DEFAULT_CHARACTER and not result:
@@ -65,7 +65,7 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     """
     try:
         result = get_character_item(*keys, character=character, default=default)
-    except:
+    except Exception:
         return f"[获取消息错误：无法获取键组为 {keys} 的消息，如用户使用出现该问题，请截图交给九镹（并暴打九镹（？））]"
     if result is None:
             return default
@@ -75,11 +75,11 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     #     return str(result).format()
     # 格式化参数文本
     for k, v in kwargs.items():
-        if type(v) == list:
+        if isinstance(v, list):
             for i, item in enumerate(v):
-                if type(item) == int:
+                if isinstance(item, int):
                     v[i] = f"{item:,}"
-        elif type(v) == int:
+        elif isinstance(v, int):
             v = f"{v:,}"
         kwargs[k] = v
     feedbacks = get_character_item("bot_info", "feedbacks")

@@ -14,7 +14,7 @@ __plugin_usage__ = CommandDoc(
     # desc='查询状态码',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='查看指定 http 状态码和它的猫猫图',
-    usage=f'<状态码>',
+    usage='<状态码>',
     permissions=[],
     alias=alias
 )

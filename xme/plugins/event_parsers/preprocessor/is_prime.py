@@ -28,7 +28,7 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
         if len(x) > 576:
             try:
                 del last_process[id]
-            except:
+            except Exception:
                 pass
             return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
         try:
@@ -36,13 +36,13 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
         except OverflowError:
             try:
                 del last_process[id]
-            except:
+            except Exception:
                 pass
             return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
     else:
         try:
             del last_process[id]
-        except:
+        except Exception:
             pass
         return
     append = ""

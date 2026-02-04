@@ -45,7 +45,7 @@ def str_list_sim(strings: list[str], target_str: str, jaccard_sim=False) -> dict
     return similars
 
 
-def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5, key=lambda x: x) -> list[tuple[Any, Any]]:
+def top_k_sim(strlist: list[str], target_str: str, k: int = 5, min: float = 0.5, key=lambda x: x) -> list[tuple[Any, Any]]:
     """返回列表里前k个与目标字符串相似的项
 
     Args:
@@ -59,7 +59,7 @@ def top_k_sim(l: list[str], target_str: str, k: int = 5, min: float = 0.5, key=l
     """
     # 相似查找
     # print(f"被解析的列表：{list(map(key, l))}")
-    sim_topk_items = sorted(str_list_sim(list(map(key, l)), target_str).items(), key=lambda item: item[1], reverse=True)[:k]
+    sim_topk_items = sorted(str_list_sim(list(map(key, strlist)), target_str).items(), key=lambda item: item[1], reverse=True)[:k]
     sim_topk_items = [item for item in sim_topk_items if item[1] >= min]
     return sim_topk_items
 
@@ -90,6 +90,6 @@ def find_pair(pairs, item):
             # 如果找到，返回配对的那个值，如果没有配对则返回 0
             try:
                 return pair[1] if pair[0] == item else pair[0]
-            except Exception as ex:
+            except Exception:
                 return ""
     return ""

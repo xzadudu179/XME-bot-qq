@@ -5,7 +5,7 @@ from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools.colortools import mix_hex_color_lab
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 # 寻宝区域
 class SeekRegion(Enum):
@@ -107,15 +107,15 @@ class Player:
         # 道具
         self.tools: list[Tool] = tools
         # 区域
-        self.region = PlayerAttr(f"区域", SeekRegion.SHALLOW_SEA)
-        self.last_region = PlayerAttr(f"上个区域", SeekRegion.SHALLOW_SEA, show=False)
+        self.region = PlayerAttr("区域", SeekRegion.SHALLOW_SEA)
+        self.last_region = PlayerAttr("上个区域", SeekRegion.SHALLOW_SEA, show=False)
 
         # 探险深度，目前想法是每走一步深度会随机加减
-        self.depth = PlayerAttr(f"深度", 0, max_value=6666, detail=False)
+        self.depth = PlayerAttr("深度", 0, max_value=6666, detail=False)
         # 是否往回走
         self.back = False
         # 机会
-        self.chance = PlayerAttr(f"剩余机会", 10, show=False)
+        self.chance = PlayerAttr("剩余机会", 10, show=False)
 
         # 遇到过的事件（存uid）
         self.events_encountered: dict[bool] = {}
@@ -386,49 +386,53 @@ class Player:
     def change_attr(self, changes: dict, html=True, blank=True):
         # debug_msg("changes", changes)
         result_strs = []
-        for k, v in changes.items():
+        for k, values in changes.items():
             change_value: PlayerAttr = use_attribute(self, k)
-            last_change_value = change_value
-            old_value = change_value.value
-            new_value = 0
-            if isinstance(v, str):
-                value = int(v[1:])
-            if not isinstance(v, dict) and v[0] == "+":
-                new_value = change_value.change(lambda v: v + value)
-                # new_value = change_value.value + value
-            elif not isinstance(v, dict) and v[0] == "-":
-                new_value = change_value.change(lambda v: v - value)
-                # new_value = change_value.value - value
-            elif not isinstance(v, dict) and v[0] == "=":
-                new_value = change_value.change(lambda _: value)
-                # new_value = value
-            elif not isinstance(v, dict) and v[0] == "*":
-                new_value = change_value.change(lambda v: v * value)
-                # new_value = change_value.value * value
-            elif not isinstance(v, dict) and v[0] == "/":
-                new_value = change_value.change(lambda v: v // value)
-                # new_value = change_value.value // value
-            else:
-                # 此时需要保证是字典类型
-                if not isinstance(v, dict):
-                    raise ValueError(f"自定义修改类型 \"{v}\" 不是字典")
-                # debug_msg("getgetget", v.get("assign", True), v)
-                result_strs.append(self.custom_change_attr(v["change_func"], v["return_func"], change_value, v.get("return_msg", "{name}: {value}"), assign=v.get("assign", True)))
-                continue
-            value_diff = new_value - old_value
-            # 对于无变化的忽略
-            # if (v[0] in ["+", "-"] and value == 0) or (v[0] in ["*", "/"] and value == 1) or (v[0] in ["="] and value == last_change_value):
-            if value_diff == 0:
-                continue
-            # 深度单独计算
-            if k == "depth":
-                result_strs.append(self.get_depth_tip(value_diff))
-                # if self.depth.value <= 0 and self.oxygen.value < self.oxygen.max_value:
-                #     result_strs.append(self.change_attr({
-                #         "oxygen": "+100000"
-                #     }, blank=False))
-                continue
-            result_strs.append(f"{change_value.name} {'+' + str(value_diff) if value_diff >= 0 else str(value_diff)}")
+            # last_change_value = change_value
+            if not isinstance(values, list):
+                values = [values]
+            for v in values:
+                old_value = change_value.value
+                new_value = 0
+                if isinstance(v, str):
+                    value = int(v[1:])
+                if not isinstance(v, dict) and v[0] == "+":
+                    new_value = change_value.change(lambda v: v + value)
+                    # new_value = change_value.value + value
+                elif not isinstance(v, dict) and v[0] == "-":
+                    new_value = change_value.change(lambda v: v - value)
+                    # new_value = change_value.value - value
+                elif not isinstance(v, dict) and v[0] == "=":
+                    new_value = change_value.change(lambda _: value)
+                    # new_value = value
+                elif not isinstance(v, dict) and v[0] == "*":
+                    new_value = change_value.change(lambda v: v * value)
+                    # new_value = change_value.value * value
+                elif not isinstance(v, dict) and v[0] == "/":
+                    new_value = change_value.change(lambda v: v // value)
+                    # new_value = change_value.value // value
+                else:
+                    # 此时需要保证是字典类型
+                    if not isinstance(v, dict):
+                        raise ValueError(f"自定义修改类型 \"{v}\" 不是字典")
+                    # debug_msg("getgetget", v.get("assign", True), v)
+                    result_strs.append(self.custom_change_attr(v["change_func"], v["return_func"], change_value, v.get("return_msg", "{name}: {value}"), assign=v.get("assign", True)))
+                    continue
+                value_diff = new_value - old_value
+                # 对于无变化的忽略
+                # if (v[0] in ["+", "-"] and value == 0) or (v[0] in ["*", "/"] and value == 1) or (v[0] in ["="] and value == last_change_value):
+                if value_diff == 0:
+                    continue
+                # 深度单独计算
+                if k == "depth":
+                    result_strs.append(self.get_depth_tip(value_diff))
+                    # if self.depth.value <= 0 and self.oxygen.value < self.oxygen.max_value:
+                    #     result_strs.append(self.change_attr({
+                    #         "oxygen": "+100000"
+                    #     }, blank=False))
+                    continue
+                result_strs.append(f"{change_value.name} {'+' + str(value_diff) if value_diff >= 0 else str(value_diff)}")
+
         content = ', '.join(result_strs)
         content = html_messy_string(content, self.get_messy_rate(), html=html)
         # c = f"<div class=\"effect\">({content})</div>" if html else f"({content})"
@@ -451,10 +455,13 @@ class Player:
         for v in self.__dict__.values():
             # 只显示整数
             # debug_msg(f"[DEBUG] type={type(v)}, value={v}")
-            if not isinstance(v, PlayerAttr): continue
-            if not isinstance(v.value, int) and not isinstance(v.value, SeekRegion): continue
+            if not isinstance(v, PlayerAttr):
+                continue
+            if not isinstance(v.value, int) and not isinstance(v.value, SeekRegion):
+                continue
             # if v.name == "上个区域": continue
-            if not v.show: continue
+            if not v.show:
+                continue
             danger_class = 'style="color: var(--fail-color)"' if v.name in ["氧气值", "生命值", "san 值"] and v.value < 30 else ""
             value = v.value
             name = v.name

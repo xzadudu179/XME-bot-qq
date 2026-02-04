@@ -13,7 +13,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<纬度,经度>',
+    usage='<纬度,经度>',
     permissions=["无"],
     alias=alias
 )
@@ -35,7 +35,7 @@ async def _(session: CommandSession):
             location_info = f'lat={lat}&lon={lon}'
         elif args or "[CQ:location" not in location:
             # print(location)
-            loc = [try_parse(l, float, None) for l in location.split(",")]
+            loc = [try_parse(x, float, None) for x in location.split(",")]
             if len(loc) < 2:
                 loc.append(0)
             if loc[0] is None or (abs(loc[0]) > 180 and abs(loc[1]) > 180) or loc[1] is None:

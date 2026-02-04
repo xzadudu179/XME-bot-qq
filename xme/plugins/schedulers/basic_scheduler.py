@@ -103,17 +103,20 @@ async def _():
 
 @nonebot.scheduler.scheduled_job('cron', second='*', max_instances=3)
 async def _():
-    if not (6 <= datetime.now().hour <= 24): return
-    if not randtools.random_percent(0.03): return
+    if not (6 <= datetime.now().hour <= 24):
+        return
+    if not randtools.random_percent(0.03):
+        return
     groups = await bot.get_group_list()
     # 群组太少就降低概率
-    if not randtools.random_percent(min(100, 50 + len(groups) * 10)): return
+    if not randtools.random_percent(min(100, 50 + len(groups) * 10)):
+        return
     group = random.choice(groups)
     group_id = group['group_id']
     has_faces = True
     try:
         faces = await bot_call_action(bot, "fetch_custom_face")
-    except:
+    except Exception:
         has_faces = False
     # debug_msg(faces)
     # 随机发表情

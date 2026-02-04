@@ -9,7 +9,7 @@ from sympy.core.sympify import SympifyError
 from .parser import parse_polynomial
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
-from .func import funcs
+from .func import funcs, builtins
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
@@ -21,7 +21,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(算式)',
+    usage='(算式)',
     permissions=permissions,
     alias=alias
 )
@@ -42,7 +42,7 @@ async def _(session: CommandSession):
         return await send_session_msg(session, '\n' + message)
     if arg == 'builtins':
         message += get_message("plugins", __plugin_name__, 'func_builtin_intro') + "\n"
-        for k, v in func.builtins.items():
+        for k, v in builtins.items():
             message += f'{k}: {v if v else "-"}\n'
         return await send_session_msg(session, '\n' + message)
     if len(arg) > 1000:

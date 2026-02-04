@@ -4,7 +4,7 @@ from . import item_methods
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools import listtools
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 class Rarity(Enum):
     """稀有度"""

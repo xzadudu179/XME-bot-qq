@@ -1,6 +1,6 @@
-# from nonebot import CommandSession
-from xme.xmetools.plugintools import on_command
-from nonebot import NoneBot, MessageSegment, message_preprocessor, Message
+# # from nonebot import CommandSession
+# from xme.xmetools.plugintools import on_command
+# from nonebot import NoneBot, MessageSegment, message_preprocessor, Message
 # from nonebot.command import call_command
 # from nonebot.plugin import PluginManager
 # import aiocqhttp

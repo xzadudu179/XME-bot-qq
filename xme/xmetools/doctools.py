@@ -54,12 +54,12 @@ class PluginDoc(Doc):
             line_head = f'  {content.split(": ")[0]}: '
             try:
                 alias_lines += f"{line_head}{', '.join(self.alias_list[i])}\n"
-            except:
+            except Exception:
                 alias_lines += f"{line_head}无\n"
             try:
                 # print(self.permissions[i])
                 permissions_lines += f"{line_head}{DEFAULT_PERMISSIONS if len(self.permissions[i]) < 1 else ' & '.join(self.permissions[i])}\n"
-            except:
+            except Exception:
                 permissions_lines += f"{line_head}无\n"
             contents_lines += f"  {content}\n"
         not_simple_output = f"""

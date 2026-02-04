@@ -7,7 +7,7 @@ from xme.xmetools.typetools import try_parse
 from config import COMMAND_START
 from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from character import get_message
@@ -20,7 +20,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<支持的功能>',
+    usage='<支持的功能>',
     permissions=["无"],
     alias=alias
 )

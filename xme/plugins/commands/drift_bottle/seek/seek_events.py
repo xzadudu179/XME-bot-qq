@@ -1,7 +1,7 @@
 from .classes.player import SeekRegion, Player
-from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import coin_name
 import random
-from .. import get_random_broken_bottle, DriftBottle
+from .. import get_random_broken_bottle
 from ..tools.bottlecard import get_pickedup_bottle_card
 from xme.xmetools.msgtools import image_msg
 
@@ -144,7 +144,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["岸边离你越来越远了...", "太阳的光线逐渐变暗了...", "海平面越来越模糊了...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
     "regions": [SeekRegion.SHALLOW_SEA],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False and depth.value < 150,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value < 150,
     "changes": {
       "depth": {
         "change": lambda: random.randint(2, 10),
@@ -168,7 +168,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["岸边离你越来越远了...", "太阳的光线逐渐变暗了...", "海平面越来越模糊了...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
     "regions": [SeekRegion.SHALLOW_SEA],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False and depth.value < 150,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value < 150,
     "changes": {
       "depth": {
         "change": lambda: random.randint(2, 10),
@@ -191,7 +191,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你徘徊了一阵子...", "你想要回头看看有没有东西错过。", "你觉得你下潜的有点太快了。"],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False and depth.value > 70,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 70,
     "changes": {
       "depth": {
         "change": lambda: random.randint(1, 7),
@@ -214,7 +214,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
         "change": lambda: random.randint(2, 14),
@@ -238,7 +238,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
         "change": lambda: random.randint(2, 14),
@@ -261,7 +261,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你反而感觉到水压越来越小..."],
     "regions": [SeekRegion.DEEPEST, SeekRegion.VOID],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
         "change": lambda: random.randint(5, 28),
@@ -285,7 +285,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你感觉到水压越来越小..."],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value >= 30,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value >= 30,
     "changes": {
       "depth": {
         "change": lambda: random.randint(7, 20),
@@ -309,7 +309,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你奋力地往上游...但是你快没氧气了...", "你尽全力往上游去...但是你快没有氧气了...", "你尝试尽力地往上游..."],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY, SeekRegion.VOID, SeekRegion.DEEPEST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value < 30,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value < 30,
     "changes": {
       "depth": {
         "change": lambda: random.randint(3, 12),
@@ -333,7 +333,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你虽然在往上游，但是感觉到水压越来越大..."],
     "regions": [SeekRegion.VOID, SeekRegion.DEEPEST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and oxygen.value >= 30,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value >= 30,
     "changes": {
       "depth": {
         "change": lambda: random.randint(10, 38),
@@ -426,7 +426,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你需要往回走。", "你觉得你应该先回去了。", "你不觉得你还有时间继续探索这艘船了。"],
     "regions": [SeekRegion.SHIPWRECK, SeekRegion.SHADOWRECK],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
     },
     "region_change": lambda last: last,
@@ -925,7 +925,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你需要往回走。", "你觉得你应该先回去了。", "你不觉得你还有时间继续探索城市了。"],
     "regions": [SeekRegion.UNDERSEA_CITY],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
     },
     "region_change": lambda last: last,
@@ -944,7 +944,7 @@ EVENTS = [
         "ok_msgs": ["你的脑袋感受到了剧烈的疼痛，你奋力反抗，夺走了巨兽尝试对你的控制...", "你的思绪被一股强大且混乱的力量侵蚀，你奋力尝试保持专注...", "你忽然感觉到一阵无形的力量从四周侵入，你奋力反抗，最终击退了那股力量..."],
         "bigwin_msgs": ["你的思绪被巨兽强大的力量侵蚀，但你趁着它集中精神的时刻朝着它的眼睛攻击！巨兽被击退了，留下了许多奇怪的珍品...", "你成功抵抗了巨兽对你的精神攻击，并趁机攻击巨兽的弱点！巨兽痛苦地嚎叫，散落出闪烁着诡光的宝物离开...", "你忽然感到剧烈的疼痛，你集中全部精神反抗，并且找准时机攻击了巨兽的弱点！巨兽发出痛苦的嘶鸣，留下了许多闪闪发光的宝物消散..."],
         "fail_msgs": ["巨兽的眼睛散发光芒，你在剧烈的疼痛中被它控制，献上了鲜血以交换自由...", "你的意识被巨兽强大的力量击碎，你被迫献上了鲜血以换取自由...", "你的思绪忽然受到了强烈的侵蚀，你感到意识逐渐模糊...血液从身体中抽离..."],
-        "bigfail_msgs": ["你的精神因巨兽的注视下而崩溃...它夺走了你身上的财宝与鲜血作为对你精神力的惩罚...", "你忽然被无形的力量控制，无论如何也无法反抗...你眼睁睁看着这只巨兽愤怒地夺走了你身上的财宝与鲜血...", f"巨兽在一瞬间下压制了你的思绪，粉碎了你的精神...它夺走了你身上的财宝与鲜血...作为你弱小精神力的惩罚"],
+        "bigfail_msgs": ["你的精神因巨兽的注视下而崩溃...它夺走了你身上的财宝与鲜血作为对你精神力的惩罚...", "你忽然被无形的力量控制，无论如何也无法反抗...你眼睁睁看着这只巨兽愤怒地夺走了你身上的财宝与鲜血...", "巨兽在一瞬间下压制了你的思绪，粉碎了你的精神...它夺走了你身上的财宝与鲜血...作为你弱小精神力的惩罚"],
       },
     ],
     "regions": [SeekRegion.FOREST, SeekRegion.ABYSS, SeekRegion.DEEPEST],
@@ -1047,7 +1047,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你奋力地试图往外游...", "你尝试往外游...", "你尽力地尝试往外游去...", "虽然感知不到方向，但你觉得你应该在往外游..."],
     "regions": [SeekRegion.FOREST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
       "depth": {
         "change": lambda: random.randint(-15, 20),
@@ -1153,7 +1153,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你返回的途中碰到了蠕动植物的荆棘，它似乎很不高兴...", "你似乎在返回的路上招惹到了这些植物，它们对你发动了攻击...", "你撞到了荆棘上，它们毫不犹豫地向你发动了攻击..."],
     "regions": [SeekRegion.FOREST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
       "health": {
         "change": lambda: random.randint(4, 12),
@@ -1171,7 +1171,7 @@ EVENTS = [
     "regions": [SeekRegion.FOREST],
     "post_func": None,
     "descs": ["幽绿色的藤蔓形植物似乎正在低语...", "四周非常的空，且包裹着雾气...你感到很害怕", "那些扭曲的植物似乎在主动朝你靠近...", "你似乎听到了远古生物的低鸣..."],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
       "san": {
         "change": lambda: random.randint(1, 5),
@@ -1269,7 +1269,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你总算离开了这个神秘的森林...", "在你的努力下，总算找到了森林的出口...", "你找到了森林的出口..."],
     "regions": [SeekRegion.FOREST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == True and depth.value < 180,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value < 180,
     "changes": {
     },
     "region_change": lambda last: SeekRegion.DEEP_SEA,
@@ -1283,7 +1283,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["你尝试往前探索...", "你尝试探索更深处...", "你希望能通过探索找到点什么..."],
     "regions": [SeekRegion.FOREST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back == False,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
         "change": lambda: random.randint(-10, 25),
@@ -1612,18 +1612,17 @@ EVENTS = [
         "type": "+",
         "custom": False,
       },
-      "oxygen": {
+      "oxygen": [{
         "change": lambda v: v.change_max(lambda x: random.randint(190, 210)),
         "return": lambda v: v.max_value,
         "return_msg": "最大{name} = {value}",
         "custom": True,
         "assign": False,
-      },
-      "oxygen": {
+      }, {
         "change": lambda: random.randint(90, 110),
         "type": "+",
         "custom": False,
-      },
+      }],
     },
     "region_change": lambda last: SeekRegion.DEEPEST,
   },
@@ -1711,18 +1710,17 @@ EVENTS = [
     "regions": [SeekRegion.SHADOWRECK],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
     "changes": {
-      "oxygen": {
+      "oxygen": [{
         "change": lambda: random.randint(1, 25),
         "type": "+",
         "custom": False,
-      },
-      "oxygen": {
+      }, {
         "change": lambda v: v.change_max(lambda x: x + random.randint(5, 20)),
         "return": lambda v: v.max_value,
         "return_msg": "最大{name} = {value}",
         "custom": True,
         "assign": False,
-      },
+      }],
     }
   },
   {
@@ -2099,18 +2097,17 @@ EVENTS = [
               "type": "+",
               "custom": False,
             },
-            "insight": {
+            "insight": [{
               "change": lambda: random.randint(2, 4),
               "type": "+",
               "custom": False,
-            },
-            "insight": {
+            }, {
               "change": lambda v: v.change_max(lambda x: x + random.randint(1, 3)),
               "return": lambda v: v.max_value,
               "return_msg": "最大{name} = {value}",
               "custom": True,
               "assign": False,
-            },
+            },],
           },
         },
         "fail": {

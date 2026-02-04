@@ -1,4 +1,5 @@
-from xme.xmetools.timetools import *
+from xme.xmetools.timetools import TimeUnit
+from datetime import datetime
 from .pickup import report
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
@@ -8,7 +9,7 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
 from xme.xmetools.texttools import get_image_files_from_message
-from xme.xmetools.imgtools import get_image, limit_size, get_image_format
+from xme.xmetools.imgtools import get_image, limit_size
 from traceback import format_exc
 import config
 import re
@@ -54,7 +55,7 @@ async def _(session: CommandSession, user):
         return False
     check = DriftBottle.check_duplicate_bottle(arg)
     debug_msg("查重 " + str(check['content']))
-    if check['status'] == False:
+    if not check['status']:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
         return False
 
@@ -100,7 +101,7 @@ async def _(session: CommandSession, user):
     for i, image in enumerate(images):
         path = BOTTLE_IMAGES_PATH + image_filenames[i]
         check_image = DriftBottle.check_duplicate_image(image)
-        if check_image["status"] == False:
+        if not check_image["status"]:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
             debug_msg("查重图片：", check_image)
             return False

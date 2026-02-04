@@ -11,7 +11,7 @@ from character import get_message
 from traceback import format_exc
 from nonebot.command import _FinishException
 import functools
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import time
 from xme.xmetools.dbtools import DATABASE
@@ -140,7 +140,7 @@ def on_command(
                     msg = get_message("config", "unknown_error", ex=format_exc())
                     await send_session_msg(session, msg)
                     await send_to_superusers(session.bot, msg + f"\n来自群 {session.event.group_id}，调用者 {session.event.user_id}")
-                except:
+                except Exception:
                     pass
                 raise
             finally:

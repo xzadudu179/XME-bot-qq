@@ -2,7 +2,7 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.plugins.commands.dice import __plugin_name__
-import config
+# import config
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 import random
@@ -25,7 +25,7 @@ async def _(session: CommandSession):
             faces = int(args[0])
             if len(args) > 1:
                 counts = int(args[1])
-        except:
+        except Exception:
             await send_session_msg(session, message=message)
             return
     points_list = []
@@ -51,5 +51,5 @@ async def _(session: CommandSession):
                                faces=format(faces, ','),
                                faces_result_prefix=count_morethan_1_prefix if len(args) > 1 else '',
                                faces_formula=('+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if len(args) > 1 else format(points_list[0], ',')), tips=True, tips_percent=20)
-    except Exception as ex:
+    except Exception:
         await send_session_msg(session, message=message)

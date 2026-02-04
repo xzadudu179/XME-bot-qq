@@ -1,6 +1,6 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.cmdtools import use_args
+# from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 # from nonebot.argparse import ArgumentParser
 from xme.xmetools.bottools import XmeArgumentParser
@@ -11,7 +11,7 @@ from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import httpx
 # from xme.xmetools.texttools import dec_to_chinese
-from xme.xmetools.jsontools import read_from_path, save_to_path
+from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 from xme.xmetools.timetools import TimeUnit
@@ -38,7 +38,8 @@ def get_command_list():
 
 def parse_control(session: CommandSession, text: str, user: u.User) -> str:
     text, args = text.split(" ")[0], text.split(" ")[1:]
-    parse_func = lambda text, **_: f"没有这个指令 \"{text}\" 哦"
+    def parse_func(text, **_):
+        return f"没有这个指令 \"{text}\" 哦"
     cmd = cmds.get(text, None)
     if cmd is not None:
         parse_func = cmd["content"]
@@ -79,7 +80,7 @@ __plugin_usage__ = CommandDoc(
 TIMES_LIMIT = 15
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=True)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or x == False)
+@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or not x)
 async def _(session: CommandSession, user: u.User):
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
     intext = ""
@@ -133,7 +134,7 @@ def get_history(user: u.User):
     return build_str
 
 def build_history(user: u.User, ask, ans):
-    user_history = user.ai_history
+    # user_history = user.ai_history
     # if user_history is None:
     #     user.ai_history = []
     user.ai_history.append({

@@ -5,7 +5,7 @@ def read_from_path(path) -> dict | list:
     try:
         with open(path, 'r', encoding='utf-8') as file:
             return json.load(file)
-    except:
+    except Exception:
         return None
 
 

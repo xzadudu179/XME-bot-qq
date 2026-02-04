@@ -1,11 +1,11 @@
-from xme.xmetools.rsstools import *
+from xme.xmetools.rsstools import show_rss, catch_179rss
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.doctools import CommandDoc
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 alias = ["九九文章", "rss179", "posts179", "blogposts", "posts", "post"]
 __plugin_name__ = 'xmeposts'
@@ -16,7 +16,7 @@ __plugin_usage__ = CommandDoc(
     # desc='查看九九最近的文章',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='通过 RSS 订阅并查看九九最近的 n 个文章，默认 1 个',
-    usage=f'<文章数>',
+    usage='<文章数>',
     permissions=["无"],
     alias=alias
 )
@@ -32,7 +32,7 @@ async def _(session: CommandSession):
             # return await send_msg(session, f"最多查看 10 个文章哦")
         elif count <= 0:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
-    except:
+    except Exception:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
         # return await send_msg(session, f"请输入正确的文章数量哦")
     debug_msg("rss" + show_rss(catch_179rss(), count))

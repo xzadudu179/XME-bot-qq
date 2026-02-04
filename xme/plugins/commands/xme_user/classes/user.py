@@ -2,35 +2,35 @@ from character import get_message
 coin_name = get_message("user", "coin_name")
 coin_pronoun = get_message("user", "coin_pronoun")
 
-import time
-from datetime import datetime
-from xme.xmetools import timetools
-from xme.xmetools import dicttools
-from .achievements import get_achievements, has_achievement
-from nonebot.session import BaseSession
-from functools import wraps
-from aiocqhttp import ActionFailed
-import json
-from types import FunctionType
-from xme.xmetools.dicttools import get_value
-from xme.xmetools.msgtools import send_to_superusers
-from nonebot import get_bot
-from ..tools.map_tools import *
-import inspect
-from xme.xmetools.imgtools import hash_image
-import math
-from xme.xmetools.msgtools import send_session_msg
-from .inventory import Inventory
-from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
-from .xme_map import get_starfield_map, get_celestial_from_uid, get_galaxymap
-from xme.xmetools.dbtools import DATABASE
+import time  # noqa: E402
+from datetime import datetime # noqa: E402
+from xme.xmetools import timetools # noqa: E402
+from xme.xmetools import dicttools # noqa: E402
+from .achievements import get_achievements, has_achievement # noqa: E402
+from nonebot.session import BaseSession # noqa: E402
+from functools import wraps # noqa: E402
+from aiocqhttp import ActionFailed # noqa: E402
+import json # noqa: E402
+from types import FunctionType # noqa: E402
+from xme.xmetools.dicttools import get_value # noqa: E402
+from xme.xmetools.msgtools import send_to_superusers # noqa: E402
+from nonebot import get_bot # noqa: E402
+# from ..tools.map_tools import ImageDraw, draw_text_on_image, mark_point # noqa: E402
+import inspect # noqa: E402
+# from xme.xmetools.imgtools import hash_image # noqa: E402
+import math # noqa: E402
+from xme.xmetools.msgtools import send_session_msg # noqa: E402
+from .inventory import Inventory # noqa: E402
+from xme.xmetools.debugtools import debug_msg # noqa: E402
+from nonebot.log import logger # noqa: E402
+# from .xme_map import get_galaxymap # noqa: E402
+from xme.xmetools.dbtools import DATABASE # noqa: E402
 
 
-def is_galaxy_loaded():
-    if get_galaxymap():
-        return True
-    return False
+# def is_galaxy_loaded():
+#     if get_galaxymap():
+#         return True
+#     return False
 
 # def is_galaxy_initing():
 #     return galaxy_initing
@@ -224,7 +224,7 @@ class User:
             # last_sign_time = time_tools.int_to_days(int(self.counters['sign']["time"]))
             last_sign_time = timetools.int_to_date(int(timetools.get_valuetime(self.counters['sign']["time"], timetools.TimeUnit.DAY)))
             sign_message = get_message("user", "sign_message", last_sign_time=last_sign_time)
-        except:
+        except Exception:
             sign_message = get_message("user", "no_sign")
         _, rank_ratio, _ = get_user_rank(self.id)
         return get_message("user", "user_info_str",
@@ -324,42 +324,42 @@ class User:
     def save(self):
         self.db_id = DATABASE.save_to_db(obj=self)
 
-    async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-        celestial = self.get_celestial()
-        # if not self.celestial:
-        #     center = (0, 0)
-        center = celestial.galaxy_location
-        # center = (0, 0)
-        if not get_galaxymap():
-            return None
-        map_size = get_galaxymap().max_size
-        map_img = get_galaxymap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
-        return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=center, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
+    # async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
+    #     celestial = self.get_celestial()
+    #     # if not self.celestial:
+    #     #     center = (0, 0)
+    #     center = celestial.galaxy_location
+    #     # center = (0, 0)
+    #     if not get_galaxymap():
+    #         return None
+    #     map_size = get_galaxymap().max_size
+    #     map_img = get_galaxymap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
+    #     return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=center, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
 
 
-    async def draw_user_map(self, map_size, img_zoom, map_img, location, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, line_width=1, font_size=12) -> str:
-        # map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
-        # font_size = 12
-        width, height = map_img.size
-        map_width, map_height = map_size
-        text_draw = ImageDraw.Draw(map_img)
-        user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
-        text = f'[HIUN 星图终端]\n[用户] {user_name}\n你在: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
-        draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
-        # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
-        # 绘制圆加十字
-        zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
-        append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
-        point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
-        # debug_msg("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
-        mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
-        # 保存图片
-        path = f'data/images/temp/{hash_image(map_img)}.png'
-        map_img.save(path)
-        return path
+    # async def draw_user_map(self, map_size, img_zoom, map_img, location, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, line_width=1, font_size=12) -> str:
+    #     # map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
+    #     # font_size = 12
+    #     width, height = map_img.size
+    #     map_width, map_height = map_size
+    #     text_draw = ImageDraw.Draw(map_img)
+    #     user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
+    #     text = f'[HIUN 星图终端]\n[用户] {user_name}\n你在: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
+    #     draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
+    #     # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
+    #     # 绘制圆加十字
+    #     zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
+    #     append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
+    #     point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
+    #     # debug_msg("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
+    #     mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
+    #     # 保存图片
+    #     path = f'data/images/temp/{hash_image(map_img)}.png'
+    #     map_img.save(path)
+    #     return path
 
-        # 显示图片
-        # map_img.show()
+    #     # 显示图片
+    #     # map_img.show()
 
 # Avoid creating User(0) at import time — this can construct heavy objects and
 # interfere with multithreaded GC. Call this during startup if needed.
@@ -373,7 +373,7 @@ def try_load(id):
     return u
 
 def verify_counters(user: User, name: str):
-    if not name in user.counters or type(user.counters[name]) != dict:
+    if name not in user.counters or not isinstance(user.counters[name], dict):
         user.counters[name] = {}
         user.save()
     user.counters[name].setdefault("time", 0)
@@ -427,7 +427,8 @@ def get_user_rank(user):
     sender_coins_count = None
     sender_index = None
     for index, item in enumerate(rank_items):
-        if int(item[0]) != user: continue
+        if int(item[0]) != user:
+            continue
         debug_msg("匹配到了")
         sender_coins_count = item[1]
         sender_index = index
@@ -510,7 +511,8 @@ def get_rank(*rank_item_key, key=None, excluding_zero=False):
     for v in users:
         # debug_msg(f"item: {v}")
         value = dicttools.get_value(*rank_item_key, search_dict=v)
-        if value == None: continue
+        if value is None:
+            continue
         rank[v["user_id"]] = value
     if excluding_zero:
         rank_values = [r for r in rank.items() if r[1] > 0]
@@ -528,7 +530,7 @@ def limit(limit_name: str,
           count_limit: int = 1,
           unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
           floor_float: bool = True,
-          fails=lambda x: x == False,
+          fails=lambda x: not x,
           limit_func=None, ):
     """对函数进行限制时间内只能执行数次
 
@@ -631,7 +633,7 @@ def using_user(save_data=False, id=0):
             user = try_load(user_id)
             result = await func(session, user, *args, **kwargs)
             # debug_msg(f"result: {result}")
-            if save_data and result != False:
+            if save_data and result:
                 debug_msg("保存用户数据中")
                 user.save()
             return result

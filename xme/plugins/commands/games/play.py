@@ -1,17 +1,16 @@
+# 放在行首 import 时只会读取到该行，防止出现 circular import 错误
 cmd_name = 'game'
-from nonebot import CommandSession
-from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc, shell_like_usage
-from xme.xmetools.bottools import XmeArgumentParser
-from character import get_message
-from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
-from xme.plugins.commands.xme_user.classes import user
-from config import COMMAND_START
-from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
-import xme.xmetools.texttools as t
-from xme.xmetools.msgtools import send_session_msg
-from . import game_commands as games
+from nonebot import CommandSession  # noqa: E402
+from xme.xmetools.plugintools import on_command # noqa: E402
+from xme.xmetools.doctools import CommandDoc, shell_like_usage # noqa: E402
+from xme.xmetools.bottools import XmeArgumentParser # noqa: E402
+from character import get_message # noqa: E402
+from xme.plugins.commands.xme_user.classes import user # noqa: E402
+from config import COMMAND_START # noqa: E402
+from xme.xmetools.debugtools import debug_msg # noqa: E402
+import xme.xmetools.texttools as t # noqa: E402
+from xme.xmetools.msgtools import send_session_msg # noqa: E402
+from . import game_commands as games # noqa: E402
 
 # introduction = "各种小游戏"
 alias = ["游戏", "小游戏", "play", "玩", 'gm']
@@ -77,7 +76,7 @@ async def _(session: CommandSession, user: user.User):
     if args.args:
         try:
             game_args = {i.split("=")[0].strip(): i.split("=")[1].strip() for i in t.replace_chinese_punctuation(''.join(args.args)).split(",")}
-        except:
+        except Exception:
             return await send_session_msg(session, get_message("plugins", cmd_name, 'invalid_args'))
     debug_msg(game_args)
     if args.info:
@@ -116,7 +115,7 @@ async def _(session: CommandSession, user: user.User):
         ))
     elif award == 0:
         messages.append(game_to_play['meta']['no_award_message'].format())
-    if times_left != False and not limited:
+    if times_left and not limited:
         messages.append(game_to_play['meta']['times_left_message'].format(times_left=times_left))
     elif limited or times_left <= 0:
         messages.append(game_to_play['meta']['limited_message'])

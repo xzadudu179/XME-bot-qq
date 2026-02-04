@@ -2,7 +2,7 @@ import re
 from pypinyin import lazy_pinyin
 import itertools
 import base64
-from nonebot import MessageSegment, Message
+from nonebot import Message
 import jieba.posseg as pseg
 import jieba
 import string
@@ -142,9 +142,9 @@ def find_symmetric_around(s: str, center: str) -> tuple[str, str]:
     max_len = min(idx, len(s) - idx - 1)
     # print(max_len)
     result_list = []
-    for l in range(max_len, 0, -1):
-        left = s[idx - l:idx]
-        right = s[idx + 1:idx + 1 + l]
+    for i in range(max_len, 0, -1):
+        left = s[idx - i:idx]
+        right = s[idx + 1:idx + 1 + i]
         if left == right:
             result_list.append(left)
     # print(result_list)
@@ -464,7 +464,8 @@ def try_split_left_right_equals(text, splits, total_split_return=False):
         pt2 = rf".*((.){s}\2)"
         match_split = re.match(pt2, text)
         match = re.match(pattern, text)
-        if match is None: continue
+        if match is None:
+            continue
         prefix = match.groups()[0]
         split_return = s
         if total_split_return:

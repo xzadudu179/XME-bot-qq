@@ -1,14 +1,14 @@
-from nonebot import on_notice, NoticeSession, log
-from datetime import datetime
-from xme.xmetools import colortools as c
-from character import get_message
-import json
-from xme.xmetools.msgtools import send_session_msg
-from nonebot import Message
-from xme.xmetools import jsontools
-from xme.xmetools.reqtools import fetch_data
-from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot import on_notice, NoticeSession, log
+# from datetime import datetime
+# from xme.xmetools import colortools as c
+# from character import get_message
+# import json
+# from xme.xmetools.msgtools import send_session_msg
+# from nonebot import Message
+# from xme.xmetools import jsontools
+# from xme.xmetools.reqtools import fetch_data
+# from xme.xmetools.debugtools import debug_msg
+# from nonebot.log import logger
 
 
 # 撤回

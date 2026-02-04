@@ -7,13 +7,14 @@ import asyncio
 import random
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 random.seed()
 
 @on_notice("notify")
 async def _(session: RequestSession):
     # 判断验证信息是否符合要求
-    if session.event.user_id == session.self_id: return
+    if session.event.user_id == session.self_id:
+        return
     debug_msg(session.event.user_id, session.event.sub_type)
     debug_msg(session.event.group_id)
     if session.event.sub_type == 'poke':

@@ -2,7 +2,7 @@ from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from nonebot import message_preprocessor
 from xme.xmetools.cmdtools import is_command
-from xme.xmetools.bottools import bot_call_action
+# from xme.xmetools.bottools import bot_call_action
 import aiocqhttp
 
 @message_preprocessor

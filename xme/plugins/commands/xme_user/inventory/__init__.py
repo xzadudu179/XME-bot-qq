@@ -1,12 +1,12 @@
 cmd_name = 'inventory'
-from xme.plugins.commands.xme_user import __plugin_name__
-from nonebot import CommandSession
-from xme.xmetools.plugintools import on_command
-from xme.xmetools.msgtools import send_session_msg
-from ..classes import user as u
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
-from character import get_message
-from . import add_item, drop_item, use_item, check
+from xme.plugins.commands.xme_user import __plugin_name__  # noqa: E402
+from nonebot import CommandSession # noqa: E402
+from xme.xmetools.plugintools import on_command # noqa: E402
+from xme.xmetools.msgtools import send_session_msg # noqa: E402
+from ..classes import user as u # noqa: E402
+from xme.plugins.commands.xme_user.classes.user import User # noqa: E402
+from character import get_message # noqa: E402
+from . import add_item, drop_item, use_item, check # noqa: E402
 
 funcs = {
     add_item.arg_func_name: add_item.info,
@@ -20,7 +20,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'',
+    "usage": '',
     "permissions": [],
     "alias": alias
 }
@@ -30,7 +30,8 @@ async def _(session: CommandSession, user: User):
     arg = session.current_arg_text.strip()
     args = arg.split(" ")
     for k, v in funcs.items():
-        if args[0] != k: continue
+        if args[0] != k:
+            continue
         if not v['permissions'](user.id):
             await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_permission'))
             return False

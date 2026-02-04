@@ -9,9 +9,9 @@ from xme.xmetools import jsontools
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from xme.xmetools.timetools import curr_days
 import random
-random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
+random.seed()
 
 alias = ['答案之书', 'ans', '550w']
 __plugin_name__ = 'answer'
@@ -21,7 +21,7 @@ __plugin_usage__ = CommandDoc(
     desc=get_message("plugins", __plugin_name__, "desc"),
     # introduction='随机翻开答案之书的一页，并且返回内容\n"心中默念你的问题，将会得到你的答案。"',
     introduction=get_message("plugins", __plugin_name__, "introduction"),
-    usage=f'',
+    usage='',
     permissions=["无"],
     alias=alias
 )
@@ -49,7 +49,7 @@ async def _(session: CommandSession, u: User):
         debug_msg(f"今天是 550w 的概率是 {percent}%")
         if randtools.random_percent(percent):
             debug_msg("没错，我是 550W")
-            await send_session_msg(session, f"\n" + get_message("plugins", __plugin_name__, "550w"))
+            await send_session_msg(session, "\n" + get_message("plugins", __plugin_name__, "550w"))
             await u.achieve_achievement(session, "550W")
             return
         else:
@@ -57,7 +57,7 @@ async def _(session: CommandSession, u: User):
     elif args and texttools.remove_punctuation(args) in ['人类能活下来吗', '人类能活下来嘛']:
         if randtools.random_percent(25):
             debug_msg("触发 550W 彩蛋 01")
-            await send_session_msg(session, randtools.messy_string(f"\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
+            await send_session_msg(session, randtools.messy_string("\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
             await u.achieve_achievement(session, "550W")
             return
     try:

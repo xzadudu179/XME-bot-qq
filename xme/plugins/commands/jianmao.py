@@ -1,5 +1,5 @@
 from nonebot import CommandSession
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
@@ -15,7 +15,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'',
+    usage='',
     permissions=["无"],
     alias=alias
 )

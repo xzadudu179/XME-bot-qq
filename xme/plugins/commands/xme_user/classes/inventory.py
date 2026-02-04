@@ -33,7 +33,7 @@ class Inventory:
         """输出物品栏内容
         """
         self.sort_items()
-        result = f""
+        result = ""
         i = 0
         for inv_item in self.inv_items:
             if not inv_item.recorded_item:

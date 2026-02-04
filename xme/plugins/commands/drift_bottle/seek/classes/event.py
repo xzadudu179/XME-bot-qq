@@ -59,21 +59,13 @@ class Event:
 
     def choose_event(event_list: list[dict]) -> dict:
         # 随机选择事件
-        # normal_default_events = [e for e in event_list if e["prob"] == -1 and e["type"] == "normal"]
-        # dice_default_events = [e for e in event_list if e["prob"] == -1 and e["type"] == "dice"]
-        # normal_events = [e for e in event_list if e["prob"] != -1 and e["type"] == "normal"]
-        # dice_events = [e for e in event_list if e["prob"] != -1 and e["type"] == "dice"]
-        # print("events", event_list)
         default_events = [e for e in event_list if e["prob"] == -1]
         random_events = [e for e in event_list if e["prob"] != -1 and not e.get("top", False)]
-        top_events = [e for e in event_list if e.get("top", False)]
-        # events = normal_events
-        # default_events = normal_default_events
-        # if random_percent(9):
-            # default_events = dice_default_events
-            # events = dice_events
+        top_events = [e for e in event_list if e.get("top", False) and e.get("prob") not in [100, -1]]
+        max_events = [e for e in event_list if e.get("top", False) and e.get("prob") in [100, -1]]
+
         random.shuffle(random_events)
-        random_events = top_events + random_events
+        random_events = max_events + top_events + random_events
         # random_events.sort(key=lambda x: x["prob"])
         # random_events.reverse()
         # print(random_events)
@@ -94,15 +86,20 @@ class Event:
     def build_changes(event_changes):
         build_changes = {}
         for k, v in event_changes.items():
-            if v.get("custom", False):
-                build_changes[k] = {
-                    "change_func": v['change'],
-                    "return_func": v['return'],
-                    "assign": v.get("assign", True),
-                    "return_msg": v.get("return_msg", "{name}: {value}"),
-                }
-            else:
-                build_changes[k] = f"{v['type']}{v['change']()}" # 这里需要调用一次，因为是 Lambda
+            build_changes[k] = []
+            if not isinstance(v, list):
+                v = [v]
+            for c in v:
+                if c.get("custom", False):
+                    build_changes[k].append({
+                        "change_func": c['change'],
+                        "return_func": c['return'],
+                        "assign": c.get("assign", True),
+                        "return_msg": c.get("return_msg", "{name}: {value}"),
+                    })
+                else:
+                    # 这里需要调用一次，因为是 Lambda
+                    build_changes[k].append(f"{c['type']}{c['change']()}")
         return build_changes
 
     def build_normal_event(self, event_dict: dict, html=True, event_datas={}) -> str:

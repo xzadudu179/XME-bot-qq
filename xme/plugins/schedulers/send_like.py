@@ -1,10 +1,10 @@
 import nonebot
 from xme.xmetools.bottools import bot_call_action
-bot = nonebot.get_bot()
 import asyncio
 import config
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
+bot = nonebot.get_bot()
 
 @nonebot.scheduler.scheduled_job('cron', day='*')
 async def send_like():
@@ -18,7 +18,7 @@ async def send_like():
             try:
                 await bot_call_action(bot, "send_like", user_id=f['user_id'], times=10)
                 failed = False
-            except:
+            except Exception:
                 logger.error("点赞失败，过五秒重新尝试")
                 tried_times += 1
                 await asyncio.sleep(5)

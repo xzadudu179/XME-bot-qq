@@ -3,7 +3,6 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from character import get_message
-from character import get_message
 import config
 from xme.xmetools.msgtools import send_session_msg, send_to_groups
 
@@ -13,7 +12,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<(SUPERUSER)公告内容>',
+    usage='<(SUPERUSER)公告内容>',
     permissions=["无"],
     alias=alias
 )

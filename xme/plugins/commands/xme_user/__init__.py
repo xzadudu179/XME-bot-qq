@@ -1,9 +1,10 @@
 __plugin_name__ = 'XME 宇宙'
-from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, inventory, describe, get_achievements
+# 反射需要依靠 import 访问子 module
+from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, inventory, describe, get_achievements  # noqa: F401
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg
-import config
+# import config
 from xme.xmetools.cmdtools import get_cmd_by_alias
 from character import get_message
 from xme.xmetools.doctools import PluginDoc, CommandDoc
@@ -15,7 +16,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction'),
-    "usage": f'<指令名或别名>',
+    "usage": '<指令名或别名>',
     "permissions": [],
     "alias": alias
 }

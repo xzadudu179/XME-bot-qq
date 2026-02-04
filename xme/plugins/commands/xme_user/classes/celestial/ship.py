@@ -1,5 +1,5 @@
-from . import *
-from ..faction import FACTIONS
+from . import Celestial, CanDevelop
+# from ..faction import FACTIONS
 
 class Ship(Celestial):
     """飞船类型"""

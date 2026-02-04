@@ -8,10 +8,10 @@ from xme.xmetools.cmdtools import use_args
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.typetools import try_parse
 import random
-random.seed()
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools.msgtools import image_msg
 from character import get_message
+random.seed()
 
 alias = ['兽聚汇总', '兽聚', 'fus']
 __plugin_name__ = 'furfusion'
@@ -19,7 +19,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
-    usage=f'<方法，不填则为兽聚倒计时>',
+    usage='<方法，不填则为兽聚倒计时>',
     permissions=["无"],
     alias=alias
 )

@@ -11,7 +11,7 @@ def get_value(*keys, search_dict: dict, default=None):
     """
     try:
         result = search_dict[keys[0]]
-    except Exception as ex:
+    except Exception:
         return default
     if len(keys) > 1:
         return get_value(*keys[1:], search_dict=result, default=default)
@@ -29,7 +29,7 @@ def reverse_dict(target_dict: dict, ignore_null: bool = True) -> dict:
     """
     reversed_dict = defaultdict(list)
     for k, v in target_dict.items():
-        if ignore_null and not v and v != False:
+        if ignore_null and v is None:
             continue
         reversed_dict[v].append(k)
 

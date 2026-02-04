@@ -7,10 +7,10 @@ import matplotlib as mpt
 from matplotlib import font_manager
 import numpy as np
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 bg_color = (4 / 255, 23 / 255, 32 / 255)
-path = rf"./static/fonts/Cubic_11.ttf"
+path = r"./static/fonts/Cubic_11.ttf"
 prop = font_manager.FontProperties(fname=path)
 font_manager.fontManager.addfont(path)
 debug_msg("字体名:", prop.get_name())

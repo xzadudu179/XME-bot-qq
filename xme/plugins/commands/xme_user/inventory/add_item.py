@@ -12,7 +12,7 @@ async def add(session, user: u.User, arg):
     count = 1
     try:
         id = int(args[0])
-    except:
+    except Exception:
         await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, arg_func_name, "invalid_arg"))
         return False
     try:

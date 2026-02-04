@@ -1,6 +1,6 @@
 import re
 import math
-from decimal import Decimal, getcontext
+from decimal import Decimal
 
 def to_nums_base(num: int, num_strs: list[str]):
     """将数字转换为任意进制字符列表，例如定义 ["a", "b", "c"]，会将十进制数字替换为数字字符为 a b c 的三进制数字

@@ -5,7 +5,7 @@ from functools import wraps
 from typing import Protocol, TypeVar, Type, Union, runtime_checkable
 from typing import Any, get_type_hints
 from xme.xmetools.debugtools import debug_msg
-from typing import get_origin, get_args
+from typing import get_origin
 import json
 
 T_DbReadWriteable = TypeVar("T", bound="DbReadWriteable")
@@ -159,12 +159,18 @@ class XmeDatabase:
         Returns:
             Any: 能够直接存入数据库的类型
         """
-        if value is None: return None
-        if isinstance(value, (str, int, float, bytes, bytearray)): return value
-        if isinstance(value, bool): return int(value)
-        if isinstance(value, (list, dict)): return json.dumps(value, ensure_ascii=False)
-        if isinstance(value, DbReadWriteable): return self.save_to_db(value)
-        if hasattr(value, "isoformat"): return value.isoformat()
+        if value is None:
+            return None
+        if isinstance(value, (str, int, float, bytes, bytearray)):
+            return value
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (list, dict)):
+            return json.dumps(value, ensure_ascii=False)
+        if isinstance(value, DbReadWriteable):
+            return self.save_to_db(value)
+        if hasattr(value, "isoformat"):
+            return value.isoformat()
         raise ValueError(f"无法解析类型 {type(value).__name__}")
 
     @database_connect
@@ -193,7 +199,8 @@ class XmeDatabase:
         Returns:
             int | None: 实例的主键
         """
-        if obj == None: raise ValueError("类不可是 None")
+        if obj is None:
+            raise ValueError("类不可是 None")
         # if not name:
             # name = XmeDatabase.get_instance_class_table_name(obj)
         # 获取类的字段和值
@@ -244,7 +251,8 @@ class XmeDatabase:
         debug_msg("正在通过语句加载内容:\n", sql, select_keys)
         cursor.execute(sql, select_keys)
         row = cursor.fetchone()
-        if not row: return None
+        if not row:
+            return None
         # 获取列信息
         # columns = [column[0] for column in cursor.description]
         # data_dict = dict(zip(columns, row))

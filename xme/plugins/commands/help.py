@@ -3,12 +3,12 @@ import config
 from xme.xmetools.doctools import CommandDoc, PluginDoc, check_can_show
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.timetools import TimeUnit
-from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
+from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.xmetools.listtools import split_list
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.xme_user import get_userhelp
 from xme.xmetools.msgtools import change_group_message_content, send_forward_msg
-from xme.xmetools.msgtools import image_msg
+# from xme.xmetools.msgtools import image_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from nonebot import MessageSegment
@@ -27,7 +27,7 @@ __plugin_usage__ = CommandDoc(
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='显示帮助，或某个指令的帮助，功能名若填写数字则是翻到数字所指的页数',
-    usage=f'<功能名>',
+    usage='<功能名>',
     permissions=["无"],
     alias=alias
 )
@@ -63,9 +63,10 @@ async def arg_help(arg, plugins, session):
             if user_help is not None and pl.name.lower() == "xme 宇宙" and ask_cmd != "xme 宇宙":
                 debug_msg("发送用户帮助")
                 return await send_session_msg(session, get_userhelp(ask_cmd).replace("\n\n", "\n"), tips=True)
-        except:
+        except Exception:
             pass
-        if pl.name.lower() != target_plugin: continue
+        if pl.name.lower() != target_plugin:
+            continue
         u = str(pl.usage)
         debug_msg(u)
         return await send_session_msg(session, u.split("/////OUTER/////")[0].replace("\n\n", "\n") if u.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
@@ -79,10 +80,11 @@ async def _(session: CommandSession, user: u.User):
     arg = session.current_arg_text.strip().lower()
     # 如果发了参数则发送相应命令的使用帮助
     debug_msg("发送帮助")
-    if arg and await arg_help(arg, plugins, session) != False: return False
+    if arg and await arg_help(arg, plugins, session):
+        return False
     # help_list_str = ""
     PAGE_LENGTH = 20
-    IMG_PATH = "./static/img/help_img"
+    # IMG_PATH = "./static/img/help_img"
     # 分段
     pages = []
     index = 0
@@ -110,10 +112,10 @@ async def _(session: CommandSession, user: u.User):
                 page += "\n        --------"
                 plugin_pages += page
                 continue
-        except:
+        except Exception:
             logger.exception(format_exc())
             plugin_pages += "\n" + f"[未知] {p.name}"
-
+    prefix = ""
     if len(total_pages.split("\n")) < 1:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_cmds', prefix=prefix))
         # await send_msg(session, f"{prefix}\n{get_info('name')}现在还没有任何指令哦")
@@ -140,6 +142,6 @@ async def _(session: CommandSession, user: u.User):
     # await send_session_msg(session, "注：如果没有看到即将发送的聊天记录，可以尝试私聊发送 /help", at=False)
     try:
         await send_forward_msg(session.bot, session.event, new_messages)
-    except:
+    except Exception:
         pass
     return True

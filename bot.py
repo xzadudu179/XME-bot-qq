@@ -13,17 +13,17 @@ from os import path
 from xme.xmetools import colortools as c
 from xme.xmetools.filetools import backup_data_dir
 # from xme.xmetools import jsontools
-from xme.plugins.commands.xme_user.classes.user import User, try_load
+# from xme.plugins.commands.xme_user.classes.user import User, try_load
 import random
-random.seed()
 import os
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import bot_variables
 import config
 import bot_init
 # from xme.xmetools.msgtools import send_to_superusers
 import asyncio
+random.seed()
 # from config import BOT_SETTINGS_PATH
 
 # def handle_exception(loop, context):

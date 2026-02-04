@@ -1,8 +1,6 @@
-from anyio import sleep
-# from itsdangerous import base64_encode
+
 import nonebot
 import random
-random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
@@ -11,6 +9,7 @@ from xme.xmetools.timetools import curr_days
 from xme.xmetools import randtools
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
+random.seed()
 
 alias = ["今日人品" , "luck"]
 __plugin_name__ = 'jrrp'
@@ -21,7 +20,7 @@ __plugin_usage__= CommandDoc(
     # desc='今日人品',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值',
-    usage=f'jrrp <参数>',
+    usage='jrrp <参数>',
     permissions=[],
     alias=alias
 )
@@ -57,7 +56,7 @@ async def jrrp(session: CommandSession):
             return
         try:
             count = int(args)
-        except:
+        except Exception:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'rank_error'), tips=True)
             # await send_msg(session, f"成员数量需要是整数哦ovo")
             return

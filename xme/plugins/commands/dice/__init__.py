@@ -1,5 +1,5 @@
 __plugin_name__ = '骰子'
-from .simdice import *
+from .simdice import dicealias
 from character import get_message
 from xme.xmetools.doctools import PluginDoc
 

@@ -4,7 +4,7 @@ import xme.plugins.commands.wife as w
 from xme.xmetools.debugtools import debug_msg
 from xme.plugins.commands.wife import command_properties
 from character import get_message
-from .wife_tools import *
+from .wife_tools import get_wife_id, change_wife_id
 from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission, get_group_member_name
 from xme.xmetools.imgtools import get_qq_avatar

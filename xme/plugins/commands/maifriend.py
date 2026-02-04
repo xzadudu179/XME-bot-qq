@@ -1,5 +1,5 @@
 from nonebot import CommandSession
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
@@ -34,7 +34,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<at 用户>',
+    usage='<at 用户>',
     permissions=["无"],
     alias=alias
 )
@@ -47,7 +47,7 @@ async def _(session: CommandSession):
         if arg.startswith("[CQ:at,qq="):
             qq_id = get_at_id(arg)
         image = await gen_maifriend(qq_id)
-    except:
+    except Exception:
         logger.exception(traceback.format_exc())
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'), tips=True)
     return await send_session_msg(session, await image_msg(image), tips=True, tips_percent=20)

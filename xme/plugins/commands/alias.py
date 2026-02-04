@@ -12,7 +12,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(指令名或别名)',
+    usage='(指令名或别名)',
     permissions=["无"],
     alias=alias
 )

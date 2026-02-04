@@ -1,17 +1,17 @@
 import json
 import os
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import nonebot
 from logging.handlers import TimedRotatingFileHandler
 import logging
 import traceback
 from xme.xmetools import colortools as c
-from xme.xmetools.cmdtools import get_cmd_by_alias
+# from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.xmetools.texttools import lazy_pinyin
 from datetime import datetime
 from xme.plugins.commands.xme_user import get_userhelp
-import config
+# import config
 
 WIFE_INFO = {
 }
@@ -72,7 +72,7 @@ def gen_doc_md():
                 # print(pl.name, "是特殊插件，不处理")
                 ...
             usages.append(md_usage.replace("\"", "`"))
-        except Exception as ex:
+        except Exception:
             logger.error("处理", pl.name, "插件出错:", traceback.format_exc())
             # lotraceback.print_exc()
             continue
@@ -118,14 +118,16 @@ def parse_special_doc(doc_str):
     ...
 
 def init_json(path, data):
-    if os.path.exists(path): return
+    if os.path.exists(path):
+        return
     logger.warning(f"不存在 {path}, 正在重新创建")
     with open(path, 'w', encoding='utf-8') as file:
         file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
 def create_folder_if_not_exists(*paths):
     for path in paths:
-        if os.path.exists(path): continue
+        if os.path.exists(path):
+            continue
         logger.info(f"创建 {path} 文件夹")
         os.mkdir(path)
 
@@ -160,7 +162,7 @@ def bot_init():
     gen_doc_md()
 
 
-def saving_log(logger: logging.Logger, filepath=f'./logs/nonebot.log'):
+def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
     # 设置日志的格式
     log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1, encoding="utf-8")
     log_handler.suffix = "%Y-%m-%d"  # 按年-月-日格式保存日志文件

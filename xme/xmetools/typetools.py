@@ -5,7 +5,7 @@ def try_parse(item, t, default=None):
         raise ValueError("t 需要为类型")
     try:
         return t(item)
-    except:
+    except Exception:
         return default
 
 def use_attribute(obj, attr_name):

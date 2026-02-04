@@ -3,7 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from ...xmetools import systools as st
 from character import get_message
-import heapq
+# import heapq
 from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import bot_call_action
@@ -17,7 +17,7 @@ __plugin_usage__ = CommandDoc(
     # desc='查看系统状态',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='查看运行该 XME-Bot 实例的设备的系统状态',
-    usage=f'',
+    usage='',
     permissions=["无"],
     alias=alias
 )
@@ -31,7 +31,7 @@ async def _(session: CommandSession):
         info = f'- bot 实例 APP: {info["app_name"]} v{info["app_version"]}'
     try:
         message = st.system_info()
-    except:
+    except Exception:
         message = get_message("plugins", __plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
     vars = read_from_path("data/bot_vars.json")

@@ -1,3 +1,4 @@
+from xme.xmetools.doctools import PluginDoc
 __plugin_name__ = '今日老婆'
 from character import get_message
 command_properties = [
@@ -9,9 +10,8 @@ command_properties = [
     },
 ]
 
-from .wife import *
 # from .cancanneedwife import *
-from xme.xmetools.doctools import PluginDoc
+from .wife import wife_alias  # noqa: E402
 
 commands = ['wife']
 

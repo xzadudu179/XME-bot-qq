@@ -1,7 +1,7 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
-from ...xmetools import systools as st
+# from ...xmetools import systools as st
 from character import get_message
 from xme.xmetools import typetools
 from xme.xmetools.msgtools import send_session_msg
@@ -13,7 +13,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(数字)',
+    usage='(数字)',
     permissions=[],
     alias=alias
 )

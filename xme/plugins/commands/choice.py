@@ -5,13 +5,13 @@ import jieba.posseg as pseg
 import random
 from xme.xmetools.texttools import FormatDict, replace_formatted, protect_special_word_and_quoted_text
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
-random.seed()
 import re
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 from xme.xmetools import texttools
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
+random.seed()
 
 alias = ['选择', 'cho', '决定']
 __plugin_name__ = 'choice'
@@ -21,7 +21,7 @@ __plugin_usage__ = CommandDoc(
     desc=get_message("plugins", __plugin_name__, "desc"),
     introduction=get_message("plugins", __plugin_name__, "introduction"),
     # introduction='让 xme 帮忙决定事情吧！\nxme 会因情况的不同而返回不同的结果，10~1例如只 choice 数字会返回 0~数字的随机数，choice一个数字范围比如 -1~10 会返回 1~10 1~-10 的随机数',
-    usage=f'(事情列表或是任意选择语句)',
+    usage='(事情列表或是任意选择语句)',
     permissions=[],
     alias=alias
 )
@@ -204,7 +204,7 @@ def is_or_not_choice(input_str):
     is_not = "是否".join(splits[1:])
     try:
         first_last = splits[0][-1]
-    except:
+    except Exception:
         first_last = ""
     choices = [is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)]
     choices = [('' if splits[0] in ['我', '你'] else splits[0]) + c for c in choices]

@@ -13,7 +13,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'(at想要设置的群友) (头衔名 填写 -delete 删除头衔)',
+    usage='(at想要设置的群友) (头衔名 填写 -delete 删除头衔)',
     permissions=permissions,
     alias=alias
 )

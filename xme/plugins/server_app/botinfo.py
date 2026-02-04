@@ -17,7 +17,7 @@ async def botinfo():
             "desc": "自己做的 qq 机器人，主要是拿来玩玩用的",
             "version": f"v{config.VERSION}"
         }
-    except:
+    except Exception:
         return {
             "code": 500,
             "state": "ERROR: 无法读取数据"

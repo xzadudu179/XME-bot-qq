@@ -1,7 +1,7 @@
-from nonebot.default_config import *
+from nonebot.default_config import *  # noqa: F403
 import character
 from datetime import timedelta
-import keys
+# import keys
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
 SUPERUSERS = {1795886524}
@@ -16,7 +16,7 @@ SESSION_RUN_TIMEOUT = timedelta(minutes=60)
 SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = None
 # SESSION_RUNNING_EXPRESSION = ""
-DEFAULT_COMMAND_PERMISSION = lambda s: True
+DEFAULT_COMMAND_PERMISSION = lambda s: True  # noqa: E731
 
 # 用户自定义 config
 SELF_ID = 3961418307

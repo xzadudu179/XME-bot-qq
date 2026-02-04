@@ -1,5 +1,5 @@
 import config
-from xme.xmetools import colortools as c
+# from xme.xmetools import colortools as c
 from xme.xmetools import dicttools
 from functools import wraps
 from xme.xmetools.typetools import try_parse
@@ -115,7 +115,7 @@ def is_command(text):
     # if raw_msg[0] not in config.COMMAND_START or not raw_msg[1:] or not raw_msg.replace(raw_msg[0], ""):
     if len(text) < 1:
         return False
-    if not text[0] in config.COMMAND_START or not text[1:] or not text.replace(text[0], ""):
+    if text[0] not in config.COMMAND_START or not text[1:] or not text.replace(text[0], ""):
         return False
 
     if not get_cmd_by_alias(text.split(" ")[0]):
@@ -140,7 +140,7 @@ def get_cmd_by_alias(input_string, need_cmd_start=True):
     elif name[0] not in config.COMMAND_START:
         if need_cmd_start:
             return False
-    if CommandManager._commands.get((name,), False) == False:
+    if not CommandManager._commands.get((name,), False):
         return CommandManager._aliases.get(name, False)
     else:
         # print("有这个指令")

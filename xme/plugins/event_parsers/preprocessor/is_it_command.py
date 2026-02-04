@@ -1,10 +1,10 @@
 from nonebot import NoneBot
 import aiocqhttp
 from nonebot.plugin import PluginManager
-from xme.xmetools import cmdtools
-from xme.xmetools.msgtools import send_event_msg
+# from xme.xmetools import cmdtools
+# from xme.xmetools.msgtools import send_event_msg
 from nonebot import message_preprocessor
-from character import get_message
+# from character import get_message
 import config
 
 @message_preprocessor

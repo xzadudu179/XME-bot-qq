@@ -2,10 +2,10 @@ from xme.plugins.commands.shop import __plugin_name__
 from PIL.Image import Image
 from xme.plugins.commands.xme_user.classes.user import User
 import random
-random.seed()
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.imgtools import read_image, image_to_base64
 from character import get_message
+random.seed()
 
 class Good:
     # 商品

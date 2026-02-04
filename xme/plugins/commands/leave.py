@@ -14,7 +14,7 @@ __plugin_usage__ = CommandDoc(
     # desc='机器人退群',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='使机器人退出群聊',
-    usage=f'',
+    usage='',
     permissions=permissions,
     alias=alias
 )

@@ -2,12 +2,12 @@ import time
 import base64
 import os
 from xme.xmetools import filetools
-import asyncio
-from aiocqhttp import MessageSegment
+# import asyncio
+# from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops
 import imagehash
-from collections import defaultdict
+# from collections import defaultdict
 from xme.xmetools.reqtools import fetch_data
 import traceback
 from xme.xmetools.debugtools import debug_msg
@@ -16,12 +16,12 @@ try:
     import pyautogui
 except Exception:
     pyautogui = None
-from character import get_message
+# from character import get_message
 from xme.xmetools.texttools import hash_byte
 import mss
 from html2image import Html2Image
 from uuid import uuid4
-from PIL import Image
+# from PIL import Image
 
 hti = Html2Image()
 
@@ -129,7 +129,7 @@ def screenshot(num=1):
             screenshot = sct.grab(monitor)
             # 转换为PIL图像
             img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
-        except:
+        except Exception:
             img = pyautogui.screenshot()
             state = False
 
@@ -178,14 +178,22 @@ def get_image_format(image: Image.Image, default="PNG") -> str:
     }
     return formats.get(image.mode, default)
 
-def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
+def convert_no_alpha(img: Image.Image):
+    if img.mode in ("LA", "RGBA"):
+        background = Image.new("RGB", img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[-1])
+        img = background
+    return img
+
+def image_to_base64(img: Image.Image, to_jpeg=True, ignore_alpha=False) -> str:
     output_buffer = BytesIO()
     if img.mode == "P":
         img = img.convert("RGBA")
     debug_msg("正在将图片转为base64")
-    if img.mode in ["RGBA", "P"] or not to_jpeg:
+    if (img.mode in ["RGBA", "P"] and not ignore_alpha) or not to_jpeg:
         img_mode_dict = {
             "RGBA": "PNG",
+            "LA": "PNG",
             "P": "GIF"
         }
         debug_msg("save to normal")
@@ -193,6 +201,7 @@ def image_to_base64(img: Image.Image, to_jpeg=True) -> str:
         img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
     else:
         logger.info("使用 JPEG 格式")
+        img = convert_no_alpha(img)
         img.save(output_buffer, format="JPEG", quality=75)
     byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()

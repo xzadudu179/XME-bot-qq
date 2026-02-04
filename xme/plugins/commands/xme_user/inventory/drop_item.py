@@ -42,7 +42,7 @@ async def drop(session, user: u.User, arg):
             threshold=0.9,
         )
 
-    if result == True:
+    if result:
         return True
     return False
 

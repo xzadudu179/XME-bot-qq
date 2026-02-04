@@ -1,27 +1,29 @@
-from xme.xmetools.timetools import *
+from xme.xmetools.timetools import TimeUnit
+from datetime import datetime
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
-from xme.xmetools import jsontools
+from xme.xmetools.cmdtools import send_cmd
+# from xme.xmetools import jsontools
 from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.msgtools import image_msg
-from xme.xmetools.dicttools import set_value, get_value
+# from xme.xmetools.dicttools import set_value, get_value
 from character import get_message
+import time
 from xme.xmetools import randtools
 import os
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from . import DriftBottle, get_random_bottle
 import random
-random.seed()
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, send_to_superusers, aget_session_msg
 import config
 from . import BOTTLE_IMAGES_PATH
+random.seed()
 # BOTTLE_PATH = './data/drift_bottles.json'
 pickup_alias = ["捡瓶子", "捡漂流瓶", "捡瓶", "pick", 'p']
 command_name = "pickup"
@@ -291,7 +293,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
                         continue
             try:
                 DriftBottle.exec_query(query=f"DELETE FROM {table_name} WHERE id=={bottle.id} AND views>=114514 AND likes<2000")
-            except:
+            except Exception:
                 pass
             await send_session_msg(session, content)
             return True

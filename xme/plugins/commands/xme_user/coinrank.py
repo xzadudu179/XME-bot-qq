@@ -1,11 +1,11 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc
+# from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.xme_user.classes import user
 from xme.xmetools import texttools
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import coin_name
 from character import get_message
 import statistics
 
@@ -17,7 +17,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', ),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'<排名长度/avg sum> <top> <spacing>',
+    "usage": '<排名长度/avg sum> <top> <spacing>',
     "permissions": [],
     "alias": alias
 }

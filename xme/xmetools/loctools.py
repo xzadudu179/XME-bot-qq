@@ -1,11 +1,11 @@
 from xme.xmetools.reqtools import fetch_data
 from character import get_message
 from keys import WEATHER_API_KEY
-import config
+# import config
 from xme.plugins.commands.xme_user.classes.user import try_load, User
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
-from xme.xmetools.jsontools import read_from_path, save_to_path
+# from nonebot.log import logger
+# from xme.xmetools.jsontools import read_from_path, save_to_path
 
 async def search_location(loc: str, headers: dict = {"X-QW-Api-Key": WEATHER_API_KEY}, dict_output=True) -> dict | str:
     """搜索地点

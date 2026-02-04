@@ -1,8 +1,8 @@
 import random
-random.seed()
 from .jsontools import read_from_path
 from PIL import Image
 from functools import wraps
+random.seed()
 
 def random_percent(percent : float) -> bool:
     """指定百分比概率返回True

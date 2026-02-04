@@ -1,5 +1,5 @@
 from . import Celestial, CanDevelop
-from ..faction import FACTIONS
+# from ..faction import FACTIONS
 
 class Station(Celestial, CanDevelop):
     """空间站类型"""

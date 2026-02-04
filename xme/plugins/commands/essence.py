@@ -8,17 +8,17 @@ from xme.xmetools.msgtools import send_session_msg
 import random
 from aiocqhttp import ActionFailed
 from xme.xmetools.imgtools import get_qq_avatar
-from xme.xmetools.bottools import bot_call_action
+# from xme.xmetools.bottools import bot_call_action
 from nonebot import Message
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 alias = ['ess']
 __plugin_name__ = 'essence'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'',
+    usage='',
     permissions=["无"],
     alias=alias
 )

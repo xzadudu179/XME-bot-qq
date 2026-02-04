@@ -1,6 +1,6 @@
 from nonebot import on_command, CommandSession
 from xme.xmetools.msgtools import send_session_msg
-from ...xmetools import randtools as rt
+# from ...xmetools import randtools as rt
 from ...xmetools import reqtools as req
 from ...xmetools import timetools as dt
 from xme.xmetools.doctools import CommandDoc
@@ -25,7 +25,7 @@ __plugin_usage__ = str(CommandDoc(
     # desc='查询天气',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='查看指定地区的天气',
-    usage=f'<地区名> <未来天气预测天数(1~3)>',
+    usage='<地区名> <未来天气预测天数(1~3)>',
     permissions=["无"],
     alias=alias
 ))
@@ -60,7 +60,7 @@ async def _(session: CommandSession):
                 # message = f"{rt.rand_str('设置的天数', '未来天数', '天数')}还不可以大于 3 或小于 1 哦"
                 await send_session_msg(session, message)
                 return
-        except:
+        except Exception:
             message = get_message("plugins", __plugin_name__, 'error_param', city=city, future_days=params.split(' ')[1])
             # message = f"出错啦...请确认被解析的参数是否是你想的那样哦：\n城市名：{city}\n未来天数：{params.split(' ')[1]}"
             await send_session_msg(session, message)
@@ -82,7 +82,7 @@ async def _(session: CommandSession):
         temp_min = min(int(day_temp), int(night_temp))
         day_wind = [weather_today["daywind"], weather_today["daypower"]]
         night_wind = [weather_today["nightwind"], weather_today["nightpower"]]
-        message = f""
+        message = ""
         message += get_message("plugins", __plugin_name__, 'result_prefix') + get_message("plugins", __plugin_name__, 'result_content',
             city_name=city_name,
             date=datetime.strptime(date, "%Y-%m-%d").strftime("%m月%d日"),

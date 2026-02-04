@@ -3,11 +3,11 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools import reqtools
 from character import get_message
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import random
-random.seed()
 from xme.xmetools.msgtools import send_session_msg
+random.seed()
 
 alias = ["涩图", "setu", "色图" ]
 __plugin_name__ = 'setu'
@@ -18,11 +18,11 @@ __plugin_usage__= CommandDoc(
     # desc='涩图？',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='返回一张涩图？',
-    usage=f'',
+    usage='',
     permissions=["无"],
     alias=alias
 )
-PATH_179 = rf"./data/images/179"
+PATH_179 = r"./data/images/179"
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def setu(session: CommandSession):
     image_name = "彩虹蟑螂"

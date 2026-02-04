@@ -4,7 +4,7 @@ from character import get_message
 from asyncio import sleep
 from nonebot import CommandSession
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 import random
 random.seed()
 
@@ -86,7 +86,7 @@ async def talk_to_bot(_, session: CommandSession, user):
             prompt = "[请发送合理的序号...]"
             continue
         prompt = "[请发送合理的序号...]"
-        if not result.isdigit() and not '-' in result:
+        if not result.isdigit() and '-' not in result:
             prompt = ""
             continue
         result_int = int(result) - 1

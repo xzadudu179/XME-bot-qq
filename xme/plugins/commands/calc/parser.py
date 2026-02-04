@@ -3,7 +3,7 @@ from xme.xmetools.texttools import replace_chinese_punctuation, valid_var_name, 
 from . import func
 from sympy import sympify, Integer
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 def get_func(input_str):
     pattern = r"[a-zA-Z_][a-zA-Z0-9_]*\(.*"
@@ -125,7 +125,8 @@ def parse_vars(formula: str, vars=None):
     formula = '\r'.join([formula.split("\r")[i].strip() for i, _ in enumerate(original_formula.split("\r")) if not is_var_line(original_formula, original_formula.split("\r")[i].strip())])
     for key in all_vars.keys():
         # debug_msg("key: ", key, "formula: ", formula, "keyin: ", key in formula)
-        if key in formula: break
+        if key in formula:
+            break
         return formula.split("\r")[-1]
     # for name, value in all_vars.items():
     #     formula = str(parse_polynomial(formula)[1].subs(name, value))
@@ -149,7 +150,8 @@ def get_vars(formula: str, all_vars: dict | None = None) -> dict:
     return all_vars
 
 def is_var_line(formula, line: str) -> bool | tuple:
-    if not "=" in line or line.startswith(":"): return False
+    if "=" not in line or line.startswith(":"):
+        return False
     # debug_msg("line:", line)
     name = line.split("=")[0].strip()
     value = "=".join(line.split("=")[1:]).strip()
@@ -183,7 +185,8 @@ def parse_func(formula):
             debug_msg("eval func found")
             return 0
         debug_msg(f"func name: {func_name}")
-        if func_name not in func.funcs.keys(): continue
+        if func_name not in func.funcs.keys():
+            continue
         func_body = '('.join(f.split("(")[1:])[:-1]
         debug_msg(f"func body: {func_body}")
         args = []

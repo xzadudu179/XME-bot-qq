@@ -15,5 +15,5 @@ async def read_msg(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginM
         await bot_call_action(bot, "mark_msg_as_read", message_id=event.message_id)
         # debug_msg("已读")
     except Exception as ex:
-        logger.error(f"读消息出现错误:")
+        logger.error("读消息出现错误:")
         logger.exception(ex)

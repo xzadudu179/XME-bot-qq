@@ -8,11 +8,11 @@ from xme.plugins.commands.xme_user.classes import user
 # from xme.plugins.commands.xme_user.classes.user import coin_name, coin_pronoun
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 import random
-random.seed()
 import math
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
+random.seed()
 
 TIMES_LIMIT = 10
 name = 'guess'
@@ -156,7 +156,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
         try:
             num = int(user_input)
             ask_to_guess = True
-        except:
+        except Exception:
             debug_msg("忽略")
             ask_to_guess = False
             # if get_cmd_by_alias(user_input) != False:
@@ -186,7 +186,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
             if times_limit == default_times_limit and num_range == (0, 100) and guess.guessing_times == 1 and get_award_times_left >= 0:
                 await u.achieve_achievement(session, "One Shot")
             break
-        message += f"\n" + get_message("plugins", cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
+        message += "\n" + get_message("plugins", cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)
         prefix = get_message("plugins", cmd_name, name, 'guess_prompt_prefix_default',
             start=message,
         )

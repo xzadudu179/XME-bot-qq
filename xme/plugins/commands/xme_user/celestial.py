@@ -1,16 +1,16 @@
-from xme.plugins.commands.xme_user import __plugin_name__
-from nonebot import CommandSession
-from xme.xmetools.plugintools import on_command
-from xme.xmetools.msgtools import send_session_msg
-from xme.xmetools.msgtools import gif_msg
-from .classes import user as u
-from xme.plugins.commands.xme_user.classes.xme_map import Starfield, get_starfield_map
-from xme.xmetools.cmdtools import use_args
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded
-from character import get_message
+# from xme.plugins.commands.xme_user import __plugin_name__
+# from nonebot import CommandSession
+# from xme.xmetools.plugintools import on_command
+# from xme.xmetools.msgtools import send_session_msg
+# from xme.xmetools.msgtools import gif_msg
+# from .classes import user as u
+# from xme.plugins.commands.xme_user.classes.xme_map import Starfield, get_starfield_map
+# from xme.xmetools.cmdtools import use_args
+# from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun, is_galaxy_loaded
+# from character import get_message
 
 
-# alias = ['cele', 'celes', '查看天体', '天体']
+# # alias = ['cele', 'celes', '查看天体', '天体']
 # cmd_name = 'celestial'
 # usage = {
 #     "name": cmd_name,

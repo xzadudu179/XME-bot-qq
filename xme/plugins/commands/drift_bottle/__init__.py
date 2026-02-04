@@ -3,14 +3,16 @@ from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
 from xme.xmetools.randtools import messy_image
-from xme.xmetools.texttools import only_positional_fields, replace_formatted
+from xme.xmetools.texttools import replace_formatted
 from character import get_message
 from traceback import print_exc
+import random
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
-from xme.xmetools.texttools import FormatDict, html_text
+
+# from xme.xmetools.texttools import FormatDict, html_text
 import json
 BOTTLE_IMAGES_PATH = "./data/images/driftbottle/"
 
@@ -45,7 +47,7 @@ class DriftBottle:
                 id=self.bottle_id,
                 **{'.'.join(i.split(".")[:-1]): f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
             )
-        except:
+        except Exception:
             print_exc()
             return self.content
 
@@ -237,18 +239,21 @@ command_properties = [
 # Avoid creating a DriftBottle instance at import time; call this during startup if needed.
 # DATABASE.create_class_table(DriftBottle())
 
-from .throw import *
-from .pickup import *
-from .cthulhu import *
-from .check import *
-from .pure import *
-from .seek import *
+from .throw import throw_alias  # noqa: E402
+from .pickup import pickup_alias  # noqa: E402
+from .cthulhu import cthulhu_alias # noqa: E402
+from .seek import seek_alias # noqa: E402
+from .check import check_alias # noqa: E402
+from .pure import pure_alias # noqa: E402
+
 
 aliases = [
     throw_alias,
     pickup_alias,
     cthulhu_alias,
-    seek_alias
+    seek_alias,
+    check_alias,
+    pure_alias
 ]
 __plugin_usage__ = PluginDoc(
     name=__plugin_name__,

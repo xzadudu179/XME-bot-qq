@@ -59,7 +59,7 @@ async def get_group_member_name(group_id, user_id, card=False, default=None):
     """
     try:
         result = await get_bot().api.get_group_member_info(group_id=group_id, user_id=user_id)
-    except:
+    except Exception:
         return default
     if card:
         result = result['card'] if result['card'] else result['nickname']
@@ -75,7 +75,7 @@ async def get_settings():
 async def get_stranger_name(user_id, default=None):
     try:
         result = (await get_bot().api.get_stranger_info(user_id=user_id))['nickname']
-    except:
+    except Exception:
         return default
     return result
 
@@ -104,7 +104,7 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs
 async def get_group_name(group_id, default=None):
     try:
         result = (await get_bot().api.get_group_info(group_id=group_id))['group_name']
-    except:
+    except Exception:
         return default
     return result
 

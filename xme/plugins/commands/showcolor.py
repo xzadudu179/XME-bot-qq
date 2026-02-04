@@ -9,7 +9,7 @@ from xme.xmetools.texttools import fullwidth_to_halfwidth
 from xme.xmetools.filetools import has_file
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']

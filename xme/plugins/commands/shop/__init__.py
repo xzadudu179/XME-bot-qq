@@ -5,7 +5,6 @@ from .classes.good import Good
 # from .classes.coin_shop import CoinShop
 from .static.shop import SHOP
 
-random.seed()
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
 from xme.xmetools.msgtools import image_msg
 from nonebot import CommandSession
@@ -13,6 +12,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
+random.seed()
 
 alias = ["星币商店" , "商店"]
 
@@ -20,7 +20,7 @@ __plugin_usage__= CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<物品序号>',
+    usage='<物品序号>',
     permissions=[],
     alias=alias
 )

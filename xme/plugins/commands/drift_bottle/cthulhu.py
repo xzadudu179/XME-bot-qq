@@ -1,5 +1,5 @@
-from xme.xmetools.timetools import *
-from xme.xmetools import jsontools
+# from xme.xmetools.timetools import *
+# from xme.xmetools import jsontools
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__

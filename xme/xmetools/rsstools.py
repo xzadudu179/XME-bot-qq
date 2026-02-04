@@ -10,7 +10,8 @@ def catch_179rss():
 def show_rss(rss_list, k):
     result = ""
     for i, rss in enumerate(rss_list):
-        if i >= k: break
+        if i >= k:
+            break
         result += f"{i + 1}. 《{rss['title']}》\n\t发布时间: {rss['published']}\n\t链接: {rss['link']}\n\t标签: {', '.join([tag['term'] for tag in rss['tags']])}\n\n"
         # print(rss)
     return result.strip()

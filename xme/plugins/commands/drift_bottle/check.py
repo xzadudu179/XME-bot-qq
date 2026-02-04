@@ -1,4 +1,5 @@
-from xme.xmetools.timetools import *
+# from xme.xmetools.timetools import TimeUnit
+# from datetime import datetime
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import permission
@@ -9,7 +10,7 @@ from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
 import random
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command

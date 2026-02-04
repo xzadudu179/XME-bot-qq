@@ -1,12 +1,12 @@
-from . import *
-from ..faction import FACTIONS
+from . import Celestial, CanDevelop, PlanetType, planet_HZproximity, StarType, planet_probabilities, planet_type_desc
+# from ..faction import FACTION
 from xme.xmetools.randtools import random_percent
 import random
-random.seed()
 from .star import Star
 from xme.xmetools.jsontools import read_from_path, save_to_path
 import math
-import os
+# import os
+random.seed()
 
 class Planet(Celestial, CanDevelop):
     """行星类型"""

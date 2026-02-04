@@ -4,7 +4,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 import asyncio
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 
 increase_people = {}
 

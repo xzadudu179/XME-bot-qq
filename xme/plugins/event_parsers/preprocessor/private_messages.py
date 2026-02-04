@@ -2,10 +2,10 @@ from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from xme.xmetools import cmdtools
 from nonebot import message_preprocessor
-from character import get_message
+# from character import get_message
 import aiocqhttp
-from xme.xmetools.msgtools import send_to_superusers
-from xme.xmetools.bottools import get_stranger_name, get_group_name
+# from xme.xmetools.msgtools import send_to_superusers
+# from xme.xmetools.bottools import get_stranger_name, get_group_name
 import config
 
 @message_preprocessor

@@ -2,14 +2,14 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
-from xme.xmetools.debugtools import debug_msg
+# from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools import jsontools
 from xme.xmetools import colortools as c
 import traceback
 try:
     import pygetwindow as gw
-except:
+except Exception:
     pass
 import config
 from character import get_message
@@ -21,7 +21,7 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage=f'<显示器序号>',
+    usage='<显示器序号>',
     permissions=['在可视奸的群组内'],
     alias=alias
 )
@@ -33,13 +33,14 @@ async def _(session: CommandSession):
     private_window_names = jsontools.read_from_path('./private_window_names.json')['private']
     try:
         current_window = gw.getActiveWindow()
-    except:
+    except Exception:
         current_window = None
     is_private = False
     if current_window:
         for name in private_window_names:
             if isinstance(name, list):
-                if current_window.title not in name: continue
+                if current_window.title not in name:
+                    continue
                 is_private = True
                 break
             if name in current_window.title:
@@ -59,7 +60,7 @@ async def _(session: CommandSession):
             arg_state = False
     try:
         path, state = imgtools.take_screenshot(monitor_num)
-    except:
+    except Exception:
         logger.error("无法截图: ")
         logger.exception(traceback.format_exc())
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'))

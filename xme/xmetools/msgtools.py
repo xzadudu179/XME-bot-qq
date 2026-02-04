@@ -1,7 +1,7 @@
 from nonebot import MessageSegment, Message, NoneBot
 from aiocqhttp import Event, ApiError, ActionFailed
 import config
-import config
+# import config
 from xme.xmetools.texttools import get_msg_len
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
@@ -36,7 +36,7 @@ async def gif_msg(input_path, scale=1):
     except Exception as e:
         logger.error(f"发生错误: {e}")
         logger.exception(traceback.format_exc())
-        return MessageSegment.text(f"[图片加载失败]")
+        return MessageSegment.text("[图片加载失败]")
 
 
 async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message("config", "image_summary")):
@@ -57,7 +57,7 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     debug_msg(is_image)
     try:
         image = path_or_image if is_image else Image.open(path_or_image)
-    except:
+    except Exception:
         image = await get_url_image(path_or_image)
     # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
     if max_size > 0:
@@ -74,7 +74,7 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     except Exception as e:
         logger.error(f"发生错误: {e}")
         logger.exception(traceback.format_exc())
-        return MessageSegment.text(f"[图片加载失败]")
+        return MessageSegment.text("[图片加载失败]")
 
 def create_image_message(b64: str, summary: str="[漠月的图片~]"):
     """同步发送图片消息"""
@@ -164,7 +164,7 @@ async def msg_preprocesser(session, message, send_time=-1):
         message += "\n" + get_message("config", "message_time", secs=send_time)
     for func in funcs:
         result = await func(message, session)
-        if result and type(result) == str:
+        if result and isinstance(result, str):
             message = result
     return message
 
@@ -211,7 +211,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
                 "\n-------------------\ntip：" +
             get_message("bot_info", "tips")
         )), at_sender=at, **kwargs)
-    if can_use_command and get_cmd_by_alias(reply) != False:
+    if can_use_command and get_cmd_by_alias(reply):
         if command_func:
             return await command_func(reply, **func_kwargs)
         await send_cmd(reply, session)
@@ -224,7 +224,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     message_result = await msg_preprocesser(session, message)
     if not message_result or message_result == "":
         logger.warning(f"bot 要发送的消息 {message} 已被阻止/没东西")
-        await session.send(f"[ERROR] BOT 即将发送的消息已被阻止/为空")
+        await session.send("[ERROR] BOT 即将发送的消息已被阻止/为空")
         return
     debug_prefix = "" if not debug else "[DEBUG] "
     if debug and not debugging():

@@ -59,9 +59,9 @@ def get_color_differences(color1: str | tuple, color2: str | tuple):
 def to_rgb_and_verify(*colors: str | tuple) -> tuple:
     result_colors = []
     for color in colors:
-        if type(color) == str:
+        if isinstance(color, str):
             color = hex_to_rgb(color)
-        if type(color) == tuple and len(color) != 3:
+        if isinstance(color, tuple) and len(color) != 3:
             raise ValueError("颜色 RGB 值元组长度不等于 3")
         result_colors.append(color)
     return tuple(result_colors)
@@ -92,7 +92,7 @@ def invent_color(color: str | tuple) -> str | tuple:
         str | tuple: 返回的颜色（与输入的颜色类型相同）
     """
     to_hex = False
-    if type(color) == str:
+    if isinstance(color, str):
         color = hex_to_rgb(color)
         to_hex = True
     color = [255 - c for c in color]

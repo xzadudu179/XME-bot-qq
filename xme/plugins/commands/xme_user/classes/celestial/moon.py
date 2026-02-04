@@ -1,5 +1,5 @@
-from . import *
-from ..faction import FACTIONS
+from . import Celestial, CanDevelop, PlanetType
+# from ..faction import FACTIONS
 
 class Moon(Celestial, CanDevelop):
     """卫星类型"""

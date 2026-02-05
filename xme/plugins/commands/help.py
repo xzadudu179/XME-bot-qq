@@ -47,7 +47,7 @@ async def arg_help(arg, plugins, session):
     ask_cmd = ask_for_help
     target_plugin = ask_cmd
     if not ask_for_help:
-        return False
+        return "Nothing"
     for pl in plugins:
         if isinstance(pl.usage, PluginDoc) and ask_for_help in [i.split(":")[0].strip().split(" ")[0] for i in pl.usage.usages]:
             # ask_for_help = pl.name.lower()
@@ -70,7 +70,7 @@ async def arg_help(arg, plugins, session):
         u = str(pl.usage)
         debug_msg(u)
         return await send_session_msg(session, u.split("/////OUTER/////")[0].replace("\n\n", "\n") if u.split("/////OUTER/////")[0] else get_message("plugins", __plugin_name__, 'no_usage'), at=True, tips=True)
-    return False
+    return "Nothing"
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
@@ -80,7 +80,7 @@ async def _(session: CommandSession, user: u.User):
     arg = session.current_arg_text.strip().lower()
     # 如果发了参数则发送相应命令的使用帮助
     debug_msg("发送帮助")
-    if arg and await arg_help(arg, plugins, session):
+    if arg and await arg_help(arg, plugins, session) != "Nothing":
         return False
     # help_list_str = ""
     PAGE_LENGTH = 20

@@ -228,9 +228,9 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             bottle: DriftBottle = DriftBottle.form_dict(random.choice(special))
         debug_msg("捡到了彩蛋瓶子")
         # await user.achieve_achievement(session, "彩蛋瓶")
-        if bottle.bottle_id in ["550W", "MOSS"]:
-            await user.achieve_achievement(session, "MOSS")
-        elif bottle.bottle_id in ["CTHULHU", "CTHULHU-2"]:
+        # if bottle.bottle_id in ["550W", "MOSS"]:
+            # await user.achieve_achievement(session, "MOSS")
+        if bottle.bottle_id in ["CTHULHU", "CTHULHU-2"]:
             await user.achieve_achievement(session, "蠕动的血肉")
         await send_to_superusers(session.bot, f"用户 \"{await get_stranger_name(session.event.user_id)}\" 在群 \"{await get_group_name(session.event.group_id)}\" 中捡到了一个彩蛋瓶子~")
     else:
@@ -275,7 +275,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return False
     content = ""
     if broken:
-        await user.achieve_achievement(session, "混乱不堪")
+        if not is_special_bottle:
+            await user.achieve_achievement(session, "混乱不堪")
         content = get_message("plugins", __plugin_name__, "bottle_broken")
         if messy_rate >= 100:
             content = get_message("plugins", __plugin_name__, "bottle_broken_messy")
@@ -299,7 +300,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             return True
         if str(index) == "-179" or not index_is_int:
             debug_msg("瓶子碎了？")
-            await user.achieve_achievement(session, "纯洁无暇！")
+            # await user.achieve_achievement(session, "纯洁无暇！")
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         elif index != "-179":
             # broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")

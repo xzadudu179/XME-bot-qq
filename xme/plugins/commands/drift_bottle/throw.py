@@ -103,7 +103,8 @@ async def _(session: CommandSession, user):
         check_image = DriftBottle.check_duplicate_image(image)
         if not check_image["status"]:
             await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
-            debug_msg("查重图片：", check_image)
+            # debug_msg("查重图片：", check_image)
+            logger.info("查重图片：" + str(check_image))
             return False
         # 存储图片
         image.save(path)

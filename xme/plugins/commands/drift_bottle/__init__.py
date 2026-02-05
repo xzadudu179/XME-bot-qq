@@ -108,7 +108,7 @@ class DriftBottle:
             for image in bottle.images:
                 result = phash_compare(path_or_image, BOTTLE_IMAGES_PATH + image, threshold=999)
                 debug_msg("图片查重result " + str(result))
-                if result <= 12:
+                if result <= 10:
                     return {
                     "status": False,
                     "content": bottle.content,

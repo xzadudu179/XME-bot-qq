@@ -19,7 +19,7 @@ SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 DEFAULT_COMMAND_PERMISSION = lambda s: True  # noqa: E731
 
 # 用户自定义 config
-SELF_ID = 3961418307
+SELF_ID = 3824641837
 # 测试群
 GROUPS_WHITELIST = [
     727949269,
@@ -42,4 +42,4 @@ VERSION = '0.10.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
-DEBUG = False
+DEBUG = True

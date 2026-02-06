@@ -1,6 +1,5 @@
 import re
 import math
-from decimal import Decimal
 
 def to_nums_base(num: int, num_strs: list[str]):
     """将数字转换为任意进制字符列表，例如定义 ["a", "b", "c"]，会将十进制数字替换为数字字符为 a b c 的三进制数字
@@ -29,14 +28,15 @@ def to_nums_base(num: int, num_strs: list[str]):
     return result[::-1]
 
 def divs(n):
+    n = int(n)
     ds = []
-    n = Decimal(n)
-    for i in range(2, int(Decimal(math.sqrt(n))) + 1):
+    limit = int(math.isqrt(n))
+    for i in range(2, limit + 1):
         if n % i == 0:
             ds.append(f"{i} * {n // i} = {n}")
-        if len(ds) >= 20:
-            ds.append("...")
-            return ds
+            if len(ds) >= 20:
+                ds.append("...")
+                break
     return ds
 
 def extract_numbers(s):

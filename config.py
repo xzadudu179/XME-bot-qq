@@ -5,7 +5,7 @@ from datetime import timedelta
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
 SUPERUSERS = {1795886524}
-COMMAND_START = ['/', '.', '。']
+COMMAND_START = ['/', '.', '。', '／']
 # ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'
 PORT = 18980
@@ -23,13 +23,16 @@ SELF_ID = 3824641837
 # 测试群
 GROUPS_WHITELIST = [
     727949269,
-    927322136
+    927322136,
+    739980056
 ]
 ANTI_MESSAGEBURST_GROUP = [
     905122019,
     727949269,
     927322136
 ]
+
+MIN_GROUP_MEMBER_COUNT = 35
 
 # 视奸
 PEEK_GROUP = [
@@ -42,4 +45,4 @@ VERSION = '0.10.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
-DEBUG = True
+DEBUG = False

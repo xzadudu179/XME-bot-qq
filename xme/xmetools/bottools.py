@@ -11,6 +11,7 @@ from traceback import format_exc
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from functools import wraps
+from config import GROUPS_WHITELIST, MIN_GROUP_MEMBER_COUNT
 
 class XmeArgumentParser(ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -45,6 +46,10 @@ async def get_user_name(user_id, group_id=None, default=None):
         return await get_group_member_name(group_id=group_id, user_id=user_id, card=True, default=default)
     return await get_stranger_name(user_id=user_id, default=default)
 
+def is_group_member_count_legal(group):
+    if group['member_count'] >= MIN_GROUP_MEMBER_COUNT or group['group_id'] in GROUPS_WHITELIST:
+        return True
+    return False
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名

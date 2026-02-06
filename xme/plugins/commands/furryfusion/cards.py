@@ -30,7 +30,7 @@ def get_fusion_card(card_data: dict, u: User):
         if time_surplus < 10:
             c = "about-begin"
         daysleft_str = f"剩余 {time_surplus} 天"
-        if time_surplus < 0:
+        if time_surplus <= 0:
             c = "on-event"
             daysleft_str = "预期进行中"
     title_class = ""

@@ -64,6 +64,7 @@ if __name__ == '__main__':
     # 初始化银河系地图
     # locations = jsontools.read_from_path(BOT_SETTINGS_PATH)["locations"]
     # GalaxyMap()
+    
     print("数据已备份至", backup_data_dir())
     bot_variables.currentpid = os.getpid()
     print(c.gradient_text("#dda3f8", "#66afff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))

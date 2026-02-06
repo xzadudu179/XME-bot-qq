@@ -30,10 +30,10 @@ async def _(session: CommandSession):
         essences = await session.bot.api.call_action("get_essence_msg_list", group_id=session.event.group_id)
     except ActionFailed:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
-    essence = random.choice(essences)
-    debug_msg("精华消息数量：" + str(len(essences)))
     if len(essences) < 2:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_essence'))
+    essence = random.choice(essences)
+    debug_msg("精华消息数量：" + str(len(essences)))
     debug_msg("ESSENCE", str(essence))
     await send_session_msg(session, get_message(
         "plugins",

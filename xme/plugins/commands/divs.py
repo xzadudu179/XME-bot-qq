@@ -23,7 +23,7 @@ async def _(session: CommandSession):
     args = session.current_arg.strip()
     if not args:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "no_arg"), tips=True)
-    if len(args) > 40:
+    if len(args) > 10:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, "too_long"), tips=True)
     original_num = typetools.try_parse(args, int)
     if original_num is None:

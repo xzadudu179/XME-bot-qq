@@ -13,7 +13,12 @@ increase_people = {}
 @on_notice('group_increase')
 async def _(session: NoticeSession):
     global increase_people
-
+    # 群人数过少直接退出
+    group_info = await session.bot.api.get_group_info(group_id=session.event.group_id)
+    if not is_group_member_count_legal(group_info):
+        logger.info(f"退出群 {group_info} 因为人数过低")
+        await session.bot.api.set_group_leave(group_id=group_info['group_id'])
+        return
     # 发送欢迎消息
     # 如果是自己换一种欢迎方法
     if session.event.user_id == session.self_id:
@@ -32,12 +37,7 @@ async def _(session: NoticeSession):
     await asyncio.sleep(4)
     # debug_msg(increase_people)
     if len(people) == len(increase_people[group]):
-        # 群人数过少直接退出
-        group_info = await session.bot.api.get_group_info(group_id=session.event.group_id)
-        if not is_group_member_count_legal(group_info):
-            logger.info(f"退出群 {group_info} 因为人数过低")
-            await session.bot.api.set_group_leave(group_id=group_info['group_id'])
-            return
+
         at = " ".join(increase_people[group])
         increase_people[group] = []
         debug_msg(get_message("event_parsers", "welcome", at=" ".join(str(s) for s in increase_people[group])))

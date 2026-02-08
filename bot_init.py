@@ -6,6 +6,7 @@ import nonebot
 from logging.handlers import TimedRotatingFileHandler
 import logging
 import traceback
+from config import BOT_SETTINGS_PATH
 from xme.xmetools import colortools as c
 # from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.xmetools.texttools import lazy_pinyin
@@ -45,7 +46,8 @@ BOT_SETTINGS = {
     "seek_enable_groups": [],
     "deburst_groups": [
     ],
-    "schtime_groups": []
+    "schtime_groups": [],
+    "ignore_member_count_groups": [],
 }
 
 # XXX: 更换为解析 Document 类 而非字符串处理
@@ -142,7 +144,7 @@ def bot_init():
     # init_json(botinfo_path, BASIC_INFO)
 
     # botsettings
-    botsettings_path = "./data/_botsettings.json"
+    botsettings_path = BOT_SETTINGS_PATH
     init_json(botsettings_path, BOT_SETTINGS)
 
     # bottles_path = "./data/drift_bottles.json"

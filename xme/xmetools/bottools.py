@@ -1,6 +1,8 @@
 from nonebot import get_bot, NoneBot
 from nonebot import SenderRoles
+from xme.xmetools.jsontools import get_json_value
 from nonebot.typing import PermissionPolicy_T
+from config import BOT_SETTINGS_PATH
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from argparse import ArgumentParser
@@ -47,6 +49,9 @@ async def get_user_name(user_id, group_id=None, default=None):
     return await get_stranger_name(user_id=user_id, default=default)
 
 def is_group_member_count_legal(group):
+    ignore_member_count_groups = get_json_value( "ignore_member_count_groups", default=[], path=BOT_SETTINGS_PATH)
+    if group['group_id'] in ignore_member_count_groups:
+        return True
     if group['member_count'] >= MIN_GROUP_MEMBER_COUNT or group['group_id'] in GROUPS_WHITELIST:
         return True
     return False
@@ -73,7 +78,7 @@ async def get_group_member_name(group_id, user_id, card=False, default=None):
     return result
 
 async def get_settings():
-    with open("./data/_botsettings.json", 'r', encoding='utf-8') as jsonfile:
+    with open(BOT_SETTINGS_PATH, 'r', encoding='utf-8') as jsonfile:
         settings = json.load(jsonfile)
     return settings
 

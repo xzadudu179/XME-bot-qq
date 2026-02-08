@@ -26,7 +26,7 @@ command_name = 'throw'
 @u.limit(command_name, 1, get_message("plugins", __plugin_name__, 'throw_limited'), unit=TimeUnit.HOUR, count_limit=5)
 @permission(lambda x: x.is_groupchat, permission_help="在群聊内")
 async def _(session: CommandSession, user):
-    MAX_LENGTH = 300
+    MAX_LENGTH = 500
     MAX_LINES = 20
     MAX_IMAGES = 2
 
@@ -84,7 +84,7 @@ async def _(session: CommandSession, user):
     formatted_arg = bottle.get_formatted_content("0%", 0)
     # debug_msg(formatted_arg, len(formatted_arg))
     # debug_msg(arg, len(arg))
-    if len(formatted_arg) > MAX_LENGTH:
+    if len(formatted_arg) + len(image_paths) * 100 > MAX_LENGTH:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg)))
         return False
     if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:

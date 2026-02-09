@@ -13,7 +13,7 @@ import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.msgtools import send_session_msg
-from character import get_message
+from character import get_message, get_character_item, character_format
 from xme.xmetools.timetools import TimeUnit
 from keys import GLM_API_KEY
 import asyncio
@@ -161,7 +161,13 @@ async def talk(session: CommandSession, text, user: u.User):
         glossary = gl.read()
     with open("./docs.md") as do:
         docs = do.read()
-    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary)
+    tips = get_character_item("bot_info", "tips", default="无提示")
+    if isinstance(tips, list):
+        tips = [character_format(t) for t in tips]
+    else:
+        tips = [tips]
+    tips_str = [f"{i + 1}. {t}\n" for i, t in enumerate(tips)]
+    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str)
     # print(role)
     # print(f"{get_history(session.event.user_id)}\n{text}")
     response = client.chat.asyncCompletions.create(

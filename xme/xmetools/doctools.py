@@ -31,7 +31,6 @@ class PluginDoc(Doc):
             alias_list: Iterable[Iterable[str]] = [[]],
             simple_output: bool = False,
             other_info="",
-            show_superuser_cmd=False
         ) -> None:
         super().__init__(name, desc, introduction)
         self.permissions = permissions
@@ -40,7 +39,6 @@ class PluginDoc(Doc):
         self.alias_list = alias_list
         self.simple_output = simple_output
         self.other_info = other_info
-        self.show_superuser_cmd = show_superuser_cmd
 
     def __str__(self) -> str:
         alias_lines = ""

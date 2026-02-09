@@ -355,7 +355,7 @@ EVENTS = [
     "formats": {
       "bottle_content": get_bottle_content,
     },
-    "prob": 0.084,
+    "prob": 0.184,
     "post_func": None,
     "descs": ["你发现一个破碎的漂流瓶...{bottle_content}你打算如何处理它？", "你找到了一个已经被打碎的漂流瓶...{bottle_content}要把它装到新的瓶子里吗？", "你发现了一个碎掉的漂流瓶...{bottle_content}要把它装进新的瓶子吗？"],
     "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.FOREST, SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.UNDERSEA_CAVE, SeekRegion.TRENCH],

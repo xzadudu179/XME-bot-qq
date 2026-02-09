@@ -22,8 +22,16 @@ import mss
 from html2image import Html2Image
 from uuid import uuid4
 # from PIL import Image
+from pyzbar.pyzbar import decode
 
 hti = Html2Image()
+
+def detect_qrcode(path_or_image: str | Image.Image) -> tuple[bool, list[str]]:
+    results = decode(get_image(path_or_image))
+    if results:
+        return True, [r.data.decode("utf-8") for r in results]
+    return False, []
+
 
 def get_hash(path_or_image):
     try:

@@ -4,7 +4,7 @@ from datetime import timedelta
 # import keys
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
-SUPERUSERS = {1795886524}
+SUPERUSERS = {1795886524, 2065633379}
 COMMAND_START = ['/', '.', '。', '／']
 # ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'

@@ -233,7 +233,7 @@ command_properties = [
         'name': 'seek',
         'introduction': get_message('plugins', __plugin_name__, 'seek_introduction'),
         'usage': '<操作>',
-        'permission': ''
+        'permission': []
     }
 ]
 # Avoid creating a DriftBottle instance at import time; call this during startup if needed.
@@ -251,10 +251,12 @@ aliases = [
     throw_alias,
     pickup_alias,
     cthulhu_alias,
-    seek_alias,
     check_alias,
+    seek_alias,
     pure_alias
 ]
+# print(seek_alias is check_alias)
+# print(id(seek_alias), id(check_alias))
 __plugin_usage__ = PluginDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),

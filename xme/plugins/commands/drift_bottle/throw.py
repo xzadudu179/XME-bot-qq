@@ -9,7 +9,7 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
 from xme.xmetools.texttools import get_image_files_from_message
-from xme.xmetools.imgtools import get_image, limit_size
+from xme.xmetools.imgtools import get_image, limit_size, detect_qrcode
 from traceback import format_exc
 import config
 import re
@@ -18,6 +18,12 @@ from nonebot.log import logger
 import os
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
+
+def is_illegal_image(path_or_image):
+    result, _ = detect_qrcode(path_or_image)
+    if result:
+        return True
+    return False
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'
@@ -38,6 +44,12 @@ async def _(session: CommandSession, user):
         matches = re.findall(pattern, arg)
         image_paths = await get_image_files_from_message(session.bot, arg)
         images = [limit_size(get_image(image), 700) for image in image_paths]
+        for image in image_paths:
+            logger.info("图片: " + image)
+            if is_illegal_image(image):
+                logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
+                return False
         # image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
         image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_paths)]
     except Exception as ex:

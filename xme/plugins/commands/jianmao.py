@@ -15,10 +15,57 @@ __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-    usage='',
+    usage='<期数或关键字>',
     permissions=["无"],
     alias=alias
 )
+async def get_jianmao_data_from_id(token: str, qq: str, id: str):
+    url = f"http://furgon.yjwmidc.com:8000/furry_will/qishu/{id}"
+    '''
+    期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/" + 期数id
+    '''
+    payload = {
+        "token": token,
+        "qq": qq
+    }
+    async with httpx.AsyncClient(trust_env=False) as client:
+        try:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()  # 检查 HTTP 状态码
+            return response.json()  # 解析 JSON 响应
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error occurred: {e}")
+            return {"error": f"HTTP error: {e}"}
+        except httpx.RequestError as e:
+            logger.error(f"Request error occurred: {e}")
+            return {"error": f"Request error: {e}"}
+        except ValueError as e:
+            logger.error(f"JSON decode error occurred: {e}")
+            return {"error": f"Invalid JSON response: {e}"}
+
+async def get_jianmao_data_from_name(token: str, qq: str, name: str):
+    url = f"http://furgon.yjwmidc.com:8000/furry_will/name/{name}"
+    '''
+    名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/" + name
+    '''
+    payload = {
+        "token": token,
+        "qq": qq
+    }
+    async with httpx.AsyncClient(trust_env=False) as client:
+        try:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()  # 检查 HTTP 状态码
+            return response.json()  # 解析 JSON 响应
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error occurred: {e}")
+            return {"error": f"HTTP error: {e}"}
+        except httpx.RequestError as e:
+            logger.error(f"Request error occurred: {e}")
+            return {"error": f"Request error: {e}"}
+        except ValueError as e:
+            logger.error(f"JSON decode error occurred: {e}")
+            return {"error": f"Invalid JSON response: {e}"}
 
 async def get_random_jianmao_data(token: str, qq: str):
     url = "http://furgon.yjwmidc.com:8000/furry_will/random/"
@@ -46,9 +93,24 @@ async def get_random_jianmao_data(token: str, qq: str):
             logger.error(f"JSON decode error occurred: {e}")
             return {"error": f"Invalid JSON response: {e}"}
 
+async def get_jianmao_data(session, jianmao_func, **jianmao_kwargs) -> bool:
+    jwt = generate_jwt(JIANMAO_QQ, JIANMAO_TOKEN)
+    datas = (await jianmao_func(jwt, JIANMAO_QQ, **jianmao_kwargs))
+    logger.info(datas)
+    data = datas.get('data', None)
+    if datas.get('status', "") == "error" or len(data) < 1:
+        error = datas.get("message", "未知")
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', error=error), tips=True)
+        return False
+    data = data[0]
+    await send_session_msg(session, await image_msg(data['url']) +  get_message("plugins", __plugin_name__, 'result', city=data['city'], type=data['zhongzu'], name=data['name']), tips=True)
+    return True
+
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
-    data = (await get_random_jianmao_data(generate_jwt(JIANMAO_QQ, JIANMAO_TOKEN), JIANMAO_QQ)).get('data', None)[0]
-    if data is None:
-        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error'), tips=True)
-    return await send_session_msg(session, await image_msg(data['url']) + get_message("plugins", __plugin_name__, 'result', city=data['city'], type=data['zhongzu'], name=data['name']), tips=True)
+    arg = session.current_arg_text.strip()
+    if arg and arg.isdigit():
+        return await get_jianmao_data(session, get_jianmao_data_from_id, id=arg)
+    elif arg:
+        return await get_jianmao_data(session, get_jianmao_data_from_name, name=arg)
+    return await get_jianmao_data(session, get_random_jianmao_data)

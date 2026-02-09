@@ -25,7 +25,7 @@ def system_info():
 - 机器名: {platform.node()}
 - 系统: {platform.system()} {platform.version()} {platform.machine()}
 - CPU 使用率: {pt.cpu_percent(interval=0.1)}%
-- 内存总量: {bytes_to_mib(mem.used):.2f} / {bytes_to_mib(mem.total):.2f} MiB
+- 内存消耗: {bytes_to_mib(mem.used):.2f} / {bytes_to_mib(mem.total):.2f} MiB
 - 当前开机时长: {secs_to_ymdh(time.time() - pt.boot_time())}
 """
     return content

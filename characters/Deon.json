@@ -107,7 +107,6 @@
       "大家可以多捡多扔漂流瓶（）",
       "拉{bot_name}进群前一定要和群里的管理/群主沟通好~",
       "和{bot_name}说话某种意义上相当于和九九说话（？）（仅限私聊）",
-      "非好友私聊{bot_name}是收不到消息的哦~",
       "使用 \"/h 指令或功能名\" 来查看指令/功能的完整帮助~",
       "不要把{bot_name}当成（完全的）机器哦，{bot_name}有设子",
       "你们可以帮九九想点 tips~ 想好了就发过来（？）",
@@ -1142,6 +1141,10 @@
         "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
         "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
         "no_award": "你没有拿到任何{coin_name}..."
+      },
+      "wordle": {
+        "desc": "Wordle 游戏",
+        "introduction": "输入一个单词得到提示，随后通过提示猜到答案的单词。\n黄色背景为 单词包含该文字，绿色背景为 这个文字对应在单词的这个位置，灰色背景为，单词里没有这个文字。"
       }
     },
     "漂流瓶": {
@@ -1389,6 +1392,7 @@
         "唔...大海里已经有类似的瓶子了哦 {neutral}",
         "大海里已经有类似的瓶子了哦..."
       ],
+      "content_has_qr_code": ["漂流瓶里不能包含二维码呢...", "漂流瓶里不应该出现二维码哦"],
       "throw_error": "{negative} 无法投掷漂流瓶，错误信息：{ex}\n可以试试重试一次哦",
       "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
       "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
@@ -2034,7 +2038,7 @@
     "今日鉴毛": {
       "desc": "查看今日鉴毛",
       "introduction": "随机返回一张《今日鉴毛》图片",
-      "error": "无法获取今日鉴毛图片... {negative}",
+      "error": "无法获取今日鉴毛图片... {negative}\n错误：{error}",
       "result": [
         "{positive}这次的鉴毛图片是一只来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}",
         "{positive}这张鉴毛图片是来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}"

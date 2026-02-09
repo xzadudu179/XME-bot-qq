@@ -6,6 +6,7 @@ from xme.xmetools import dicttools
 import config
 import os
 # from xme.xmetools.debugtools import debug_msg
+from decimal import Decimal
 from nonebot.log import logger
 # 其实这就是 i18n
 CHARACTER = 'Deon'
@@ -70,24 +71,22 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     if result is None:
             return default
     result = str_choice(result)
+    return character_format(result, **kwargs)
 
-    # if len(kwargs) < 1:
-    #     return str(result).format()
-    # 格式化参数文本
+def character_format(message, **kwargs):
     for k, v in kwargs.items():
         if isinstance(v, list):
             for i, item in enumerate(v):
-                if isinstance(item, int):
+                if isinstance(item, int) or isinstance(item, float) or isinstance(item, Decimal):
                     v[i] = f"{item:,}"
-        elif isinstance(v, int):
+        elif isinstance(v, int) or isinstance(v, float) or isinstance(v, Decimal):
             v = f"{v:,}"
         kwargs[k] = v
     feedbacks = get_character_item("bot_info", "feedbacks")
-    # print(feedbacks)
     try:
         # print(str(result))
         return replace_formatted(
-            str(result),
+            str(message),
             **kwargs,
             neutral=str_choice(feedbacks['neutral']),
             negative_plus=str_choice(feedbacks['negative_plus']),
@@ -108,9 +107,7 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
         )
     except KeyError as ex:
         logger.warning(f"keyerror: {ex}")
-        return str(result)
+        return str(message)
     except ValueError as ex:
         logger.warning(f"ValueError: {ex}")
-        return str(result)
-
-
+        return str(message)

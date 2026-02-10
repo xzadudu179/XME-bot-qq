@@ -13,6 +13,12 @@ class TimeUnit(Enum):
     MONTH = 60 * 60 * 24 * 30
     YEAR = 60 * 60 * 24 * 365
 
+def time_diff(t1: float, t2: float, unit: TimeUnit = TimeUnit.SECOND) -> float:
+    """
+    计算 t2 - t1 的时间差，并转换为指定单位
+    """
+    return (t2 - t1) / unit.value
+
 def get_valuetime(time_float, unit: TimeUnit):
     if unit in [TimeUnit.DAY, TimeUnit.MONTH, TimeUnit.YEAR] and time_float < 50000:
         return time_float

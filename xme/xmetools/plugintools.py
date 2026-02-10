@@ -8,7 +8,10 @@ from nonebot.typing import CommandName_T, CommandHandler_T, Patterns_T, Permissi
 from nonebot.plugin import Plugin
 from xme.xmetools.msgtools import send_to_superusers, send_session_msg
 from character import get_message
+from bot_variables import command_msgs
 from traceback import format_exc
+from xme.xmetools.dicttools import set_value
+from xme.xmetools.cmdtools import clean_cmd_msgs
 from nonebot.command import _FinishException
 import functools
 # from xme.xmetools.debugtools import debug_msg
@@ -125,6 +128,18 @@ def on_command(
             start = time.monotonic()
             call_time = time.time()
             success = False
+            # 清理指令消息绑定
+            try:
+                clean_cmd_msgs()
+            except RuntimeError:
+                pass
+            if session.event.message_id is not None:
+                command_msgs[session.event.message_id] = {
+                    "ids": [],
+                    "time": call_time,
+                    # 私聊为 None 和 userid
+                    "open": f"{session.event.group_id}{session.event.user_id}"
+                }
             try:
                 result = await func(session, *args, **kwargs)
                 success = True
@@ -157,6 +172,9 @@ def on_command(
                     )
                 logger.info(f"存储指令调用数据：{data.to_dict()}")
                 data.save()
+                if session.event.message_id is not None:
+                    set_value(session.event.message_id, "open", search_dict=command_msgs, set_method=lambda _: False)
+                    # command_msgs[session.event.message_id]["open"] = False
 
         cmd = Command(name=cmd_name,
                       func=wrapper,

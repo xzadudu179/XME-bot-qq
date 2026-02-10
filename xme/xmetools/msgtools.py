@@ -9,13 +9,24 @@ from xme.xmetools.bottools import get_user_name
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
+from xme.xmetools.dicttools import set_value
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
 import asyncio
 import traceback
+from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
 from character import get_message
+
+def add_to_open_cmd_msgs(event_msg_id, cmd_msg_id) -> bool:
+    if cmd_msg_id is None:
+        return False
+    msgs = command_msgs.get(event_msg_id, None)
+    if msgs is None:
+        return False
+    set_value("ids", search_dict=msgs, set_method=lambda v: v + [cmd_msg_id])
+    return False
 
 async def gif_msg(input_path, scale=1):
     img = Image.open(input_path)
@@ -123,15 +134,18 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         event (Event): 消息事件
         messages (list[MessageSegment]): 消息列表
     """
+    msg_id = None
     try:
         from xme.xmetools.bottools import bot_call_action
         if event.group_id is not None:
             res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
         else:
             res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
-        return await bot.send(event, message=Message(MessageSegment.forward(res_id)))
+        msg_id = await bot.send(event, message=Message(MessageSegment.forward(res_id)))
     except ApiError:
         return
+    finally:
+        add_to_open_cmd_msgs(event.message_id, msg_id)
 
 def get_pure_text_message(message: dict) -> str:
     """获取纯文本消息
@@ -155,7 +169,8 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     if debug and not debugging():
         return
     debug_prefix = "" if not debug else "[DEBUG] "
-    await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
+    msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
+    add_to_open_cmd_msgs(event.message_id, msg_id)
 
 async def msg_preprocesser(session, message, send_time=-1):
     funcs = {
@@ -259,7 +274,8 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
             )
     except ApiError:
         return
-    await session.send(send_msg, at_sender=at, **kwargs)
+    msg_id = await session.send(send_msg, at_sender=at, **kwargs)
+    add_to_open_cmd_msgs(session.event.message_id, msg_id)
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

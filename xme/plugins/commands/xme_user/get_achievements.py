@@ -2,18 +2,14 @@ from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
-from xme.xmetools.bottools import permission
 from xme.xmetools.typetools import try_parse
 from xme.xmetools.bottools import get_group_name
 from xme.xmetools.texttools import replace_chinese_punctuation, fuzzy_search
-from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from .classes import user as u
-import math
 from xme.plugins.commands.xme_user.classes.user import User
 from character import get_message
 from xme.plugins.commands.xme_user.classes.achievements import get_achievements, get_achievement_details
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
 
 alias = ['查看成就', '成就', 'achi']
 cmd_name = 'achievement'
@@ -21,7 +17,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'<成就关键词或序号>',
+    "usage": '<成就关键词或序号>',
     "permissions": [],
     "alias": alias
 }
@@ -59,13 +55,13 @@ async def get_details(text: str, user: User, use_search=True):
     achieved = False
     achieved_time = ""
     achieved_from = ""
-    if achievement is None and achievements[search]["hidden"] == True:
+    if achievement is None and achievements[search]["hidden"]:
         # 处理隐藏成就，不显示
         return None
     if achievement is not None:
         achieved = bool(achievement)
         achieved_time = achievement["achieve_time"]
-        achieved_from = await get_group_name(achievement["from"], "[未知群聊]")
+        achieved_from = await get_group_name(achievement["from"], "私聊")
     return get_achievement_details(achievement_name=search, achieved=achieved, achieved_time=achieved_time, achieved_from=achieved_from)
 
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)

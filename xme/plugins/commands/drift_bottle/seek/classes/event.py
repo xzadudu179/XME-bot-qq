@@ -187,7 +187,7 @@ class Event:
         event_func = event_dict.get("event_func", None)
         if event_func is not None:
             await event_func(event_datas, self.player)
-        return await self.decision_event(session, current_region, can_quit, desc, event_dict["decisions"], message_prefix, event_datas=event_datas)
+        return await self.decision_event(session, current_region, can_quit, desc, event_dict["decisions"], message_prefix, event_datas=event_datas, long=event_dict.get("long", False))
 
     # 构建事件
     def build_event(self, event_dict: dict, current_region: SeekRegion, html=True, event_datas={}) -> str | dict:
@@ -225,7 +225,7 @@ class Event:
             #     return await self.build_decision_event(session, event_dict, current_region)
 
     # 决策事件
-    async def decision_event(self, session: CommandSession, current_region: SeekRegion, can_quit: bool, event_desc, decisions = [list[dict]], message_prefix = "", event_datas={}) -> str | dict:
+    async def decision_event(self, session: CommandSession, current_region: SeekRegion, can_quit: bool, event_desc, decisions = [list[dict]], message_prefix = "", event_datas={}, long=False) -> str | dict:
         from .. import is_stepping, command_name
         """决策事件
 
@@ -244,7 +244,11 @@ class Event:
         decision_chunks = [decision_strs[i : i + 2] for i in range(0, len(decision_strs), 2)]
         decision_str = "\n".join(["\t".join(a) for a in decision_chunks])
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
-        await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
+        if long:
+            await send_session_msg(session, message_prefix)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
+        else:
+            await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
         reply_valid = False
         while not reply_valid:
             reply: str = (await aget_session_msg(session)).strip()

@@ -40,7 +40,7 @@ class Seek:
         self.status = "stop"
         self.total_steps = 0
 
-    async def parse_steps(self, step_count, total_steps: int, is_sim) -> dict:
+    def parse_steps(self, step_count, total_steps: int, is_sim) -> dict:
         msgs = []
         count = 0
         self.status = "start"
@@ -436,7 +436,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             step_results = []
             last_event = ''
             while expected_steps > 0 and seek.status == "start":
-                result = await seek.parse_steps(expected_steps, total_steps, is_sim=is_sim)
+                result = seek.parse_steps(expected_steps, total_steps, is_sim=is_sim)
                 # --------- 检测成就
                 if player.region.value == SeekRegion.ABYSS:
                     await u.achieve_achievement(session, "来自深渊")

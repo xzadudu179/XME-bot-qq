@@ -2,12 +2,20 @@ import config
 # from xme.xmetools import colortools as c
 from xme.xmetools import dicttools
 from functools import wraps
+import time
+from aiocqhttp import Event
 from xme.xmetools.typetools import try_parse
+from bot_variables import command_msgs
+from xme.xmetools.timetools import time_diff
 from nonebot.command import call_command, CommandManager, Command
 from nonebot import CommandSession
+from nonebot.log import logger
 
-async def event_send_cmd(cmd_string, bot, event, check_permission=True):
+async def event_send_cmd(cmd_string, bot, event: Event, check_permission=True):
     name = cmd_string.split(" ")[0]
+    # e = command_msgs.get(event.message_id)
+    # if e is not None:
+    #     e["open"] = False
     if name[0] in config.COMMAND_START:
         name = name[1:]
     else:
@@ -156,3 +164,12 @@ def get_args(arg_text: str):
         tuple[str]: 参数
     """
     return tuple([a for a in arg_text.strip().split(" ") if a])
+
+def clean_cmd_msgs():
+    t = time.time()
+    for k, v in command_msgs.items():
+        # 默认超时2分钟
+        if time_diff(v.get('time', 0), t) < 120:
+            continue
+        logger.info("删除指令消息: " + str(command_msgs[k]))
+        del command_msgs[k]

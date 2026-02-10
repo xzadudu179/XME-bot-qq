@@ -124,7 +124,7 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
     messy_rate = max(0, min(100, bottle.views * 2 - bottle.likes * 3))
     card = await image_msg(get_html_image(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%")))
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{(await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=user_id))['nickname']} ({user_id}) {message_prefix}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
+        await session.bot.send_private_msg(user_id=superuser,message=f"{(await get_stranger_name( user_id=user_id))} ({user_id}) {message_prefix}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
     if send_success_message:
         await send_session_msg(session, content)
 
@@ -303,10 +303,6 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             # await user.achieve_achievement(session, "纯洁无暇！")
             content = get_message("plugins", __plugin_name__, "bottle_broken?")
         elif index != "-179":
-            # broken_bottles = jsontools.read_from_path("./data/broken_bottles.json")
-            # broken_bottles[index] = bottle.to_dict()
-            # jsontools.save_to_path("./data/broken_bottles.json", broken_bottles)
-            # jsontools.change_json(BOTTLE_PATH, 'bottles', index, delete=True)
             bottle.remove_self()
             debug_msg("瓶子碎了")
 

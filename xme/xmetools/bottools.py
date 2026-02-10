@@ -49,7 +49,7 @@ async def get_user_name(user_id, group_id=None, default=None):
     return await get_stranger_name(user_id=user_id, default=default)
 
 def is_group_member_count_legal(group):
-    ignore_member_count_groups = get_json_value( "ignore_member_count_groups", default=[], path=BOT_SETTINGS_PATH)
+    ignore_member_count_groups = get_json_value(BOT_SETTINGS_PATH, "ignore_member_count_groups", default=[])
     if group['group_id'] in ignore_member_count_groups:
         return True
     if group['member_count'] >= MIN_GROUP_MEMBER_COUNT or group['group_id'] in GROUPS_WHITELIST:

@@ -3,6 +3,7 @@ from datetime import datetime
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd
 # from xme.xmetools import jsontools
+from xme.xmetools.texttools import remove_invisible
 from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import get_stranger_name, get_group_name
@@ -87,7 +88,7 @@ async def comment(session, bottle_id, user_id, comment_content):
     index = bottle_id
     # index = bottle.bottle_id
     content = get_message("plugins", __plugin_name__, "commented", id=index)
-    comment_content = comment_content.strip()
+    comment_content = remove_invisible(comment_content.strip())
     if not comment_content:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_content"))
         return False
@@ -313,7 +314,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         "like": False,
         "rep": False,
         "say": False,
-        "pure": False,
+        # "pure": False,
         "likesay": False,
     }
     while_index = 0
@@ -348,11 +349,11 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             if result:
                 operated["say"] = True
             continue
-        elif reply.split(" ")[0] == '-pure'  and not operated["pure"]:
-            operated["pure"] = True
-            await report(session, bottle, user_id, "申请了一个纯洁无暇的漂流瓶", False)
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
-            continue
+        # elif reply.split(" ")[0] == '-pure'  and not operated["pure"]:
+        #     operated["pure"] = True
+        #     await report(session, bottle, user_id, "申请了一个纯洁无暇的漂流瓶", False)
+        #     await send_session_msg(session, get_message("plugins", __plugin_name__, "pured"))
+        #     continue
         elif reply.split(" ")[0] == '-likesay' and not operated["likesay"]:
             result = await likesay(session, bottle.bottle_id, " ".join(reply.split(" ")[1:]).strip(), operated["say"])
             if result:

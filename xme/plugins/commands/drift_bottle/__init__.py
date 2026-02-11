@@ -45,7 +45,10 @@ class DriftBottle:
                 sender=self.sender,
                 group=self.from_group,
                 id=self.bottle_id,
-                **{'.'.join(i.split(".")[:-1]): f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
+                **{
+                    '.'.join(i.split(".")[:-1])
+                    :
+                    f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
             )
         except Exception:
             print_exc()

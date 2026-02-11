@@ -213,7 +213,30 @@ EVENTS = [
     "prob": -1,
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你感觉到水压越来越大..."],
-    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS],
+    "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(2, 14),
+        "type": "+",
+        "custom": False,
+      },
+      "oxygen": {
+        "change": lambda: random.randint(0, 2),
+        "type": "-",
+        "custom": False,
+      }
+    }
+  },
+  {
+    # 下潜事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": -1,
+    "post_func": None,
+    "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了..."],
+    "regions": [SeekRegion.ABYSS],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
@@ -260,16 +283,16 @@ EVENTS = [
     "prob": -1,
     "post_func": None,
     "descs": ["你继续前往更深的地方...", "你尝试探索更深处...", "你下潜得越来越深了...", "你反而感觉到水压越来越小..."],
-    "regions": [SeekRegion.DEEPEST, SeekRegion.VOID],
+    "regions": [SeekRegion.DEEPEST, SeekRegion.VOID, SeekRegion.EMPTY],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back,
     "changes": {
       "depth": {
-        "change": lambda: random.randint(5, 28),
+        "change": lambda: random.randint(10, 58),
         "type": "+",
         "custom": False,
       },
       "oxygen": {
-        "change": lambda: random.randint(0, 3),
+        "change": lambda: random.randint(0, 4),
         "type": "-",
         "custom": False,
       }
@@ -308,7 +331,7 @@ EVENTS = [
     "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...但是你快没氧气了...", "你尽全力往上游去...但是你快没有氧气了...", "你尝试尽力地往上游..."],
-    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY, SeekRegion.VOID, SeekRegion.DEEPEST],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY, SeekRegion.VOID, SeekRegion.EMPTY, SeekRegion.DEEPEST, SeekRegion.EMPTY],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value < 30,
     "changes": {
       "depth": {
@@ -332,7 +355,7 @@ EVENTS = [
     "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你虽然在往上游，但是感觉到水压越来越大..."],
-    "regions": [SeekRegion.VOID, SeekRegion.DEEPEST],
+    "regions": [SeekRegion.VOID, SeekRegion.DEEPEST, SeekRegion.EMPTY],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value >= 30,
     "changes": {
       "depth": {
@@ -553,6 +576,46 @@ EVENTS = [
     "region_change": lambda last: SeekRegion.DEEPEST,
   },
   {
+    # ↓切换空事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["........空........"],
+    "regions": [SeekRegion.VOID],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 5500,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "+",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.EMPTY,
+  },
+  {
+    # ↑切换虚境事件
+    "type": "normal",
+    "tags": [],
+    # 概率 -1 为默认事件
+    "prob": 100,
+    "top": True,
+    "post_func": None,
+    "descs": ["......你回去了...."],
+    "regions": [SeekRegion.EMPTY],
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value <= 5400,
+    "changes": {
+      "depth": {
+        "change": lambda: random.randint(10, 20),
+        "type": "-",
+        "custom": False,
+      }
+    },
+    "region_change": lambda last: SeekRegion.VOID,
+  },
+  {
     # 深度过高受到伤害
     "type": "normal",
     "tags": [],
@@ -561,16 +624,16 @@ EVENTS = [
     # "top": True,
     "post_func": None,
     "descs": ["周围嘈杂的声响正在撕裂你的身体...与心智...", "你的心灵无法承受如此多的...侵蚀...", "你快要被虚空融化了..."],
-    "regions": [SeekRegion.VOID],
+    "regions": [SeekRegion.EMPTY, SeekRegion.VOID],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 5000,
     "changes": {
       "health": {
-        "change": lambda: random.randint(10, 20),
+        "change": lambda: random.randint(5, 12),
         "type": "-",
         "custom": False,
       },
       "san": {
-        "change": lambda: random.randint(10, 20),
+        "change": lambda: random.randint(5, 12),
         "type": "-",
         "custom": False,
       }

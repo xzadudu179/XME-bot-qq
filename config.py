@@ -26,12 +26,14 @@ GROUPS_WHITELIST = [
     927322136,
     739980056
 ]
+# 反刷屏群，暂无作用
 ANTI_MESSAGEBURST_GROUP = [
     905122019,
     727949269,
     927322136
 ]
 
+# 群最低成员要求（低于该值 bot 进群会自动退群）
 MIN_GROUP_MEMBER_COUNT = 35
 
 # 视奸
@@ -41,7 +43,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '0.10.1-beta'
+VERSION = '0.11.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

@@ -185,10 +185,14 @@ CARD_SKINS = {
                 <li>
                     <p>
                         <span class="code">-like</span> /
-                        <span class="code">-rep</span> /
-                        <span class="code">-pure</span>
+                        <span class="code">
+                        -rep
+                            <span class="colored">
+                                    (举报原因)
+                                </span>
+                        </span>
                     </p>
-                    <p>点赞 / 举报 / 申请纯净</p>
+                    <p>点赞 / 举报</p>
                 </li>
                 <li>
                     <p>
@@ -1261,10 +1265,14 @@ CARD_SKINS = {
                 <li>
                     <p>
                         <span class="code">-like</span> /
-                        <span class="code">-rep</span> /
-                        <span class="code">-pure</span>
+                        <span class="code">
+                        -rep
+                            <span class="colored">
+                                    (举报原因)
+                                </span>
+                        </span>
                     </p>
-                    <p>点赞 / 举报 / 申请纯净</p>
+                    <p>点赞 / 举报</p>
                 </li>
                 <li>
                     <p>
@@ -1522,10 +1530,14 @@ CARD_SKINS = {
                 <li>
                     <p>
                         <span class="code">-like</span> /
-                        <span class="code">-rep</span> /
-                        <span class="code">-pure</span>
+                        <span class="code">
+                        -rep
+                            <span class="colored">
+                                    (举报原因)
+                                </span>
+                        </span>
                     </p>
-                    <p>点赞 / 举报 / 申请纯净</p>
+                    <p>点赞 / 举报</p>
                 </li>
                 <li>
                     <p>
@@ -1793,10 +1805,14 @@ CARD_SKINS = {
                 <li>
                     <p>
                         <span class="code">-like</span> /
-                        <span class="code">-rep</span> /
-                        <span class="code">-pure</span>
+                        <span class="code">
+                        -rep
+                            <span class="colored">
+                                    (举报原因)
+                                </span>
+                        </span>
                     </p>
-                    <p>点赞 / 举报 / 申请纯净</p>
+                    <p>点赞 / 举报</p>
                 </li>
                 <li>
                     <p>

@@ -20,6 +20,7 @@ class SeekRegion(Enum):
     ABYSS = "深渊"
     DEEPEST = "溟渊"
     VOID = "虚境"
+    EMPTY = "空"
     # 设计于会让人迷路的危险区域
     FOREST = "扭曲森林"
 
@@ -281,6 +282,19 @@ class Player:
                 "event_color": "#d89dff",
                 "attr_color": "#ab8dff",
                 "line_color": "#cec3ff4b",
+                }, SeekRegion.EMPTY: {
+                "text_color": "#00000000",
+                "card_border_color": "#00000000",
+                "card_background_color": "#00000000",
+                "fail_color": "#00000000",
+                "win_color": "#00000000",
+                "ident_color": "#00000000",
+                "dice_color": "#00000000",
+                "region_color": "#00000000",
+                "effect_color": "#00000000",
+                "event_color": "#00000000",
+                "attr_color": "#00000000",
+                "line_color": "#00000000",
                 }, SeekRegion.FOREST: {
                 "text_color": "#d4ffe4",
                 "card_border_color": "#136e53",

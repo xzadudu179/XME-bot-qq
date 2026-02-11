@@ -4,13 +4,13 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
 # from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
-from xme.xmetools import jsontools
+# from xme.xmetools import jsontools
 from xme.xmetools import colortools as c
 import traceback
-try:
-    import pygetwindow as gw
-except Exception:
-    pass
+# try:
+    # import pygetwindow as gw
+# except Exception:
+    # pass
 import config
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg, image_msg
@@ -30,34 +30,34 @@ __plugin_usage__ = CommandDoc(
 async def _(session: CommandSession):
     if session.event.group_id not in config.PEEK_GROUP:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'not_in_peek_group'))
-    private_window_names = jsontools.read_from_path('./private_window_names.json')['private']
-    try:
-        current_window = gw.getActiveWindow()
-    except Exception:
-        current_window = None
-    is_private = False
-    if current_window:
-        for name in private_window_names:
-            if isinstance(name, list):
-                if current_window.title not in name:
-                    continue
-                is_private = True
-                break
-            if name in current_window.title:
-                is_private = True
-                break
-    if is_private:
-        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'is_private', title=current_window.title))
+    # private_window_names = jsontools.read_from_path('./private_window_names.json')['private']
+    # try:
+        # current_window = gw.getActiveWindow()
+    # except Exception:
+    #     current_window = None
+    # is_private = False
+    # if current_window:
+    #     for name in private_window_names:
+    #         if isinstance(name, list):
+    #             if current_window.title not in name:
+    #                 continue
+    #             is_private = True
+    #             break
+    #         if name in current_window.title:
+    #             is_private = True
+    #             break
+    # if is_private:
+    #     return await send_session_msg(session, get_message("plugins", __plugin_name__, 'is_private', title=current_window.title))
     print(c.gradient_text("#FF5287", "#FF5257", "#FF8257", text=f"{'=' * 20}\n{'=' * 20}\n{'=' * 20}\n===👁你被视奸👁了===\n{'=' * 20}\n{'=' * 20}\n{'=' * 20}"))
-    arg = session.current_arg_text.strip()
+    # arg = session.current_arg_text.strip()
     monitor_num = 1
     arg_state = True
-    if arg:
-        try:
-            monitor_num = int(arg)
-        except TypeError:
-            monitor_num = 1
-            arg_state = False
+    # if arg:
+    #     try:
+    #         monitor_num = int(arg)
+    #     except TypeError:
+    #         monitor_num = 1
+    #         arg_state = False
     try:
         path, state = imgtools.take_screenshot(monitor_num)
     except Exception:

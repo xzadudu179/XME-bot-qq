@@ -6,7 +6,6 @@ from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
 
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
     item = CARD_SKINS.get(skin_name, CARD_SKINS["默认卡片"]).get(item_name, CARD_SKINS["默认卡片"][item_name])
@@ -129,7 +128,7 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
             continue
         # 空行
         elif not c.rstrip():
-            content = f'<p></p>'
+            content = '<p></p>'
             formatted_content.append(content)
             continue
         content = f'<p class="main_content">{html_messy_string(c, messy_rate) if not html_render else messy_string(c, messy_rate)}</p>'

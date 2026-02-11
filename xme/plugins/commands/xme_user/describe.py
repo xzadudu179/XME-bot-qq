@@ -4,6 +4,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg, send_to_superusers
 from xme.xmetools.bottools import get_user_name
 # from xme.xmetools import texttools
+from xme.xmetools.texttools import remove_invisible
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User
 from character import get_message
@@ -39,7 +40,7 @@ async def _(session: CommandSession, user: User):
             return True
         # await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'canceled_delete'))
         return False
-    desc = arg.strip()
+    desc = remove_invisible(arg.strip())
     line_count = max(desc.count("\r"), desc.count("\n"))
     if len(desc) > 500:
         await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'too_long_desc', count=len(desc)), tips=True)

@@ -8,7 +8,7 @@ from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
-from xme.xmetools.texttools import get_image_files_from_message
+from xme.xmetools.texttools import get_image_files_from_message, remove_invisible, is_url
 from xme.xmetools.imgtools import get_image, limit_size, detect_qrcode
 from traceback import format_exc
 import config
@@ -20,8 +20,10 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 
 def is_illegal_image(path_or_image):
-    result, _ = detect_qrcode(path_or_image)
-    if result:
+    result, link = detect_qrcode(path_or_image)
+    # logger.info(f"{result}, {link}")
+    if result and is_url(link):
+        logger.warning(f"检测到二维码链接：{link}")
         return True
     return False
 
@@ -36,7 +38,7 @@ async def _(session: CommandSession, user):
     MAX_LINES = 20
     MAX_IMAGES = 2
 
-    arg = session.current_arg.strip()
+    arg = remove_invisible(session.current_arg.strip())
 
     debug_msg(arg)
     try:

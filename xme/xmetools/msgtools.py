@@ -36,12 +36,11 @@ async def gif_msg(input_path, scale=1):
         img.seek(frame)  # 选中当前帧
         resized_frame = img.resize(
             (img.width * scale, img.height * scale), Image.Resampling.NEAREST
-        )  # 放大2倍
-        frames.append(resized_frame.convert("RGBA"))  # 确保格式一致
+        )  # 放大
+        frames.append(resized_frame.convert("RGBA"))
     b64 = gif_to_base64(img, frames)
     debug_msg("gif b64 success")
     try:
-        # 将消息发送的同步方法放到后台线程执行
         result = await asyncio.to_thread(create_image_message, b64)
         return result
     except Exception as e:
@@ -210,22 +209,23 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         msg = msg[:-1]
     is_nline_start = True if msg and msg[0] == "\n" else False
     reply = await session.aget(
-        prompt="" if prompt is None else (debug_prefix +
-        (
-            "\n" if
-                is_nline_start and
-                at and
-                linebreak and
-                session.event.group_id is not None
-            else ""
-        ) +
-        msg +
-        (
-            "" if not has_tips
-            else
-                "\n-------------------\ntip：" +
-            get_message("bot_info", "tips")
-        )), at_sender=at, **kwargs)
+        prompt="" if prompt is None else (
+            debug_prefix + (
+                "\n" if
+                    is_nline_start and
+                    at and
+                    linebreak and
+                    session.event.group_id is not None
+                else ""
+            ) +
+            msg +
+            (
+                "" if not has_tips
+                else
+                    "\n-------------------\ntip：" +
+                get_message("bot_info", "tips")
+            )
+        ), at_sender=at, **kwargs)
     if can_use_command and get_cmd_by_alias(reply):
         if command_func:
             return await command_func(reply, **func_kwargs)

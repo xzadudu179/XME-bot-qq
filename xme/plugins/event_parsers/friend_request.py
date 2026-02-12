@@ -1,6 +1,7 @@
 from nonebot import on_request, RequestSession
 from xme.xmetools import bottools
 from xme.xmetools import colortools as c
+from nonebot.log import logger
 
 @on_request('friend')
 async def _(session: RequestSession):
@@ -12,3 +13,7 @@ async def _(session: RequestSession):
     await bottools.bot_call_action(bot=session.bot, action="set_friend_add_request", flag=session.event.flag, approve=True)
     # await session.approve()
     return
+
+@on_request
+async def _(session: RequestSession):
+    logger.info('有新的请求事件：%s', session.event)

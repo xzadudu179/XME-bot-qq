@@ -28,7 +28,8 @@ class PluginCallData:
             call_group: str,
             success: bool,
             time_cost: float,
-            db_id: int = -1
+            db_id: int = -1,
+            args: str = "",
         ):
         self.name = name
         self.call_time = call_time
@@ -37,6 +38,7 @@ class PluginCallData:
         self.success = success
         self.time_cost = time_cost
         self.id = db_id
+        self.args = args
 
     @classmethod
     def get_table_name(cls):
@@ -57,7 +59,8 @@ class PluginCallData:
             "call_group": self.call_group,
             "success": self.success,
             "time_cost": self.time_cost,
-            "id": self.id
+            "id": self.id,
+            "args": self.args,
         }
 
     @staticmethod
@@ -169,12 +172,14 @@ def on_command(
                         call_group=session.event.group_id,
                         success=success,
                         time_cost=cost,
+                        args=session.current_arg.strip() if session.current_arg is not None else "",
                     )
                 logger.info(f"存储指令调用数据：{data.to_dict()}")
                 data.save()
                 if session.event.message_id is not None:
                     set_value(session.event.message_id, "open", search_dict=command_msgs, set_method=lambda _: False)
                     # command_msgs[session.event.message_id]["open"] = False
+                return result
 
         cmd = Command(name=cmd_name,
                       func=wrapper,

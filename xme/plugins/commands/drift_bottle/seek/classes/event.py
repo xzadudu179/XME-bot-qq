@@ -245,10 +245,10 @@ class Event:
         decision_str = "\n".join(["\t".join(a) for a in decision_chunks])
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
         if long:
-            await send_session_msg(session, message_prefix)
-            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
+            await send_session_msg(session, message_prefix, merge_long_msg=False)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)
         else:
-            await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'))
+            await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)
         reply_valid = False
         while not reply_valid:
             reply: str = (await aget_session_msg(session)).strip()

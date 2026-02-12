@@ -19,6 +19,27 @@ from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
 from character import get_message
 
+async def aget_arg(
+        session: CommandSession,
+        prompt: Message | str,
+        error: Message | str,
+        error_too_many: Message | str,
+        rules,
+        max_times=3
+    ):
+    for times in range(1, max_times + 1):
+        msg = prompt if times == 1 else f"{error}{prompt}"
+        reply = await aget_session_msg(session, msg)
+        try:
+            if not reply:
+                await send_session_msg(session, get_message("config", "aget_no_content"))
+                continue
+            if rules(reply):
+                return reply
+        except Exception:
+            raise
+    return await send_session_msg(session, error_too_many)
+
 def add_to_open_cmd_msgs(event_msg_id, cmd_msg_id) -> bool:
     if cmd_msg_id is None:
         return False
@@ -233,7 +254,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         return "CMD_END"
     return reply
 
-async def send_session_msg(session: BaseSession, message: Message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, **kwargs):
+async def send_session_msg(session: BaseSession, message: Message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, merge_long_msg=True, **kwargs):
     message_result = Message(message)
     list_msg = message_result
     message_result = await msg_preprocesser(session, message)
@@ -254,7 +275,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_message("bot_info", "tips"))
     # 太长的消息用聊天记录发送
     try:
-        if get_msg_len(list_msg) > 1200 and session.event.group_id is not None:
+        if get_msg_len(list_msg) > 1200 and session.event.group_id is not None and merge_long_msg:
             # if at:
             #     await session.send("", at_sender=at, **kwargs)
             return await send_forward_msg(

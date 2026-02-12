@@ -3,10 +3,7 @@ from nonebot import on_notice, NoticeSession
 from nonebot.log import logger
 from bot_variables import command_msgs
 
-
-
-@on_notice('group_recall')
-async def _(session: NoticeSession):
+async def recall(session: NoticeSession):
     logger.info(f"{command_msgs}")
     try:
         recalled_message = await session.bot.api.get_msg(message_id=session.event['message_id'])
@@ -29,3 +26,11 @@ async def _(session: NoticeSession):
         logger.info(f"尝试撤回 {i['message_id']}")
         await session.bot.delete_msg(message_id=i["message_id"], self_id=session.self_id)
     del command_msgs[msg_id]
+
+@on_notice('group_recall')
+async def _(session: NoticeSession):
+    return await recall(session)
+
+@on_notice('friend_recall')
+async def _(session: NoticeSession):
+    return await recall(session)

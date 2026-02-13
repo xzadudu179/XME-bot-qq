@@ -5,6 +5,7 @@ import base64
 from nonebot import Message
 import jieba.posseg as pseg
 import jieba
+import unicodedata
 import string
 import hashlib
 from difflib import SequenceMatcher
@@ -573,10 +574,12 @@ def most_similarity_str_diff(input_str: str, str_list: list[str], threshold: flo
         similarities.append((s, difflib_similar(input_str, s, ignore_case=True)))
     return [x for x in sorted(similarities,key=lambda x: x[1]) if x[1] > threshold]
 
+
+
 def remove_invisible(text: str):
     return "".join(
         ch for ch in text
-        if ch.isprintable()
+        if unicodedata.category(ch)[0] != "C" or ch in ("\n", "\r")
     )
 
 # def is_question_product(question, question_of):

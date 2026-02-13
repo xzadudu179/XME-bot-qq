@@ -39,7 +39,7 @@ async def _(session: CommandSession, user):
     MAX_IMAGES = 2
 
     arg = remove_invisible(session.current_arg.strip())
-
+    logger.info(f"arg is {arg}")
     debug_msg(arg)
     try:
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"

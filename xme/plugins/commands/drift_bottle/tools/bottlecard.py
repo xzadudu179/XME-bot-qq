@@ -5,6 +5,7 @@ from xme.xmetools.imgtools import get_html_image
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
 from xme.plugins.commands.drift_bottle import DriftBottle
 from keys import BOTTLE_IMAGE_KEY
+from nonebot.log import logger
 from xme.xmetools.debugtools import debug_msg
 
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
@@ -94,7 +95,7 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
         messy_rate = min(100, max(0, bottle.views * 2 - bottle.likes * 3))
     if messy_rate_str is None:
         messy_rate_str = f"{messy_rate}%"
-    return get_bottle_card_html(
+    html = get_bottle_card_html(
         id=bottle.bottle_id,
         messy_rate_str=messy_rate_str,
         messy_rate=messy_rate,
@@ -110,14 +111,19 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
         html_render=html_render,
         images=bottle.images
     )
+    # logger.info(html)
+    return html
 
 def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, content, sender, group, views, likes, comments_list, custom_tip="", images=[], skin_name="默认卡片", html_render=False):
     content: str = f'{content}'
     str_len = get_card_item("str_len", skin_name)
     comments = get_comment_html(messy_rate, messy_rate_str, comments_list, skin_name=skin_name)
     formatted_content = []
+    # logger.info(content)
+    logger.info(str(content.replace("\n", "\r").split("\r")))
     for c in content.replace("\n", "\r").split("\r"):
         image_item_count = 0
+        logger.info(c)
         content = ""
         # 防止注入html的问题
         if c.startswith(f'<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,') and len(images) > 0 and image_item_count < len(images):

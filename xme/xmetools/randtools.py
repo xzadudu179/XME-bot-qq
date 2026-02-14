@@ -89,9 +89,6 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
     boxsize = (w + h) / 2
     max_block_size = int(min(max((messy_rate / 50) * (boxsize / 4), boxsize / 50), boxsize / 5))
     region_count = int((messy_rate) * (boxsize / max_block_size / 8))
-    # print(max_wh)
-    # print(region_count)
-    # print(max_block_size)
     # 最大的
     if messy_rate >= 100 and max_messy_break:
         for y in range(img.height):
@@ -170,5 +167,4 @@ def messy_string(string_input, temperature: float=50, resample_times=0):
     if resample_times > 0:
         result = messy_string(result, temperature, resample_times-1)
     return result
-
 # print(messy_string('你捡到了一个漂流瓶~\n[#101号漂流瓶，来自 "寻找无处不在的179（？）"]：\n-----------\n你不许玩了！*抢走你的.pick\n-----------\n由 "仍然是一只AOS 喵～" 在2024年10月15日 15:24:12 投出\n这个瓶子被捡到了26次，还没有任何赞ovo\n你可以马上发送 "-like" 以点赞，或发送 "-rep" 以举报。\n'))

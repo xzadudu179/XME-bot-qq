@@ -77,7 +77,7 @@ async def _(session: CommandSession):
     debug_msg(all(x == choices[0] for x in choices), can_choice, choices, has_valid_placeholders(choice, ['member']))
     if all(x == choices[0] for x in choices) and not can_choice and not has_valid_placeholders(choice, ["member"]):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_choice'), tips=True)
-    choice = replace_formatted(texttools.me_to_you(str(choice)), **formats)
+    choice = replace_formatted(texttools.me_to_you(str(choice), True), **formats)
     # try:
     #     choice = choice.format_map(formats)
     # except ValueError as ex:

@@ -62,11 +62,10 @@
       "{bot_name}会随机发消息",
       "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
       "使用 \"/stats\" 指令可以查看{bot_name}的状态哦",
-      "1049755354 是漠月 BOT 和漠星 BOT 的交流群哦！有什么想聊的或者问的都可以去聊聊呢",
+      "1049755354 是漠月 BOT 的交流群与群主群哦！有什么想聊的或者问的都可以去聊聊呢",
       "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
       "你们要不要帮我想几个 tips（）我觉得很需要",
-      "漠星是一个正在开发阶段的管理员 BOT~，大家如果好奇的话可以添加 2335097817 哦，是漠星的 qq。",
-      "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}漠星的开发进度哦",
+      "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}的开发进度哦",
       "如果喜欢{bot_name}，在 https://afdian.com/a/xzadudu179 可以给九镹投喂哦~",
       "九九木有钱钱，饭饭（bushi",
       "https://www.xzadudu179.top 是九九的个人主页 / 赛博名片哦！",
@@ -150,7 +149,12 @@
       "在用 \"/loc\" 绑定了位置后，使用 \"/fus\" 指令时在符合绑定位置的省份的兽聚地点会被标蓝哦",
       "如果不想要漠月登记你的位置了 可以用 \"/loc clear\" 来清除登记哦",
       "可以使用 \"/desc 介绍内容\" 来设置你自己的个人介绍~",
-      "热知识：你不能给别的瓶子点赞或发评论"
+      "热知识：你不能给别的瓶子点赞或发评论",
+      "漠星是一只龙龙~和漠月一起生活在沙漠里",
+      "如果对九九的个人生活好奇的话，可以去 https://blog.xzadudu179.top/ 查看九九的个人博客~",
+      "如果你不知道漠月的一些功能怎么用，可以试试用 \"/ai 问题\" 来询问 AI-Helper 哦！",
+      "漠月喜欢吃饼干...而且漠月虽然是小狗，但是可以吃巧克力！",
+      "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xme.179.life/glossary 看看，说不定会帮上忙~"
     ]
   },
   "apis": {
@@ -1354,11 +1358,11 @@
         "漂流瓶里面好像什么都没有...要用\n{command_name} 漂流瓶内容\n来扔漂流瓶哦"
       ],
       "content_too_many": [
-        "瓶子的内容太多啦 ({text_len}字)！要 {max_length} 字以内哦 (图片算 100 字)",
-        "瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 100 字)",
-        "瓶子塞不下啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 100 字)",
-        "唔...瓶子塞不下啦 ({text_len}字)！内容要在 {max_length} 字以内哦 (图片算 100 字)",
-        "{negative}..瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 100 字)"
+        "瓶子的内容太多啦 ({text_len}字)！要 {max_length} 字以内哦 (图片算 30 字 / 50像素高)",
+        "瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 30 字 / 50像素高)",
+        "瓶子塞不下啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 30 字 / 50像素高)",
+        "唔...瓶子塞不下啦 ({text_len}字)！内容要在 {max_length} 字以内哦 (图片算 30 字 / 50像素高)",
+        "{negative}..瓶子的内容太多啦 ({text_len}字)...要 {max_length} 字以内哦 (图片算 30 字 / 50像素高)"
       ],
       "lines_too_many": [
         "瓶子的行数太多啦！最多 {max_lines} 行哦",
@@ -1369,6 +1373,10 @@
       "images_too_many": [
         "图片太多啦！最多放 {max_images} 张哦"
       ],
+      "images_too_height": [
+        "图片加起来太高啦，去掉一点太长的图片吧 {neutral}"
+      ],
+      "check_image": "正在检查瓶子内容{positive_punc}",
       "too_fast_warning": [
         "你捡瓶子的速度有点快哦... {negative}",
         "你捡瓶子的速度太快啦... {negative}"
@@ -1394,7 +1402,10 @@
         "唔...大海里已经有类似的瓶子了哦 {neutral}",
         "大海里已经有类似的瓶子了哦..."
       ],
-      "content_has_qr_code": ["漂流瓶里不能包含二维码链接呢...", "漂流瓶里不应该出现二维码链接哦 {negative}"],
+      "content_has_qr_code": [
+        "漂流瓶里不能包含二维码链接呢...",
+        "漂流瓶里不应该出现二维码链接哦 {negative}"
+      ],
       "throw_error": "{negative} 无法投掷漂流瓶，错误信息：{ex}\n可以试试重试一次哦",
       "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
       "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",
@@ -2124,11 +2135,11 @@
       "introduction": "使用时，{bot_name}会发送一条 tip"
     },
     "group": {
-        "desc": "登记群",
-        "introduction": "将群聊登记，用于使漠月加入，不在登记中的群若群主不是 SUPERUSER，漠月会退出。",
-        "step1": "请在下面输入需要登记的群号吧 {positive}:",
-        "step1_error": "群号不符合要求呢...{negative} 应该是纯数字哦",
-        "step2": "请在下面输入该群平时的聊天内容{positive_punc}"
+      "desc": "登记群",
+      "introduction": "将群聊登记，用于使漠月加入，不在登记中的群若群主不是 SUPERUSER，漠月会退出。",
+      "step1": "请在下面输入需要登记的群号吧 {positive}:",
+      "step1_error": "群号不符合要求呢...{negative} 应该是纯数字哦",
+      "step2": "请在下面输入该群平时的聊天内容{positive_punc}"
     }
   }
 }

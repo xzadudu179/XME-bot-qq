@@ -5,10 +5,10 @@ from xme.xmetools.bottools import permission
 from xme.xmetools.msgtools import send_session_msg
 from .classes import user as u
 from datetime import datetime
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import User, coin_name
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+# from nonebot.log import logger
 from xme.xmetools.texttools import get_at_id
 
 alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin', 'v']
@@ -57,7 +57,7 @@ async def _(session: CommandSession, user: User, check_invalid, count_tick):
     if len(args) >= 2:
         try:
             coin_count = sum([int(i) for i in args[1:] if i.strip().isdigit()])
-        except:
+        except Exception:
             coin_count = 0
     else:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_coin_count')
@@ -80,7 +80,7 @@ async def _(session: CommandSession, user: User, check_invalid, count_tick):
     try:
         target_user = (await session.bot.api.get_stranger_info(user_id=at_id))['nickname']
         is_real_user = True
-    except:
+    except Exception:
         pass
     if is_real_user:
         send_to_user: u.User = u.User.load(at_id, True)

@@ -26,7 +26,7 @@ CARD_SKINS = {
         }
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             border-radius: 15px;
             margin: 10px;
@@ -279,7 +279,7 @@ CARD_SKINS = {
             }
 
             .img {
-                max-height: 400px;
+                max-height: 500px;
                 max-width: calc(100% - 20px);
                 border-radius: 15px;
                 margin: 10px;
@@ -437,7 +437,7 @@ CARD_SKINS = {
             }
 
             .img {
-                max-height: 400px;
+                max-height: 500px;
                 max-width: calc(100% - 20px);
                 border-radius: 15px;
                 margin: 10px;
@@ -595,7 +595,7 @@ CARD_SKINS = {
             }
 
             .img {
-                max-height: 400px;
+                max-height: 500px;
                 max-width: calc(100% - 20px);
                 border-radius: 15px;
                 margin: 10px;
@@ -748,7 +748,7 @@ CARD_SKINS = {
         "styles": """
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             border-radius: 15px;
             margin: 10px;
@@ -1206,7 +1206,7 @@ CARD_SKINS = {
         }
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             clip-path: polygon(0% 40px, 40px 0%, 100% 0%, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0% 100%);
             margin: 10px;
@@ -1489,7 +1489,7 @@ CARD_SKINS = {
         }
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             clip-path: polygon(0 0%, calc(100% - 30px) 0%, 100% 30px, 100% calc(100% - 30px), calc(100% - 30px) 100%, 30px 100%, 0% 100%);
             margin: 10px;
@@ -1755,7 +1755,7 @@ CARD_SKINS = {
         }
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             border: 3px solid var(--date-color);
             margin: 10px;
@@ -1863,7 +1863,7 @@ CARD_SKINS = {
         }
 
         .img {
-            max-height: 400px;
+            max-height: 500px;
             max-width: calc(100% - 20px);
             border-radius: 15px;
             margin: 10px;

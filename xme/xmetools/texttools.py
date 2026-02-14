@@ -3,7 +3,7 @@ from pypinyin import lazy_pinyin
 import itertools
 import base64
 from nonebot import Message
-import jieba.posseg as pseg
+# import jieba.posseg as pseg
 import jieba
 import unicodedata
 import string
@@ -52,7 +52,7 @@ def protect_special_word_and_quoted_text(text, tag='nz'):
     mapping = {}
 
     def repl(match):
-        content = match.group(1)
+        content = match.group(0)
         key = f"__QUOTE_{len(mapping)}__"
         mapping[key] = content
         jieba.add_word(key, tag=tag)  # 强制词性：nz / n / x 都行
@@ -436,20 +436,37 @@ def replace_chinese_punctuation(text: str) -> str:
         text = re.sub(re.escape(chinese_punc), english_punc, text)
     return text
 
-def me_to_you(content: str) -> str:
-    protected_text, quote_map = protect_special_word_and_quoted_text(content, tag='nz')
-    words = list(pseg.cut(protected_text))
-    # choice = random.randint(0, 1)
-    words = [
-        quote_map.get(w, w)
-        for w, _ in words
-    ]
-    return ''.join(
-        "你" if w == "我" else
-        "我" if w == "你" else w
-        for w in words
-    )
+def me_to_you(content: str, keep_quote_content: bool = False) -> str:
+    pattern = r'[“"]([^”"]+)[”"]'
+    def swap(text: str) -> str:
+        return (
+            text.replace("我", "__TMP__")
+                .replace("你", "我")
+                .replace("__TMP__", "你")
+        )
 
+    result = []
+    last_end = 0
+    for match in re.finditer(pattern, content):
+        start, end = match.span()
+
+        normal_part = content[last_end:start]
+        result.append(swap(normal_part))
+
+        quoted_text = match.group(0)
+
+        if keep_quote_content:
+            result.append(quoted_text)
+        else:
+            # 仅替换引号内部内容。
+            inner = quoted_text[1:-1]
+            result.append(quoted_text[0] + swap(inner) + quoted_text[-1])
+
+        last_end = end
+    tail = content[last_end:]
+    result.append(swap(tail))
+
+    return ''.join(result)
 def doubt_to_excl(content):
     content = replace_chinese_punctuation(content)
     return content.replace("嘛?", "!").replace("吗", "").replace("?", "!")

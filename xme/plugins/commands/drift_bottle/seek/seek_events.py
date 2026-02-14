@@ -307,7 +307,7 @@ EVENTS = [
     "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...", "你尽全力往上游去...", "你尽力地往上游...", "你感觉到水压越来越小..."],
-    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value >= 30,
     "changes": {
       "depth": {
@@ -331,7 +331,7 @@ EVENTS = [
     "top": True,
     "post_func": None,
     "descs": ["你奋力地往上游...但是你快没氧气了...", "你尽全力往上游去...但是你快没有氧气了...", "你尝试尽力地往上游..."],
-    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.UNDERSEA_CAVE, SeekRegion.UNDERSEA_CITY, SeekRegion.VOID, SeekRegion.EMPTY, SeekRegion.DEEPEST, SeekRegion.EMPTY],
+    "regions": [SeekRegion.SHALLOW_SEA, SeekRegion.ABYSS, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.VOID, SeekRegion.EMPTY, SeekRegion.DEEPEST, SeekRegion.EMPTY],
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and oxygen.value < 30,
     "changes": {
       "depth": {

@@ -50,7 +50,7 @@ BOT_SETTINGS = {
     "ignore_member_count_groups": [],
 }
 
-# XXX: 更换为解析 Document 类 而非字符串处理
+# TODO: 更换为解析 Document 类 而非字符串处理
 def gen_doc_md():
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
     plugins.sort(key=lambda p: lazy_pinyin(p.name))

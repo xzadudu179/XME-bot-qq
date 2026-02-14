@@ -44,7 +44,7 @@ docs = CommandDoc(
     desc=desc,
     introduction=get_message("plugins", cmd_name, 'introduction', games=game_list_str),
     # introduction=f'游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{game_list_str}',
-    usage=f'(小游戏名) [OPTIONS]\n{arg_usage}',
+    usage=f'<小游戏名> [OPTIONS]\n{arg_usage}',
     permissions=[],
     alias=alias
 )

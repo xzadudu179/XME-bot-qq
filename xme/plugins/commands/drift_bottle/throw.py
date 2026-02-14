@@ -36,7 +36,7 @@ command_name = 'throw'
 async def _(session: CommandSession, user):
     MAX_LENGTH = 500
     MAX_LINES = 20
-    MAX_IMAGES = 2
+    MAX_IMAGES = 3
 
     arg = remove_invisible(session.current_arg.strip())
     logger.info(f"arg is {arg}")
@@ -98,7 +98,11 @@ async def _(session: CommandSession, user):
     formatted_arg = bottle.get_formatted_content("0%", 0)
     # debug_msg(formatted_arg, len(formatted_arg))
     # debug_msg(arg, len(arg))
-    if len(formatted_arg) + len(image_paths) * 100 > MAX_LENGTH:
+    image_len = 0
+    for image in images:
+        image_len += image.height
+    image_len = image_len / 50 * 30
+    if len(formatted_arg) + image_len > MAX_LENGTH:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg)))
         return False
     if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:
@@ -111,8 +115,14 @@ async def _(session: CommandSession, user):
         return False
 
     # 处理图片
-
+    total_height = 0
+    if len(images) > 0:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "check_image"))
     for i, image in enumerate(images):
+        total_height += image.height
+        if total_height > 800:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_height", max_images=MAX_IMAGES))
+            return False
         path = BOTTLE_IMAGES_PATH + image_filenames[i]
         check_image = DriftBottle.check_duplicate_image(image)
         if not check_image["status"]:

@@ -26,22 +26,6 @@ import asyncio
 random.seed()
 # from config import BOT_SETTINGS_PATH
 
-# def handle_exception(loop, context):
-#     exception = context.get("exception")
-#     if exception:
-#         print("[异常]")
-#         trace = traceback.format_exception(type(exception), exception, exception.__traceback__)
-#         trace_str = "\n".join(trace)
-#         except_msg = f'XME-BOT 运行出现异常：{context.get("message")}\n{trace_str}'
-#         print(except_msg)
-#         loop.create_task(send_to_superusers(nonebot.get_bot(), except_msg))
-#     else:
-#         # 如果 context 没有 exception，通常只有字符串 message
-#         msg = context.get("message")
-#         except_msg = f'XME-BOT 运行出现异常：{msg}'
-#         print(except_msg)
-#         loop.create_task(send_to_superusers(nonebot.get_bot(), except_msg))
-
 def load_plugins_list(*args: list[str, str]):
     for arg in args:
         nonebot.load_plugins(arg[0], arg[1])

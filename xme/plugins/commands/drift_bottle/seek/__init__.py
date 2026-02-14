@@ -370,7 +370,6 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     try:
         global seeking_groups
         global seeking_players
-        # TODO 插件管理系统
         enable_groups: list = read_from_path(BOT_SETTINGS_PATH)["seek_enable_groups"]
 
         arg = session.current_arg_text.strip()
@@ -416,6 +415,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         # # 验证正在探险的玩家防止多开
         if not validate_player(session):
             return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'seek_on_seeking', place=seeking_players[session.event.user_id]["place"]))
+
+        # 开始
         from .seek_events import EVENTS
         player = Player()
         seek = Seek(player, EVENTS)
@@ -478,6 +479,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                     msg_prefix = ""
             return total_steps
 
+        # TODO: 选择道具
+        # tools = []
 
         total_steps = 0
         expected_steps = 20

@@ -4,5 +4,6 @@
     },
     "files.exclude": {
         "**/xme/plugins/archive/": true
-    }
+    },
+    "editor.semanticHighlighting.enabled": true
 }

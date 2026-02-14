@@ -9,8 +9,8 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.msgtools import image_msg
 
-API_URL="http://103.236.69.53"
-# API_URL="http://furgon.yjwmidc.com:8000"
+# API_URL="http://103.236.69.53"
+API_URL="http://furgon.yjwmidc.com:8000"
 
 alias = ['鉴毛', 'jianmao', 'jrjm']
 __plugin_name__ = '今日鉴毛'
@@ -27,6 +27,10 @@ async def get_jianmao_data_from_id(token: str, qq: str, id: str):
     '''
     期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/" + 期数id
     '''
+    return await aget(token, qq, url)
+
+
+async def aget(token: str, qq: str, url):
     payload = {
         "token": token,
         "qq": qq
@@ -40,8 +44,12 @@ async def get_jianmao_data_from_id(token: str, qq: str, id: str):
             logger.error(f"HTTP error occurred: {e}")
             return {"error": f"HTTP 错误: {e}"}
         except httpx.RequestError as e:
+            try:
+                code = response.status_code
+            except Exception:
+                code = "未知"
             logger.error(f"Request error occurred: {e}")
-            return {"error": f"请求出现错误: {e}"}
+            return {"error": f"请求出现错误: {e}\ncode:{code}"}
         except ValueError as e:
             logger.error(f"JSON decode error occurred: {e}")
             return {"error": f"无效的 JSON response: {e}"}
@@ -51,24 +59,7 @@ async def get_jianmao_data_from_name(token: str, qq: str, name: str):
     '''
     名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/" + name
     '''
-    payload = {
-        "token": token,
-        "qq": qq
-    }
-    async with httpx.AsyncClient(trust_env=False) as client:
-        try:
-            response = await client.post(url, json=payload)
-            response.raise_for_status()  # 检查 HTTP 状态码
-            return response.json()  # 解析 JSON 响应
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error occurred: {e}")
-            return {"error": f"HTTP 错误: {e}"}
-        except httpx.RequestError as e:
-            logger.error(f"Request error occurred: {e}")
-            return {"error": f"请求出现错误: {e}"}
-        except ValueError as e:
-            logger.error(f"JSON decode error occurred: {e}")
-            return {"error": f"无效的 JSON response: {e}"}
+    return await aget(token, qq, url)
 
 async def get_random_jianmao_data(token: str, qq: str):
     url = f"{API_URL}/furry_will/random/"
@@ -77,24 +68,7 @@ async def get_random_jianmao_data(token: str, qq: str):
     期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/" + 期数id
     名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/" + 关键字
     '''
-    payload = {
-        "token": token,
-        "qq": qq
-    }
-    async with httpx.AsyncClient(trust_env=False) as client:
-        try:
-            response = await client.post(url, json=payload)
-            response.raise_for_status()  # 检查 HTTP 状态码
-            return response.json()  # 解析 JSON 响应
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error occurred: {e}")
-            return {"error": f"HTTP 错误: {e}"}
-        except httpx.RequestError as e:
-            logger.error(f"Request error occurred: {e}")
-            return {"error": f"请求出现错误: {e}"}
-        except ValueError as e:
-            logger.error(f"JSON decode error occurred: {e}")
-            return {"error": f"无效的 JSON response: {e}"}
+    return await aget(token, qq, url)
 
 async def get_jianmao_data(session, jianmao_func, **jianmao_kwargs) -> bool:
     jwt = generate_jwt(JIANMAO_QQ, JIANMAO_TOKEN)

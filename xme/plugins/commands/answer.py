@@ -13,7 +13,7 @@ from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 random.seed()
 
-alias = ['答案之书', 'ans', '550w']
+alias = ['答案之书', 'ans']
 __plugin_name__ = 'answer'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
@@ -21,7 +21,7 @@ __plugin_usage__ = CommandDoc(
     desc=get_message("plugins", __plugin_name__, "desc"),
     # introduction='随机翻开答案之书的一页，并且返回内容\n"心中默念你的问题，将会得到你的答案。"',
     introduction=get_message("plugins", __plugin_name__, "introduction"),
-    usage='',
+    usage='<问题>',
     permissions=["无"],
     alias=alias
 )

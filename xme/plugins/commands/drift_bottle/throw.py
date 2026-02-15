@@ -103,7 +103,7 @@ async def _(session: CommandSession, user):
         image_len += image.height
     image_len = image_len / 50 * 30
     if len(formatted_arg) + image_len > MAX_LENGTH:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg)))
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg) + image_len))
         return False
     if arg.count('\n') >= MAX_LINES or arg.count('\r') >= MAX_LINES:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "lines_too_many", max_lines=MAX_LINES))

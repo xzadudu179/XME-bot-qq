@@ -179,7 +179,7 @@ def on_command(
                 if session.event.message_id is not None:
                     set_value(session.event.message_id, "open", search_dict=command_msgs, set_method=lambda _: False)
                     # command_msgs[session.event.message_id]["open"] = False
-                return result
+                # return result
 
         cmd = Command(name=cmd_name,
                       func=wrapper,

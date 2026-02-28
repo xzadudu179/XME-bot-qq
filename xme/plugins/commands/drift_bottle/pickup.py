@@ -6,6 +6,7 @@ from xme.xmetools.cmdtools import send_cmd
 from xme.xmetools.texttools import remove_invisible
 from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
+from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
 from xme.xmetools.imgtools import get_html_image
@@ -240,9 +241,19 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         # if bottle.sender_id == session.event.user_id and bottle.views == 0:
             # await user.achieve_achievement(session, "回旋瓶")
         debug_msg("捡到了瓶子")
+
+    # 专属皮肤
+    sender: u.User = u.try_load(bottle.sender_id)
+    logger.info(f"sender is {sender}")
+    if sender is not None:
+        custom_card = sender.get_custom_setting(__plugin_name__, "custom_cards")
+        logger.info(f"{custom_card} {CUSTOM_CARD_NAMES}")
+        if custom_card in CUSTOM_CARD_NAMES:
+            skin_name = custom_card
     # 瓶子自己的皮肤
     if bottle.skin:
         skin_name = bottle.skin
+
     index = bottle.bottle_id
     index_is_int = index.isdigit()
 

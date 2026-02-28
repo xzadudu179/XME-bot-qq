@@ -76,7 +76,7 @@ class User:
             inventory: Inventory | None = None,
             talked_to_bot: list | None = None,
             desc: str = "",
-            celestial_uid=None,
+            afdian_id = "",
             xme_favorability=0,
             counters: dict | None = None,
             # timers: dict = {},
@@ -87,6 +87,7 @@ class User:
         self.db_id: int = db_id
         self.id: int = user_id
         self.desc: str = desc
+        self.afdian_id: str = afdian_id
         # avoid shared mutable defaults
         self.inventory: Inventory = inventory if inventory is not None else Inventory()
         self.coins: int = coins
@@ -123,17 +124,6 @@ class User:
             return time_now
         return v
 
-    # def get_celestial(self):
-    #     # debug_msg("uid:", self.celestial_uid)
-    #     if self.celestial_uid is not None:
-    #         self.celestial = get_celestial_from_uid(self.celestial_uid)
-    #     # debug_msg("uid:", self.celestial_uid)
-    #     if self.celestial is None:
-    #         self.gen_celestial()
-    #     return self.celestial
-
-    # def get_starfield(self):
-    #     return get_starfield_map(self.get_celestial().galaxy_location)
 
     def get_achievement(self, achievement_name) -> dict | bool:
         # debug_msg("achievement_name:", achievement_name)
@@ -282,6 +272,7 @@ class User:
             "coins": self.coins,
             "counters": self.counters,
             # "timers": self.timers,
+            "afdian_id": self.afdian_id,
             "xme_favorability": self.xme_favorability,
             "desc": self.desc,
             "plugin_datas": self.plugin_datas,
@@ -324,46 +315,6 @@ class User:
     def save(self):
         self.db_id = DATABASE.save_to_db(obj=self)
 
-    # async def draw_user_galaxy_map(self, img_zoom=2, zoom_fac=1, padding=100, background_color="black", ui_zoom_fac=2, line_width=1, grid_color='#102735'):
-    #     celestial = self.get_celestial()
-    #     # if not self.celestial:
-    #     #     center = (0, 0)
-    #     center = celestial.galaxy_location
-    #     # center = (0, 0)
-    #     if not get_galaxymap():
-    #         return None
-    #     map_size = get_galaxymap().max_size
-    #     map_img = get_galaxymap().draw_galaxy_map(img_zoom=img_zoom, center=center, zoom_fac=zoom_fac, padding=padding, background_color=background_color, line_width=line_width, grid_color=grid_color)
-    #     return await self.draw_user_map(map_size=map_size, img_zoom=img_zoom, map_img=map_img, center=center, location=center, zoom_fac=zoom_fac, ui_zoom_fac=ui_zoom_fac, padding=padding, line_width=line_width)
-
-
-    # async def draw_user_map(self, map_size, img_zoom, map_img, location, center=(0, 0), zoom_fac=1, ui_zoom_fac=2, padding=100, line_width=1, font_size=12) -> str:
-    #     # map_img = galaxy_map.draw_galaxy_map(center, zoom_fac, ui_zoom_fac, padding, background_color, line_width, grid_color)
-    #     # font_size = 12
-    #     width, height = map_img.size
-    #     map_width, map_height = map_size
-    #     text_draw = ImageDraw.Draw(map_img)
-    #     user_name = (await get_bot().api.get_stranger_info(user_id=self.id))['nickname']
-    #     text = f'[HIUN 星图终端]\n[用户] {user_name}\n你在: {center}  缩放倍率: {zoom_fac}x | {ui_zoom_fac}x'
-    #     draw_text_on_image(text_draw, text, (int(15 * ui_zoom_fac), int(height - 40 * ui_zoom_fac - font_size * (text.count('\n') + 1) * ui_zoom_fac)), int(font_size * ui_zoom_fac), 'white', spacing=10)
-    #     # draw_text_on_image(draw, 'Test File HIUN\nYesyt', (15, 1080 - font_size), font_size, 'white')
-    #     # 绘制圆加十字
-    #     zoom_width, zoom_height = map_width // zoom_fac // 2, map_height // zoom_fac // 2
-    #     append_ = (((-center[0] + zoom_width) * zoom_fac), (-center[1] + zoom_height) * zoom_fac)
-    #     point_to_draw = (int(location[0] * zoom_fac + padding + append_[0]) * img_zoom, int(location[1] * zoom_fac + padding + append_[1]) * img_zoom)
-    #     # debug_msg("user", point_to_draw, zoom_fac, img_zoom, padding, append_)
-    #     mark_point(text_draw, point_to_draw, location, 0, 'cyan', int(line_width * ui_zoom_fac), int(10 * ui_zoom_fac),f'{user_name} (你)', int(font_size * ui_zoom_fac), text_offset=(0, 24))
-    #     # 保存图片
-    #     path = f'data/images/temp/{hash_image(map_img)}.png'
-    #     map_img.save(path)
-    #     return path
-
-    #     # 显示图片
-    #     # map_img.show()
-
-# Avoid creating User(0) at import time — this can construct heavy objects and
-# interfere with multithreaded GC. Call this during startup if needed.
-# DATABASE.create_class_table(User(0))
 
 def try_load(id):
     u = User.load(id)
@@ -709,9 +660,9 @@ def load_from_dict(data: dict, id: int) -> User:
         user_id=id,
         coins=data.get('coins', 0),
         inventory=inventory,
+        afdian_id= data.get("afdian_id", ''),
         talked_to_bot=json.loads(data.get('talked_to_bot', "[]")),
         desc=data.get('desc', ""),
-        celestial_uid=celestial,
         plugin_datas=plugin_datas,
         achievements=json.loads(achis),
         xme_favorability=data.get('xme_favorability', 0),

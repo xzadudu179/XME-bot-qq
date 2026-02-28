@@ -4,6 +4,7 @@ from .pickup import report
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.msgtools import send_session_msg
+# from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
@@ -73,10 +74,11 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
         return False
 
-    user = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
+    user: u.User = await session.bot.get_group_member_info(group_id=session.event.group_id, user_id=session.event.user_id)
     group = await session.bot.get_group_info(group_id=session.event.group_id)
     bottle_id = DriftBottle.get_max_bottle_id() + 1
     debug_msg(bottle_id)
+    # custom_card = user.get_custom_setting(__plugin_name__, "custom_cards")
     bottle_content = {
         "id": -1,
         "bottle_id": bottle_id,
@@ -90,6 +92,7 @@ async def _(session: CommandSession, user):
         "sender_id": user['user_id'],
         "comments": "[]",
         "is_broken": False,
+        # "skin": custom_card if custom_card in CUSTOM_CARD_NAMES else "",
         # "pure_vote_users": {},
         "group_id": user['group_id'],
     }

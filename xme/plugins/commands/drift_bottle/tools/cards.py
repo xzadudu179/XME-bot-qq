@@ -1998,3 +1998,7 @@ CARD_SKINS = {
         """
     },
 }
+
+CUSTOM_CARD_NAMES = [
+    "基础宇喵天枢"
+]

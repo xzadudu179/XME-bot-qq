@@ -350,9 +350,7 @@ def hash_text(text):
     Returns:
         str: 输出的字符串
     """
-    # 使用 SHA-256 哈希算法
     hash_object = hashlib.sha256(text.encode('utf-8'))
-    # 将哈希值转换为十六进制字符串
     hex_result = hash_object.hexdigest()
     return hex_result.upper()
 
@@ -383,16 +381,12 @@ def fullwidth_to_halfwidth(text):
     """
     result = []
     for char in text:
-        # 判断是否是全角字符（全角字符的 Unicode 编码范围：65281~65374）
         code_point = ord(char)
         if 65281 <= code_point <= 65374:
-            # 将全角字符转换为半角字符
             result.append(chr(code_point - 0xFEE0))
         elif code_point == 12288:
-            # 处理全角空格（全角空格的 Unicode 编码是 12288，对应半角空格是 32）
             result.append(chr(32))
         else:
-            # 非全角字符保持不变
             result.append(char)
     return ''.join(result)
 
@@ -467,6 +461,7 @@ def me_to_you(content: str, keep_quote_content: bool = False) -> str:
     result.append(swap(tail))
 
     return ''.join(result)
+
 def doubt_to_excl(content):
     content = replace_chinese_punctuation(content)
     return content.replace("嘛?", "!").replace("吗", "").replace("?", "!")

@@ -43,7 +43,6 @@ def group_init(group_id: str) -> dict:
     Returns:
         dict: 群组老婆信息
     """
-    # Keep for backward compatibility but do not auto-generate pairs anymore.
     days = d.curr_days()
     with open("./data/wife.json", 'r', encoding='utf-8') as file:
         wifeinfo = json.load(file)

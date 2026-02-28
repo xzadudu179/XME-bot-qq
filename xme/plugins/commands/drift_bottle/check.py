@@ -4,6 +4,7 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import permission
 from .tools.bottlecard import get_class_bottle_card_html
+from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.imgtools import get_html_image
 from character import get_message
@@ -52,9 +53,19 @@ async def _(session: CommandSession, user: u.User):
     else:
         messy_rate_string = f"{messy_rate}%"
     suffix = ""
+
+    sender: u.User = u.try_load(bottle.sender_id)
+    logger.info(f"sender is {sender}")
+    if sender is not None:
+        custom_card = sender.get_custom_setting(__plugin_name__, "custom_cards")
+        logger.info(f"{custom_card} {CUSTOM_CARD_NAMES}")
+        if custom_card in CUSTOM_CARD_NAMES:
+            skin_name = custom_card
+
     # 瓶子自己的皮肤
     if bottle.skin:
         skin_name = bottle.skin
+
     # 手滑摔碎了瓶子
     # 越混乱的瓶子越容易摔碎
     broken_rate = min(100, 1 + messy_rate / 2.5) * 0.65 if messy_rate < 100 else 100

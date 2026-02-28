@@ -41,7 +41,7 @@ def calc_lottery():
 async def send_time_message(new_day=False):
     scheduler_groups = read_from_path(config.BOT_SETTINGS_PATH).get("schtime_groups", [])
     if new_day:
-        log.logger.log("数据已备份至: " + str(backup_data_dir()))
+        log.logger.info("数据已备份至: " + str(backup_data_dir()))
         get_coins, lose_coins = calc_lottery()
     try:
         groups = await bot.get_group_list()

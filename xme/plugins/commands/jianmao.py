@@ -9,8 +9,8 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.msgtools import image_msg
 
-# API_URL="http://103.236.69.53"
-API_URL="http://furgon.yjwmidc.com:8000"
+API_URL="http://8.141.27.115:8000"
+# API_URL="http://furgon.yjwmidc.com:8000"
 
 alias = ['鉴毛', 'jianmao', 'jrjm']
 __plugin_name__ = '今日鉴毛'

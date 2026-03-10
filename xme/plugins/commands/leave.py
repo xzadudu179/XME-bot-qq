@@ -25,7 +25,8 @@ async def _(session: CommandSession):
 
     result = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, 'leaving')))
     # print("result", result)
-    if result != "Y":
+    if result not in ["Y", 'y']:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'cancel_leave'))
         return
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'leave_message'))
     # await send_msg(session, "正在退出群聊...")

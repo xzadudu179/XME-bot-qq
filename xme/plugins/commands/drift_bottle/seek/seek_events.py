@@ -1114,7 +1114,7 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back,
     "changes": {
       "depth": {
-        "change": lambda: random.randint(-15, 20),
+        "change": lambda: random.randint(-14, 25),
         "type": "-",
         "custom": False,
       },
@@ -1262,6 +1262,105 @@ EVENTS = [
     },
     "region_change": lambda last: last,
   },
+#   {
+#     "type": "decision",
+#     "tags": [],
+#     "prob": 1.7,
+#     "post_func": None,
+#     "descs": ["你发现了一个深潜装置...它应该不会出现什么异常", "出现了一个深潜装置，似乎完好可用...", "你发现了一个深潜装置，运气好的话借助它或许能前往更深处..."],
+#     "regions": [SeekRegion.DEEP_SEA, SeekRegion.SHALLOW_SEA],
+#     "can_quit": True,
+#     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value >80 and depth.value < 500,
+#     "decisions": [
+#       {
+#         "type": "dice",
+#         "tags": [],
+#         "names": ["尝试使用", "使用", "进入装置"],
+#         "tip": "[???]",
+#         "event_messages": [
+#           {
+#             # 什么都没有是所有地区都可
+#             "regions": [],
+#             "descs": ["你进入了装置并尝试启动...", "你尝试启动这个装置，看它会把你带向哪里..."],
+#             "ok_msgs": ["深潜装置发出了轰鸣声，将你带去了水下深处...",],
+#             "bigwin_msgs": ["深潜装置启动了，并且你在装置里找到了一套全新的潜水服...", "深潜装置启动了，而且它的物资保留非常完善，甚至还有一套全新的潜水服！"],
+#             "fail_msgs": ["你尝试启动装置，但是它没有任何反应...", "看上去它并不是完好的...而是完全损坏了", "你完全无法启动这个装置..."],
+#             "bigfail_msgs": ["装置启动了...？不对，它要带你去哪里？！", "装置启动了...？它好像不受控制了！", "装置...似乎忽然不受控制地启动了！"],
+#           },
+#         ],
+#         # "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY],
+#         "dice_faces": lambda: random.randint(5, 18),
+#         "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
+#         "determine_attr": "insight",
+#         "ok": {
+#           "changes": {
+#             "san": {
+#               "change": lambda: random.randint(3, 12),
+#               "type": "+",
+#               "custom": False,
+#             },
+#             "insight": {
+#               "change": lambda: random.randint(0, 1),
+#               "type": "+",
+#               "custom": False,
+#             },
+#           },
+#         },
+#         "big_win": {
+#           "changes": {
+#             "chance": {
+#               "change": lambda: random.randint(1, 5),
+#               "type": "+",
+#               "custom": False,
+#             },
+#             "insight": [{
+#               "change": lambda: random.randint(2, 4),
+#               "type": "+",
+#               "custom": False,
+#             }, {
+#               "change": lambda v: v.change_max(lambda x: x + random.randint(1, 3)),
+#               "return": lambda v: v.max_value,
+#               "return_msg": "最大{name} = {value}",
+#               "custom": True,
+#               "assign": False,
+#             },],
+#           },
+#         },
+#         "fail": {
+#           "changes": {
+#             "san": {
+#               "change": lambda: random.randint(5, 15),
+#               "type": "-",
+#               "custom": False,
+#             },
+#           },
+#         },
+#         "big_fail": {
+#           "changes": {
+#             "chance": {
+#               "change": lambda: random.randint(1, 2),
+#               "type": "-",
+#               "custom": False,
+#             },
+#             "san": {
+#               "change": lambda: random.randint(10, 20),
+#               "type": "-",
+#               "custom": False,
+#             },
+#           },
+#         },
+#       },
+#       {
+#         "type": "normal",
+#         "tags": [],
+#         "tip": "",
+#         "names": ["离开", "放弃", "放弃探索"],
+#         "descs": ["你觉得你可能进去这里后就出不来了...", "你觉得自己还不适合来这里探索", "你觉得你在这里无法判断深度，很可能出问题..."],
+#         "changes": {
+#         }
+#       },
+#     ]
+#   },
   {
     "type": "decision",
     "tags": [],
@@ -1270,7 +1369,7 @@ EVENTS = [
     "descs": ["一抹幽绿色的光芒引起了你的注意...前方似乎是一片森林？", "前方出现了一片神秘的...海底森林？", "你的视野似乎被蒙上了一层雾，前方出现了一片奇怪的海底森林..."],
     "regions": [SeekRegion.DEEP_SEA, SeekRegion.TRENCH],
     "can_quit": True,
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 250 and depth.value < 600,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 280 and depth.value < 600,
     "decisions": [
       {
         "type": "normal",
@@ -1329,11 +1428,12 @@ EVENTS = [
     "type": "normal",
     "tags": [],
     # 概率 -1 为默认事件
-    "prob": -1,
+    "top": True,
+    "prob": 100,
     "post_func": None,
     "descs": ["你总算离开了这个神秘的森林...", "在你的努力下，总算找到了森林的出口...", "你找到了森林的出口..."],
     "regions": [SeekRegion.FOREST],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value < 180,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: back and depth.value < 230,
     "changes": {
     },
     "region_change": lambda last: SeekRegion.DEEP_SEA,

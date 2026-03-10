@@ -61,6 +61,8 @@ async def _(session: CommandSession, _: User, check_is_invalid, count_tick):
         return await send_session_msg(session, get_message("plugins", w.__plugin_name__, "no_wife", name=at_name))
     if wife_id == session.self_id:
         wife_name = "我"
+    elif arg.startswith("at"):
+        wife_name = f"[CQ:at,qq={wife_id}]"
     else:
         wife_name = await get_group_member_name(group_id, wife_id, card=True)
     return await send_session_msg(

@@ -1,9 +1,10 @@
 {
     "files.watcherExclude": {
-        "**/target": true
+        "**/target": true,
     },
     "files.exclude": {
-        "**/xme/plugins/archive/": true
+        "**/xme/plugins/archive/": true,
+        "**/nonebot": true
     },
     "editor.semanticHighlighting.enabled": true
 }

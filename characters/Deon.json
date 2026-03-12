@@ -1876,12 +1876,14 @@
       ]
     },
     "ping": {
-      "desc": "检测消息发送延迟",
-      "introduction": "发送后会返回当前的消息延迟",
+      "desc": "检测延迟",
+      "introduction": "发送后会返回当前{bot_name}的延迟",
       "ping_message": "{shout}",
       "ping": [
-        "我在 {ping} 秒后听到了回音...",
-        "我在 {ping} 秒后听到了自己的声音..."
+        "{shout} 看起来机器在 {ping} 秒后回应了我...",
+        "{shout} 看起来机器在 {ping} 秒后出现了回应...",
+        "{shout} 机器在 {ping} 秒后出现了回应...",
+        "{shout} 机器在 {ping} 秒后回应了我..."
       ]
     },
     "alias": {

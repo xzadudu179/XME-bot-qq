@@ -19,7 +19,8 @@ __plugin_usage__ = CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     start = time.time()
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping_message'), at=False)
+    # await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping_message'), at=False)
+    await session.bot.get_stranger_info(user_id=session.event.user_id)
     end = time.time()
     ping = end - start
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'ping', ping=f"{ping:.3f}"), tips=True, linebreak=False)

@@ -19,6 +19,13 @@ from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
 from character import get_message
 
+async def aget_arg_with_timeout(session, timeout_secs) -> str | None:
+    try:
+        reply: str = await asyncio.wait_for(aget_session_msg(session), timeout=timeout_secs)
+        return reply
+    except asyncio.TimeoutError:
+        return None
+
 async def aget_arg(
         session: CommandSession,
         prompt: Message | str,

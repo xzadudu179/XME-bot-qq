@@ -14,8 +14,6 @@ def to_nums_base(num: int, num_strs: list[str]):
     base = len(num_strs)
     if len(num_strs) < 2:
         raise ValueError("进制不可小于2")
-    # if base > len(nums):
-    #     return "进制过大"
     result = ""
     div_num = abs(num)
     while div_num != 0:

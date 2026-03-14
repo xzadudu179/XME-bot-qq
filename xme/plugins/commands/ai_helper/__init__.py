@@ -12,11 +12,10 @@ from nonebot.log import logger
 import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout
 from character import get_message, get_character_item, character_format
-from xme.xmetools.timetools import TimeUnit
+from xme.xmetools.timetools import TimeUnit, Timer
 from keys import GLM_API_KEY
-import asyncio
 from xme.plugins.commands.xme_user.classes import user as u
 from zhipuai import ZhipuAI
 
@@ -181,15 +180,22 @@ async def talk(session: CommandSession, text, user: u.User):
     task_status = ''
     get_cnt = 0
     MAX_CHECK_TIMES = 1000
+    t = Timer()
+    t.start()
     while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
+        reply = await aget_arg_with_timeout(session, 0.5)
+        if reply is not None and reply.strip() == "aistop":
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+            return False
         result_response = client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
         # print(result_response)
         task_status = result_response.task_status
-        await asyncio.sleep(0.5)
+        # await asyncio.sleep(0.5)
         get_cnt += 1
     try:
         if get_cnt >= MAX_CHECK_TIMES:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=0.5 * MAX_CHECK_TIMES))
+            t.stop()
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
             return False
         ans = result_response.choices[0].message.content
         build_history(user=user, ask=text, ans=ans)

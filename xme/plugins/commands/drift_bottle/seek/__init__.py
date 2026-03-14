@@ -16,7 +16,7 @@ from nonebot import SenderRoles
 import time
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
-import asyncio
+# import asyncio
 import os
 from xme.plugins.commands.xme_user.classes import user
 import random
@@ -26,7 +26,7 @@ from .classes.event import Event, SPECIAL_EVENTS
 # from .. import DriftBottle, get_random_bottle
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.msgtools import send_session_msg, aget_session_msg
+from xme.xmetools.msgtools import send_session_msg, aget_session_msg, aget_arg_with_timeout
 from uuid import uuid4
 random.seed()
 hti = Html2Image()
@@ -498,9 +498,11 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             player.back = False
             afk = False
             while not valid_reply:
-                try:
-                    reply: str = await asyncio.wait_for(aget_session_msg(session), timeout=300)
-                except asyncio.TimeoutError:
+                reply: str | None = await aget_arg_with_timeout(session, 300)
+                # try:
+                #     reply: str = await asyncio.wait_for(aget_session_msg(session), timeout=300)
+                # except asyncio.TimeoutError:
+                if reply is None:
                     # 5 分钟没有操作
                     if afk:
                         seek.status = 'exit'

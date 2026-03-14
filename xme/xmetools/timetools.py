@@ -4,6 +4,20 @@ import pytz
 import time
 import math
 
+class Timer:
+    def __init__(self):
+        # self.timer_count = 0
+        self.start_time = 0.
+        self.end_time = 0.
+
+    def start(self):
+        self.start_time = time.time()
+
+    def stop(self):
+        self.end_time = time.time()
+
+    def get_timer_value(self) -> float:
+        return self.end_time - self.start_time
 class TimeUnit(Enum):
     SECOND = 1
     MINUTE = 60

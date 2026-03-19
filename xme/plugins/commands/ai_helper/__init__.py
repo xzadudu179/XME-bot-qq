@@ -13,14 +13,130 @@ import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout
+from xme.xmetools.bottools import get_user_name
 from character import get_message, get_character_item, character_format
-from xme.xmetools.timetools import TimeUnit, Timer
+from xme.xmetools.timetools import TimeUnit, Timer, get_time_now
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zhipuai import ZhipuAI
+from zhipuai.core._errors import ZhipuAIError
+MAX_CHECK_TIMES = 1000
+
+class AIHelper:
+    def __init__(self, ai_client: ZhipuAI):
+        self.client = ai_client
 
 
+    async def ai_init(self, messages):
+        response = self.client.chat.asyncCompletions.create(
+            # model="glm-4-flashx",
+            model="glm-5",
+            messages=messages,
+            tools=[
+                {
+                    "type": "web_search",
+                    "web_search": {
+                        "enable": "True",
+                        "search_engine": "search_pro",
+                        "search_result": "True",
+                        "search_prompt": "你可以进行数据汇总，语义理解与矛盾信息清洗处理。参考以下信息，间接、准确地回答搜索结果：{{search_result}}中的关键信息，并且根据实际对话情况整理自己搜到的数据并作出回答。",
+                        "search_intent": "True",
+                        "count": "7",
+                        "search_recency_filter": "oneYear",
+                        "content_size": "medium"
+                    }
+                }
+            ],
+            # tools=[
+            #     {
+            #         "type": "retrieval",
+            #         "retrieval": {
+            #             "knowledge_id": knowledge_id,
+            #             "prompt_template": "若用户提出 BOT/漠月/指令 相关问题或其他问题，默认先从文档\n\"\"\"\n{{knowledge}}\n\"\"\"\n中找问题\n\"\"\"\n{{question}}\n\"\"\"\n的答案，找不到答案就用自身知识回答并且告诉用户该信息不是来自文档。\n不要复述问题，直接开始回答。"
+            #         }
+            #     }
+            # ],
+            temperature=0.3
 
+        )
+        return response
+
+    # async def talk(self, messages):
+    #     # ai_helper = AIHelper(client)
+    #     response = await self.ai_init(messages)
+    #     task_id = response.id
+    #     task_status = ''
+    #     get_cnt = 0
+
+    #     t = Timer()
+    #     t.start()
+    #     while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
+    #         reply = await aget_arg_with_timeout(session, 0.5)
+    #         if reply is not None and reply.strip() == "aistop":
+    #             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+    #             return False
+    #         result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
+    #         # print(result_response)
+    #         task_status = result_response.task_status
+    #         # await asyncio.sleep(0.5)
+    #         get_cnt += 1
+    #     try:
+    #         if get_cnt >= MAX_CHECK_TIMES:
+    #             t.stop()
+    #             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
+    #             return False
+    #         ans = result_response.choices[0].message.content
+    #         build_history(user=user, ask=text, ans=ans)
+    #         logger.info(f"AI 返回了以下 response：{result_response}")
+    #         debug_msg("处理结果")
+    #         return result_response.choices[0].message.content
+    #     except AttributeError as ex:
+    #         logger.error("attribute 错误: ", ex)
+    #         await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
+    #         return False
+
+    async def user_talk(self, session: CommandSession, role, user, text):
+        # ai_helper = AIHelper(client)
+        response = await self.ai_init([
+            {"role": "system","content": role},
+            {"role": "user","content": f"{await get_history(user)}\n{text}"}
+        ])
+        task_id = response.id
+        task_status = ''
+        get_cnt = 0
+
+        t = Timer()
+        t.start()
+        while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
+            reply = await aget_arg_with_timeout(session, 0.5)
+            if reply is not None and reply.strip() == "aistop":
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+                return False
+            result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
+            # print(result_response)
+            task_status = result_response.task_status
+            # await asyncio.sleep(0.5)
+            get_cnt += 1
+        try:
+            if get_cnt >= MAX_CHECK_TIMES:
+                t.stop()
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
+                return False
+            ans = result_response.choices[0].message.content
+            build_history(user=user, ask=text, ans=ans)
+            logger.info(f"AI 返回了以下 response：{result_response}")
+            debug_msg("处理结果")
+            return result_response.choices[0].message.content
+        except AttributeError as ex:
+            logger.error("attribute 错误:", ex)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
+            return False
+        except ZhipuAIError as ex:
+            logger.error(f"AI 出现错误: {ex}")
+            code = result_response.get("error", {}).get("code", "未知")
+            message = result_response.get("error", {}).get("message", "未知")
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_error", content=result_response, code=code, message=message))
+            return False
 cmds = {
         "clear": {
             "content": clear_history,
@@ -82,6 +198,7 @@ TIMES_LIMIT = 15
 @u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.HOUR, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or not x)
 async def _(session: CommandSession, user: u.User):
     times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
+    MAX_LENGTH = 1000
     intext = ""
     if "-r " in session.current_arg_text:
         intext = "-r"
@@ -97,7 +214,6 @@ async def _(session: CommandSession, user: u.User):
         args = parser.parse_args(session.argv)
         # print(session.argv)
         text =  ' '.join(args.text).strip()
-        MAX_LENGTH = 1000
         if args.ctrl and text and len(text) <= MAX_LENGTH:
             await send_session_msg(session, parse_control(session, text, user))
             return 2
@@ -113,23 +229,26 @@ async def _(session: CommandSession, user: u.User):
         t = await talk(session, text, user)
         if not t:
             return False
-        await send_session_msg(session,
-                               get_message("plugins", __plugin_name__, 'talk_result', talk=(t), times_left_now=cn2an.an2cn(times_left_now)), tips=True)
+        await send_session_msg(
+            session,
+            get_message("plugins", __plugin_name__, 'talk_result', talk=t, times_left_now=cn2an.an2cn(times_left_now)), tips=True
+        )
+        return True
     except Exception:
         logger.error("错误：", format_exc())
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
-    return True
 
-def get_history(user: u.User):
+async def get_history(user: u.User):
     user_history = user.ai_history
     if not user_history:
         return ""
     build_str = "历史记录：\n"
+    uname = await get_user_name(user.id, default='未知用户')
     for i, item in enumerate(user_history):
-        build_str += f"{i + 1}. [用户{user.id}]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
+        build_str += f"{i + 1}. [{item.get('time', '未知时间')}]][{uname}(qq{user.id})]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
     build_str += "=" * 15
-    build_str += "\n当前对话："
+    build_str += f"\n当前对话（时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
     return build_str
 
 def build_history(user: u.User, ask, ans):
@@ -138,7 +257,8 @@ def build_history(user: u.User, ask, ans):
     #     user.ai_history = []
     user.ai_history.append({
         "ask": ask,
-        "ans": ans
+        "ans": ans,
+        "time": get_time_now()
     })
     if len(user.ai_history) > 20:
         del user.ai_history[-1]
@@ -166,42 +286,6 @@ async def talk(session: CommandSession, text, user: u.User):
     else:
         tips = [tips]
     tips_str = [f"{i + 1}. {t}\n" for i, t in enumerate(tips)]
-    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str)
-    # print(role)
-    # print(f"{get_history(session.event.user_id)}\n{text}")
-    response = client.chat.asyncCompletions.create(
-    # model="glm-4-flashx",
-    model="glm-4.6",
-    messages=[
-            {"role": "system","content": role},
-            {"role": "user","content": f"{get_history(user)}\n{text}"}
-        ], temperature=0.3)
-    task_id = response.id
-    task_status = ''
-    get_cnt = 0
-    MAX_CHECK_TIMES = 1000
-    t = Timer()
-    t.start()
-    while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
-        reply = await aget_arg_with_timeout(session, 0.5)
-        if reply is not None and reply.strip() == "aistop":
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
-            return False
-        result_response = client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
-        # print(result_response)
-        task_status = result_response.task_status
-        # await asyncio.sleep(0.5)
-        get_cnt += 1
-    try:
-        if get_cnt >= MAX_CHECK_TIMES:
-            t.stop()
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
-            return False
-        ans = result_response.choices[0].message.content
-        build_history(user=user, ask=text, ans=ans)
-        debug_msg("处理结果")
-        return result_response.choices[0].message.content
-    except AttributeError as ex:
-        logger.error("attribute 错误: ", ex)
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
-        return False
+    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now())
+    ai_helper = AIHelper(client)
+    return await ai_helper.user_talk(session, role, user, text)

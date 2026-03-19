@@ -31,6 +31,7 @@ async def _(session: CommandSession):
     arg = session.current_arg_text.strip().lower()
     index_addtion = 0
     rank_items = user.get_rank('coins')
+    rank_items_exclude_zero = user.get_rank('coins', excluding_zero=True)
     spacing = False
     top = False
     if arg:
@@ -43,16 +44,16 @@ async def _(session: CommandSession):
 
     if arg and arg == 'avg':
         # 平均值消息
-        rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items)
+        rank_avg = rank_operation(lambda x: sum(x) / len(x), rank_items_exclude_zero)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_avg',
             avg=int(rank_avg),
-            median=int(rank_operation(lambda x: statistics.median(x), rank_items))
+            median=int(rank_operation(lambda x: statistics.median(x), rank_items_exclude_zero))
         )
         await send_session_msg(session, message)
         return True
     elif arg and arg == 'sum':
         # 总和消息
-        rank_sum = rank_operation(lambda x: sum(x), rank_items)
+        rank_sum = rank_operation(lambda x: sum(x), rank_items_exclude_zero)
         message = get_message("plugins", __plugin_name__, cmd_name, 'rank_msg_sum',
             sum=rank_sum
         )

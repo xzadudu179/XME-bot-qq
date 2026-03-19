@@ -164,15 +164,19 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
     msg_id = None
     try:
         from xme.xmetools.bottools import bot_call_action
-        if event.group_id is not None:
-            res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
-        else:
-            res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
-        msg_id = await bot.send(event, message=Message(MessageSegment.forward(res_id)))
+        msg_id = (await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id))["message_id"]
+        debug_msg(f"{msg_id=}")
+        # if event.group_id is not None:
+        #     res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
+        # else:
+        #     res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
+        # msg_id = await bot.send(event, message=Message(MessageSegment.forward(res_id)))
+        # msg = await bot.
+        if msg_id:
+            add_to_open_cmd_msgs(event.message_id, msg_id)
     except ApiError:
-        return
-    finally:
-        add_to_open_cmd_msgs(event.message_id, msg_id)
+        # logger.exception(ex)
+        raise
 
 def get_pure_text_message(message: dict) -> str:
     """获取纯文本消息
@@ -295,7 +299,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
                         nickname=await get_user_name(
                             session.event.user_id,
                             group_id=session.event.group_id,
-                            default="user"
+                            default="未知用户"
                         )
                     )
                 ]

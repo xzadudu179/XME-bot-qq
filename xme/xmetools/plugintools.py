@@ -39,14 +39,13 @@ class PluginCallData:
         self.time_cost = time_cost
         self.id = db_id
         self.args = args
-
     @classmethod
     def get_table_name(cls):
         return PluginCallData.__name__
 
     @staticmethod
     def get_datas():
-        return [PluginCallData.form_dict(d) for d in DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}")]
+        return [PluginCallData.form_dict(d) for d in DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}", dict_data=True)]
 
     def save(self):
         self.id = DATABASE.save_to_db(self)
@@ -72,6 +71,7 @@ class PluginCallData:
 
     @staticmethod
     def form_dict(data: dict) -> 'PluginCallData':
+        # logger.info(f"{data=}")
         return PluginCallData(
             name=data["name"],
             call_time=data["call_time"],
@@ -143,6 +143,7 @@ def on_command(
                     # 私聊为 None 和 userid
                     "open": f"{session.event.group_id}{session.event.user_id}"
                 }
+            result = None
             try:
                 result = await func(session, *args, **kwargs)
                 success = True
@@ -193,8 +194,12 @@ def on_command(
         if shell_like:
 
             async def shell_like_args_parser(session: CommandSession):
-                session.state['argv'] = shlex.split(session.current_arg) if \
-                    session.current_arg else []
+                try:
+                    session.state['argv'] = shlex.split(session.current_arg) if \
+                        session.current_arg else []
+                except ValueError:
+                    # 如果引号未闭合，将整个参数作为单个字符串
+                    session.state['argv'] = [session.current_arg] if session.current_arg else []
 
             cmd.args_parser_func = shell_like_args_parser
 

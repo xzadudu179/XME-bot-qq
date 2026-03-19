@@ -47,4 +47,4 @@ VERSION = '0.11.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
-DEBUG = False
+DEBUG = True

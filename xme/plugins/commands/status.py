@@ -8,6 +8,8 @@ from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.bottools import bot_call_action
 from xme.plugins.commands.xme_user.classes import user
+from xme.xmetools.plugintools import PluginCallData
+from collections import Counter
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
@@ -39,9 +41,29 @@ async def _(session: CommandSession):
     # user_datas = read_from_path("./data/users.json")
     user_count = len(user.User.get_users())
 
+    # 获取指令统计数据
+    datas = PluginCallData.get_datas()
+    if datas:
+        # 最常被调用的三个指令
+        call_counts = Counter(data.name for data in datas)
+        top_called = call_counts.most_common(3)
+        top_called_str = "\n".join(f"- {name}: {count} 次" for name, count in top_called)
+
+        # 平均每日调用量最大的三个指令
+        min_time = min(data.call_time for data in datas)
+        max_time = max(data.call_time for data in datas)
+        days = (max_time - min_time) / (24 * 3600) + 1  # 加1避免除零
+        daily_avgs = {name: count / days for name, count in call_counts.items()}
+        top_daily = sorted(daily_avgs.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_daily_str = "\n".join(f"- {name}: {avg:.2f} /d" for name, avg in top_daily)
+    else:
+        top_called_str = "无数据"
+        top_daily_str = "无数据"
+
     await send_session_msg(
         session, message + "=== 当前 bot 状态 ===\n" +
         info +
-        f"\n===============\nBOT 记录了 {user_count:,} 位用户。",
+        f"\n===============\nBOT 记录了 {user_count:,} 位用户。" +
+        f"\n=== 指令统计 ===\n最常被调用的三个指令：\n{top_called_str}\n\n日均调用量最大的三个指令：\n{top_daily_str}",
         tips=True
     )

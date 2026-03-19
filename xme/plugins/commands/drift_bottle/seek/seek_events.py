@@ -2024,7 +2024,7 @@ EVENTS = [
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(10, 20),
+          "change": lambda: random.randint(10, 25),
           "type": "-",
           "custom": False,
         },
@@ -2043,7 +2043,7 @@ EVENTS = [
           "custom": False,
         },
         "health": {
-          "change": lambda: random.randint(15, 35),
+          "change": lambda: random.randint(15, 40),
           "type": "-",
           "custom": False,
         },

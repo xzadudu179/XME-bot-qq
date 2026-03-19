@@ -6,6 +6,7 @@ import random
 from typing import Any
 from xme.xmetools.typetools import use_attribute
 from nonebot import CommandSession
+from nonebot.log import logger
 from xme.xmetools.randtools import html_messy_string, messy_string
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg
@@ -246,6 +247,7 @@ class Event:
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
         if long:
             await send_session_msg(session, message_prefix, merge_long_msg=False)
+            logger.info(f"即将发送的决策事件内容如下：{get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision')}")
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)
         else:
             await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)

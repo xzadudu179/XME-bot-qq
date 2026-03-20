@@ -124,7 +124,7 @@ async def comment(session, bottle_id, user_id, comment_content):
 async def report(session, bottle: DriftBottle, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True, report_content=""):
     content = get_message("plugins", __plugin_name__, "reported")
     messy_rate = max(0, min(100, bottle.views * 2 - bottle.likes * 3))
-    card = await image_msg(get_html_image(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%")))
+    card = await image_msg(get_html_image(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%"), 1200, 700))
     for superuser in config.SUPERUSERS:
         await session.bot.send_private_msg(user_id=superuser,message=f"{(await get_stranger_name( user_id=user_id))} ({user_id}) {message_prefix}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
     if send_success_message:

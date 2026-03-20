@@ -17,7 +17,6 @@ SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = None
 # SESSION_RUNNING_EXPRESSION = ""
 DEFAULT_COMMAND_PERMISSION = lambda s: True  # noqa: E731
-
 # 用户自定义 config
 SELF_ID = 3824641837
 # 测试群
@@ -43,8 +42,9 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '0.11.1-beta'
+VERSION = '0.12.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
-DEBUG = True
+IMAGE_TEMP_PATH = "./data/images/temp/"
+DEBUG = False

@@ -3,6 +3,7 @@ import base64
 import os
 from xme.xmetools import filetools
 # import asyncio
+from config import IMAGE_TEMP_PATH
 # from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops
@@ -24,7 +25,9 @@ from uuid import uuid4
 # from PIL import Image
 from pyzbar.pyzbar import decode
 
-hti = Html2Image()
+hti = Html2Image(
+)
+hti.output_path = IMAGE_TEMP_PATH
 
 def detect_qrcode(path_or_image: str | Image.Image) -> tuple[bool, list[str]]:
     results = decode(get_image(path_or_image))
@@ -90,11 +93,16 @@ def read_image(path):
     image = Image.open(path)
     return image
 
-def get_html_image(html_str, height=2500) -> Image.Image:
+def get_html_image(html_str, height=2500, width=1920) -> Image.Image:
     name = f"image-{uuid4()}.png"
-    hti.screenshot(html_str=html_str, save_as=name, size=(1920, height))
-    image = crop_transparent_area(name)
-    os.remove(name)
+    pth = os.path.join(IMAGE_TEMP_PATH, name)
+    x = time.time()
+    hti.screenshot(html_str=html_str, save_as=name, size=(width, height))
+    s = time.time()
+    p = s - x
+    print(f"ppp{p=}")
+    image = crop_transparent_area(pth)
+    # os.remove(name)
     return image
 
 def crop_transparent_area(input_path) -> Image.Image:

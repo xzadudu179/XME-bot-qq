@@ -2,6 +2,6 @@ import nonebot
 from xme.xmetools import filetools
 bot = nonebot.get_bot()
 
-@nonebot.scheduler.scheduled_job('cron', day='*')
+@nonebot.scheduler.scheduled_job('cron', hour='*')
 async def del_temp_images():
     filetools.clear_temps()

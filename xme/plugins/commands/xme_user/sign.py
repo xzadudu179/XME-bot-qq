@@ -1,21 +1,19 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.msgtools import send_session_msg
-import math
+# from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools import timetools
 # from xme.xmetools.texttools import dec_to_chinese
 import cn2an
 from xme.xmetools import randtools
-# from nonebot.permission import SenderRoles
-import json
+
 import random
-random.seed()
+# random.seed()
 from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
-from nonebot.log import logger
+from xme.xmetools.dicttools import get_value, set_value
 
 alias = ['签到', 'register', 's']
 cmd_name = 'sign'
@@ -23,7 +21,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
-    "usage": f'',
+    "usage": '',
     "permissions": [],
     "alias": alias
 }
@@ -35,14 +33,16 @@ async def _(session: CommandSession, user: User):
     FIRST_AWARD = 20
     message = ""
     # message = get_message("plugins", __plugin_name__, cmd_name, 'failed')
+    consecutive_days = get_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, default=0)
     debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
-    user.add_coins(append_coins)
+    consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 1.5))
+    user.add_coins(append_coins + consecutive_award)
     users: list[dict] = User.get_users()
     signed_users_count = 0
     reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
-    for u in users:
-        counters = u["counters"]
+    for us in users:
+        counters = us["counters"]
         if timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY) == timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY):
             signed_users_count += 1
     if append_coins == 0:
@@ -50,8 +50,11 @@ async def _(session: CommandSession, user: User):
             time_period=timetools.get_time_period()
         )
     else:
-        message = get_message("plugins", __plugin_name__, cmd_name, 'success',
-            login_success=get_message("plugins", __plugin_name__, cmd_name, 'login_success', time_period=timetools.get_time_period()),
+        message = get_message(
+            "plugins", __plugin_name__, cmd_name, 'success',
+            login_success=get_message(
+                "plugins", __plugin_name__, cmd_name, 'login_success', time_period=timetools.get_time_period()
+            ),
             state=get_message("plugins", __plugin_name__, cmd_name, 'get_state'),
             coin_count=abs(append_coins),
             coin_pron_name=coin_pronoun + coin_name,
@@ -62,7 +65,17 @@ async def _(session: CommandSession, user: User):
         sign_message = get_message("plugins", __plugin_name__, cmd_name, 'first_sign', first_award=FIRST_AWARD,  )
     else:
         sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=cn2an.an2cn(signed_users_count + 1) if (signed_users_count + 1 <= 10) else f' {signed_users_count + 1} ')
-    message += "\n" + sign_message + reaction
+    consecutive_message = ""
+    if consecutive_days > 0:
+        consecutive_message = "\n" + get_message(
+            "plugins", __plugin_name__, cmd_name, 'consecutive_days', n = consecutive_days + 1, cons_award=
+            " " + get_message(
+                "plugins", __plugin_name__, cmd_name, "cons_award", count=consecutive_award
+                ) if consecutive_award > 0 else ""
+            )
+    message += consecutive_message + "\n" + sign_message + reaction
+    # 增加连签
+    set_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, set_method=lambda v: (v + 1) if v is not None else 1)
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()
     debug_msg("保存用户数据")

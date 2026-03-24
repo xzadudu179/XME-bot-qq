@@ -1580,6 +1580,14 @@
           "你是今天第{count}个签到的哦 {neutral}",
           "你是今天第{count}个签到的哦{positive_punc}",
           "你是今天第{count}位签到的{positive_punc}"
+        ],
+        "consecutive_days": [
+            "你已经连续签到 {n} 天啦 {positive}{cons_award}",
+            "你连续签到了 {n} 天 {positive}{cons_award}"
+        ],
+        "cons_award": [
+            "奖励你 {count} {coin_pronoun}{coin_name}{positive_punc}",
+            "给你 {count} {coin_pronoun}{coin_name}作为奖励{positive_punc}"
         ]
       },
       "lottery": {

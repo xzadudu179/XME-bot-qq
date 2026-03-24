@@ -112,12 +112,13 @@ class AIHelper:
             if reply is not None and reply.strip() == "aistop":
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
+            result_response = None
+        try:
             result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
             # print(result_response)
             task_status = result_response.task_status
             # await asyncio.sleep(0.5)
             get_cnt += 1
-        try:
             if get_cnt >= MAX_CHECK_TIMES:
                 t.stop()
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))

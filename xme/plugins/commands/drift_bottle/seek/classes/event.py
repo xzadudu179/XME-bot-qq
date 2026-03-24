@@ -180,6 +180,8 @@ class Event:
             str: 决策事件返回
         """
         can_quit: bool = event_dict["can_quit"]
+        # TODO get_random_broken_bottle 潜在的 None 异常问题
+        # BUG 漂流瓶事件会出现重复瓶子的问题，目前不知道是为什么，而且似乎只有同一局 seek 会这样
         event_datas = {k: v() for k, v in event_dict.get("datas", {}).items()}
         formats = {k: (await v(event_datas) if iscoroutinefunction(v) else v(event_datas)) for k, v in event_dict.get("formats", {}).items()}
         # print(formats, event_dict.get("formats", {}))
@@ -247,7 +249,7 @@ class Event:
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
         if long:
             await send_session_msg(session, message_prefix, merge_long_msg=False)
-            logger.info("即将发送的决策事件内容如下：" + {get_message('plugins', __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + '\n' + get_message('plugins', __plugin_name__, command_name, 'get_decision')})
+            logger.info("即将发送的决策事件内容如下：" + get_message('plugins', __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + '\n' + get_message('plugins', __plugin_name__, command_name, 'get_decision'))
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)
         else:
             await send_session_msg(session, message_prefix + get_message("plugins", __plugin_name__, command_name, 'decision_event', event_desc=event_desc, decision_descs=decision_str) + "\n" + get_message("plugins", __plugin_name__, command_name, 'get_decision'), merge_long_msg=False)

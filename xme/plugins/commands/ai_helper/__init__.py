@@ -12,6 +12,7 @@ from nonebot.log import logger
 import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path
+from xme.xmetools.cmdtools import is_command
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout
 from xme.xmetools.bottools import get_user_name
 from character import get_message, get_character_item, character_format
@@ -108,12 +109,14 @@ class AIHelper:
         t = Timer()
         t.start()
         while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
+            debug_msg(f"尝试获取 AI 连接第 {get_cnt} 次")
             reply = await aget_arg_with_timeout(session, 0.5)
+            if reply is not None and is_command(reply):
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_sending"))
             if reply is not None and reply.strip() == "aistop":
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
-            result_response = None
-        try:
+            # result_response = None
             result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
             # print(result_response)
             task_status = result_response.task_status
@@ -123,6 +126,7 @@ class AIHelper:
                 t.stop()
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
                 return False
+        try:
             ans = result_response.choices[0].message.content
             build_history(user=user, ask=text, ans=ans)
             logger.info(f"AI 返回了以下 response：{result_response}")

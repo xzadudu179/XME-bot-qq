@@ -34,6 +34,9 @@ async def _(session: CommandSession, user: User):
     message = ""
     # message = get_message("plugins", __plugin_name__, cmd_name, 'failed')
     consecutive_days = get_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, default=0)
+    last_sign_date = get_value(__plugin_name__, cmd_name, "sign_date", search_dict=user.plugin_datas, default=timetools.curr_days())
+    curr_date = timetools.curr_days()
+    is_consecutive = curr_date - last_sign_date <= 1
     debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
     consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 1.5))
@@ -66,16 +69,19 @@ async def _(session: CommandSession, user: User):
     else:
         sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=cn2an.an2cn(signed_users_count + 1) if (signed_users_count + 1 <= 10) else f' {signed_users_count + 1} ')
     consecutive_message = ""
-    if consecutive_days > 0:
+    if consecutive_days > 0 and is_consecutive:
         consecutive_message = "\n" + get_message(
             "plugins", __plugin_name__, cmd_name, 'consecutive_days', n = consecutive_days + 1, cons_award=
             " " + get_message(
                 "plugins", __plugin_name__, cmd_name, "cons_award", count=consecutive_award
                 ) if consecutive_award > 0 else ""
             )
+    if not is_consecutive:
+        consecutive_message = "\n" + get_message("plugins", __plugin_name__, cmd_name, 'consecutive_reset')
     message += consecutive_message + "\n" + sign_message + reaction
     # 增加连签
-    set_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, set_method=lambda v: (v + 1) if v is not None else 1)
+    set_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, set_method=lambda v: (v + 1) if v is not None and is_consecutive else 1)
+    set_value(__plugin_name__, cmd_name, "sign_date", search_dict=user.plugin_datas, set_method=lambda _: curr_date)
     # 防止发送消息时间过长导致出现多个第一名签到的情况
     user.save()
     debug_msg("保存用户数据")

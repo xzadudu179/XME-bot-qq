@@ -1586,8 +1586,8 @@
                     "你连续签到了 {n} 天 {positive}{cons_award}"
                 ],
                 "consecutive_reset": [
-                    "你的连签重置了 {negative}",
-                    "{negative} 你的连签重置了..."
+                    "你的 {days} 天连签重置了 {negative}",
+                    "{negative} 你的 {days} 天连签重置了..."
                 ],
                 "cons_award": [
                     "奖励你 {count} {coin_pronoun}{coin_name}{positive_punc}",

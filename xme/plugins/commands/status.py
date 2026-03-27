@@ -54,7 +54,7 @@ async def _(session: CommandSession):
         max_time = max(data.call_time for data in datas)
         days = (max_time - min_time) / (24 * 3600) + 1  # 加1避免除零
         daily_avgs = {name: count / days for name, count in call_counts.items()}
-        top_daily = sorted(daily_avgs.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_daily = sorted(daily_avgs.items(), key=lambda x: x[1], reverse=True)[:5]
         top_daily_str = "\n".join(f"- {name}: {avg:.2f} /d" for name, avg in top_daily)
     else:
         # top_called_str = "无数据"
@@ -64,6 +64,6 @@ async def _(session: CommandSession):
         session, message + "=== 当前 bot 状态 ===\n" +
         info +
         f"\n===============\nBOT 记录了 {user_count:,} 位用户。" +
-        f"\n=== 指令统计 ===\n日均调用量最大的三个指令：\n{top_daily_str}",
+        f"\n=== 指令统计 ===\n日均调用量最大的五个指令：\n{top_daily_str}",
         tips=True
     )

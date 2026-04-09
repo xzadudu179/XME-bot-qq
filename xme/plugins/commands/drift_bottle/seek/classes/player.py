@@ -161,9 +161,9 @@ class Player:
         def get_depth_ratio():
             depth: int = self.depth.value
             weight = 1
-            # 将区间按深度排序
             if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
                 weight = 0.4
+            # 将区间按深度排序
             sorted_regions = sorted(depths.items(), key=lambda x: x[1])
             for i in range(len(sorted_regions) - 1):
                 region_last, d_last = sorted_regions[i]
@@ -173,6 +173,13 @@ class Player:
                 if d_last <= depth <= d_next:
                     # 计算相对比值
                     ratio = (depth - d_last) / (d_next - d_last)
+                    return region_next, ratio * weight
+                # 对于深度不符合区间的情况
+                elif depth < d_last:
+                    ratio = 0
+                    return region_next, ratio * weight
+                elif depth > d_next:
+                    ratio = 1
                     return region_next, ratio * weight
             # 若未匹配到说明超过最大区间
             last_region, _ = sorted_regions[-1]

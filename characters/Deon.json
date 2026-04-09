@@ -942,8 +942,8 @@
             "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
             "no_more_wife": "没有老婆可以更换了呢... {negative}",
             "wife_message": [
-                "{who}今日的群老婆是:\n{avatar}\n{name} ({user_id})",
-                "{who}今天的群老婆是:\n{avatar}\n{name} ({user_id}) \n汪！"
+                "{who}今日的群老婆是:\n{avatar}{name} ({user_id})",
+                "{who}今天的群老婆是:\n{avatar}{name} ({user_id}) \n汪！"
             ],
             "no_at_hint": "你的参数里有 @ 符号，但是解析不到 at 的 QQ，可能没 at 上哦 {neutral}，",
             "no_wife_yet": [

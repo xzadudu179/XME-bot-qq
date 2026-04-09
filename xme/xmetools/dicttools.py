@@ -54,4 +54,4 @@ def set_value(*keys: str, search_dict: dict, set_method=lambda value: value, del
     if delete:
         del  search_dict[keys[0]]
         return
-    search_dict[keys[0]] = set_method(v)
+    search_dict[keys[0]] = set_method(v) 

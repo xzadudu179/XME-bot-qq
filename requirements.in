@@ -9,8 +9,10 @@ psutil
 feedparser
 aiohttp
 aiocqhttp
+aiocache
 imagehash
 PyAutoGUI
+"nonebot[scheduler]"
 mss
 html2image
 numpy

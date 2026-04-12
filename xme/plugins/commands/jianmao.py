@@ -9,7 +9,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.msgtools import image_msg
 
-API_URL="http://8.141.27.115:8000"
+API_URL="https://mrjm.fur-bot.com"
 # API_URL="http://furgon.yjwmidc.com:8000"
 
 alias = ['鉴毛', 'jianmao', 'jrjm']
@@ -27,14 +27,16 @@ async def get_jianmao_data_from_id(token: str, qq: str, id: str):
     '''
     期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/" + 期数id
     '''
-    return await aget(token, qq, url)
+    return await aget(url, token=token, qq=qq)
 
+async def check_health() -> bool:
+    resp = await aget(f"{API_URL}/health")
+    data = resp.json()
+    status = data['status']
+    return status == "ok"
 
-async def aget(token: str, qq: str, url):
-    payload = {
-        "token": token,
-        "qq": qq
-    }
+async def aget(url, **kwargs):
+    payload = kwargs
     async with httpx.AsyncClient(trust_env=False) as client:
         try:
             response = await client.post(url, json=payload)
@@ -59,7 +61,7 @@ async def get_jianmao_data_from_name(token: str, qq: str, name: str):
     '''
     名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/" + name
     '''
-    return await aget(token, qq, url)
+    return await aget(url, token=token, qq=qq, )
 
 async def get_random_jianmao_data(token: str, qq: str):
     url = f"{API_URL}/furry_will/random/"
@@ -68,7 +70,7 @@ async def get_random_jianmao_data(token: str, qq: str):
     期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/" + 期数id
     名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/" + 关键字
     '''
-    return await aget(token, qq, url)
+    return await aget(url, token=token, qq=qq)
 
 async def get_jianmao_data(session, jianmao_func, **jianmao_kwargs) -> bool:
     jwt = generate_jwt(JIANMAO_QQ, JIANMAO_TOKEN)
@@ -86,6 +88,8 @@ async def get_jianmao_data(session, jianmao_func, **jianmao_kwargs) -> bool:
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     arg = session.current_arg_text.strip()
+    if not await check_health():
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'server_error'))
     if arg and arg.isdigit():
         return await get_jianmao_data(session, get_jianmao_data_from_id, id=arg)
     elif arg:

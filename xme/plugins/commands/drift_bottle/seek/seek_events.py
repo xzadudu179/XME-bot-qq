@@ -1502,6 +1502,15 @@ EVENTS = [
     "can_quit": True,
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 230,
     "decisions": [
+        {
+        "type": "normal",
+        "tags": [],
+        "tip": "",
+        "names": ["留在城市", "继续探索城市"],
+        "descs": ["你觉得这座城市还有东西没被发现", "你觉得这座城市还适合继续探索", "你觉得这座城市应该多探索一下"],
+        "changes": {
+        }
+      },
       {
         "type": "normal",
         "tags": [],
@@ -1517,15 +1526,7 @@ EVENTS = [
         },
         "region_change": lambda last: last,
       },
-      {
-        "type": "normal",
-        "tags": [],
-        "tip": "",
-        "names": ["留在城市", "继续探索城市"],
-        "descs": ["你觉得这座城市还有东西没被发现", "你觉得这座城市还适合继续探索", "你觉得这座城市应该多探索一下"],
-        "changes": {
-        }
-      },
+
     ]
   },
   {

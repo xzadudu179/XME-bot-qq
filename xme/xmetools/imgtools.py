@@ -6,7 +6,7 @@ from xme.xmetools import filetools
 from config import IMAGE_TEMP_PATH
 # from aiocqhttp import MessageSegment
 from io import BytesIO
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 import imagehash
 # from collections import defaultdict
 from xme.xmetools.reqtools import fetch_data
@@ -29,8 +29,33 @@ hti = Html2Image(
 )
 hti.output_path = IMAGE_TEMP_PATH
 
+def make_circle_image(path_or_image: str | Image.Image) -> Image.Image:
+
+    img = get_image(path_or_image).convert("RGBA")
+    w, h = img.size
+
+
+    d = min(w, h)
+
+    left = (w - d) // 2
+    top = (h - d) // 2
+    right = left + d
+    bottom = top + d
+    img_cropped = img.crop((left, top, right, bottom))
+
+    # 创建圆形 mask
+    mask = Image.new("L", (d, d), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, d, d), fill=255)
+
+    # 应用 mask
+    result = Image.new("RGBA", (d, d))
+    result.paste(img_cropped, (0, 0), mask)
+    return result
+
 def detect_qrcode(path_or_image: str | Image.Image) -> tuple[bool, list[str]]:
-    results = decode(get_image(path_or_image))
+    logger.info("正在检测二维码")
+    results = decode(limit_size(get_image(path_or_image), 800))
     if results:
         return True, [r.data.decode("utf-8") for r in results]
     return False, []

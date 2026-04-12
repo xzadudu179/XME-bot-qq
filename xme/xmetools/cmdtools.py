@@ -69,7 +69,7 @@ def get_alias_by_cmd(cmd_name: str):
     # print(cmds)
     return cmds.get(cmd_name, False)
 
-def use_args(arg_len: int, split_str: str = None, default: str = "", arg_types: type | list[type] = str):
+def use_args(arg_len: int, split_str: str = None, default: str = "", arg_types: type | list[type] = str, raw=False):
     """解析指令内参数，会添加一个名叫 arg_list 的指定参数
 
     Args:
@@ -81,7 +81,8 @@ def use_args(arg_len: int, split_str: str = None, default: str = "", arg_types: 
     def decorator(func):
         @wraps(func)
         async def wrapper(session: CommandSession, *args, **kwargs):
-            arg_list = get_command_args(session.current_arg_text.strip(), arg_len, arg_len, split_str, default, arg_types=arg_types)
+            arg_text = session.current_arg_text.strip() if not raw else session.current_arg.strip()
+            arg_list = get_command_args(arg_text, arg_len, arg_len, split_str, default, arg_types=arg_types)
             return await func(session, arg_list=arg_list, *args, **kwargs)
 
         return wrapper

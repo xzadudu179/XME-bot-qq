@@ -21,11 +21,12 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 
 def is_illegal_image(path_or_image):
-    result, link = detect_qrcode(path_or_image)
-    # logger.info(f"{result}, {link}")
-    if result and is_url(link):
-        logger.warning(f"检测到二维码链接：{link}")
-        return True
+    result, links = detect_qrcode(path_or_image)
+    logger.info(f"{result}, {links}")
+    for link in links:
+        if result and is_url(link):
+            logger.warning(f"检测到二维码链接：{link}")
+            return True
     return False
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]

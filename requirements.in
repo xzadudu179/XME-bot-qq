@@ -18,6 +18,7 @@ html2image
 numpy
 matplotlib
 colorspacious
+sniffio
 PyGetWindow
 cn2an
 httpx

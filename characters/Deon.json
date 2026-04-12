@@ -1989,14 +1989,16 @@
                 "没有任何东西哦...这个数应该是质数{positive_punc}"
             ]
         },
-        "maifriend": {
-            "desc": "生成旅行伙伴图",
-            "introduction": "生成自己或指定群友的旅行伙伴图",
+        "ring": {
+            "desc": "生成头像装饰环",
+            "introduction": "生成自己或指定群友的头像装饰环，参数可以填写以下内容：\n  maif: 旅行伙伴\n  goog: google pro 头像环\n  goog2: google pro 头像环（小头像效果）",
             "error": [
                 "{negative} 生成图片出错了，可能是 qq 无效哦...",
                 "{negative} 生成图片出现错误，可以问问 179...",
                 "{negative} 生成图片出问题了，可能是 qq 无效哦..."
-            ]
+            ],
+            "no_method": "你好像没有指定任何生成样式呢，试试使用 \"/h ri\" 来查看帮助吧~",
+            "invalid_method": "好像没有名为 {method} 的方法呢...使用 \"/h ri\" 看看这个指令的帮助吧~"
         },
         "peek179": {
             "desc": "看看 179",
@@ -2076,6 +2078,9 @@
             "result": [
                 "{positive}这次的鉴毛图片是一只来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}",
                 "{positive}这张鉴毛图片是来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}"
+            ],
+            "server_error": [
+                "{negative} 服务器好像出现了错误，通信失败了..."
             ]
         },
         "ai_helper": {

@@ -8,24 +8,29 @@ import jieba
 import unicodedata
 import string
 import hashlib
+from urllib.parse import urlparse
 from difflib import SequenceMatcher
 import enchant
 
 d = enchant.Dict("en_US")
 
-URL_PATTERN = re.compile(
-    r'^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
-    re.IGNORECASE
-)
 
 def is_url(text: str) -> bool:
-    text = text.strip()
-    return bool(URL_PATTERN.fullmatch(text))
+    try:
+        result = urlparse(text)
+        return all([result.scheme, result.netloc])
+    except:
+        return False
 
 def has_url(text: str) -> bool:
-    text = text.strip()
-    return bool(URL_PATTERN.search(text))
-
+    for token in text.split():
+        try:
+            parsed = urlparse(token)
+            if parsed.scheme in ("http", "https") and parsed.netloc:
+                return True
+        except Exception:
+            continue
+    return False
 
 def is_valid_english_word(word: str) -> bool:
     return d.check(word)

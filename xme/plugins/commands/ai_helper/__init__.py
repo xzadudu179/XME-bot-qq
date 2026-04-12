@@ -290,7 +290,7 @@ async def talk(session: CommandSession, text, user: u.User):
         tips = [character_format(t) for t in tips]
     else:
         tips = [tips]
-    tips_str = [f"{i + 1}. {t}\n" for i, t in enumerate(tips)]
+    tips_str = [f"- {t}\n" for t in tips]
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now())
     ai_helper = AIHelper(client)
     return await ai_helper.user_talk(session, role, user, text)

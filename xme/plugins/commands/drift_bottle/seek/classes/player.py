@@ -463,12 +463,12 @@ class Player:
     # 玩家是否还活着
     def is_die(self) -> tuple[bool, str]:
         if self.oxygen.value <= 0:
-            return (True, html_messy_string("氧气不足", self.get_messy_rate()))
+            return (True, html_messy_string("氧气不足", self.get_messy_rate()), "氧气不足")
         elif self.health.value <= 0:
-            return (True, html_messy_string("生命值过低", self.get_messy_rate()))
+            return (True, html_messy_string("生命值过低", self.get_messy_rate()), "生命值过低")
         elif self.san.value <= 0:
-            return (True, html_messy_string("混乱而死", self.get_messy_rate()))
-        return (False, "")
+            return (True, html_messy_string("混乱而死", self.get_messy_rate()), "混乱而死")
+        return (False, "", "")
 
     def get_attr_str(self, detailed=False, html=True) -> str:
         index = 0

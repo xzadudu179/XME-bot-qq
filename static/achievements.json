@@ -58,5 +58,15 @@
         "desc": "你看清了世界的本质...",
         "award": 666,
         "hidden": true
+    },
+    "沙漠探索者": {
+        "desc": "你持续签到了一个（漠）月啦~",
+        "award": 800,
+        "hidden": false
+    },
+    "真相...?的冲击": {
+        "desc": "(/seek) 你因混乱而死",
+        "award": 100,
+        "hidden": false
     }
 }

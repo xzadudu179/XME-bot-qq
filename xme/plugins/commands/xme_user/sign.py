@@ -79,6 +79,9 @@ async def _(session: CommandSession, user: User):
     if not is_consecutive:
         consecutive_message = "\n" + get_message("plugins", __plugin_name__, cmd_name, 'consecutive_reset', days=consecutive_days)
     message += consecutive_message + "\n" + sign_message + reaction
+
+    if consecutive_days + 1 >= 30:
+        await user.achieve_achievement(session, "沙漠探索者")
     # 增加连签
     set_value(__plugin_name__, cmd_name, "consecutive_days", search_dict=user.plugin_datas, set_method=lambda v: (v + 1) if v is not None and is_consecutive else 1)
     set_value(__plugin_name__, cmd_name, "sign_date", search_dict=user.plugin_datas, set_method=lambda _: curr_date)

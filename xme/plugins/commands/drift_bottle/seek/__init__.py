@@ -51,7 +51,9 @@ class Seek:
                 if tool.can_apply():
                     msgs.append(tool.apply_event(self.event))
             msg = SeekStep(self.event).gen_step(self.events, self.player, is_sim=is_sim)
-            is_die, die_reason = self.player.is_die()
+            is_die, die_reason, raw_reason = self.player.is_die()
+            if raw_reason == "混乱而死":
+                self.player.achieved_achievements.append("真相...?的冲击")
             if (self.player.back and self.player.depth.value <= 0) or is_die:
                 # 回到海面，新增一步回到海面的计算
                 if not is_die:

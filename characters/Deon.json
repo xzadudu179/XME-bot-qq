@@ -2080,7 +2080,7 @@
                 "{positive}这张鉴毛图片是来自{city}、种族为{type}的{name} {positive_punc}\nAPI 由筱翯提供 {positive}"
             ],
             "server_error": [
-                "{negative} 服务器好像出现了错误，通信失败了..."
+                "{negative} 服务器好像出现了错误，通信失败了...\n{data}"
             ]
         },
         "ai_helper": {

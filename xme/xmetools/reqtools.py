@@ -10,15 +10,15 @@ async def get_weather(city: str) -> dict:
     json_dict = json.loads(response)
     return json_dict
 
-async def fetch_data_post(url, params, *args, **kwargs):
+async def fetch_data_post(url, json, *args, **kwargs):
     try:
         async with aiohttp.ClientSession() as aiosession:
-            async with aiosession.post(url, *args, **kwargs, json=params) as response:
+            async with aiosession.post(url, *args, **kwargs, json=json) as response:
                 data = await response.json()
                 return data
     except Exception as e:
         logger.exception(e)
-        return None
+        raise
 
 async def fetch_data(url, response_type="json", *args, **kwargs):
     async with aiohttp.ClientSession() as aiosession:

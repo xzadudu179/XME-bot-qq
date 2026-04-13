@@ -4,7 +4,7 @@ from datetime import timedelta
 # import keys
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
-SUPERUSERS = {1795886524, 2065633379}
+SUPERUSERS = {1795886524}
 COMMAND_START = ['/', '.', '。', '／']
 # ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'
@@ -42,7 +42,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '0.12.1-beta'
+VERSION = '0.13.1-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

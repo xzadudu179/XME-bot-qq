@@ -19,7 +19,7 @@ def is_url(text: str) -> bool:
     try:
         result = urlparse(text)
         return all([result.scheme, result.netloc])
-    except:
+    except Exception:
         return False
 
 def has_url(text: str) -> bool:

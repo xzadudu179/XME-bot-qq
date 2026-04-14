@@ -5,6 +5,7 @@ import signal
 import os
 import select
 import logging
+from xme.xmetools.filetools import backup_data_dir
 from logging.handlers import TimedRotatingFileHandler
 
 TARGET_SCRIPT = "bot.py"
@@ -90,6 +91,7 @@ if os.name == "nt":
 
 if __name__ == "__main__":
     logger = setup_logger()
+    logger.info(f"BOT 数据已备份至 {backup_data_dir()}")
     while running:
         proc = start_process()
 
@@ -115,7 +117,7 @@ if __name__ == "__main__":
             logger.error(f"{TARGET_SCRIPT} 异常退出，返回码: {ret}")
 
         RESTART_DELAY = 5
-        logger.info(f"{TARGET_SCRIPT} 已退出，将在 {RESTART_DELAY} 秒后重启...\n")
+        logger.info(f"{TARGET_SCRIPT} 已退出，将在 {RESTART_DELAY} 秒后重启...")
         time.sleep(RESTART_DELAY)
 
     stop_process()

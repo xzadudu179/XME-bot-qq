@@ -177,3 +177,6 @@ docs.md
 prohibited.json
 static/map/map.json
 static/img/jianmao/*
+guild1.db
+guild1.db-shm
+guild1.db-wal

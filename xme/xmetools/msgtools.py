@@ -166,16 +166,9 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
         from xme.xmetools.bottools import bot_call_action
         msg_id = (await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id))["message_id"]
         debug_msg(f"{msg_id=}")
-        # if event.group_id is not None:
-        #     res_id = await bot_call_action(bot, "send_group_forward_msg", messages=Message(messages), group_id=event.group_id)
-        # else:
-        #     res_id = await bot_call_action(bot, "send_private_forward_msg", messages=Message(messages), user_id=event.user_id)
-        # msg_id = await bot.send(event, message=Message(MessageSegment.forward(res_id)))
-        # msg = await bot.
         if msg_id:
             add_to_open_cmd_msgs(event.message_id, msg_id)
     except ApiError:
-        # logger.exception(ex)
         raise
 
 def get_pure_text_message(message: dict) -> str:
@@ -203,9 +196,10 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
 
-async def msg_preprocesser(session, message, send_time=-1):
+async def msg_preprocesser(session, message: Message, send_time=-1):
     funcs = {
     }
+    logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{message.extract_plain_text()}\"")
     if send_time >= 0:
         message += "\n" + get_message("config", "message_time", secs=send_time)
     for func in funcs:
@@ -240,6 +234,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
     if msg and msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
     is_nline_start = True if msg and msg[0] == "\n" else False
+    msg = await msg_preprocesser(session, Message(msg))
     reply = await session.aget(
         prompt="" if prompt is None else (
             debug_prefix + (
@@ -268,8 +263,8 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
 async def send_session_msg(session: BaseSession, message: Message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, merge_long_msg=True, **kwargs):
     message_result = Message(message)
     list_msg = message_result
-    message_result = await msg_preprocesser(session, message)
-    if not message_result or message_result == "":
+    message_result = await msg_preprocesser(session, message_result)
+    if not message_result:
         logger.warning(f"bot 要发送的消息 {message} 已被阻止/没东西")
         await session.send("[ERROR] BOT 即将发送的消息已被阻止/为空")
         return

@@ -18,7 +18,7 @@ SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = ""
 DEFAULT_COMMAND_PERMISSION = lambda s: True  # noqa: E731
 # 用户自定义 config
-SELF_ID = 3824641837
+SELF_ID = 3921994690
 # 测试群
 GROUPS_WHITELIST = [
     727949269,

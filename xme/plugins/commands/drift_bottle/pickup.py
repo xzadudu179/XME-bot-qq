@@ -342,6 +342,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             return "CMD_OVER"
         try:
             reply = await aget_session_msg(session=session, can_use_command=True, command_func=cmd_func)
+            reply = reply.replace("－", "-")
         except TimeoutError:
             # 超时不处理异常
             return True

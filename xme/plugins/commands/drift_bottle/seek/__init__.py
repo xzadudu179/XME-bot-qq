@@ -453,7 +453,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 total_steps += result["count"]
                 if result["over"]:
                     expected_steps = 0
-                continue_message = get_message("plugins", __plugin_name__, command_name, 'continue_step_tip') if player.depth.value > 0 else get_message("plugins", __plugin_name__, command_name, 'continue_step_tip_onsea')
+                continue_message = get_message("plugins", __plugin_name__, command_name, 'continue_step_tip') if \
+                player.depth.value > 0 else \
+                get_message("plugins", __plugin_name__, command_name, 'continue_step_tip_onsea')
                 step_results = await seek.make_steps_message(session, result, prefix=prefix, send=False)
                 if player.depth.value <= 0:
                     # 回到海面补充一下氧气
@@ -462,7 +464,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 msg = ""
                 if step_results[0].strip() != prefix:
                     md_msg = "\n".join(step_results)
-                    msg = msg_prefix + (await image_msg(messy_image(get_img_msg(md_msg, player), (100 - player.san.value) / 3.5, rand_color=False))) + (continue_message if result["decision"] is None else "")
+                    msg = msg_prefix + (await image_msg(messy_image(
+                        get_img_msg(md_msg, player),
+                        (100 - player.san.value) / 3.5, rand_color=False))) + (continue_message if result["decision"] is None else "")
                     if result["decision"] is None:
                     # new_messages += [change_group_message_content(msg_dict, r) for r in step_results]
                         await send_session_msg(session, msg)
@@ -493,7 +497,15 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             message = get_message("plugins", __plugin_name__, command_name, 'seek_start')
         # TODO: get_tools_str↑
         start_prefix = "----------开头总结----------"
-        total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True, html=True)}</div>\n<p>使用道具：无</p>\n<hr>\n<h2>{html_messy_string(start_prefix, temperature=player.get_messy_rate())}</h2>\n<hr/>\n', msg_prefix=message, prefix_onlyonce=True)
+        total_steps = await parse_event_steps(
+            total_steps,
+            expected_steps,
+            prefix=f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,
+            html=True)}</div>\n<p>使用道具：无</p>\n<hr>\n<h2>{html_messy_string(start_prefix,
+            temperature=player.get_messy_rate())}</h2>\n<hr/>\n',
+            msg_prefix=message,
+            prefix_onlyonce=True
+        )
         while seek.status == "start" and player.chance.value > 0:
             expected_steps = 0
             valid_reply = False

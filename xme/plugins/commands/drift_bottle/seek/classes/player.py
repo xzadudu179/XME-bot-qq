@@ -5,7 +5,7 @@ from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools.colortools import mix_hex_color_lab
 from xme.xmetools.debugtools import debug_msg
-# from nonebot.log import logger
+from nonebot.log import logger
 
 # 寻宝区域
 class SeekRegion(Enum):
@@ -165,23 +165,27 @@ class Player:
                 weight = 0.4
             # 将区间按深度排序
             sorted_regions = sorted(depths.items(), key=lambda x: x[1])
-            for i in range(len(sorted_regions) - 1):
-                region_last, d_last = sorted_regions[i]
-                region_next, d_next = sorted_regions[i + 1]
-
-                # 判断深度是否在此区间之间
-                if d_last <= depth <= d_next:
-                    # 计算相对比值
-                    ratio = (depth - d_last) / (d_next - d_last)
-                    return region_next, ratio * weight
-                # 对于深度不符合区间的情况
-                elif depth < d_last:
-                    ratio = 0
-                    return region_next, ratio * weight
-                elif depth > d_next:
-                    ratio = 1
-                    return region_next, ratio * weight
+            curr_region = self.region.value
+            d_last = depths[self.region.value]
+            region_next, d_next = sorted_regions[[i for i, r in enumerate(sorted_regions) if r[0] == self.region.value][0] + 1]
+            # 判断深度是否在此区间之间
+            logger.info(f"深度 {depth}, 当前区域 {curr_region} {d_last}, 下一区域 {region_next} {d_next}")
+            if d_last <= depth <= d_next:
+                # 计算相对比值
+                ratio = (depth - d_last) / (d_next - d_last)
+                logger.debug("在中间")
+                return region_next, ratio * weight
+            # 对于深度不符合区间的情况
+            elif depth < d_last:
+                ratio = 0
+                logger.debug("在上一个之前")
+                return region_next, ratio * weight
+            elif depth > d_next:
+                ratio = 1
+                logger.debug("在下一个之后")
+                return region_next, ratio * weight
             # 若未匹配到说明超过最大区间
+            logger.debug("未匹配")
             last_region, _ = sorted_regions[-1]
             return last_region, 1.0 * weight
         region_colors = {
@@ -363,6 +367,7 @@ class Player:
         for k, v in default_colors.items():
             curr_color = region_colors.get(self.region.value, {}).get(k, v)
             color_dict[k] = mix_hex_color_lab(curr_color, next_region_colors.get(k, curr_color), ratio)
+            logger.debug(f"color {k} is {v}, ratio {ratio}, curr {curr_color}, next {next_region_colors.get(k, curr_color)}")
         return color_dict
 
     def get_depth_tip(self, count):

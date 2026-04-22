@@ -500,9 +500,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         total_steps = await parse_event_steps(
             total_steps,
             expected_steps,
-            prefix=f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,
-            html=True)}</div>\n<p>使用道具：无</p>\n<hr>\n<h2>{html_messy_string(start_prefix,
-            temperature=player.get_messy_rate())}</h2>\n<hr/>\n',
+            prefix=f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,html=True)}</div>\n<p>使用道具：无</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n',
             msg_prefix=message,
             prefix_onlyonce=True
         )

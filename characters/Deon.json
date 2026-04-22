@@ -938,7 +938,7 @@
         },
         "今日老婆": {
             "desc": "今日老婆相关指令",
-            "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n使用 \"/w ch\" 可以更换老婆\n注意：这个功能仅供娱乐 uwu",
+            "introduction": "查看自己的今日群老婆，或者是别人的今日群老婆\n\n使用 \"/w ch\" 可以更换老婆\n\n注意：这个功能仅供娱乐 uwu",
             "wife_introduction": "查看自己或别人的今日群老婆，参数填写 at 会同时 at 你今日的群老婆{positive_punc}",
             "no_more_wife": "没有老婆可以更换了呢... {negative}",
             "wife_message": [
@@ -970,7 +970,7 @@
         },
         "jrrp": {
             "desc": "今日人品相关指令",
-            "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+            "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
             "avg_message": [
                 "今日群员人品的平均值是 {avg} {reaction}",
                 "今日大家的平均人品值是 {avg} {reaction}",
@@ -1117,7 +1117,7 @@
         },
         "game": {
             "desc": "各种小游戏",
-            "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n以下是目前有的所有游戏：\n{games}",
+            "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n\n以下是目前有的所有游戏：\n\n{games}",
             "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
             "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
             "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
@@ -1991,7 +1991,7 @@
         },
         "ring": {
             "desc": "生成头像装饰环",
-            "introduction": "生成自己或指定群友的头像装饰环，参数可以填写以下内容：\n  maif: 旅行伙伴\n  goog: google pro 头像环\n  goog2: google pro 头像环（小头像效果）",
+            "introduction": "生成自己或指定群友的头像装饰环，参数可以填写以下内容：\n- maif: 旅行伙伴\n- goog: google pro 头像环\n- goog2: google pro 头像环（小头像效果）",
             "error": [
                 "{negative} 生成图片出错了，可能是 qq 无效哦...",
                 "{negative} 生成图片出现错误，可以问问 179...",
@@ -2007,7 +2007,7 @@
         },
         "location": {
             "desc": "绑定所在地区",
-            "introduction": "查看或绑定你的城市及地区，用于更方便地进行天气查询等功能。\n\n解绑可使用 \"/loc clear\" 或 \"/loc unbind\"",
+            "introduction": "查看或绑定你的城市及地区，用于更方便地进行天气查询等功能。\n\n解绑可使用 \"/loc clear\" 或 \"/loc unbind\"。",
             "unbind_loc": [
                 "成功解绑了你的位置信息 {neutral}",
                 "成功移除了你的位置信息 {neutral}",
@@ -2135,7 +2135,7 @@
         },
         "custom": {
             "desc": "自定义设置",
-            "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n目前支持以下调用方法：\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
+            "introduction": "自定义设置工具，可以设置漂流瓶卡片皮肤等内容。\n\n目前支持以下调用方法：\n\n\"/cus bottle\" - 用于自定义漂流瓶卡片皮肤",
             "custom_info": "以下是你对于 \"{items_name}\" 可用的自定义项{positive_punc}:\n{html_image}当前使用的设置是：\"{curr_custom}\"\n{suffix}",
             "custom_info_suffix": "在下面发送数字序号来选择想要指定的样式吧 {positive} 发送其他内容将会退出哦",
             "index_duplicate": "你正在使用这个样式哦 {neutral}",

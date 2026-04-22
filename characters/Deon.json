@@ -1161,7 +1161,7 @@
         },
         "漂流瓶": {
             "desc": "漂流瓶相关指令",
-            "introduction": "扔/捡来自各个群组的漂流瓶。每人每小时可以捡 30 个\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少",
+            "introduction": "扔/捡来自各个群组的漂流瓶。每人每小时可以捡 30 个\n\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少",
             "throw_introduction": "扔一个漂流瓶（文本和图片）",
             "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
             "seek": {
@@ -2085,7 +2085,7 @@
         },
         "ai_helper": {
             "desc": "AI 助手",
-            "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话",
+            "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每小时可使用 15 次\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话",
             "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
             "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
             "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你这小时还剩下{times_left_now}次对话机会哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录",

@@ -6,6 +6,7 @@ from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools.colortools import mix_hex_color_lab
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
+import bisect
 
 # 寻宝区域
 class SeekRegion(Enum):
@@ -161,13 +162,17 @@ class Player:
         def get_depth_ratio():
             depth: int = self.depth.value
             weight = 1
-            if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
-                weight = 0.4
+            curr_region = self.region.value
             # 将区间按深度排序
             sorted_regions = sorted(depths.items(), key=lambda x: x[1])
-            curr_region = self.region.value
-            d_last = depths[self.region.value]
-            region_next, d_next = sorted_regions[[i for i, r in enumerate(sorted_regions) if r[0] == self.region.value][0] + 1]
+            # 通过二分法查询玩家深度所在的区域索引
+            index = bisect.bisect_right(sorted_regions, self.depth.value, key=lambda x: x[1]) - 1
+            if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
+                weight = 0.4
+                curr_region = sorted_regions[index][0]
+            d_last = depths.get(self.region.value, sorted_regions[index])
+            logger.info(f"当前所属区域 {curr_region}")
+            region_next, d_next = sorted_regions[[i for i, r in enumerate(sorted_regions) if r[0] == curr_region][0] + 1]
             # 判断深度是否在此区间之间
             logger.info(f"深度 {depth}, 当前区域 {curr_region} {d_last}, 下一区域 {region_next} {d_next}")
             if d_last <= depth <= d_next:

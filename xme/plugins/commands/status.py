@@ -5,11 +5,17 @@ from ...xmetools import systools as st
 from character import get_message
 # import heapq
 from xme.xmetools.jsontools import read_from_path, save_to_path
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, image_msg
 from xme.xmetools.bottools import bot_call_action
 from xme.plugins.commands.xme_user.classes import user
 from xme.xmetools.plugintools import PluginCallData
-from collections import Counter
+from xme.xmetools.drawtools import generate_command_trend_chart
+
+from collections import defaultdict
+
+from datetime import datetime, timedelta
+
+TOP_K = 5
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
@@ -44,26 +50,49 @@ async def _(session: CommandSession):
     # 获取指令统计数据
     datas = PluginCallData.get_datas()
     if datas:
-        # 最常被调用的三个指令
-        call_counts = Counter(data.name for data in datas)
-        # top_called = call_counts.most_common(3)
-        # top_called_str = "\n".join(f"- {name}: {count} 次" for name, count in top_called)
+        # 过滤最近3个月的数据
+        current_time = datetime.now()
+        three_months_ago = current_time - timedelta(days=90)
+        filtered_datas = [d for d in datas if datetime.fromtimestamp(d.call_time) >= three_months_ago]
 
-        # 平均每日调用量最大的三个指令
-        min_time = min(data.call_time for data in datas)
-        max_time = max(data.call_time for data in datas)
-        days = (max_time - min_time) / (24 * 3600) + 1  # 加1避免除零
-        daily_avgs = {name: count / days for name, count in call_counts.items()}
-        top_daily = sorted(daily_avgs.items(), key=lambda x: x[1], reverse=True)[:5]
-        top_daily_str = "\n".join(f"- {name}: {avg:.2f} /d" for name, avg in top_daily)
+        if filtered_datas:
+            # 按周聚合调用量
+            weeks = defaultdict(lambda: defaultdict(int))
+            for d in filtered_datas:
+                dt = datetime.fromtimestamp(d.call_time)
+                year, week, _ = dt.isocalendar()
+                weeks[(year, week)][d.name] += 1
+
+            weeks_list = sorted(weeks.keys())
+            names = set(d.name for d in filtered_datas)
+
+            # 计算总日均调用量，选择前TOP_K
+            total_daily_avg = {}
+            for name in names:
+                total_calls = sum(weeks[w].get(name, 0) for w in weeks_list)
+                total_daily_avg[name] = total_calls / (len(weeks_list) * 7)
+            top_k = sorted(total_daily_avg.items(), key=lambda x: x[1], reverse=True)[:TOP_K]
+
+            # 绘制趋势图
+            data_list = []
+            for name, _ in top_k:
+                x = list(range(len(weeks_list)))
+                y = [weeks[w].get(name, 0) / 7 for w in weeks_list]
+                data_list.append((x, y, name))
+            image_path, _ = generate_command_trend_chart(data_list, title=f'最近 3 个月日均调用最多的 {TOP_K} 个指令', xlabel='周数', ylabel='日均调用量')
+            message += "=== 当前 bot 状态 ===\n" + info + f"\n===============\nBOT 记录了 {user_count:,} 位用户。" + "\n=== 指令统计 ===\n"
+            # 发送图片
+            await send_session_msg(
+                session, message + (await image_msg(image_path)),
+                tips=True
+            )
+        else:
+            await send_session_msg(
+                session, message + "最近3个月无指令调用数据",
+                tips=True
+            )
     else:
-        # top_called_str = "无数据"
-        top_daily_str = "无数据"
-
-    await send_session_msg(
-        session, message + "=== 当前 bot 状态 ===\n" +
-        info +
-        f"\n===============\nBOT 记录了 {user_count:,} 位用户。" +
-        f"\n=== 指令统计 ===\n日均调用量最大的五个指令：\n{top_daily_str}",
-        tips=True
-    )
+        await send_session_msg(
+            session, message + "无指令调用数据",
+            tips=True
+        )

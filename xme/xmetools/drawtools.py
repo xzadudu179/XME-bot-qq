@@ -7,15 +7,21 @@ import matplotlib as mpt
 from matplotlib import font_manager
 import numpy as np
 from xme.xmetools.debugtools import debug_msg
-# from nonebot.log import logger
+from nonebot.log import logger
 
-bg_color = (4 / 255, 23 / 255, 32 / 255)
+# 颜色常量
+BG_COLOR = (4 / 255, 23 / 255, 32 / 255)
+FONT_COLOR = (200 / 255, 248 / 255, 251 / 255)
+SEC_COLOR = (93 / 255, 238 / 255, 246 / 255)
+GRID_COLOR = (57 / 255, 84 / 255, 91 / 255)
+FONT_SIZE = 16
+
 path = r"./static/fonts/Cubic_11.ttf"
 prop = font_manager.FontProperties(fname=path)
 font_manager.fontManager.addfont(path)
 debug_msg("字体名:", prop.get_name())
 mpt.rcParams['font.family'] = prop.get_name()
-FIG = plt.figure(figsize=(8, 6), facecolor=bg_color)
+FIG = plt.figure(figsize=(8, 6), facecolor=BG_COLOR)
 
 def draw_expr(expr_str, color: str | tuple = "blue", range_x=(-10, 10, 800), range_y=None, labels=[]):
     expr = sp.sympify(expr_str,  evaluate=False)
@@ -141,7 +147,7 @@ def parse_3d_exprs_label(title, font_size, font_color, bg_color, grid_color, lab
     ax.legend(labels=labels,fontsize=12, facecolor=bg_color, edgecolor=sec_color, labelcolor=font_color)
 
 def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_expr, parse_func=parse_exprs_label, label_ax="default", pre="func_image", **draw_kwargs):
-    global bg_color
+    global BG_COLOR
     debug_msg("exprstrs:", expr_strs)
     title = f"{limit_str_len(','.join([es for es in expr_strs]), 30)} 的结果"
     name = hash_text(f"{pre}_{title}") + ".png"
@@ -165,7 +171,46 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     if label_ax == "default":
         label_ax = plt.gca()
     labels = [limit_str_len(label, 30) for label in labels]
-    parse_func(title, font_size, font_color, bg_color, grid_color, labels, sec_color, label_ax)
+    parse_func(title, font_size, font_color, BG_COLOR, grid_color, labels, sec_color, label_ax)
 
     plt.savefig(path, dpi=200, bbox_inches="tight")
     return path, False
+
+def generate_command_trend_chart(data_list: list[tuple[list[float], list[float], str]], image_folder='./data/images/temp/', title='趋势图', xlabel='x', ylabel='y'):
+    """生成趋势图
+
+    Args:
+        data_list (list[tuple[list[float], list[float], str]]): 数据列表，每个元素为 (x_list, y_list, label)，其中 x_list 和 y_list 是数值列表，label 是字符串标签。
+        image_folder (str, optional): 保存图片的文件夹路径. Defaults to './data/images/temp/'.
+        title (str, optional): 图表标题. Defaults to '趋势图'.
+        xlabel (str, optional): x轴标签. Defaults to 'x'.
+        ylabel (str, optional): y轴标签. Defaults to 'y'.
+
+    Returns:
+        tuple[str, bool]: (图片路径, 是否使用缓存)
+    """
+    # 计算 hash 用于缓存
+    data_str = str(data_list) + title + xlabel + ylabel
+    image_name = hash_text(data_str) + ".png"
+    image_path = image_folder + image_name
+    if has_file(image_path):
+        debug_msg("使用缓存")
+        logger.info("使用缓存")
+        return image_path, True
+
+    plt.figure(figsize=(10, 6), facecolor=BG_COLOR)
+    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#448fff", len(data_list))]
+    for i, (x, y, label) in enumerate(data_list):
+        plt.plot(x, y, color=colors[i], label=label, marker='o', markersize=3)
+    plt.xlabel(xlabel, fontsize=FONT_SIZE, color=FONT_COLOR)
+    plt.ylabel(ylabel, fontsize=FONT_SIZE, color=FONT_COLOR)
+    plt.title(title, fontsize=FONT_SIZE, color=FONT_COLOR)
+    ax = plt.gca()
+    ax.set_facecolor(BG_COLOR)
+    ax.tick_params(axis='x', colors=FONT_COLOR)
+    ax.tick_params(axis='y', colors=FONT_COLOR)
+    plt.grid(True, color=GRID_COLOR, linestyle='--', linewidth=1)
+    plt.legend(fontsize=12, facecolor=BG_COLOR, edgecolor=SEC_COLOR, labelcolor=FONT_COLOR)
+    plt.savefig(image_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    return image_path, False

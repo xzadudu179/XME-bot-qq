@@ -10,7 +10,7 @@ random.seed()
 class Good:
     # 商品
     def __init__(self, id: int, name: str, introduction: str, image: str | Image | None = None, introduction_html: str | None = None, price: int = -1, buy_func=None, **kwargs):
-        # 商品 id 用于判断是否已购买
+        # 商品 id 用于判断是否已购买，需要完全唯一
         self.id: int = id
         # 商品名
         self.name: str = name

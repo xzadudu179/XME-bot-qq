@@ -29,23 +29,41 @@ async def aget_arg_with_timeout(session, timeout_secs) -> str | None:
 async def aget_arg(
         session: CommandSession,
         prompt: Message | str,
-        error: Message | str,
-        error_too_many: Message | str,
         rules,
-        max_times=3
+        error: Message | str = "",
+        error_too_many: Message | str = "",
+        can_use_cmd = False,
+        max_times=3,
+        **kwargs
     ):
+    """异步获取用户输入的内容作为参数
+
+    Args:
+        session (CommandSession): 用户 session
+        prompt (Message | str): bot 发送的提示语句
+        error (Message | str): 出现错误时，bot在发送提示语句前额外增加的内容
+        error_too_many (Message | str): 错误次数太多时返回的消息
+        rules (_type_): 判定回复是否合法的函数，返回 bool
+        max_times (int, optional): 最大尝试次数. Defaults to 3.
+
+    Returns:
+        (Any | None): 用户的回复，指令结束或空
+    """
     for times in range(1, max_times + 1):
         msg = prompt if times == 1 else f"{error}{prompt}"
-        reply = await aget_session_msg(session, msg)
+        reply = await aget_session_msg(session, msg, can_use_command=can_use_cmd, **kwargs)
         try:
             if not reply:
                 await send_session_msg(session, get_message("config", "aget_no_content"))
                 continue
+            if reply == "CMD_END":
+                return "CMD_END"
             if rules(reply):
                 return reply
         except Exception:
             raise
-    return await send_session_msg(session, error_too_many)
+    await send_session_msg(session, error_too_many)
+    return None
 
 def add_to_open_cmd_msgs(event_msg_id, cmd_msg_id) -> bool:
     if cmd_msg_id is None:

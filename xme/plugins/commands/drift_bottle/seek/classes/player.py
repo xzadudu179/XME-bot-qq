@@ -153,11 +153,12 @@ class Player:
     def get_card_color(self) -> dict:
         depths = {
             SeekRegion.SHALLOW_SEA: 0,
-            SeekRegion.DEEP_SEA: 120,
+            SeekRegion.DEEP_SEA: 130,
             SeekRegion.TRENCH: 500,
             SeekRegion.ABYSS: 1000,
             SeekRegion.DEEPEST: 2000,
-            SeekRegion.VOID: 3500
+            SeekRegion.VOID: 3500,
+            SeekRegion.EMPTY: 5500
         }
         def get_depth_ratio():
             depth: int = self.depth.value
@@ -170,7 +171,7 @@ class Player:
             if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
                 weight = 0.4
                 curr_region = sorted_regions[index][0]
-            d_last = depths.get(self.region.value, sorted_regions[index])
+            d_last = depths.get(self.region.value, sorted_regions[index][1])
             logger.info(f"当前所属区域 {curr_region}")
             region_next, d_next = sorted_regions[[i for i, r in enumerate(sorted_regions) if r[0] == curr_region][0] + 1]
             # 判断深度是否在此区间之间

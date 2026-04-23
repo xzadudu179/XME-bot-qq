@@ -217,7 +217,9 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
 async def msg_preprocesser(session, message: Message, send_time=-1):
     funcs = {
     }
-    logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{message.extract_plain_text()}\"")
+    msg = message.extract_plain_text()
+    if msg:
+        logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{msg}\"")
     if send_time >= 0:
         message += "\n" + get_message("config", "message_time", secs=send_time)
     for func in funcs:

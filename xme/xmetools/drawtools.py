@@ -176,7 +176,15 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     plt.savefig(path, dpi=200, bbox_inches="tight")
     return path, False
 
-def generate_command_trend_chart(data_list: list[tuple[list[float], list[float], str]], image_folder='./data/images/temp/', title='趋势图', xlabel='x', ylabel='y'):
+def generate_command_trend_chart(
+        data_list: list[tuple[list[float],
+        list[float],
+        str]],
+        image_folder='./data/images/temp/',
+        title='趋势图',
+        xlabel='x',
+        ylabel='y'
+    ):
     """生成趋势图
 
     Args:

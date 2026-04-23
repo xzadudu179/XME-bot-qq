@@ -509,10 +509,7 @@ def limit(limit_name: str,
                     return await limit_func(func, session, user, *args, **kwargs)
                 else:
                     return limit_func(func, session, user, *args, **kwargs)
-            # user = try_load(session.event.user_id, User(session.event.user_id))
-            # debug_msg(user.counters)
             result = await func(session, user, *args, **kwargs)
-            # debug_msg(f"result: {result}")
             if not fails(result):
                 debug_msg("保存用户数据, 增加计数")
                 debug_msg("coins", user.coins)

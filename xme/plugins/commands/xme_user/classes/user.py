@@ -582,7 +582,7 @@ def using_user(save_data=False, id=0):
                 user_id = session.event.user_id
             debug_msg(user_id)
             user = try_load(user_id)
-            result = await func(session, user=user, *args, **kwargs)
+            result = await func(session, user, *args, **kwargs)
             # debug_msg(f"result: {result}")
             if save_data and result:
                 debug_msg("保存用户数据中")

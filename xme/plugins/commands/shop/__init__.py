@@ -29,7 +29,7 @@ __plugin_usage__= CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @using_user(save_data=True)
 @use_args(arg_len=2)
-async def _(session: CommandSession, arg_list, user: User):
+async def _(session: CommandSession , user: User, arg_list: list[str]):
     serial, is_buy = arg_list
     reply = "y" if is_buy in ['y', 'Y'] else None
     # serial = session.current_arg_text.strip()

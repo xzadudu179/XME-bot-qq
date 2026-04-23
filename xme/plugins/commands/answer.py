@@ -34,7 +34,7 @@ def get_current_days_550w_percent():
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 @using_user(False)
-async def _(session: CommandSession, u: User):
+async def _(session: CommandSession, user: User):
     message = get_message("plugins", __plugin_name__, "default_error")
     # message = "呜呜，书突然找不到了"
     args = session.current_arg_text.strip()
@@ -50,7 +50,7 @@ async def _(session: CommandSession, u: User):
         if randtools.random_percent(percent):
             debug_msg("没错，我是 550W")
             await send_session_msg(session, "\n" + get_message("plugins", __plugin_name__, "550w"))
-            await u.achieve_achievement(session, "550W")
+            await user.achieve_achievement(session, "550W")
             return
         else:
             debug_msg("550W 还没来")
@@ -58,7 +58,7 @@ async def _(session: CommandSession, u: User):
         if randtools.random_percent(25):
             debug_msg("触发 550W 彩蛋 01")
             await send_session_msg(session, randtools.messy_string("\n" + get_message("plugins", __plugin_name__, "550w_1"), 35))
-            await u.achieve_achievement(session, "550W")
+            await user.achieve_achievement(session, "550W")
             return
     try:
         ans_json = jsontools.read_from_path("./static/answers.json")

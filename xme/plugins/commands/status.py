@@ -50,36 +50,54 @@ async def _(session: CommandSession):
     # 获取指令统计数据
     datas = PluginCallData.get_datas()
     if datas:
-        # 过滤最近3个月的数据
+        # 过滤最近95天的数据
         current_time = datetime.now()
-        three_months_ago = current_time - timedelta(days=90)
-        filtered_datas = [d for d in datas if datetime.fromtimestamp(d.call_time) >= three_months_ago]
+        start_time = current_time - timedelta(days=95)
+        # 将 start_time 转换为时间戳，在循环过滤时直接对比浮点数，效率更高
+        start_timestamp = start_time.timestamp()
+        filtered_datas = [d for d in datas if d.call_time >= start_timestamp]
 
         if filtered_datas:
-            # 按周聚合调用量
-            weeks = defaultdict(lambda: defaultdict(int))
+            # 按每 7 天聚合调用量
+            periods = defaultdict(lambda: defaultdict(int))
             for d in filtered_datas:
                 dt = datetime.fromtimestamp(d.call_time)
-                year, week, _ = dt.isocalendar()
-                weeks[(year, week)][d.name] += 1
+                # 计算该条数据距离 start_time 过去了多少天
+                delta_days = (dt - start_time).days
+                # 整除 7 得到所在的周期索引 (0, 1, 2...)
+                period_index = delta_days // 7
+                periods[period_index][d.name] += 1
 
-            weeks_list = sorted(weeks.keys())
+            period_list = sorted(periods.keys())
             names = set(d.name for d in filtered_datas)
 
-            # 计算总日均调用量，选择前TOP_K
+            # 计算总日均调用量，总跨度为 95 天，选择前TOP_K
             total_daily_avg = {}
             for name in names:
-                total_calls = sum(weeks[w].get(name, 0) for w in weeks_list)
-                total_daily_avg[name] = total_calls / (len(weeks_list) * 7)
+                total_calls = sum(periods[p].get(name, 0) for p in period_list)
+                total_daily_avg[name] = total_calls / 95.0
             top_k = sorted(total_daily_avg.items(), key=lambda x: x[1], reverse=True)[:TOP_K]
 
             # 绘制趋势图
             data_list = []
             for name, _ in top_k:
-                x = list(range(len(weeks_list)))
-                y = [weeks[w].get(name, 0) / 7 for w in weeks_list]
+                x = list(range(len(period_list)))
+                y = []
+                for p in period_list:
+                    # 95 天无法被 7 完全整除 (95 = 13 * 7 + 4)
+                    # 前 13 个周期是满 7 天的，最后一个周期只有 4 天
+                    # 这里动态计算除数，确保最后一个周期的日均调用量统计客观准确
+                    days_in_period = 7 if p < (95 // 7) else (95 % 7)
+                    y.append(periods[p].get(name, 0) / days_in_period)
+
                 data_list.append((x, y, name))
-            image_path, _ = generate_command_trend_chart(data_list, title=f'最近 3 个月日均调用最多的 {TOP_K} 个指令', xlabel='周数', ylabel='日均调用量')
+
+            image_path, _ = generate_command_trend_chart(
+                data_list,
+                title=f'最近 95 天日均调用最多的 {TOP_K} 个指令',
+                xlabel='时间周期（每7天）',
+                ylabel='日均调用量'
+            )
             message += "=== 当前 bot 状态 ===\n" + info + f"\n===============\nBOT 记录了 {user_count:,} 位用户。" + "\n=== 指令统计 ===\n"
             # 发送图片
             await send_session_msg(

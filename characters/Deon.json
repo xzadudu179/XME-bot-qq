@@ -2169,6 +2169,14 @@
             "step1": "请在下面输入需要登记的群号吧 {positive}:",
             "step1_error": "群号不符合要求呢...{negative} 应该是纯数字哦",
             "step2": "请在下面输入该群平时的聊天内容{positive_punc}"
+        },
+        "chomem": {
+            "desc": "随机选择群友",
+            "introduction": "随机选择 n 个群友",
+            "output": "你选择了以下群友{positive_punc}:\n{members}",
+            "error": "群成员好像没有那么多呢 {negative}",
+            "max_num": "最多选择 {max_num} 名群成员呢 {negative}",
+            "too_small_number": "成员数不能小于 1 哦 {neutral}"
         }
     }
 }

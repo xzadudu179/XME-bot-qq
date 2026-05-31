@@ -185,8 +185,8 @@ class Event:
         event_datas = {k: v() for k, v in event_dict.get("datas", {}).items()}
         formats = {k: (await v(event_datas) if iscoroutinefunction(v) else v(event_datas)) for k, v in event_dict.get("formats", {}).items()}
         # print(formats, event_dict.get("formats", {}))
-        event_dict["descs"] = [desc.format(**formats) for desc in event_dict["descs"]]
-        desc: str = random.choice(event_dict["descs"])
+        descs = [desc.format(**formats) for desc in event_dict["descs"]]
+        desc: str = random.choice(descs)
         event_func = event_dict.get("event_func", None)
         if event_func is not None:
             await event_func(event_datas, self.player)

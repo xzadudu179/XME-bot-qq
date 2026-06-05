@@ -62,40 +62,6 @@ class AIHelper:
         )
         return response
 
-    # async def talk(self, messages):
-    #     # ai_helper = AIHelper(client)
-    #     response = await self.ai_init(messages)
-    #     task_id = response.id
-    #     task_status = ''
-    #     get_cnt = 0
-
-    #     t = Timer()
-    #     t.start()
-    #     while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
-    #         reply = await aget_arg_with_timeout(session, 0.5)
-    #         if reply is not None and reply.strip() == "aistop":
-    #             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
-    #             return False
-    #         result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
-    #         # print(result_response)
-    #         task_status = result_response.task_status
-    #         # await asyncio.sleep(0.5)
-    #         get_cnt += 1
-    #     try:
-    #         if get_cnt >= MAX_CHECK_TIMES:
-    #             t.stop()
-    #             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
-    #             return False
-    #         ans = result_response.choices[0].message.content
-    #         build_history(user=user, ask=text, ans=ans)
-    #         logger.info(f"AI 返回了以下 response：{result_response}")
-    #         debug_msg("处理结果")
-    #         return result_response.choices[0].message.content
-    #     except AttributeError as ex:
-    #         logger.error("attribute 错误: ", ex)
-    #         await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
-    #         return False
-
     async def user_talk(self, session: CommandSession, role, user, text):
         # ai_helper = AIHelper(client)
         response = await self.ai_init([

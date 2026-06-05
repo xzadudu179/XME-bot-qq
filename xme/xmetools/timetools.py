@@ -4,20 +4,80 @@ import pytz
 import time
 import math
 
+class Countdown:
+    """倒计时"""
+    def __init__(self, total_secs: float, start_sec: float | None = None, end_countdown=False):
+        """倒计时构造函数
+
+        Args:
+            total_secs (float): 倒计时总秒数
+        """
+        self.total_secs: float = total_secs
+        self.start_sec: float | None = start_sec
+        self.end_countdown = end_countdown
+
+    @property
+    def remaining_secs(self) -> float:
+        """剩余秒数
+        """
+        if self.start_sec is None:
+            return self.total_secs
+        elapsed = time.time() - self.start_sec
+        remaining = self.total_secs - elapsed
+        return max(0.0, remaining)
+
+    def start(self):
+        """开始倒计时记录
+        """
+        if self.start_sec is not None:
+            raise ValueError("倒计时记录不能重复开始。")
+        self.start_sec = time.time()
+
+    def check(self) -> bool:
+        """检查当前倒计时状态
+
+        Returns:
+            bool: 倒计时是否结束
+        """
+        if self.start_sec is None:
+            raise ValueError("需要先开始记录再检查状态。")
+        if self.end_countdown:
+            return True
+        elapsed = time.time() - self.start_sec
+        if elapsed < self.total_secs:
+            return False
+        self.end_countdown = True
+        return True
+
+    def __dict__(self):
+        return {
+            "total_secs": self.total_secs,
+            "start_sec": self.start_sec,
+            "end_countdown": self.end_countdown,
+        }
+
+
 class Timer:
     def __init__(self):
         # self.timer_count = 0
-        self.start_time = 0.
-        self.end_time = 0.
+        self.start_time = None
+        self.end_time = None
 
     def start(self):
         self.start_time = time.time()
 
     def stop(self):
+        if self.start_time == 0:
+            raise RuntimeError("计时器尚未开始")
         self.end_time = time.time()
 
     def get_timer_value(self) -> float:
+        if self.start_time is None:
+            return 0.
+        if self.end_time is None:
+            return time.time() - self.start_time
         return self.end_time - self.start_time
+
 class TimeUnit(Enum):
     SECOND = 1
     MINUTE = 60

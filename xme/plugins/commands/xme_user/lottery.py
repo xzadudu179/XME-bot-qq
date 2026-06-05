@@ -1,18 +1,18 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc
+# from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.texttools import remove_punctuation
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.jsontools import save_to_path, read_from_path
 import random
-random.seed()
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from .classes import user as u
-from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
+from xme.plugins.commands.xme_user.classes.user import User, coin_name
 from character import get_message
 import traceback
+random.seed()
 
 alias = ['抽奖', 'lot']
 TIMES_LIMIT = 5

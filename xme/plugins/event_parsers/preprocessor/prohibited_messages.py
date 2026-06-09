@@ -2,13 +2,14 @@ from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from nonebot.message import CanceledException
 from nonebot import message_preprocessor
+from xme.xmetools.bottools import get_settings
 # from character import get_message
 import aiocqhttp
 # from xme.xmetools import jsontools
 # import config
 # import asyncio
 @message_preprocessor
-async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+async def _(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     # message = event.raw_message.strip()
     # prohibited_list = jsontools.read_from_path('./prohibited.json')['whitelist_prohibited']
     is_prohibited = False
@@ -30,6 +31,8 @@ async def recall_handler(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: P
     #     # await bot.send_group_msg(message="不要发奇怪的词汇 uwu", group_id=event.group_id)
     #     is_prohibited = True
     #     break
+    if str(event.user_id) in ((await get_settings())["blacklist_users"]):
+        raise CanceledException(f"消息 \"{event.raw_message}\" 为黑名单用户发送")
     if is_prohibited:
         raise CanceledException(f"消息 \"{event.raw_message}\" 包含违禁词")
     return

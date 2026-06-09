@@ -7,7 +7,6 @@ from xme.xmetools.texttools import FormatDict, replace_formatted, protect_specia
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 import re
 from xme.xmetools.debugtools import debug_msg
-# from nonebot.log import logger
 from xme.xmetools import texttools
 from character import get_message
 from xme.xmetools.msgtools import send_session_msg
@@ -25,6 +24,7 @@ __plugin_usage__ = CommandDoc(
     permissions=[],
     alias=alias
 )
+
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):

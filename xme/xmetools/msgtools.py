@@ -18,6 +18,45 @@ import traceback
 from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
 from character import get_message
+from logging.handlers import TimedRotatingFileHandler
+import logging
+import os
+
+
+def setup_send_logger():
+    log_dir = "./logs/send"
+    os.makedirs(log_dir, exist_ok=True)
+
+    logger = logging.getLogger("send")
+    logger.setLevel(logging.INFO)
+
+    log_file = os.path.join(log_dir, "bot_send_logs.log")
+
+    handler = TimedRotatingFileHandler(
+        log_file,
+        when="midnight",
+        interval=1,
+        backupCount=30,
+        encoding="utf-8"
+    )
+
+    handler.suffix = "%Y-%m-%d"
+
+    formatter = logging.Formatter(
+        "[%(asctime)s] [%(levelname)s] %(message)s"
+    )
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+
+    # 控制台输出
+    console = logging.StreamHandler()
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+
+    return logger
+
+SEND_LOGGER = setup_send_logger()
 
 async def aget_arg_with_timeout(session, timeout_secs) -> str | None:
     try:
@@ -214,12 +253,14 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
 
-async def msg_preprocesser(session, message: Message, send_time=-1):
+async def msg_preprocesser(session: BaseSession, message: Message, send_time=-1):
     funcs = {
     }
     msg = message.extract_plain_text()
     if msg and msg is not None:
-        logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{msg}\"")
+        # logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{msg}\"")
+        msg = msg.replace("\n", "\\n").replace("\r", "\\r")
+        SEND_LOGGER.info(f'Message at {session.event.group_id} from user {session.event.user_id} called reply: {msg}')
     if send_time >= 0:
         message += "\n" + get_message("config", "message_time", secs=send_time)
     for func in funcs:

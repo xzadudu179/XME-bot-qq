@@ -51,9 +51,9 @@ async def aget(url):
     return res
 
 async def get_jianmao_data_from_name(name: str):
-    url = f"{API_URL}/furry_will/search"
+    url = f"{API_URL}/furry_will/name"
     '''
-    名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/search/" + name
+    名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/"
     '''
     return await apost(url, params={"all": "1", "name": name})
 
@@ -62,7 +62,7 @@ async def get_random_jianmao_data():
     '''
     随机为 "http://furgon.yjwmidc.com:8000/furry_will/random/"
     期数搜索为 "http://furgon.yjwmidc.com:8000/furry_will/qishu/"
-    名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/search/"
+    名称搜索为 "http://furgon.yjwmidc.com:8000/furry_will/name/"
     '''
     return await apost(url)
 

@@ -257,9 +257,9 @@ async def msg_preprocesser(session: BaseSession, message: Message, send_time=-1)
     funcs = {
     }
     msg = message.extract_plain_text()
-    if msg and msg is not None:
+    msg = msg.replace("\n", "\\n").replace("\r", "\\r")
+    if msg and msg is not None and message is not None:
         # logger.info(f"XME-DEON-BOT 即将发送如下消息：\"{msg}\"")
-        msg = msg.replace("\n", "\\n").replace("\r", "\\r")
         SEND_LOGGER.info(f'Message at {session.event.group_id} from user {session.event.user_id} called reply: {msg}')
     if send_time >= 0:
         message += "\n" + get_message("config", "message_time", secs=send_time)

@@ -4,22 +4,47 @@ from .classes.player import SeekRegion
 # player = Player()
 TOOLS = [
     {
-        "name": "备用气罐",
-        "desc": "首次氧气耗尽时增加 100 氧气",
-        "apply_condition": lambda player: player.depth > 0 and player.oxygen <= 0,
+        "name": "无依无靠",
+        "desc": "失去了外部信息的帮助，你只能靠自己了...（收益 *1.6）",
+        "apply_condition": lambda player: True,
         "apply_times": 1,
         "apply_event": {
             "type": "normal",
-            "descs": ["你的备用气罐激活了！", "备用气罐激活了！"],
+            "descs": ["我们开始吧...", "可以开始了..."],
             "changes": {
-                "oxygen": {
-                    "change": lambda: 100,
-                    "type": "+",
+                "hardcore": {
+                    "change": lambda: 1,
+                    "type": "=",
                     "custom": False,
-                }
+                },
+                "depth": {
+                    "change": lambda: 100,
+                    "type": "=",
+                    "custom": False,
+                },
             }
         },
-        "price": 120,
+        "price": 100,
+    },
+    {
+        "name": "备用气罐",
+        "desc": "增加 100 点氧气上限",
+        "apply_condition": lambda player: True,
+        "apply_times": 1,
+        "apply_event": {
+            "type": "normal",
+            "descs": ["你装备上了备用的氧气罐。", "你戴上了备用的氧气罐"],
+            "changes": {
+                "oxygen": {
+                        "change": lambda v: v.change_max(lambda x: x + 100),
+                        "return": lambda v: v.max_value,
+                        "return_msg": "最大{name} = {value}",
+                        "custom": True,
+                        "assign": False,
+                    },
+            }
+        },
+        "price": 150,
     },
     {
         "name": "星币回收机",
@@ -59,7 +84,7 @@ TOOLS = [
     },
     {
         "name": "深潜装甲",
-        "desc": "战斗力增加5，最大战斗力增加7，最大生命值增加50",
+        "desc": "战斗力增加5、最大战斗力增加7、生命值增加50",
         "apply_condition": lambda player: True,
         "apply_times": 1,
         "apply_event": {
@@ -94,6 +119,69 @@ TOOLS = [
             },
         },
         "price": 300,
+    },
+    {
+        "name": "心灵控制器",
+        "desc": "精神力+5、最大精神力+5、san 值+50",
+        "apply_condition": lambda player: True,
+        "apply_times": 1,
+        "apply_event": {
+            "type": "normal",
+            "descs": ["你携带了心灵控制器出发..."],
+            "changes": {
+                "mental": [{
+                    "change": lambda: 5,
+                    "type": "+",
+                    "custom": False,
+                    }, {
+                    "change": lambda v: v.change_max(lambda x: x + 5),
+                    "return": lambda v: v.max_value,
+                    "return_msg": "最大{name} = {value}",
+                    "custom": True,
+                    "assign": False,
+                    },
+                ],
+                "san": [{
+                        "change": lambda v: v.change_max(lambda x: x + 50),
+                        "return": lambda v: v.max_value,
+                        "return_msg": "最大{name} = {value}",
+                        "custom": True,
+                        "assign": False,
+                    },
+                    {
+                        "change": lambda: 50,
+                        "type": "+",
+                        "custom": False,
+                    },
+                ],
+            },
+        },
+        "price": 300,
+    },
+    {
+        "name": "物品扫描仪",
+        "desc": "洞察力+5、最大洞察力+5",
+        "apply_condition": lambda player: True,
+        "apply_times": 1,
+        "apply_event": {
+            "type": "normal",
+            "descs": ["你带上了物品扫描仪..."],
+            "changes": {
+                "insight": [{
+                    "change": lambda: 5,
+                    "type": "+",
+                    "custom": False,
+                    }, {
+                    "change": lambda v: v.change_max(lambda x: x + 5),
+                    "return": lambda v: v.max_value,
+                    "return_msg": "最大{name} = {value}",
+                    "custom": True,
+                    "assign": False,
+                    },
+                ],
+            },
+        },
+        "price": 500,
     },
     {
         "name": "应急维生装置",
@@ -165,7 +253,7 @@ TOOLS = [
             "changes": {
                 "depth": {
                     "change": lambda: 1000,
-                    "type": "+",
+                    "type": "=",
                     "custom": False,
                 },
             },

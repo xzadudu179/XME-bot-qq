@@ -68,5 +68,10 @@
         "desc": "(/seek) 你因混乱而死",
         "award": 100,
         "hidden": false
+    },
+    "虚空侵蚀...": {
+        "desc": "(/seek) 你快被虚空腐化了...",
+        "award": 500,
+        "hidden": true
     }
 }

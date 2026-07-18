@@ -111,6 +111,8 @@ class PlayerAttr:
 class Player:
     def __init__(self, health=100, oxygen=100, san=100, combat=10, insight=10, mental=10, coins=0, tools=[]):
         from .tool import Tool
+        # 无芯片（bushi）模式
+        self.hardcore = PlayerAttr("无依无靠", 0, 1, show=False)
         # 基本属性
         self.health = PlayerAttr("生命值", health, 100)
         self.oxygen = PlayerAttr("氧气值", oxygen, 100)
@@ -133,7 +135,7 @@ class Player:
         self.region = PlayerAttr("区域", SeekRegion.SHALLOW_SEA)
         self.last_region = PlayerAttr("上个区域", SeekRegion.SHALLOW_SEA, show=False)
 
-        # 探险深度，目前想法是每走一步深度会随机加减
+        # 探险深度
         self.depth = PlayerAttr("深度", 0, max_value=6666, detail=False)
         # 是否往回走
         self.back = False
@@ -164,6 +166,9 @@ class Player:
             # self.last_region = SeekRegion.SHALLOW_SEA
         last = self.last_region.value.value
         curr = self.region.value.value
+        if self.hardcore.value == 1:
+            last = "???"
+            curr = "???"
         last = html_messy_string(last, self.get_messy_rate(), html=html)
         curr = html_messy_string(curr, self.get_messy_rate(), html=html)
         if not html:
@@ -437,8 +442,10 @@ class Player:
     def get_messy_rate(self):
         # 得到自己的混乱值
         ratio = 1
-        if self.san.value < 40:
+        if self.hardcore.value == 1:
             ratio = 1.4
+        if self.san.value < 40:
+            ratio += 0.4
         if self.san.value < 10:
             return 100
         return (100 - (self.san.value / self.san.max_value) * 100) * 0.5 * ratio
@@ -492,6 +499,8 @@ class Player:
                     #         "oxygen": "+100000"
                     #     }, blank=False))
                     continue
+                if self.hardcore.value == 1 and k != "coins":
+                    continue
                 result_strs.append(f"{change_value.name} {'+' + str(value_diff) if value_diff >= 0 else str(value_diff)}")
 
         content = ', '.join(result_strs)
@@ -535,6 +544,8 @@ class Player:
                 if self.region.value in [SeekRegion.FOREST]:
                     value = "???"
                 value += " d.n."
+            if self.hardcore.value == 1:
+                value = "---"
             name = html_messy_string(str(name), self.get_messy_rate(), html=html)
             value = html_messy_string(str(value), self.get_messy_rate(), html=html)
             # 星币不显示
@@ -548,7 +559,10 @@ class Player:
             if index == 0:
                 r = ""
                 if detailed and v.detail:
-                    r = f"{prefix}{name}: {value}" + (f" / {maxvalue}" if maxvalue != -1 else "") + suffix
+                    if self.hardcore.value == 1:
+                        r = f"{prefix}{name}: {value}" + suffix
+                    else:
+                        r = f"{prefix}{name}: {value}" + (f" / {maxvalue}" if maxvalue != -1 else "") + suffix
                 else:
                     r = f"{prefix}{name}: {value}{suffix}"
                 index += 1
@@ -558,13 +572,13 @@ class Player:
             if index % 2 == 0:
                 result += "\n"
             if detailed and name != "深度" and v.detail:
-                r = f"{prefix}{name}: {value}" + (f" / {maxvalue}" if maxvalue != -1 else "") + suffix
+                if self.hardcore.value == 1:
+                    r = f"{prefix}{name}: {value}" + suffix
+                else:
+                    r = f"{prefix}{name}: {value}" + (f" / {maxvalue}" if maxvalue != -1 else "") + suffix
             else:
                 r = f"{prefix}{name}: {value}{suffix}"
             result += r
             index += 1
         return result
-
-    def get_tools_str(self, detailed=False) -> str:
-        ...
 

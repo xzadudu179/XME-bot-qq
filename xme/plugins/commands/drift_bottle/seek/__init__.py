@@ -447,6 +447,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 # --------- 检测成就
                 if player.region.value == SeekRegion.ABYSS:
                     await u.achieve_achievement(session, "来自深渊")
+                if player.region.value == SeekRegion.VOID and player.depth.value > 5000:
+                    await u.achieve_achievement(session, "虚空侵蚀...")
                 if len(player.achieved_achievements) > 0:
                     for a in player.achieved_achievements:
                         await u.achieve_achievement(session, a)
@@ -490,7 +492,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             return total_steps
 
         # 选择道具
-        tools = []
+        tools: list[Tool] = []
         used_nums = []
         msg = get_message(
             "plugins",
@@ -544,10 +546,14 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             message = get_message("plugins", __plugin_name__, command_name, 'seek_start')
 
         start_prefix = "----------开头总结----------"
+        tools_str = "、".join([t.name for t in player.tools])
+        prefix = f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,html=True)}</div>\n<p>使用道具：{tools_str}</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n'
+        if "无依无靠" in tools_str:
+            prefix = f'<h2>----------出发玩家属性----------</h2>\n<p>使用道具：{tools_str}</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n'
         total_steps = await parse_event_steps(
             total_steps,
             expected_steps,
-            prefix=f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,html=True)}</div>\n<p>使用道具：无</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n',
+            prefix=prefix,
             msg_prefix=message,
             prefix_onlyonce=True
         )
@@ -649,10 +655,14 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     no_exit_result = int(result_value * gain_ratio)
     depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
     result_value = player.coins.value - depth_punish - sim_tool_prices
+    suffix = ""
+    if player.hardcore.value == 1:
+        result_value = int((player.coins.value - depth_punish) * 1.6) - sim_tool_prices
+        suffix = "* 1.6(无依无靠加成) "
     if is_sim:
-        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) - {sim_tool_prices}(模拟道具价格)  结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix}- {sim_tool_prices}(模拟道具价格)  结算:{result_value}"
     else:
-        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚)  结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix} 结算:{result_value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:
         await u.achieve_achievement(session, "满载无归")
     try:

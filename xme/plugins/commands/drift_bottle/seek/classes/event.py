@@ -181,8 +181,6 @@ class Event:
             str: 决策事件返回
         """
         can_quit: bool = event_dict["can_quit"]
-        # TODO get_random_broken_bottle 潜在的 None 异常问题
-        # BUG 漂流瓶事件会出现重复瓶子的问题，目前不知道是为什么，而且似乎只有同一局 seek 会这样
         event_datas = {k: v() for k, v in event_dict.get("datas", {}).items()}
         formats = {k: (await v(event_datas) if iscoroutinefunction(v) else v(event_datas)) for k, v in event_dict.get("formats", {}).items()}
         # print(formats, event_dict.get("formats", {}))
@@ -244,7 +242,7 @@ class Event:
             str: 决策事件返回结果
         """
         # 决策事件里的决策是封装的普通事件或者其他事件，当然也可以是决策事件
-        decision_strs = [f'{i + 1}. {messy_string(random.choice(e["names"]), self.player.get_messy_rate())} {messy_string(e.get("tip", ""), self.player.get_messy_rate())}' for i, e in enumerate(decisions)]
+        decision_strs = [f'{i + 1}. {messy_string(random.choice(e["names"]), self.player.get_messy_rate())} {(messy_string(e.get("tip", ""), self.player.get_messy_rate())) if self.player.hardcore.value == 0 else "[???]"}' for i, e in enumerate(decisions)]
         decision_chunks = [decision_strs[i : i + 2] for i in range(0, len(decision_strs), 2)]
         decision_str = "\n".join(["\t".join(a) for a in decision_chunks])
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=False)
@@ -377,6 +375,10 @@ class Event:
         rd_str = html_messy_string(str(rd), self.player.get_messy_rate(), html=html)
         attr_value_str = html_messy_string(str(attr_value), self.player.get_messy_rate(), html=html)
         msg = html_messy_string(msg, self.player.get_messy_rate(), html=html)
+        if self.player.hardcore.value == 1:
+            if not html:
+                return get_message("plugins", __plugin_name__, command_name, 'hardcore_dice_event_no_html', attr_change=attr_change, event_desc=event_desc, attr_name="???", state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")
+            return get_message("plugins", __plugin_name__, command_name, 'hardcore_dice_event', attr_change=attr_change, event_desc=event_desc, attr_name="???", state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")
         if not html:
             return get_message("plugins", __plugin_name__, command_name, 'dice_event_no_html', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")
         return get_message("plugins", __plugin_name__, command_name, 'dice_event', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")

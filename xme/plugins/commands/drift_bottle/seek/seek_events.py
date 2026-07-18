@@ -1908,15 +1908,16 @@ EVENTS = [
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: True,
     "changes": {
       "oxygen": [{
-        "change": lambda: random.randint(1, 25),
-        "type": "+",
-        "custom": False,
-      }, {
-        "change": lambda v: v.change_max(lambda x: x + random.randint(5, 20)),
-        "return": lambda v: v.max_value,
-        "return_msg": "最大{name} = {value}",
-        "custom": True,
-        "assign": False,
+            "change": lambda v: v.change_max(lambda x: x + random.randint(5, 20)),
+            "return": lambda v: v.max_value,
+            "return_msg": "最大{name} = {value}",
+            "custom": True,
+            "assign": False,
+        },
+        {
+            "change": lambda: random.randint(1, 25),
+            "type": "+",
+            "custom": False,
       }],
     }
   },
@@ -2106,7 +2107,7 @@ EVENTS = [
       },
     ],
     "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.SHADOWRECK],
-    "dice_faces": lambda: random.randint(8, 25),
+    "dice_faces": lambda: random.randint(8, 27),
     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: depth.value > 100,
     "determine_attr": "insight",
     "ok": {
@@ -2246,7 +2247,7 @@ EVENTS = [
   {
     "type": "decision",
     "tags": [],
-    "prob": 2,
+    "prob": 1.8,
     "post_func": None,
     "descs": ["这里似乎有一些日志...要不要看看？", "你发现了一些笔记...或许可以查看一下？", "你发现了一些保存完好的手稿...要打开看看吗？"],
     "regions": [SeekRegion.SHIPWRECK, SeekRegion.UNDERSEA_CITY, SeekRegion.SHADOWRECK],

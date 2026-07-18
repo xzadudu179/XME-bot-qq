@@ -1,6 +1,7 @@
 from xme.xmetools.randtools import html_messy_string
 from xme.xmetools.typetools import use_attribute
 import random
+from functools import total_ordering
 from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
 from xme.xmetools.colortools import mix_hex_color_lab
@@ -17,6 +18,7 @@ class SeekRegion(Enum):
     TRENCH = "海沟"
     UNDERSEA_CITY = "深海城市"
     ABYSS_CITY = "深渊城市"
+    ANCIENT_CITY = "远古城市"
     UNDERSEA_CAVE = "海底洞穴"
     ABYSS = "深渊"
     DEEPEST = "溟渊"
@@ -25,6 +27,7 @@ class SeekRegion(Enum):
     # 设计于会让人迷路的危险区域
     FOREST = "扭曲森林"
 
+@total_ordering
 class PlayerAttr:
     def __init__(self, name, value, max_value=-1, show=True, detail=True):
         self.name = name
@@ -34,6 +37,20 @@ class PlayerAttr:
         # 是否显示和是否显示详情
         self.show = show
         self.detail = detail
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.value == other
+        elif isinstance(other, PlayerAttr):
+            return self.value == other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self.value < other
+        elif isinstance(other, PlayerAttr):
+            return self.value < other.value
+        return NotImplemented
 
     def __int__(self):
         if isinstance(self.value, int):
@@ -106,6 +123,10 @@ class Player:
         self.mental = PlayerAttr("精神力", mental, 20)
         # 星币
         self.coins = PlayerAttr(f"{coin_name}数", coins)
+        # 前进最大步数
+        self.seek_max_steps = PlayerAttr("前进最大步数", 20, 50, show=False)
+        # 返回最大步数
+        self.back_max_steps = PlayerAttr("返回最大步数", 30, 70, show=False)
         # 道具
         self.tools: list[Tool] = tools
         # 区域
@@ -124,6 +145,9 @@ class Player:
 
         # 得到的成就
         self.achieved_achievements: list[str] = []
+
+        # 深度惩罚倍率
+        self.depth_gain_ratio = PlayerAttr("深度惩罚倍率", 100, 200, show=False)
 
     def post_process(self, custom_func: None):
         # 事件后执行的一些方法
@@ -412,7 +436,12 @@ class Player:
 
     def get_messy_rate(self):
         # 得到自己的混乱值
-        return (100 - (self.san.value / self.san.max_value) * 100) * 0.5
+        ratio = 1
+        if self.san.value < 40:
+            ratio = 1.4
+        if self.san.value < 10:
+            return 100
+        return (100 - (self.san.value / self.san.max_value) * 100) * 0.5 * ratio
 
 
     def change_attr(self, changes: dict, html=True, blank=True):

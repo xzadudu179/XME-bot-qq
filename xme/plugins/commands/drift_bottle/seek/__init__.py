@@ -11,9 +11,12 @@ from xme.xmetools.randtools import html_messy_string, messy_image
 from character import get_message
 from xme.xmetools.imgtools import crop_transparent_area
 from xme.xmetools.msgtools import image_msg
+from xme.xmetools.typetools import try_parse
 from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time
+from .seek_tools import TOOLS
+from .classes.tool import Tool
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 # import asyncio
@@ -49,10 +52,11 @@ class Seek:
             count += 1
             for tool in self.player.tools:
                 if tool.can_apply():
-                    msgs.append(tool.apply_event(self.event))
+                    print("新增一个tool事件")
+                    msgs.append(tool.apply(self.event))
             msg = SeekStep(self.event).gen_step(self.events, self.player, is_sim=is_sim)
             is_die, die_reason, raw_reason = self.player.is_die()
-            if raw_reason == "混乱而死":
+            if raw_reason == "混乱而死" and not is_sim:
                 self.player.achieved_achievements.append("真相...?的冲击")
             if (self.player.back and self.player.depth.value <= 0) or is_die:
                 # 回到海面，新增一步回到海面的计算
@@ -453,9 +457,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 total_steps += result["count"]
                 if result["over"]:
                     expected_steps = 0
-                continue_message = get_message("plugins", __plugin_name__, command_name, 'continue_step_tip') if \
+                continue_message = get_message("plugins", __plugin_name__, command_name, 'continue_step_tip', max_seek_steps=player.seek_max_steps.value, max_back_steps=player.back_max_steps.value) if \
                 player.depth.value > 0 else \
-                get_message("plugins", __plugin_name__, command_name, 'continue_step_tip_onsea')
+                get_message("plugins", __plugin_name__, command_name, 'continue_step_tip_onsea', max_seek_steps=player.seek_max_steps.value)
                 step_results = await seek.make_steps_message(session, result, prefix=prefix, send=False)
                 if player.depth.value <= 0:
                     # 回到海面补充一下氧气
@@ -485,17 +489,60 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                     msg_prefix = ""
             return total_steps
 
-        # TODO: 选择道具
-        # tools = []
+        # 选择道具
+        tools = []
+        used_nums = []
+        msg = get_message(
+            "plugins",
+            __plugin_name__,
+            command_name,
+            "choose_tools",
+            tools='\n'.join(
+                [f"{i + 1}. " + str(Tool.build_tool(t, player)) for i, t in enumerate(TOOLS)]
+            )
+        )
+        await send_session_msg(session, msg)
+        sim_tool_prices = 0
+        tool_reply = ""
+        while True:
+            tool_reply = await aget_arg_with_timeout(session, 150)
+            num = try_parse(tool_reply, int, None)
+            if tool_reply == "st" or tool_reply is None:
+                break
+            if num is None:
+                # 无效内容
+                await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'num_error'))
+                continue
+            # 序号
+            if num == 0 or num > len(TOOLS):
+                await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'num_out_range'))
+                continue
+            tool: Tool = [Tool.build_tool(t, player) for t in TOOLS][num - 1]
+            if num in used_nums:
+                await send_session_msg(session, get_message("plugins", __plugin_name__,  command_name, 'already_use_tool'))
+                continue
+            # 花钱
+            if not is_sim:
+                have_enough_money, _ = u.spend_coins(tool.price)
+                if not have_enough_money:
+                   await send_session_msg(session, get_message("plugins", __plugin_name__,  command_name, 'not_enough_coin', left=u.coins))
+                   continue
+            elif is_sim:
+                sim_tool_prices += tool.price
+            tools.append(tool)
+            used_nums.append(num)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'choose_tool_succes', cost=tool.price, tool=tool.name))
 
+        player.tools = tools
+        # await send_session_msg(session, msg)
         total_steps = 0
-        expected_steps = 20
+        expected_steps = player.seek_max_steps.value
         # msgs = ""
         if is_sim:
             message = get_message("plugins", __plugin_name__, command_name, 'seek_simulation')
         else:
             message = get_message("plugins", __plugin_name__, command_name, 'seek_start')
-        # TODO: get_tools_str↑
+
         start_prefix = "----------开头总结----------"
         total_steps = await parse_event_steps(
             total_steps,
@@ -522,7 +569,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                     msg_name = "seeking_tip"
                     if player.depth.value <= 0:
                         msg_name = "seeking_tip_onsea"
-                    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, msg_name))
+                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, msg_name, max_seek_steps=player.seek_max_steps.value))
+                    else:
+                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, msg_name, max_seek_steps=player.seek_max_steps.value, max_back_steps=player.back_max_steps.value))
                     afk = True
                     continue
                 reply = reply.strip()
@@ -534,18 +583,18 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                     valid_reply = True
                     # await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'introduction'))
                 elif is_command(reply):
-                    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'on_seeking'))
+                    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'on_seeking', max_seek_steps=player.seek_max_steps.value, max_back_steps=player.back_max_steps.value))
                 elif is_stepping(reply, "b") and player.depth.value > 0:
                     expected_steps = int(reply.split("b")[1].strip())
-                    if expected_steps > 30 or expected_steps < 1:
-                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, "invalid_step", count=expected_steps, max=30))
+                    if expected_steps > player.back_max_steps.value or expected_steps < 1:
+                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, "invalid_step", count=expected_steps, max=player.back_max_steps.value))
                         continue
                     player.back = True
                     valid_reply = True
                 elif is_stepping(reply):
                     expected_steps = int(reply.split("s")[1].strip())
-                    if expected_steps > 20 or expected_steps < 1:
-                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, "invalid_step", count=expected_steps, max=20))
+                    if expected_steps > player.seek_max_steps.value or expected_steps < 1:
+                        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, "invalid_step", count=expected_steps, max=player.seek_max_steps.value))
                         continue
                     valid_reply = True
             # result = await seek.parse_steps(step)
@@ -593,12 +642,17 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
 
     #########
     # 去除放弃惩罚
-    exit_punish = 1
+    # exit_punish = 1
     # if seek.status == "exit":
         # exit_punish = 0
+
     no_exit_result = int(result_value * gain_ratio)
-    result_value = no_exit_result * exit_punish
-    coins_str = f"{player.coins.name}: {player.coins.value} - {player.coins.value - no_exit_result}(深度惩罚)  结算:{result_value}"
+    depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
+    result_value = player.coins.value - depth_punish - sim_tool_prices
+    if is_sim:
+        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) - {sim_tool_prices}(模拟道具价格)  结算:{result_value}"
+    else:
+        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚)  结算:{result_value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:
         await u.achieve_achievement(session, "满载无归")
     try:

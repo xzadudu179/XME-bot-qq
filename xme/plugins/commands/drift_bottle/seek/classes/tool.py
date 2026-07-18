@@ -10,19 +10,16 @@ class Tool:
             name: str,
             desc: str,
             player: Player,
-            changes: dict,
+            price: int,
             apply_event : dict,
             apply_condition: Callable,
             apply_times: int = -1,
-            region_change: Callable | None = None,
         ):
         self.name = name
         self.desc = desc
         # self.apply_message = apply_message
-        self.cost
+        self.price = price
         self.player = player
-        self.changes = changes
-        self.region_change = region_change
         # 激活条件
         self.apply_condition = apply_condition
         self.apply_event = apply_event
@@ -30,7 +27,7 @@ class Tool:
         self.apply_times = apply_times
 
     def __str__(self):
-        return f"{self.name}: {self.desc}"
+        return f"(${self.price}) {self.name}: {self.desc}"
 
     def can_apply(self) -> bool:
         if self.apply_times < 1 and self.apply_times != -1:
@@ -47,17 +44,19 @@ class Tool:
         event_type = self.apply_event.get("type", "normal")
         match event_type:
             case "normal":
-                return e.build_normal_event(self.apply_event, html=True)
+                return e.build_normal_event(self.apply_event, html=True, is_tool=True)
             case "dice":
-                return e.build_dice_event(self.apply_event, self.player.region.value, html=True)
+                return e.build_dice_event(self.apply_event, self.player.region.value, html=True, is_tool=True)
             case _:
                 raise ValueError(f"道具不支持 normal 和 dice 之外的事件: {event_type}")
 
-    def build_tool(tool_dict: dict):
+    def build_tool(tool_dict: dict, player):
         return Tool(
             name=tool_dict["name"],
             desc=tool_dict["desc"],
+            price=tool_dict.get("price", 0),
+            player=player,
+            apply_event=tool_dict["apply_event"],
             apply_condition=tool_dict["apply_condition"],
             apply_times=tool_dict["apply_times"],
-            region_change=tool_dict.get("region_change", None)
         )

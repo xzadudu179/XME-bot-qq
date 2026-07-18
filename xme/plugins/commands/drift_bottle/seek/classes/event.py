@@ -103,12 +103,12 @@ class Event:
                     build_changes[k].append(f"{c['type']}{c['change']()}")
         return build_changes
 
-    def build_normal_event(self, event_dict: dict, html=True, event_datas={}) -> str:
+    def build_normal_event(self, event_dict: dict, html=True, is_tool=False, event_datas={}) -> str:
         event_changes: dict = event_dict["changes"]
         region_change = event_dict.get("region_change", None)
         build_changes = Event.build_changes(event_changes)
         event_desc: str = random.choice(event_dict["descs"])
-        return self.normal_event(event_desc, build_changes, region_change, html=html)
+        return self.normal_event(event_desc, build_changes, region_change, is_tool, html=html)
 
     def parse_event_messages(messages, current_region: SeekRegion):
         # 解析事件消息列表
@@ -123,7 +123,7 @@ class Event:
             result_list.append(e)
         return result_list
 
-    def build_dice_event(self, event_dict: dict, current_region, html=True, event_datas={}) -> str:
+    def build_dice_event(self, event_dict: dict, current_region, html=True, is_tool=False, event_datas={}) -> str:
         event_message = random.choice(Event.parse_event_messages(event_dict["event_messages"], current_region))
         # print("evmsg", event_message)
         desc: str = random.choice(event_message["descs"])
@@ -165,6 +165,7 @@ class Event:
             win=win,
             fail=fail,
             big_fail=big_fail,
+            is_tool=is_tool,
             html=html,
         )
 
@@ -270,7 +271,7 @@ class Event:
 
 
     # 一般事件，只有结果
-    def normal_event(self, event_desc: str, attr_changes: dict[str, Any] | None = None, region_change=None, html=True) -> str:
+    def normal_event(self, event_desc: str, attr_changes: dict[str, Any] | None = None, region_change=None, is_tool=False, html=True) -> str:
         from .. import command_name
         """一般事件
 
@@ -289,8 +290,8 @@ class Event:
             region_ch = self.player.change_region(region_change, html=html)
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=html)
         if not html:
-            return get_message("plugins", __plugin_name__, command_name, 'normal_event_no_html', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch).strip()
-        return get_message("plugins", __plugin_name__, command_name, 'normal_event', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch).strip()
+            return get_message("plugins", __plugin_name__, command_name, 'normal_event_no_html', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch, tool="(道具)" if is_tool else "").strip()
+        return get_message("plugins", __plugin_name__, command_name, 'normal_event', event_desc=event_desc, attr_change=attr_change, region_ch=region_ch, tool="(道具)" if is_tool else "").strip()
 
     # 掷骰判定事件
     def dice_event(
@@ -302,6 +303,7 @@ class Event:
         big_win: dict,
         fail: dict,
         big_fail: dict,
+        is_tool=False,
         html: bool = True,
         ) -> str:
         from .. import command_name
@@ -376,8 +378,8 @@ class Event:
         attr_value_str = html_messy_string(str(attr_value), self.player.get_messy_rate(), html=html)
         msg = html_messy_string(msg, self.player.get_messy_rate(), html=html)
         if not html:
-            return get_message("plugins", __plugin_name__, command_name, 'dice_event_no_html', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch)
-        return get_message("plugins", __plugin_name__, command_name, 'dice_event', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch)
+            return get_message("plugins", __plugin_name__, command_name, 'dice_event_no_html', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")
+        return get_message("plugins", __plugin_name__, command_name, 'dice_event', attr_change=attr_change, event_desc=event_desc, attr_name=attr_name, dice_faces=dice_faces_str, dice_result=rd_str, attr_value=attr_value_str, state=state, result_message=msg, region_ch=region_ch, tool="(道具)" if is_tool else "")
 
 SPECIAL_EVENTS: dict[dict] = {
     "on_sea": {

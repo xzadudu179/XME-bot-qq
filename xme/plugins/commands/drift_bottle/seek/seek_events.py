@@ -56,7 +56,7 @@ EVENTS = [
   {
     "type": "normal",
     "tags": [],
-    "prob": 3,
+    "prob": 5,
     "post_func": None,
     "descs": ["你收集到了一些神秘的发光物体...", "你发现了几个发着光的球体...", "你捕捉到了一些黑影..."],
     "regions": [SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID],
@@ -72,7 +72,7 @@ EVENTS = [
   {
     "type": "normal",
     "tags": [],
-    "prob": 3,
+    "prob": 4,
     "post_func": None,
     "descs": ["你收集到了一些神秘的发光物体...他们似乎能治疗你", "你发现了几个发着光的球体...它们好像可以疗愈你的伤口", "你捕捉到了一些黑影...它们似乎能治疗你"],
     "regions": [SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID, SeekRegion.SHADOWRECK],
@@ -88,7 +88,7 @@ EVENTS = [
   {
     "type": "normal",
     "tags": [],
-    "prob": 3,
+    "prob": 4,
     "post_func": None,
     "descs": ["你收集到了一些神秘的发光物体...", "你发现了几个发着光的球体...", "你捕捉到了一些黑影..."],
     "regions": [SeekRegion.SHADOWRECK],
@@ -1018,7 +1018,7 @@ EVENTS = [
     "ok": {
       "changes": {
         "coins": {
-          "change": lambda: random.randint(20, 80),
+          "change": lambda: random.randint(50, 90),
           "type": "+",
           "custom": False,
         },
@@ -1037,7 +1037,7 @@ EVENTS = [
     "big_win": {
       "changes": {
         "coins": {
-          "change": lambda: random.randint(180, 320),
+          "change": lambda: random.randint(180, 350),
           "type": "+",
           "custom": False,
         },
@@ -1492,6 +1492,7 @@ EVENTS = [
       },
     ]
   },
+
   {
     "type": "decision",
     "tags": [],
@@ -1529,6 +1530,37 @@ EVENTS = [
 
     ]
   },
+#   {
+#     "type": "decision",
+#     "tags": [],
+#     "prob": 0.65,
+#     "post_func": None,
+#     "descs": ["在光点的映照中出现了一片城市的轮廓...你感到很不安...", "深渊中似乎出现了一座城市...?"],
+#     "regions": [SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID],
+#     "can_quit": True,
+#     "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, *args: not back and depth.value > 1230,
+#     "decisions": [
+#       {
+#         "type": "normal",
+#         "tags": [],
+#         "names": ["进入城市", "探索城市"],
+#         "descs": ["你进入了这座城市...", "你来到了这座城市...", "你开始对这座城市进行探险...", "你进入了这个城市..."],
+#         "tip": "[区域→]",
+#         "changes": {
+#         },
+#         "region_change": lambda last: SeekRegion.ABYSS_CITY
+#       },
+#       {
+#         "type": "normal",
+#         "tags": [],
+#         "tip": "",
+#         "names": ["离开", "放弃", "放弃探索"],
+#         "descs": ["你觉得探索这座城市太危险了", "你觉得自己还不适合来这里探索", "你觉得城市太危险了"],
+#         "changes": {
+#         }
+#       },
+#     ]
+#   },
   {
     "type": "normal",
     "tags": [],

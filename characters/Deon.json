@@ -1163,27 +1163,33 @@
             "desc": "漂流瓶相关指令",
             "introduction": "扔/捡来自各个群组的漂流瓶。每人每小时可以捡 30 个\n\n神秘力量入侵了大海...现在每捡一次漂流瓶都会让它更加混乱，也更容易碎掉...但是点赞可以让混乱值变少",
             "throw_introduction": "扔一个漂流瓶（文本和图片）",
-            "seek_introduction": "在海中寻宝（使用 \"/seek\" 指令查看详细帮助）",
+            "seek_introduction": "在海中寻宝（使用 \"/sk\" 指令查看详细帮助）",
             "seek": {
-                "introduction": "--------海中寻宝[早期测试ing]--------\n使用 \"/seek start\" 来开始一轮寻宝（每日限制两次）\n当你使用 \"/seek start\" 且开始寻宝后，使用\"s 步数\" 来前进，使用 \"b 步数\" 来返回，当结束时深度小于 20，寻宝成功，你会拿到你所有的奖励{positive_punc}，如果没有成功的话，会根据深度扣除{coin_name}惩罚\n\n注：一个群只能同时有一个人寻宝哦。而且每天只能寻宝两次。\n或者你也可以在私聊使用 \"/seek sim\" 来模拟寻宝（每日不限次数）~\n\n其他功能：\n(管理使用) \"/seek swi\" 在本群启用/禁用寻宝功能（默认禁用）",
-                "not_enable": "这个群里没有开启寻宝功能哦，可以尝试联系群管理使用 \"/seek swi\" 开启 {neutral}\n也可以私聊使用这个功能哦。",
-                "not_enable_admin": "这个群里没有开启寻宝功能哦，可以尝试使用 \"/seek swi\" 开关 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦。\n顺便，你也可以私聊使用这个功能哦。",
+                "introduction": "--------海中寻宝[早期测试ing]--------\n使用 \"/sk st\" 来开始一轮寻宝（每日限制两次）\n\n当你开始寻宝后，使用\"s 步数\" 来前进，使用 \"b 步数\" 来返回\n游戏结束时，深度若小于 20，寻宝成功，你会拿到你所有的奖励{positive_punc}\n若深度大于等于 20，会根据深度扣除{coin_name}惩罚\n\n注：一个群只能同时有一个人寻宝哦。而且每天只能寻宝两次。\n你也可以在私聊使用 \"/sk sim\" 来模拟寻宝（每日不限次数）~\n\n其他功能：\n(管理使用) \"/sk swi\" 在本群启用/禁用寻宝功能（默认禁用）",
+                "not_enable": "这个群里没有开启寻宝功能哦，可以尝试联系群管理使用 \"/sk swi\" 开启 {neutral}\n也可以私聊使用这个功能哦。",
+                "not_enable_admin": "这个群里没有开启寻宝功能哦，可以尝试使用 \"/sk swi\" 开关 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦。\n顺便，你也可以私聊使用这个功能哦。",
                 "not_group": "你不在群聊里，不能执行这个操作哦 {neutral}",
                 "enable_warning": "请发送 \"y\" 确定开启群聊的寻宝功能 或发送其他任意消息取消。 {neutral}\n警告：此功能在普通群聊环境下非常刷屏，谨慎使用哦",
                 "disable": "群里的寻宝功能已关闭 {neutral}",
-                "not_private": "你需要在私聊里使用 \"/seek sim\" 哦（注意：{bot_name}可能无法接收到临时会话的消息哦）",
+                "not_private": "你需要在私聊里使用 \"/sk sim\" 哦（注意：{bot_name}可能无法接收到临时会话的消息哦）",
                 "cancel_enable": "取消开启寻宝功能了哦 {neutral}",
                 "enable": "在本群开启寻宝功能啦 {positive}",
-                "limit": "你今天不能再寻宝啦，明天再来试试吧~\n不过你可以尝试在私聊使用 \"/seek sim\" 来模拟寻宝哦！",
+                "limit": "你今天不能再寻宝啦，明天再来试试吧~\n不过你可以尝试在私聊使用 \"/sk sim\" 来模拟寻宝哦！",
                 "seek_choose_tools": "出发前来选择道具吧！\n{tools}\n发送序号来购买道具，结束后发送 \"ok\" 来开始寻宝{positive_punc} {positive}",
                 "seek_start": "出发寻宝！{positive}\n> 欢迎使用 SeekerOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n（你闭上眼，来到了一个奇怪的空间，眼前是一望无际的大海）\n注意：当结束时深度小于 20，寻宝成功，你会拿到你所有的奖励，若深度大于 20，会根据深度扣除{coin_name}惩罚\n——↓—开始下潜—↓——",
                 "not_admin": "你不是管理员哦，无法执行这个功能 {neutral}",
                 "seek_simulation": "开始模拟寻宝！{positive}\n> 欢迎使用 SeekerOS, 正在进行系统初始化...\n> 正在构建大海...\n> 正在生成[???]\n> 系统初始化成功\n当前为模拟环境，开始下潜。",
                 "group_seeking": "这个群还有人在探险哦，可以试试私聊使用或者换一个群使用呢 {neutral}",
-                "dice_event": "<span class=\"ev\">[掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change} {region_ch}</div>",
-                "dice_event_no_html": "[掷骰事件] {event_desc}\n[正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message}\n{attr_change} {region_ch}",
-                "normal_event": "<span class=\"ev\">[事件]</span> {event_desc}</div> <div class=\"effect\">{attr_change} {region_ch}</div>",
-                "normal_event_no_html": "[事件] {event_desc} {attr_change} {region_ch}",
+                "num_error": "请发送有效的整数作为序号哦 {neutral}\n如果想要开始直接发送 \"st\" 就好啦",
+                "already_use_tool": "你已经启用了这个道具啦 {neutral}",
+                "choose_tool_succes": "你花费了 {cost} {coin_pronoun}{coin_name}选择了 \"{tool}\" 道具{positive_punc}\n如果选完了的话，就发送 \"st\" 开始吧{positive_punc}",
+                "not_enough_coin": "你好像没有足够多的{coin_name}来购买这个道具呢...{negative}，你当前只有 {left} {coin_pronoun}{coin_name}哦",
+                "num_out_range": "你发送的序号好像不在范围内诶...{neutral}",
+                "choose_tools": "在开始前，选择道具吧 {neutral}\n当你结束选择了后，发送 \"st\" 即可开始~\n以下是道具列表：\n{tools}\n发送序号来选择你想使用的道具吧{positive_punc}",
+                "dice_event": "<span class=\"ev\">[{tool}掷骰事件]</span> {event_desc} </div><div class=\"dice\">[正在鉴定 <span class=\"ident\">{attr_name}</span>: D{dice_faces}={dice_result}/{attr_value} {state}]</div></li><li><div class=\"other-lines\">{result_message}</div><div class=\"effect\">{attr_change} {region_ch}</div>",
+                "dice_event_no_html": "[{tool}掷骰事件] {event_desc}\n[正在鉴定 \"{attr_name}\": D{dice_faces}={dice_result}/{attr_value} {state}]\n{result_message}\n{attr_change} {region_ch}",
+                "normal_event": "<span class=\"ev\">[{tool}事件]</span> {event_desc}</div> <div class=\"effect\">{attr_change} {region_ch}</div>",
+                "normal_event_no_html": "[{tool}事件] {event_desc} {attr_change} {region_ch}",
                 "decision_event": "{event_desc}\n{decision_descs}",
                 "result_msg": "寻宝结束啦{positive_punc}\n收益统计：{gain}\n（你一阵恍惚，感觉自己的记忆正在快速消失……你在探险机器旁醒来了，好像什么事都没发生过…除了一篇你完全没有印象的探险报告...）",
                 "result_msg_with_coins": "寻宝结束啦{positive_punc}\n收益统计：{gain}\n（你一阵恍惚，感觉自己的记忆正在快速消失……你在探险机器旁醒来了，好像什么事都没发生过…除了一篇你完全没有印象的探险报告，和你账户多出的 {coins} {coin_pronoun}{coin_name}）",
@@ -1199,26 +1205,26 @@
                     "你还在 \"{place}\" 探险诶，结束后再开始新的探险吧 {neutral}"
                 ],
                 "on_seeking": [
-                    "正在探险中，不能执行指令哦 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。",
-                    "你还在探险中哦，不能执行指令 {neutral}\n发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
+                    "正在探险中，不能执行指令哦 {neutral}\n发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。",
+                    "你还在探险中哦，不能执行指令 {neutral}\n发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
                 ],
                 "error_msg": "{negative} 运行出现错误：{ex}\n可以尝试重新探险，或者将错误内容发送给九九 {neutral}",
                 "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
                 "continue_step_tip": [
-                    "发送 \"s 1~20\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~30\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
+                    "发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
                 ],
                 "continue_step_tip_onsea": [
-                    "你回到海面啦{positive_punc} 可以发送 \"s 1~20\" 以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结算这次探险。"
+                    "你回到海面啦{positive_punc} 可以发送 \"s 1~{max_seek_steps}\" 以继续探险{positive_punc} 数字为步数, 或发送 \"quit\" 结算这次探险。"
                 ],
                 "in_decision": [
                     "你正在决策事件中哦，请先进行决策吧 {neutral}",
                     "你还在决策事件中哦，需要先进行决策{positive_punc} {neutral}"
                 ],
                 "seeking_tip": [
-                    "你还在探险中哦，发送 \"s 1~20\" 或 \"b 1~30\" 来探险 / 返回，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
+                    "你还在探险中哦，发送 \"s 1~{max_seek_steps}\" 或 \"b 1~{max_back_steps}\" 来探险 / 返回，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
                 ],
                 "seeking_tip_onsea": [
-                    "你还在探险中哦，发送 \"s 1~20\" 来探险，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
+                    "你还在探险中哦，发送 \"s 1~{max_seek_steps}\" 来探险，也可以发送 \"quit\" 退出并结算\n若五分钟后还没有继续探险，将会自动结算哦"
                 ],
                 "invalid_step": "探险步数需要保持在 1~{max} 以内哦，你指定的步数 {count} 太大啦",
                 "quit_success": [

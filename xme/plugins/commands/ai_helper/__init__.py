@@ -31,7 +31,7 @@ class AIHelper:
     async def ai_init(self, messages):
         response = self.client.chat.asyncCompletions.create(
             # model="glm-4-flashx",
-            model="glm-5",
+            model="glm-5.2",
             messages=messages,
             tools=[
                 {

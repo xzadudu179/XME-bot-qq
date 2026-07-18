@@ -16,9 +16,9 @@ SESSION_RUN_TIMEOUT = timedelta(minutes=60)
 SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = None
 # SESSION_RUNNING_EXPRESSION = ""
-DEFAULT_COMMAND_PERMISSION = lambda s: True  # noqa: E731
+DEFAULT_COMMAND_PERMISSION = lambda _: True  # noqa: E731
 # 用户自定义 config
-SELF_ID = 3921994690
+SELF_ID = 3961418307
 # 测试群
 GROUPS_WHITELIST = [
     727949269,

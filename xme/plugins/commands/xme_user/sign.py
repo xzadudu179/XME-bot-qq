@@ -37,6 +37,8 @@ async def _(session: CommandSession, user: User):
     last_sign_date = get_value(__plugin_name__, cmd_name, "sign_date", search_dict=user.plugin_datas, default=timetools.curr_days())
     curr_date = timetools.curr_days()
     is_consecutive = curr_date - last_sign_date <= 1
+    # 临时改变
+    # is_consecutive = True
     debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
     consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 1.5))
@@ -46,8 +48,13 @@ async def _(session: CommandSession, user: User):
     reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
     for us in users:
         counters = us["counters"]
-        if timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY) == timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY):
+        last_sign_day = timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY)
+        day_now = timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY)
+        # can_make_up = False
+        if last_sign_day == day_now:
             signed_users_count += 1
+        # elif day_now - last_sign_day <= 2:
+        #     can_make_up = True
     if append_coins == 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',
             time_period=timetools.get_time_period()

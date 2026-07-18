@@ -14,7 +14,7 @@ async def send_like():
         tried_times = 0
         if f['user_id'] == config.SELF_ID:
             continue
-        while failed and tried_times < 30:
+        while failed and tried_times < 10:
             try:
                 await bot_call_action(bot, "send_like", user_id=f['user_id'], times=10)
                 failed = False

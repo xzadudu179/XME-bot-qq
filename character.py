@@ -1,30 +1,39 @@
-# import config
 from xme.xmetools import jsontools
 from xme.xmetools.texttools import replace_formatted
 from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
+from functools import lru_cache
 import config
 import os
 # from xme.xmetools.debugtools import debug_msg
 from decimal import Decimal
 from nonebot.log import logger
-# 其实这就是 i18n
+
 CHARACTER = 'Deon'
 DEFAULT_CHARACTER = 'Deon'
 
-items = os.listdir("./characters/")
+@lru_cache(maxsize=32)
+def _read_character_file(char_name: str) -> dict:
+    """读取角色文件并缓存"""
+    if not char_name:
+        return {}
+    try:
+        data = jsontools.read_from_path(f"./characters/{char_name}.json")
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        logger.debug(f"读取或解析角色文件 \"{char_name}.json\" 失败: {e}")
+        return {}
 
 def get_character(default=DEFAULT_CHARACTER, target='') -> dict:
-    target = target if target != '' else CHARACTER
-    try:
-        chacs = jsontools.read_from_path(f"./characters/{target}.json")
-    except Exception:
-        chacs = False
-    result = chacs if chacs else False
-    if target == DEFAULT_CHARACTER and not result:
-        return {}
-    # 如果没有查询到且角色不是 XME，切换为 XME 再查询
-    return result if result else get_character(default=default, target=DEFAULT_CHARACTER)
+    target = target or CHARACTER
+    result = _read_character_file(target)
+    if result:
+        return result
+    if target != default:
+        result = _read_character_file(default)
+        if result:
+            return result
+    return {}
 
 def get_character_item(*keys: str, character: str="", default="[NULL]", search_dict: dict | None=None):
     """得到角色字典对应键的值，如果找不到对应角色的值会返回默认的，还找不到则返回 default 值

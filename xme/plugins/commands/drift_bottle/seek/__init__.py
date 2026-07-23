@@ -7,7 +7,7 @@ from xme.xmetools.bottools import get_group_name
 # from xme.xmetools.timetools import TimeUnit
 from config import BOT_SETTINGS_PATH
 from html2image import Html2Image
-from xme.xmetools.randtools import html_messy_string, messy_image
+from xme.xmetools.randtools import html_messy_string, messy_image, random_percent
 from character import get_message
 from xme.xmetools.imgtools import crop_transparent_area
 from xme.xmetools.msgtools import image_msg
@@ -193,7 +193,7 @@ def get_img_msg(
             }
             body {
                 background-color: transparent;
-                font-family: "Helvetica Neue", "Noto Sans CJK SC", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             }
             main li {
                 font-size: 1em;
@@ -445,9 +445,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             while expected_steps > 0 and seek.status == "start":
                 result = seek.parse_steps(expected_steps, total_steps, is_sim=is_sim)
                 # --------- 检测成就
-                if player.region.value == SeekRegion.ABYSS:
+                if player.region.value == SeekRegion.ABYSS and not is_sim:
                     await u.achieve_achievement(session, "来自深渊")
-                if player.region.value == SeekRegion.VOID and player.depth.value > 5000:
+                if player.region.value == SeekRegion.VOID and player.depth.value > 5000 and not is_sim:
                     await u.achieve_achievement(session, "虚空侵蚀...")
                 if len(player.achieved_achievements) > 0:
                     for a in player.achieved_achievements:
@@ -504,7 +504,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             )
         )
         await send_session_msg(session, msg)
-        sim_tool_prices = 0
+        tool_prices = 0
         tool_reply = ""
         while True:
             tool_reply = await aget_arg_with_timeout(session, 150)
@@ -529,8 +529,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 if not have_enough_money:
                    await send_session_msg(session, get_message("plugins", __plugin_name__,  command_name, 'not_enough_coin', left=u.coins))
                    continue
-            elif is_sim:
-                sim_tool_prices += tool.price
+                tool_prices += tool.price
+            # elif is_sim:
             tools.append(tool)
             used_nums.append(num)
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'choose_tool_succes', cost=tool.price, tool=tool.name))
@@ -548,7 +548,11 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         start_prefix = "----------开头总结----------"
         tools_str = "、".join([t.name for t in player.tools])
         prefix = f'<h2>----------出发玩家属性----------</h2><div class=\"fl\">{player.get_attr_str(detailed=True,html=True)}</div>\n<p>使用道具：{tools_str}</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n'
+        # 无依无靠模式
         if "无依无靠" in tools_str:
+            player.chance.value = random.randint(8, 11)
+            if random_percent(25):
+                player.chance.value = random.randint(9, 12)
             prefix = f'<h2>----------出发玩家属性----------</h2>\n<p>使用道具：{tools_str}</p>\n<hr>\n<h2>{html_messy_string(start_prefix,temperature=player.get_messy_rate())}</h2>\n<hr/>\n'
         total_steps = await parse_event_steps(
             total_steps,
@@ -608,8 +612,42 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 afk = False
             if afk:
                 break
-            prefix = "----------阶段总结[剩余 {chance} 次机会]----------"
             player.chance.change(lambda v: v - 1)
+            if player.hardcore.value == 1:
+                tip_text = "你不知道你到底适不适合探险"
+                random_tip = False
+                if player.san.value < 50:
+                    random_tip = True
+                tip_texts = {
+                   5: ["你感觉你异常地亢奋", "你感觉完全可以一直探险", "你觉得自己有花不完的精力", "你好像有无限多的精力"],
+                   4: ["你感觉你的精力充沛", "你充满了探险的决心", "你觉得你能够探险好久", "你十分精神"],
+                   3: ["你感觉你还可以继续探险", "你感觉你还可以行动一阵子", "你还比较有精神"],
+                   2: ["你感觉你快要走不动了", "你感觉你快没力气了", "你感觉很累了"],
+                   1: ["你感觉你几乎不能继续了", "你感觉快要力竭了", "你感觉太累了", "你马上就要走不动了"],
+                   0: ["你完全走不动了", "你完全没力气了", "你没有任何精神了", "你完全力竭了"]
+                }
+                thresholds = [
+                    (random.randint(18, 22), 5),
+                    (random.randint(9, 11), 4),
+                    (random.randint(4, 6), 3),
+                    (random.randint(2, 3), 2),
+                    (0, 1)
+                ]
+                val = player.chance.value
+                tip_type = next((level for limit, level in thresholds if val > limit), 0)
+
+                if random_tip and val > 0:
+                    random_type = random.randint(0, 5)
+                    question_mark_count = 1
+                    if abs(random_type - tip_type) >= 2:
+                        question_mark_count = 2
+                    tip_text = random.choice(tip_texts[random_type]) + f"..{'?' * question_mark_count}"
+                else:
+                    tip_text = random.choice(tip_texts[tip_type])
+
+                prefix = html_messy_string(f"---阶段总结 *{tip_text}*---", player.get_messy_rate())
+            else:
+                prefix = "----------阶段总结[剩余 {chance} 次机会]----------"
             total_steps = await parse_event_steps(total_steps, expected_steps, prefix=f'<h2>{prefix}</h2>\n<hr/>\n')
             # debug_msg(player.chance.value, seek.status)
     except TimeoutError:
@@ -654,13 +692,13 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
 
     no_exit_result = int(result_value * gain_ratio)
     depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
-    result_value = player.coins.value - depth_punish - sim_tool_prices
+    result_value = player.coins.value - depth_punish - tool_prices
     suffix = ""
     if player.hardcore.value == 1:
-        result_value = int((player.coins.value - depth_punish) * 1.6) - sim_tool_prices
-        suffix = "* 1.6(无依无靠加成) "
+        result_value = int((player.coins.value - depth_punish) * 1.7) - tool_prices
+        suffix = f"+ {int((player.coins.value - depth_punish) * 0.7)}(无依无靠加成) "
     if is_sim:
-        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix}- {sim_tool_prices}(模拟道具价格)  结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix}- {tool_prices}(道具价格)  结算:{result_value}"
     else:
         coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix} 结算:{result_value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:

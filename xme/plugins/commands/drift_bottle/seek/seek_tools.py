@@ -4,8 +4,9 @@ from .classes.player import SeekRegion
 # player = Player()
 TOOLS = [
     {
+        "id": 0,
         "name": "无依无靠",
-        "desc": "失去了外部信息的帮助，你只能靠自己了...（收益 *1.6）",
+        "desc": "失去了外部信息的帮助，你只能靠自己了...（收益 *1.7）",
         "apply_condition": lambda player: True,
         "apply_times": 1,
         "apply_event": {
@@ -19,7 +20,7 @@ TOOLS = [
                 },
                 "depth": {
                     "change": lambda: 100,
-                    "type": "=",
+                    "type": "+",
                     "custom": False,
                 },
             }
@@ -27,26 +28,33 @@ TOOLS = [
         "price": 100,
     },
     {
+        "id": 1,
         "name": "备用气罐",
-        "desc": "增加 100 点氧气上限",
+        "desc": "增加 100 点氧气上限，并且增加 50 点初始氧气值",
         "apply_condition": lambda player: True,
         "apply_times": 1,
         "apply_event": {
             "type": "normal",
             "descs": ["你装备上了备用的氧气罐。", "你戴上了备用的氧气罐"],
             "changes": {
-                "oxygen": {
+                "oxygen": [{
                         "change": lambda v: v.change_max(lambda x: x + 100),
                         "return": lambda v: v.max_value,
                         "return_msg": "最大{name} = {value}",
                         "custom": True,
                         "assign": False,
-                    },
+                    },{
+                        "change": lambda: 50,
+                        "type": "+",
+                        "custom": False,
+                    }
+                ]
             }
         },
-        "price": 150,
+        "price": 180,
     },
     {
+        "id": 2,
         "name": "星币回收机",
         "desc": "减少 40% 深度惩罚",
         "apply_condition": lambda player: True,
@@ -65,6 +73,7 @@ TOOLS = [
         "price": 280,
     },
     {
+        "id": 3,
         "name": "次元传送器",
         "desc": "减少 90% 深度惩罚",
         "apply_condition": lambda player: True,
@@ -83,6 +92,7 @@ TOOLS = [
         "price": 960,
     },
     {
+        "id": 4,
         "name": "深潜装甲",
         "desc": "战斗力增加5、最大战斗力增加7、生命值增加50",
         "apply_condition": lambda player: True,
@@ -121,6 +131,7 @@ TOOLS = [
         "price": 300,
     },
     {
+        "id": 5,
         "name": "心灵控制器",
         "desc": "精神力+5、最大精神力+5、san 值+50",
         "apply_condition": lambda player: True,
@@ -159,6 +170,7 @@ TOOLS = [
         "price": 300,
     },
     {
+        "id": 6,
         "name": "物品扫描仪",
         "desc": "洞察力+5、最大洞察力+5",
         "apply_condition": lambda player: True,
@@ -184,6 +196,7 @@ TOOLS = [
         "price": 500,
     },
     {
+        "id": 7,
         "name": "应急维生装置",
         "desc": "在水下首次耗尽行动机会时增加 3 次行动机会",
         "apply_condition": lambda player: player.depth > 0 and player.chance <= 0,
@@ -202,6 +215,7 @@ TOOLS = [
         "price": 350,
     },
     {
+        "id": 8,
         "name": "探险精神",
         "desc": "增加 10 次初始行动机会",
         "apply_condition": lambda player: True,
@@ -220,6 +234,7 @@ TOOLS = [
         "price": 780,
     },
     {
+        "id": 9,
         "name": "快速探险",
         "desc": "前进与返回最高步数 + 10",
         "apply_condition": lambda player: True,
@@ -243,6 +258,7 @@ TOOLS = [
         "price": 550,
     },
     {
+        "id": 10,
         "name": "深渊传送器",
         "desc": "你将从 1000 d.n. 处开始下潜...",
         "apply_condition": lambda player: True,

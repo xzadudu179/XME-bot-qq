@@ -3,6 +3,7 @@ from xme.plugins.commands.xme_user.classes.user import coin_name
 import random
 from .. import get_random_broken_bottle
 from ..tools.bottlecard import get_pickedup_bottle_card
+from .classes.tool import get_tool
 from xme.xmetools.msgtools import image_msg
 
 def shark_post(p: Player):
@@ -1852,7 +1853,7 @@ EVENTS = [
     "post_func": None,
     "descs": ["氧气充足的状态让你感到精神充沛", "有了这么多的氧气，你觉得你可以继续你的探险", "获得了如此充足的氧气让你下定了决心"],
     "regions": [],
-    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, *args: not events_encountered.get("oxy_full", False) and oxygen.value >= 160,
+    "condition": lambda health, san, oxygen, combat, insight, mental, coins, tools, depth, back, chance, events_encountered, *args: not events_encountered.get("oxy_full", False) and oxygen.value >= 160 and get_tool(1, tools) is None,
     "changes": {
       "chance": {
         "change": lambda: random.randint(4, 5),

@@ -176,38 +176,6 @@ class User:
             except ActionFailed:
                 continue
 
-    # def gen_celestial(self):
-    #     """随机获取出生星体
-    #     """
-    #     map = get_galaxymap()
-    #     if not map:
-    #         debug_msg("地图未生成")
-    #         return
-    #     choice_celestials = []
-    #     debug_msg("随机生成出生星体中")
-    #     # debug_msg("USERRRRRRRRRRRRRRR", map.starfields)
-    #     for starfield in map.starfields.values():
-    #         if starfield.calc_faction().id != 1:
-    #             continue
-    #         for c in starfield.celestials.values():
-    #             if isinstance(c, Star):
-    #                 continue
-    #             if isinstance(c, Planet):
-    #                 if c.planet_type not in [
-    #                     PlanetType.CITY,
-    #                     PlanetType.DESOLATE,
-    #                     PlanetType.DRY,
-    #                     PlanetType.SEA,
-    #                     PlanetType.TERRESTRIAL,
-    #                 ]:
-    #                     continue
-    #             choice_celestials.append(c)
-    #     if choice_celestials:
-    #         self.celestial = random.choice(choice_celestials)
-    #         # self.save()
-    #     else:
-    #         debug_msg("无法获取到合适的行星")
-
     def __str__(self):
         # debug_msg("self.get_reg_time()", self.get_reg_time())
         try:
@@ -365,29 +333,6 @@ def limit_count_tick(user: User, name: str, count=1):
     user.counters[name]["count"] += count
     # user.save()
 
-def get_user_rank(user):
-    """获取指定用户 id 的金币排名百分比以及数量和位置
-
-    Args:
-        user (int): 用户 id
-
-    Returns:
-        tuple: 金币数量, 排名比例
-    """
-    rank_items = get_rank('coins', excluding_zero=True)
-    sender_coins_count = None
-    sender_index = None
-    for index, item in enumerate(rank_items):
-        if int(item[0]) != user:
-            continue
-        debug_msg("匹配到了")
-        sender_coins_count = item[1]
-        sender_index = index
-    rank_ratio = 0
-    if sender_coins_count is not None:
-        rank_ratio = (len(rank_items[sender_index:]) - 1)/ (len(rank_items) - 1) * 100 if len(rank_items[sender_index:]) > 1 else 100
-    return sender_coins_count, rank_ratio, sender_index
-
 
 def detect_limit(user: User, name: str, interval: float | int, count_limit: int = 1,
                    unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True) -> tuple[bool, bool]:
@@ -447,33 +392,6 @@ def get_limit_info(user, name):
     # return (user.counters[name]["time"], user.counters[name]["count"])
 
 
-def get_rank(*rank_item_key, key=None, excluding_zero=False):
-    """获取用户某项内容排名
-
-    Args:
-        key (Callable[_T, SupportsRichComparison], optional): 排名方法. Defaults to None.
-
-    Returns:
-        list[tuple]: 用户: 键对应值
-    """
-    rank = {}
-    # users: dict = jsontools.read_from_path(config.USER_PATH)['users']
-    users = User.get_users()
-    for v in users:
-        # debug_msg(f"item: {v}")
-        value = dicttools.get_value(*rank_item_key, search_dict=v)
-        if value is None:
-            continue
-        rank[v["user_id"]] = value
-    if excluding_zero:
-        rank_values = [r for r in rank.items() if r[1] > 0]
-    else:
-        rank_values = [r for r in rank.items()]
-    # debug_msg(rank_values)
-    rank_values.sort(reverse=True, key=lambda x: key(x[1]) if key else x[1])
-    # debug_msg(rank)
-    return rank_values
-
 
 def limit(limit_name: str,
           interval: float | int,
@@ -492,7 +410,7 @@ def limit(limit_name: str,
         count_limit (int, optional): 时间内限制次数. Defaults to 1.
         unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
         floor_float (bool, optional): 是否向下取整时间. Defaults to True.
-        fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: x == False.
+        fails (func, optional): 函数返回什么会被判定为失败. Defaults to lambda x: not x.
         limit_func (func, optional): 自定义限制时返回的函数. Defaults to None.
     """
 
@@ -531,7 +449,7 @@ def custom_limit(limit_name: str | FunctionType,
     """对函数进行限制时间内只能执行数次，其中判断限制和增加计数由函数自己决定
 
     Args:
-        limit_name (str): 限制名
+        limit_name (str | FunctionType): 限制名
         interval (float | int): 多少时间单位后刷新限制
         limit_message (str): 限制时返回的消息
         count_limit (int, optional): 时间内限制次数. Defaults to 1.
@@ -568,6 +486,57 @@ def custom_limit(limit_name: str | FunctionType,
 
     return decorator
 
+
+def get_user_rank(user):
+    """获取指定用户 id 的金币排名百分比以及数量和位置
+
+    Args:
+        user (int): 用户 id
+
+    Returns:
+        tuple: 金币数量, 排名比例
+    """
+    rank_items = get_rank('coins', excluding_zero=True)
+    sender_coins_count = None
+    sender_index = None
+    for index, item in enumerate(rank_items):
+        if int(item[0]) != user:
+            continue
+        debug_msg("匹配到了")
+        sender_coins_count = item[1]
+        sender_index = index
+    rank_ratio = 0
+    if sender_coins_count is not None:
+        rank_ratio = (len(rank_items[sender_index:]) - 1)/ (len(rank_items) - 1) * 100 if len(rank_items[sender_index:]) > 1 else 100
+    return sender_coins_count, rank_ratio, sender_index
+
+
+def get_rank(*rank_item_key, key=None, excluding_zero=False):
+    """获取用户某项内容排名
+
+    Args:
+        key (Callable[_T, SupportsRichComparison], optional): 排名方法. Defaults to None.
+
+    Returns:
+        list[tuple]: 用户: 键对应值
+    """
+    rank = {}
+    # users: dict = jsontools.read_from_path(config.USER_PATH)['users']
+    users = User.get_users()
+    for v in users:
+        # debug_msg(f"item: {v}")
+        value = dicttools.get_value(*rank_item_key, search_dict=v)
+        if value is None:
+            continue
+        rank[v["user_id"]] = value
+    if excluding_zero:
+        rank_values = [r for r in rank.items() if r[1] > 0]
+    else:
+        rank_values = [r for r in rank.items()]
+    # debug_msg(rank_values)
+    rank_values.sort(reverse=True, key=lambda x: key(x[1]) if key else x[1])
+    # debug_msg(rank)
+    return rank_values
 
 
 def using_user(save_data=False, id=0):

@@ -75,11 +75,8 @@ def get_color_luminance(color: str | tuple) -> float:
     Returns:
         float: 亮度值（最高为 255）
     """
-    # print("xwx")
     color = to_rgb_and_verify(color)[0]
-    # print(color)
     luminance = 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]
-    # print("uwu")
     return luminance
 
 def invent_color(color: str | tuple) -> str | tuple:

@@ -599,16 +599,3 @@ def remove_invisible(text: str):
         ch for ch in text
         if unicodedata.category(ch)[0] != "C" or ch in ("\n", "\r")
     )
-
-# def is_question_product(question, question_of):
-#     # 加载中文模型
-#     nlp = spacy.load("zh_core_web_sm")
-
-#     # 处理句子
-#     doc = nlp(question)
-
-#     # 识别实体
-#     for ent in doc.ents:
-#         if ent.text == question_of:
-#             return True
-#     return False

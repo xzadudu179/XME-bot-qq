@@ -126,10 +126,10 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
             random.randint(0, 255)
         )
         for dy in range(block_size):
-            random_color = random.random() < 0.1 if rand_color else False
+            is_rand_color = random.random() < 0.1 if rand_color else False
             for dx in range(block_size):
                 # 随机颜色
-                if random_color:
+                if is_rand_color:
                     pixels[x1 + dx, y1 + dy] = random_color
                     pixels[x2 + dx, y2 + dy] = random_color1
                     continue
@@ -138,7 +138,7 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
     return img
 
 
-def messy_string(string_input, temperature: float=50, resample_times=0):
+def messy_string(string_input, temperature: float=50, resample_times=0, t:int = 1):
     """返回一个混乱的字符串
 
     Args:
@@ -149,7 +149,12 @@ def messy_string(string_input, temperature: float=50, resample_times=0):
     Returns:
         str: 混乱字符串
     """
-    random_chars = ["!", "?", "@", "%", "#", "&", "*", "**", "^", ".", "..", "??", "$", "\"", "¿", "¡", "=", "<", ">", ",",]
+    random_types = {
+        0: "ⰀⰁⰂⰃⰄⰅⰆⰇᚖᚗᚘⰈⰉⰊⰋⰌⰍⰎⰏⰐⰑⰒⰓⰔⰕⰖⰗꚠꚡꚢꚣꚤꚥꚦꚧꚨꚩꚪꚫꚬꚭꚮꚯꚰꚱꚲꚳꚴꚵꚶꚷꚸꚹꚺꚻꚼꚽꚾꚿꛀꛁꛂꛃꛄꛅꛆꛇꛈꛉꛊꛋꛌꛍꛎꛏꛐꛑꛒꛓꛔꛕ𓇠ᐱⵇ",
+        1: "𒀀𒀁𒀂𒀃𒀄𒀅𒀆𒀇𒀈𒀉𒀊𒀒𒀓𒀭𒂊𒄿𒅀𒆠𒇻𒈠𒉌𒊒𒋗𒌋𒍣𒎙ᚏᚠᚢᚦᚨᚱᚲᚳᚴᚵᚶᚷᚸᚹᚺᚻᚼᚽᚾᚿᛀᛁᛂᛃᛄᛅᛆᛇᛈᛉᛊᛋᛌᛍᛎᛏᛐᛑᛒᛓ𓇠ꚡꚢꚣꚤꚥꚦꚧꚨꚩꚪꚫꚬꚭꚮꚯꚰꚱꚲꚳꚴꚵꚶꚷꚸꚹꚺꚻꚼꚽꚾꚿꛀꛁꛂꛃꛄᐱⵇ"
+    }
+    # random_chars = ["!", "?", "@", "%", "#", "&", "*", "**", "^", ".", "..", "??", "$", "\"", "¿", "¡", "=", "<", ">", ",",]
+    random_chars = random_types[t]
     result = ""
     for c in string_input:
         if c in ['\n', '\r', ' ']:
@@ -157,10 +162,12 @@ def messy_string(string_input, temperature: float=50, resample_times=0):
             continue
         if random_percent(temperature):
             if random_percent(temperature):
-                result += random.choice(random_chars)
+                for _ in range(random.randint(1, 4)):
+                    result += random.choice(random_chars)
             else:
                 result += c
-                result += random.choice(random_chars)
+                for _ in range(random.randint(1, 3)):
+                    result += random.choice(random_chars)
         else:
             result += c
     # 重新采样

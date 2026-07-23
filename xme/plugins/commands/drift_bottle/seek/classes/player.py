@@ -19,6 +19,7 @@ class SeekRegion(Enum):
     UNDERSEA_CITY = "深海城市"
     ABYSS_CITY = "深渊城市"
     ANCIENT_CITY = "远古城市"
+    # 物资丰富，但是可能会出不去，在back的时候会有决策事件让你寻找出口
     UNDERSEA_CAVE = "海底洞穴"
     ABYSS = "深渊"
     DEEPEST = "溟渊"
@@ -167,8 +168,7 @@ class Player:
         last = self.last_region.value.value
         curr = self.region.value.value
         if self.hardcore.value == 1:
-            last = "???"
-            curr = "???"
+            return ""
         last = html_messy_string(last, self.get_messy_rate(), html=html)
         curr = html_messy_string(curr, self.get_messy_rate(), html=html)
         if not html:

@@ -2,11 +2,20 @@ from .event import Event
 from typing import Callable
 # import random
 
+
+def get_tool(tool_id: int, tools):
+        for t in tools:
+            if t.id == tool_id:
+                return t
+            continue
+        return None
+
 # 道具
 class Tool:
     from .player import Player
     def __init__(
             self,
+            tool_id: int,
             name: str,
             desc: str,
             player: Player,
@@ -15,6 +24,7 @@ class Tool:
             apply_condition: Callable,
             apply_times: int = -1,
         ):
+        self.id = tool_id
         self.name = name
         self.desc = desc
         # self.apply_message = apply_message
@@ -52,6 +62,7 @@ class Tool:
 
     def build_tool(tool_dict: dict, player):
         return Tool(
+            tool_id=tool_dict["id"],
             name=tool_dict["name"],
             desc=tool_dict["desc"],
             price=tool_dict.get("price", 0),

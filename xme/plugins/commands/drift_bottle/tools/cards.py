@@ -18,7 +18,7 @@ CARD_SKINS = {
 
         body {
             word-break: break-all;word-wrap: break-word;
-            font-family: "Helvetica Neue","Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue","Noto Sans CJK SC", "Noto Sans SC", "PingFang SC",  sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -271,7 +271,7 @@ CARD_SKINS = {
         },
         "styles": """
             body {
-                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
                 background-color: transparent;
                 color: var(--text-color);
                 margin: 0;
@@ -429,7 +429,7 @@ CARD_SKINS = {
         },
         "styles": """
             body {
-                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
                 background-color: transparent;
                 color: var(--text-color);
                 margin: 0;
@@ -587,7 +587,7 @@ CARD_SKINS = {
         },
         "styles": """
             body {
-                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+                font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
                 background-color: transparent;
                 color: var(--text-color);
                 margin: 0;
@@ -755,7 +755,7 @@ CARD_SKINS = {
         }
 
         body {
-            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1044,7 +1044,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1316,7 +1316,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1579,7 +1579,7 @@ CARD_SKINS = {
         },
         "styles": FONTS_STYLE + r"""
         body {
-            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;
@@ -1855,7 +1855,7 @@ CARD_SKINS = {
         },
         "styles": """
                 body {
-            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+            font-family: "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", sans-serif;
             background-color: transparent;
             color: var(--text-color);
             margin: 0;

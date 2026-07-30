@@ -41,7 +41,7 @@ async def _(session: CommandSession, user: User):
     # is_consecutive = True
     debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
-    consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 1.5))
+    consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 2))
     user.add_coins(append_coins + consecutive_award)
     users: list[dict] = User.get_users()
     signed_users_count = 0

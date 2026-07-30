@@ -694,13 +694,19 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
     result_value = player.coins.value - depth_punish - tool_prices
     suffix = ""
+    if depth_punish > 0:
+        suffix += f'- {depth_punish}(深度惩罚) '
     if player.hardcore.value == 1:
         result_value = int((player.coins.value - depth_punish) * 1.7) - tool_prices
-        suffix = f"+ {int((player.coins.value - depth_punish) * 0.7)}(无依无靠加成) "
+        suffix += f"+ {int((player.coins.value - depth_punish) * 0.7)}(无依无靠加成) "
+    if tool_prices > 0:
+        suffix += f'- {tool_prices}(道具价格) '
     if is_sim:
-        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix}- {tool_prices}(道具价格)  结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value}"
     else:
-        coins_str = f"{player.coins.name}: {player.coins.value} - {depth_punish}(深度惩罚) {suffix} 结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value}"
+    if not suffix:
+        coins_str = f"{player.coins.name}: {player.coins.value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:
         await u.achieve_achievement(session, "满载无归")
     try:

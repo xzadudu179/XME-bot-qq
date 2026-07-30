@@ -23,6 +23,9 @@ import logging
 import os
 
 
+def get_tips():
+    return get_message("bot_info", "tips")
+
 def setup_send_logger():
     log_dir = "./logs/send"
     os.makedirs(log_dir, exist_ok=True)
@@ -221,7 +224,7 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
     msg_id = None
     try:
         from xme.xmetools.bottools import bot_call_action
-        msg_id = (await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id))["message_id"]
+        msg_id = (await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id, user_id=event.user_id))["message_id"]
         debug_msg(f"{msg_id=}")
         if msg_id:
             add_to_open_cmd_msgs(event.message_id, msg_id)
@@ -269,6 +272,7 @@ async def msg_preprocesser(session: BaseSession, message: Message, send_time=-1)
             message = result
     return message
 
+
 async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, can_use_command=False, command_func=None, func_kwargs: dict= {}, check_prohibited_words=False, **kwargs):
     """异步获取会话回复消息，并设置 prompt
 
@@ -311,7 +315,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
                 "" if not has_tips
                 else
                     "\n-------------------\ntip：" +
-                get_message("bot_info", "tips")
+                get_tips()
             )
         ), at_sender=at, **kwargs)
     if can_use_command and get_cmd_by_alias(reply):
@@ -339,7 +343,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     msg_dict = {
         "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)
     }
-    send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_message("bot_info", "tips"))
+    send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_tips())
     # 太长的消息用聊天记录发送
     try:
         if get_msg_len(list_msg) > 1200 and session.event.group_id is not None and merge_long_msg:

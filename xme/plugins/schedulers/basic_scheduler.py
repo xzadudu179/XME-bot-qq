@@ -83,7 +83,7 @@ async def send_time_message(new_day=False):
             anno=anno_message,
             update=latest,
             lottery_info=lottery_info,
-            tips=get_message("bot_info", "tips")
+            tips=msgtools.get_tips()
         )
         try:
             await bot.send_group_msg(group_id=group,

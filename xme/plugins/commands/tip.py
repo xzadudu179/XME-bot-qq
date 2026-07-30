@@ -1,7 +1,7 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import send_session_msg, get_tips
 from character import get_message
 
 alias = ['提示']
@@ -19,5 +19,5 @@ __plugin_usage__ = CommandDoc(
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
-    tip = get_message("bot_info", "tips")
+    tip = get_tips()
     await send_session_msg(session, f"tip: {tip}", tips=False)

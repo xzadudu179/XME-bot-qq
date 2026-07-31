@@ -68,6 +68,10 @@ class User:
             return True
         return False
 
+    def record_call(self):
+        self.last_call_time = time.time()
+        DATABASE.update_db(obj=self, id=self.db_id, last_call_time=self.last_call_time)
+
     def __init__(
             self,
             user_id: int,
@@ -83,6 +87,7 @@ class User:
             plugin_datas: dict | None = None, # 插件数据，比如 weather 保存用户位置之类的
             achievements: list | None = None,
             ai_history: list[dict] | None = None,
+            last_call_time: float | None = None,
         ):
         self.db_id: int = db_id
         self.id: int = user_id
@@ -95,6 +100,8 @@ class User:
         self.talked_to_bot: list = talked_to_bot if talked_to_bot is not None else []
         self.counters: dict = counters if counters is not None else {}
         self.plugin_datas: dict = plugin_datas if plugin_datas is not None else {}
+        # 上次调用漠月的时间
+        self.last_call_time: float = last_call_time if last_call_time is not None else 0
         # self.timers = timers
         # 注册时间
         # datas = self.plugin_datas.get("datas", {})
@@ -248,6 +255,7 @@ class User:
             "talked_to_bot": self.talked_to_bot,
             "achievements": self.achievements,
             "ai_history": self.ai_history,
+            "last_call_time": self.last_call_time,
         }
 
     def __dict__(self):
@@ -332,7 +340,6 @@ def limit_count_tick(user: User, name: str, count=1):
         user.counters[name]["count"] = 0
     user.counters[name]["count"] += count
     # user.save()
-
 
 def detect_limit(user: User, name: str, interval: float | int, count_limit: int = 1,
                    unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True) -> tuple[bool, bool]:
@@ -602,6 +609,7 @@ def load_dict_user(data: dict):
             "talked_to_bot": talked_to_bot,
             "celestial": celestial,
             "ai_history": ai_history,
+            "last_call_time": data.get('last_call_time', 0),
     }
 
 def load_from_dict(data: dict, id: int) -> User:
@@ -635,6 +643,7 @@ def load_from_dict(data: dict, id: int) -> User:
         counters=counters,
         # timers=timers,
         ai_history=json.loads(data.get('ai_history', "[]")),
+        last_call_time=data.get('last_call_time', 0)
     )
     # user.counters = data.get('counters', {})
     # user.xme_favorability = data.get('xme_favorability', 0)

@@ -102,6 +102,7 @@ async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs
     """
     try:
         # debug_msg("call action")
+        debug_msg(f"action={action} kwargs={kwargs}")
         return await bot.api.call_action(action=action, **kwargs)
     except Exception as ex:
         logger.error(f"bot 调用接口出现错误： {ex}")

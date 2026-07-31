@@ -9,7 +9,7 @@ from xme.plugins.commands.xme_user.classes.user import User, coin_name
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
 # from nonebot.log import logger
-from xme.xmetools.texttools import get_at_id
+from xme.xmetools.texttools import get_at_id, no_except_cn2an
 
 alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin', 'v']
 cmd_name = 'sendcoin'
@@ -56,7 +56,7 @@ async def _(session: CommandSession, user: User, check_invalid, count_tick):
     # 是否设置了金币数量
     if len(args) >= 2:
         try:
-            coin_count = sum([int(i) for i in args[1:] if i.strip().isdigit()])
+            coin_count = sum([int(no_except_cn2an(i.strip())) for i in args[1:] if i.strip().isdigit() or str(no_except_cn2an(i.strip())).isdigit()])
         except Exception:
             coin_count = 0
     else:

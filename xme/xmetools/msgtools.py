@@ -255,6 +255,9 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     debug_prefix = "" if not debug else "[DEBUG] "
     msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
+    from xme.plugins.commands.xme_user.classes.user import User, try_load
+    u: User = try_load(event.user_id)
+    u.record_call()
 
 async def msg_preprocesser(session: BaseSession, message: Message, send_time=-1):
     funcs = {
@@ -368,6 +371,10 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
         return
     msg_id = await session.send(send_msg, at_sender=at, **kwargs)
     add_to_open_cmd_msgs(session.event.message_id, msg_id)
+    from xme.plugins.commands.xme_user.classes.user import User, try_load
+    u: User = try_load(session.event.user_id)
+    u.record_call()
+
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

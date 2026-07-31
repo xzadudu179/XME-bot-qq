@@ -52,6 +52,4 @@ async def _(session: CommandSession, user: User):
     await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'success'))
 
     await send_to_superusers(session.bot, f"{uname} ({session.event.user_id}) 将自己的个人资料改为了 {desc}")
-    # if is_danger_sql(user.desc):
-        # await user.achieve_achievement(session, "想注入漠月")
     return True

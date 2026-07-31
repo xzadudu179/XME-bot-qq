@@ -43,6 +43,9 @@ class PluginCallData:
     def get_table_name(cls):
         return PluginCallData.__name__
 
+    def __str__(self):
+        return f"id:{self.id}, name: {self.name}, calltime: {self.call_time}, from: {self.from_user_id}, group: {self.call_group}, success: {self.success}, time_cost: {self.time_cost}, args: \"{self.args}\""
+
     @staticmethod
     def get_datas():
         return [PluginCallData.form_dict(d) for d in DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}", dict_data=True)]

@@ -2185,6 +2185,11 @@
             "error": "群成员好像没有那么多呢 {negative}",
             "max_num": "最多选择 {max_num} 名群成员呢 {negative}",
             "too_small_number": "成员数不能小于 1 哦 {neutral}"
+        },
+        "execute": {
+            "execute_error": [
+                "好像执行出错了呢...\n完整错误如下：{ex}\n{trace}"
+            ]
         }
     }
 }

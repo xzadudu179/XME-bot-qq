@@ -11,9 +11,14 @@ import hashlib
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 import enchant
-
+import cn2an
 d = enchant.Dict("en_US")
 
+def no_except_cn2an(content: str, *args,**kwargs):
+    try:
+        return cn2an.cn2an(content, *args, **kwargs)
+    except Exception:
+        return content
 
 def is_url(text: str) -> bool:
     try:
@@ -193,7 +198,7 @@ def base64_encode(text):
     return base64_string
 
 def contains_blacklisted(expr: str) -> bool:
-    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open', 'attr']
+    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open', 'attr', '\\x']
     blacklist_whitelist = ['cos']
     return any(bad in expr for bad in blacklist) and not any(c in expr for c in blacklist_whitelist)
 

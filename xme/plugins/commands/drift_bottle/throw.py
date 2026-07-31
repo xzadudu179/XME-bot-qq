@@ -9,8 +9,8 @@ from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
-from xme.xmetools.texttools import get_image_files_from_message, remove_invisible, is_url
-from xme.xmetools.imgtools import get_image, limit_size, detect_qrcode
+from xme.xmetools.texttools import get_images_from_message, remove_invisible, is_url
+from xme.xmetools.imgtools import get_url_image, limit_size, detect_qrcode
 from traceback import format_exc
 import config
 import re
@@ -20,8 +20,9 @@ import os
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 
-def is_illegal_image(path_or_image):
-    result, links = detect_qrcode(path_or_image)
+async def is_illegal_image(image_url):
+    image = await get_url_image(image_url)
+    result, links = detect_qrcode(image)
     logger.info(f"{result}, {links}")
     for link in links:
         if result and is_url(link):
@@ -46,16 +47,20 @@ async def _(session: CommandSession, user):
     try:
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
         matches = re.findall(pattern, arg)
-        image_paths = await get_image_files_from_message(session.bot, arg)
-        images = [limit_size(get_image(image), 700) for image in image_paths]
-        for image in image_paths:
+        image_objects = await get_images_from_message(session.bot, arg)
+        image_urls = [x["file"] for x in image_objects]
+        image_names = [x["file_name"] for x in image_objects]
+        logger.info(f"paths {image_urls}")
+        images = [limit_size((await get_url_image(image)), 700) for image in image_urls]
+        for image in image_urls:
             logger.info("图片: " + image)
-            if is_illegal_image(image):
+            if await is_illegal_image(image):
                 logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
                 return False
         # image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
-        image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_paths)]
+        # image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_urls)]
+        image_filenames = [os.path.splitext(os.path.basename(name))[0] + ".WEBP" for name in image_names]
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
         logger.exception(format_exc())
@@ -106,6 +111,7 @@ async def _(session: CommandSession, user):
     for image in images:
         image_len += image.height
     image_len = image_len / 50 * 30
+    logger.info(f"args {formatted_arg} image_len {image_len}")
     if len(formatted_arg) + image_len > MAX_LENGTH:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_too_many", max_length=MAX_LENGTH, text_len=len(formatted_arg) + image_len))
         return False
@@ -114,7 +120,7 @@ async def _(session: CommandSession, user):
         return False
 
     # if arg.count("")
-    if len(image_paths) > MAX_IMAGES:
+    if len(image_urls) > MAX_IMAGES:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_many", max_images=MAX_IMAGES))
         return False
 

@@ -18,7 +18,7 @@ try:
 except Exception:
     pyautogui = None
 # from character import get_message
-from xme.xmetools.texttools import hash_byte
+from xme.xmetools.texttools import hash_byte, is_url
 import mss
 from html2image import Html2Image
 from uuid import uuid4

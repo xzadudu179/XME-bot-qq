@@ -18,16 +18,18 @@ SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = ""
 DEFAULT_COMMAND_PERMISSION = lambda _: True  # noqa: E731
 # 用户自定义 config
-SELF_ID = 3961418307
+SELF_ID = 3893933165
 # 测试群
 GROUPS_WHITELIST = [
     727949269,
+    1094916675,
     927322136,
     739980056
 ]
 # 反刷屏群，暂无作用
 ANTI_MESSAGEBURST_GROUP = [
     905122019,
+    1094916675,
     727949269,
     927322136
 ]
@@ -38,11 +40,12 @@ MIN_GROUP_MEMBER_COUNT = 35
 # 视奸
 PEEK_GROUP = [
     727949269,
-    913581215
+    913581215,
+    1094916675
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '0.19.2-beta'
+VERSION = '0.19.5-beta'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

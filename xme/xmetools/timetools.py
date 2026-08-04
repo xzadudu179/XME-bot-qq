@@ -3,6 +3,161 @@ from enum import Enum
 import pytz
 import time
 import math
+import time
+import random
+from enum import Enum
+from typing import Dict, Any, Optional
+import time
+import random
+from xme.xmetools import jsontools
+import os
+from enum import Enum
+from typing import Dict, Any, Optional, Tuple
+
+# 季节相关代码
+class MacroSeason(Enum):
+    """季节状态"""
+    DROUGHT = "旱季"
+    TRANSITION_TO_RAIN = "降水过渡期"
+    RAIN = "雨季"
+    TRANSITION_TO_DROUGHT = "升温过渡期"
+
+
+class MicroSeason(Enum):
+    """天象"""
+    DUAL_SUN = "凌空期"
+    BLOOD_SUN = "血日期"
+    WHITE_SUN = "白日期"
+
+
+class MicroPhase(Enum):
+    """时间周期"""
+    DUAL_1 = 1        # 血日前的凌空期
+    BLOOD = 2         # 血日期
+    DUAL_2 = 3        # 白日前的凌空期
+    WHITE = 4         # 白日期
+
+
+# 内部相位到对外展示状态的映射
+MICRO_DISPLAY_MAP = {
+    MicroPhase.DUAL_1: MicroSeason.DUAL_SUN,
+    MicroPhase.BLOOD: MicroSeason.BLOOD_SUN,
+    MicroPhase.DUAL_2: MicroSeason.DUAL_SUN,
+    MicroPhase.WHITE: MicroSeason.WHITE_SUN,
+}
+class TeliaClock:
+    def __init__(self, config: Dict[str, Any], local_path: str):
+        """初始化星球时钟
+
+        Args:
+            config (Dict[str, Any]): 配置文件
+            local_path (str): 本地保存路径
+        """
+        self.config = config
+        self.local_path = local_path
+        # 未找到返回 None
+        saved_state = jsontools.read_from_path(local_path)
+        if saved_state:
+            # 从存档恢复大季节状态
+            self.macro_current = MacroSeason(saved_state["macro_current"])
+            self.macro_start = saved_state["macro_start"]
+            self.macro_duration = saved_state["macro_duration"]
+
+            # 从存档恢复小季节状态
+            self.micro_current = MicroPhase(saved_state["micro_current"])
+            self.micro_start = saved_state["micro_start"]
+            self.micro_duration = saved_state["micro_duration"]
+        else:
+            # 无存档，初始化为星球元年（此刻）
+            now = int(time.time())
+
+            self.macro_current = MacroSeason.DROUGHT
+            self.macro_start = now
+            self.macro_duration = self._get_random_duration("macro", self.macro_current)
+
+            self.micro_current = MicroPhase.DUAL_1
+            self.micro_start = now
+            self.micro_duration = self._get_random_duration("micro", self.micro_current)
+
+    def _get_random_duration(self, clock_type: str, state: Enum) -> int:
+        """根据配置获取指定阶段的随机持续秒数"""
+        range_cfg = self.config[clock_type][state]
+        return random.randint(range_cfg["min"], range_cfg["max"])
+
+    def _get_next_macro(self, current: MacroSeason) -> MacroSeason:
+        """大季节流转规则"""
+        transitions = {
+            MacroSeason.DROUGHT: MacroSeason.TRANSITION_TO_RAIN,
+            MacroSeason.TRANSITION_TO_RAIN: MacroSeason.RAIN,
+            MacroSeason.RAIN: MacroSeason.TRANSITION_TO_DROUGHT,
+            MacroSeason.TRANSITION_TO_DROUGHT: MacroSeason.DROUGHT
+        }
+        return transitions[current]
+
+    def _get_next_micro(self, current: MicroPhase) -> MicroPhase:
+        """小天象流转规则"""
+        transitions = {
+            MicroPhase.DUAL_1: MicroPhase.BLOOD,
+            MicroPhase.BLOOD: MicroPhase.DUAL_2,
+            MicroPhase.DUAL_2: MicroPhase.WHITE,
+            MicroPhase.WHITE: MicroPhase.DUAL_1
+        }
+        return transitions[current]
+
+    def _update_clocks(self, now: int):
+        """
+        仅在被查询时执行的天象更新。
+        """
+        # 1. 结算大季节
+        while now >= self.macro_start + self.macro_duration:
+            self.macro_start += self.macro_duration
+            self.macro_current = self._get_next_macro(self.macro_current)
+            self.macro_duration = self._get_random_duration("macro", self.macro_current)
+            # 可在此处接入日志或事件分发机制
+            # print(f"[大季节更替] 忒利亚进入：{self.macro_current.value}")
+
+        # 2. 结算小天象
+        while now >= self.micro_start + self.micro_duration:
+            self.micro_start += self.micro_duration
+            self.micro_current = self._get_next_micro(self.micro_current)
+            self.micro_duration = self._get_random_duration("micro", self.micro_current)
+
+            # 异象发生与结束的日志判断
+            # display_season = MICRO_DISPLAY_MAP[self.micro_current]
+            # if display_season != MicroSeason.DUAL_SUN:
+            #     print(f"[天象播报] 异象发生：{display_season.value} 开始！")
+            # else:
+            #     print(f"[天象播报] 异象结束，恢复为 {display_season.value}。")
+        # 自动保存
+        self._save()
+
+    def _save(self):
+            """保存当前状态
+
+            Returns:
+                Dict[str, Any]: 时间线天象状态
+            """
+            save_dict = {
+                "macro_current": self.macro_current.value,
+                "macro_start": self.macro_start,
+                "macro_duration": self.macro_duration,
+                "micro_current": self.micro_current.value,
+                "micro_start": self.micro_start,
+                "micro_duration": self.micro_duration,
+            }
+            jsontools.save_to_path(self.local_path, save_dict)
+
+    def get_current_state(self) -> Tuple[MacroSeason, MicroSeason]:
+        """ 获取当前星球综合状态。
+            调用此方法会自动触发时间线推进。
+
+        Returns:
+            Tuple[MacroSeason, MicroSeason]: 大季节，小季节
+        """
+        now = int(time.time())
+        self._update_clocks(now)
+        return self.macro_current, MICRO_DISPLAY_MAP[self.micro_current]
+
 
 class Countdown:
     """倒计时"""
@@ -276,3 +431,25 @@ def get_time_period():
         return "晚上"
     elif 23 <= hour < 24:
         return "凌晨"
+
+TELIA_CONFIG = {
+        "macro": {
+            MacroSeason.DROUGHT: {"min": 10 * TimeUnit.DAY.value, "max": 23 * TimeUnit.DAY.value},
+            MacroSeason.TRANSITION_TO_RAIN: {"min": 1 * TimeUnit.DAY.value, "max": 3 * TimeUnit.DAY.value},
+            MacroSeason.RAIN: {"min": 8 * TimeUnit.DAY.value, "max": 14 * TimeUnit.DAY.value},
+            MacroSeason.TRANSITION_TO_DROUGHT: {"min": int(1.5 * TimeUnit.DAY.value), "max": int(2.5 * TimeUnit.DAY.value)},
+        },
+        "micro": {
+            # 凌空期
+            MicroPhase.DUAL_1: {"min": 80 * TimeUnit.HOUR.value, "max": 95 * TimeUnit.HOUR.value},
+            # 血日期
+            MicroPhase.BLOOD: {"min": 40 * TimeUnit.MINUTE.value, "max": 140 * TimeUnit.MINUTE.value},
+
+            # 凌空期 2
+            MicroPhase.DUAL_2: {"min": 80 * TimeUnit.HOUR.value, "max": 95 * TimeUnit.HOUR.value},
+            # 白日期
+            MicroPhase.WHITE: {"min": 80 * TimeUnit.MINUTE.value, "max": 240 * TimeUnit.MINUTE.value},
+        }
+    }
+
+TELIA_CLOCK = TeliaClock(TELIA_CONFIG, "./data/telia_clock.json")

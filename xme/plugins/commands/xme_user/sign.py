@@ -10,10 +10,13 @@ from xme.xmetools import randtools
 import random
 # random.seed()
 from .classes import user as u
+from .classes.user import User
 from xme.plugins.commands.xme_user.classes.user import User, coin_name, coin_pronoun
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.dicttools import get_value, set_value
+from xme.xmetools.timetools import TELIA_CLOCK
+from xme.xmetools.msgtools import aget_arg, send_session_msg
 
 alias = ['签到', 'register', 's']
 cmd_name = 'sign'
@@ -45,16 +48,20 @@ async def _(session: CommandSession, user: User):
     user.add_coins(append_coins + consecutive_award)
     users: list[dict] = User.get_users()
     signed_users_count = 0
-    reaction = "\n" + get_message("character", "time_period_reactions",timetools.get_time_period()) if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
+    macro_season, micro_season = TELIA_CLOCK.get_current_state()
+    status_message = get_message("character", "time_period_reactions",timetools.get_time_period(), f"{macro_season.value}{micro_season.value}", default=None)
+    if status_message is None:
+        status_message = get_message("character", "time_period_reactions",timetools.get_time_period(), f"normal")
+    reaction = "\n" + status_message if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
+    day_now = timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY)
     for us in users:
         counters = us["counters"]
         last_sign_day = timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY)
-        day_now = timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY)
-        # can_make_up = False
         if last_sign_day == day_now:
             signed_users_count += 1
-        # elif day_now - last_sign_day <= 2:
-        #     can_make_up = True
+    can_make_up = False
+    if curr_date - last_sign_date == 2 and consecutive_days > 1:
+        can_make_up = True
     if append_coins == 0:
         message = get_message("plugins", __plugin_name__, cmd_name, 'login_no_coins',
             time_period=timetools.get_time_period()
@@ -76,6 +83,18 @@ async def _(session: CommandSession, user: User):
     else:
         sign_message = get_message("plugins", __plugin_name__, cmd_name,'sign_rank', count=cn2an.an2cn(signed_users_count + 1) if (signed_users_count + 1 <= 10) else f' {signed_users_count + 1} ')
     consecutive_message = ""
+    if can_make_up:
+        make_up_cost = consecutive_days * 15
+        await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'consecutive_make_up', cost=make_up_cost))
+        reply = await aget_arg(
+            session,
+            prompt="",
+            rules=lambda r: r in ['y', 'Y', 'n', 'N'],
+        )
+        if reply in ['y', 'Y']:
+            spend_result = await user.try_spend(session, make_up_cost)
+            if spend_result:
+                is_consecutive = True
     if consecutive_days > 0 and is_consecutive:
         consecutive_message = "\n" + get_message(
             "plugins", __plugin_name__, cmd_name, 'consecutive_days', n = consecutive_days + 1, cons_award=

@@ -139,9 +139,9 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     ask_to_guess = True
     quit_inputs = ("quit", "退出游戏", "退出", "exit")
     while True:
-        user_input = (await aget_session_msg(session, prompt=f'[CQ:at,qq={session.event.user_id}] ' + get_message("plugins", cmd_name, name, 'guess_prompt',
+        user_input = (await aget_session_msg(session, prompt=get_message("plugins", cmd_name, name, 'guess_prompt',
             prefix=prefix,
-            quit_input=quit_inputs[0]) if ask_to_guess else "", can_use_command=False)).strip()
+            quit_input=quit_inputs[0]) if ask_to_guess else None, can_use_command=False)).strip()
         # 退出游戏
         if user_input.lower().strip() in quit_inputs:
             await send_session_msg(session, get_message("plugins", cmd_name, name, 'quit_message') if start_guessing else get_message("plugins", cmd_name, name, 'quit_message_not_start', ))

@@ -150,7 +150,7 @@ def crop_transparent_area(input_path) -> Image.Image:
         return cropped
     return image
 
-def screenshot(num=1):
+def                                                                                                                                                                                                                          screenshot(num=1):
     """检测是否有第 num 个显示器并截图，如果没有指定的显示器就截取全部
 
     Args:

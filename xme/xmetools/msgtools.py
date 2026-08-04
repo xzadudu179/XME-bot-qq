@@ -104,7 +104,8 @@ async def aget_arg(
                 return reply
         except Exception:
             raise
-    await send_session_msg(session, error_too_many)
+    if error_too_many:
+        await send_session_msg(session, error_too_many)
     return None
 
 def add_to_open_cmd_msgs(event_msg_id, cmd_msg_id) -> bool:

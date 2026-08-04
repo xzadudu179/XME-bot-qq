@@ -31,8 +31,6 @@ async def _(session: NoticeSession):
         increase_people[group].append(str(MessageSegment.at(session.event.user_id)))
     else:
         return await send_session_msg(session, get_message("event_parsers", "welcome_99"), at=False)
-    # debug_msg(increase_people)
-    # debug_msg(get_message("event_parsers", "welcome", at=" ".join(increase_people[group])))
     people = increase_people[group]
     await asyncio.sleep(4)
     # debug_msg(increase_people)

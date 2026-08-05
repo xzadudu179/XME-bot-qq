@@ -100,13 +100,13 @@ class AIHelper:
             return result_response.choices[0].message.content
         except AttributeError as ex:
             logger.error("attribute 错误:", ex)
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response))
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response, replace_cq_str=True))
             return False
         except ZhipuAIError as ex:
             logger.error(f"AI 出现错误: {ex}")
             code = result_response.get("error", {}).get("code", "未知")
             message = result_response.get("error", {}).get("message", "未知")
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_error", content=result_response, code=code, message=message))
+            await send_session_msg(session, get_message("plugins", __plugin_name__,"ai_error", replace_cq_str=True, content=result_response, code=code, message=message))
             return False
 cmds = {
         "clear": {
@@ -202,7 +202,7 @@ async def _(session: CommandSession, user: u.User):
             return False
         await send_session_msg(
             session,
-            get_message("plugins", __plugin_name__, 'talk_result', talk=t, times_left_now=cn2an.an2cn(times_left_now)), tips=True
+            get_message("plugins", __plugin_name__, 'talk_result', talk=t, times_left_now=cn2an.an2cn(times_left_now), replace_cq_str=True), tips=True
         )
         return True
     except Exception:

@@ -2,6 +2,7 @@ from xme.xmetools import jsontools
 from xme.xmetools.texttools import replace_formatted
 from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
+from nonebot.message import Message
 from functools import lru_cache
 import config
 import os
@@ -61,13 +62,14 @@ def get_character_item(*keys: str, character: str="", default="[NULL]", search_d
         result = default
     return result
 
-def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 bot 并发送相关聊天记录/图片报告问题 xwx (遇到这件事请截图并且暴打九九)]", character: str="", **kwargs) -> str:
+def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 bot 并发送相关聊天记录/图片报告问题 xwx (遇到这件事请截图并且暴打九九)]", character: str="", replace_cq_str=False, **kwargs) -> str:
     """获取 bot 角色字典消息
 
     Args:
         *keys (str): 消息键
         default (str, optional): 找不到值时返回的默认值. Defaults to "[bot 未输出任何消息 请私信 bot 并发送相关聊天记录/图片报告问题 xwx (遇到这件事请截图并且暴打九九)]".
         character (str, optional): 指定的角色名. Defaults to "".
+        replace_cq_str (bool, optional): 是否替换 cq 码. Defaults to False.
         **kwargs: 格式化参数
 
     Returns:
@@ -80,7 +82,10 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     if result is None:
             return default
     result = str_choice(result)
-    return character_format(result, **kwargs)
+    result = character_format(result, **kwargs)
+    if replace_cq_str:
+        result = result.replace("[", "&#91;").replace("]","&#93;")
+    return result
 
 def character_format(message, **kwargs):
     for k, v in kwargs.items():

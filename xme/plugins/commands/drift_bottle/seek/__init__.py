@@ -202,11 +202,13 @@ def get_img_msg(
                 display: flex;
                 justify-content: space-between;
                 list-style: none;
+                overflow: hidden;
             }
 
             main h2 {
                 text-align: center;
                 font-weight: normal;
+                word-break: break-all;
             }
 
             main {

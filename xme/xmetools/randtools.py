@@ -162,11 +162,11 @@ def messy_string(string_input, temperature: float=50, resample_times=0, t:int = 
             continue
         if random_percent(temperature):
             if random_percent(temperature):
-                for _ in range(random.randint(1, 4)):
+                for _ in range(random.randint(1, 3)):
                     result += random.choice(random_chars)
             else:
                 result += c
-                for _ in range(random.randint(1, 3)):
+                for _ in range(random.randint(1, 2)):
                     result += random.choice(random_chars)
         else:
             result += c

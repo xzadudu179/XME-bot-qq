@@ -192,7 +192,7 @@ class User:
         except Exception:
             sign_message = get_message("user", "no_sign")
         _, rank_ratio, _ = get_user_rank(self.id)
-        return get_message("user", "user_info_str",
+        return str(get_message("user", "user_info_str",
             id=str(self.id),
             reg_time=datetime.strftime(datetime.fromtimestamp(self.get_reg_time()), format=r"%Y-%m-%d %H:%M:%S"),
             coins_count=self.coins,
@@ -202,7 +202,7 @@ class User:
             rank_ratio=f"{rank_ratio:.2f}",
             space=self.inventory.get_space_left(),
             desc=self.desc + "\n----------\n" if self.desc else ""
-        )
+        ))
 
     def add_favorability(self, count):
         """增加好感度

@@ -202,9 +202,26 @@ def base64_encode(text):
     return base64_string
 
 def contains_blacklisted(expr: str) -> bool:
-    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open', 'attr', '\\x']
+    blacklist = ['__', 'import', 'eval', 'exec', 'os', 'system', 'subprocess', 'open', 'attr', '\\']
     blacklist_whitelist = ['cos']
-    return any(bad in expr for bad in blacklist) and not any(c in expr for c in blacklist_whitelist)
+    check_expr = expr
+    for allowed in blacklist_whitelist:
+        check_expr = check_expr.replace(allowed, ' ')
+    return any(bad in check_expr for bad in blacklist)
+
+def is_repeated_substring(s: str, sub: str) -> bool:
+    """是否有重复的子串 sub
+
+    Args:
+        s (str): 输入字符串
+        sub (str): 需要查找的子串
+
+    Returns:
+        bool: 是否为子串组成
+    """
+    if not sub or not s:
+        return False
+    return s.replace(sub, "") == ""
 
 def limit_str_len(s: str, max_len: int):
     """限制字符串长度
@@ -587,7 +604,7 @@ def text_combinations(text: tuple[str] | str, **kwargs: tuple[str] | str):
             continue
         for t in text:
             result_strs.append(t.format(**result_dict))
-    return result_strs
+    return list(set(result_strs))
 
 def most_similarity_str(input_str: str, str_list: list[str], threshold: float=0) -> list[tuple[str, int]]:
     similarities = []

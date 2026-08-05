@@ -169,6 +169,45 @@
     "face_summary": "[漠月的小表情]",
     "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
     "unknown_error": "指令执行出错了... {negative}\n以下是错误内容：{ex}",
+    "call_response": [
+      "{shout}",
+      "{bot_name}在哦{positive_punc}",
+      "{positive} {bot_name}在这里{positive_punc}",
+      "{bot_name}在哦{positive_punc}",
+      "{shout} {bot_name}在呢{positive_punc}",
+      "怎么啦{positive_punc}",
+      "怎么啦{positive_punc} {positive}"
+    ],
+    "call_response_many_1": [
+      "{bot_name}在的 {negative}",
+      "{bot_name}在哦，好像{bot_name}已经说过了呢... {negative}",
+      "我已经说过我在啦 {neutral}"
+    ],
+    "call_response_many_2": [
+      "{negative}，{bot_name}在的哇...",
+      "{bot_name}已经说过几次在这了... {negative}",
+      "{bot_name}在的...不要再叫啦... {negative}",
+      "{bot_name}在这呀...已经说过几次啦... {negative}"
+    ],
+    "call_response_many_3": [
+      "{bot_name}在...{negative}",
+      "{bot_name}已经说过好多次在这了... {negative}",
+      "{bot_name}在这...{negative}",
+      "{bot_name}在这哇...已经说过好多次了... {negative}"
+    ],
+    "call_response_many_4": [
+      "{bot_name}在这里...{bot_name}不想继续说了...{negative}",
+      "{bot_name}已经回答了很多次了... {negative}",
+      "{bot_name}在这...让{bot_name}歇歇吧...{negative}",
+      "{bot_name}在这...{negative}"
+    ],
+    "call_response_too_many": [
+      "不要再叫我啦... {negative}",
+      "{negative_plus} 不要再叫我了...",
+      "不要叫我了...{negative}",
+      "休息一会吧...{negative}",
+      "{negative} 不要再叫{bot_name}了..."
+    ],
     "busy": "我还在处理指令哦...呜呜",
     "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
     "pid_prime": "我这次运行的 PID {pid} 是质数诶~",

@@ -81,7 +81,7 @@ class AIHelper:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_sending"))
             if reply is not None and reply.strip() == "aistop":
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
-                return False
+                return False, 0
             # result_response = None
             result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
             # print(result_response)
@@ -91,23 +91,24 @@ class AIHelper:
             if get_cnt >= MAX_CHECK_TIMES:
                 t.stop()
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
-                return False
+                return False, 0
         try:
             ans = result_response.choices[0].message.content
             build_history(user=user, ask=text, ans=ans)
             logger.info(f"AI 返回了以下 response：{result_response}")
+            tokens_use = result_response.usage.total_tokens
             debug_msg("处理结果")
-            return result_response.choices[0].message.content
+            return result_response.choices[0].message.content, tokens_use
         except AttributeError as ex:
             logger.error("attribute 错误:", ex)
             await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response, replace_cq_str=True))
-            return False
+            return False, 0
         except ZhipuAIError as ex:
             logger.error(f"AI 出现错误: {ex}")
             code = result_response.get("error", {}).get("code", "未知")
             message = result_response.get("error", {}).get("message", "未知")
             await send_session_msg(session, get_message("plugins", __plugin_name__,"ai_error", replace_cq_str=True, content=result_response, code=code, message=message))
-            return False
+            return False, 0
 cmds = {
         "clear": {
             "content": clear_history,
@@ -163,13 +164,16 @@ __plugin_usage__ = CommandDoc(
 
 # history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 
-TIMES_LIMIT = 30
+TOKENS_LIMIT = 500000
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=True)
-@u.limit(__plugin_name__, 1, get_message("plugins", __plugin_name__, 'limited'), unit=TimeUnit.DAY, count_limit=TIMES_LIMIT, fails=lambda x: x == 2 or not x)
-async def _(session: CommandSession, user: u.User):
-    times_left_now = TIMES_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
-    MAX_LENGTH = 1000
+@u.custom_limit(__plugin_name__, 1, unit=TimeUnit.DAY, count_limit=TOKENS_LIMIT)
+async def _(session: CommandSession, user: u.User, validate, count_tick):
+    if validate():
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
+        return False
+    tokens_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
+    MAX_LENGTH = 3000
     intext = ""
     if "-r " in session.current_arg_text:
         intext = "-r"
@@ -197,12 +201,13 @@ async def _(session: CommandSession, user: u.User):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
         # print("正常")
-        t = await talk(session, text, user)
+        t, tokens_use = await talk(session, text, user)
         if not t:
             return False
+        count_tick(tokens_use)
         await send_session_msg(
             session,
-            get_message("plugins", __plugin_name__, 'talk_result', talk=t, times_left_now=cn2an.an2cn(times_left_now), replace_cq_str=True), tips=True
+            get_message("plugins", __plugin_name__, 'talk_result', talk=t, tokens_left_now=tokens_left_now, replace_cq_str=True), tips=True
         )
         return True
     except Exception:

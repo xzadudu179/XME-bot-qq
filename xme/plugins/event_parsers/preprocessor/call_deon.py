@@ -56,7 +56,7 @@ async def call_deon(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plugin
         append_mul = 3
     else:
         append_mul = min(15 / time_interval, 10)
-    annoying_index += 5 * append_mul
+    annoying_index += 5 * append_mul + 0.15 * annoying_index
     if annoying_index <= 0:
         annoying_index = 0
         mute = False

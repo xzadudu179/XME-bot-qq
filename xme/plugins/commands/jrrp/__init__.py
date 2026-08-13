@@ -20,7 +20,7 @@ __plugin_usage__= CommandDoc(
     # desc='今日人品',
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
     # introduction='查看当前 qq 号今日的人品或群友人品排名~\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值',
-    usage='jrrp <参数>',
+    usage='<参数>',
     permissions=[],
     alias=alias
 )

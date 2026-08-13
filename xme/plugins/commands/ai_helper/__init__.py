@@ -151,7 +151,7 @@ arg_usage = shell_like_usage("OPTION", [
 
 ])
 
-alias = ['ai', 'aih']
+alias = ['ai']
 __plugin_name__ = 'ai_helper'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
@@ -172,7 +172,6 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     if validate():
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
-    tokens_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - 1
     MAX_LENGTH = 3000
     intext = ""
     if "-r " in session.current_arg_text:
@@ -205,6 +204,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         if not t:
             return False
         count_tick(tokens_use)
+        tokens_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
         await send_session_msg(
             session,
             get_message("plugins", __plugin_name__, 'talk_result', talk=t, tokens_left_now=tokens_left_now, replace_cq_str=True), tips=True
@@ -254,6 +254,8 @@ async def talk(session: CommandSession, text, user: u.User):
     client = ZhipuAI(api_key=GLM_API_KEY, http_client=httpx_client)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
+    with open("./static/telia.txt") as tel:
+        telia = tel.read()
     with open("./docs.md") as do:
         docs = do.read()
     tips = get_character_item("bot_info", "tips", default="无提示")
@@ -262,6 +264,6 @@ async def talk(session: CommandSession, text, user: u.User):
     else:
         tips = [tips]
     tips_str = [f"- {t}\n" for t in tips]
-    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now())
+    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia)
     ai_helper = AIHelper(client)
     return await ai_helper.user_talk(session, role, user, text)

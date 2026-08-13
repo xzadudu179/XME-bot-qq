@@ -88,7 +88,6 @@
       "使用 \"/help\" 查看{bot_name}的总体帮助~",
       "{bot_name}保存着大家的消息记录！请不要让{bot_name}输出不好的消息哦",
       "问 \"xxx是不是质数\" {bot_name}会告诉你哦！",
-      "前往南京能够抓到九九（？",
       "有关瓶子的污染尚不明确...但或许和一位形似章鱼的东西有关。",
       "{bot_name}是开源的哦！ Github 仓库在 https://github.com/xzadudu179/XME-bot-qq",
       "大家喜欢{bot_name}的话可以放心大胆地到处宣传（？",
@@ -1120,7 +1119,7 @@
     },
     "jrrp": {
       "desc": "今日人品相关指令",
-      "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n\n参数填写整数，正数为人品最高排名，负数为最低。填写 avg 为群员平均值",
+      "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n\n参数只能填写整数或 avg，正数为人品最高排名，负数为最低。填写 avg 为群员平均值。",
       "avg_message": [
         "今日群员人品的平均值是 {avg} {reaction}",
         "今日大家的平均人品值是 {avg} {reaction}",
@@ -2246,10 +2245,10 @@
     },
     "ai_helper": {
       "desc": "AI 助手",
-      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话",
+      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
       "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
       "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
-      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录",
+      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{message}",
       "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}",

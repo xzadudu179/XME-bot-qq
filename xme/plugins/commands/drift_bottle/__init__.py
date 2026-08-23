@@ -82,7 +82,7 @@ class DriftBottle:
     def check_duplicate_bottle(content: str):
         bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
         for bottle in bottles:
-            if not bottle.bottle_id.isdigit():
+            if not bottle.bottle_id.isdecimal():
                 continue
             if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2): # 碎瓶子也一并检查
                 return {
@@ -99,7 +99,7 @@ class DriftBottle:
     def check_duplicate_image(path_or_image):
         bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
         for bottle in bottles:
-            if not bottle.bottle_id.isdigit():
+            if not bottle.bottle_id.isdecimal():
                 continue
             # 没有图片不检查
             if bottle.images is None or len(bottle.images) <= 0:
@@ -190,7 +190,7 @@ def get_random_bottle(no_easteregg=True) -> DriftBottle:
 
 def get_messy_rate(bottle: DriftBottle, view_minus=0) -> tuple[float, str]:
     # 混乱值根据浏览量计算
-    index_is_int = bottle.bottle_id.isdigit()
+    index_is_int = bottle.bottle_id.isdecimal()
     views = bottle.views - view_minus
     messy_rate: float = min(100, max(0, views * 2 - bottle.likes * 3)) if index_is_int or bottle.bottle_id != '-179' else 0
     # 增加浏览量以及构造卡片

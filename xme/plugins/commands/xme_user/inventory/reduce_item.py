@@ -66,7 +66,7 @@ async def reduce_item_by_id(
     item_name = item_get.name
     item_pronoun = item_get.pronoun
 
-    if count_str and not count_str.isdigit() and not count_str == 'all':
+    if count_str and not count_str.isdecimal() and not count_str == 'all':
         if not silent:
             await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
             # await send_msg(session,  get_message("plugins", __plugin_name__, cmd_name, name, "invalid_count"))
@@ -176,14 +176,14 @@ async def reduce_item_by_index(
     item_name = inv_item.recorded_item.name
     item_pronoun = inv_item.recorded_item.pronoun
 
-    if count_str and not count_str.isdigit() and not count_str == "all":
+    if count_str and not count_str.isdecimal() and not count_str == "all":
         if not silent:
             await send_session_msg(session,  try_get_msg("invalid_count", message_key, name))
         return default
 
     if count_str == "all":
         count = inv_item.count
-    elif count_str.isdigit():
+    elif count_str.isdecimal():
         count = int(count_str)
 
     if count > inv_item.count:

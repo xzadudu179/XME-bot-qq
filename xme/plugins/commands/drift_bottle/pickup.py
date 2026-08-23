@@ -61,7 +61,7 @@ async def reset(session: CommandSession, user: u.User):
 async def likesay(session: CommandSession, bottle_id, comment_index: str, said):
     bottle = DriftBottle.get(bottle_id)
     index = bottle_id
-    if not comment_index.isdigit():
+    if not comment_index.isdecimal():
         await send_session_msg(session, get_message("plugins", __plugin_name__, "like_comment_failed", id=comment_index, bottle=index))
         return False
     comment_index = int(comment_index)
@@ -215,7 +215,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         # from . import ERROR_BOTTLE
         from . import create_example_bottles
         bottle = create_example_bottles()["ERROR_BOTTLE"]
-    if not bottle.bottle_id.isdigit() or bottle.bottle_id == '-179':
+    if not bottle.bottle_id.isdecimal() or bottle.bottle_id == '-179':
         is_special_bottle = True
         have_special_bottle
     if is_broken_bottle:
@@ -255,7 +255,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         skin_name = bottle.skin
 
     index = bottle.bottle_id
-    index_is_int = index.isdigit()
+    index_is_int = index.isdecimal()
 
 
     # 增加浏览量以及构造卡片

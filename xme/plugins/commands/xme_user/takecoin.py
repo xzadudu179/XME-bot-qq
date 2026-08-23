@@ -46,7 +46,7 @@ async def _(session: CommandSession, user: User):
     # 是否设置了金币数量
     if len(args) >= 2:
         try:
-            coin_count = sum([int(i) for i in args[1:] if i.strip().isdigit()])
+            coin_count = sum([int(i) for i in args[1:] if i.strip().isdecimal()])
         except Exception:
             coin_count = 0
     else:

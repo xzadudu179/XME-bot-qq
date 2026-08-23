@@ -59,7 +59,7 @@ async def _(session: CommandSession, user: User):
         debug_msg("count is", count)
     if len(arg_list) > 1 and not all_in:
         arg = arg_list[0]
-        if arg_list[1].isdigit() and int(arg_list[1]) > 0:
+        if arg_list[1].isdecimal() and int(arg_list[1]) > 0:
             count = int(arg_list[1])
         else:
             message = get_message("plugins", __plugin_name__, cmd_name, 'invalid_count')

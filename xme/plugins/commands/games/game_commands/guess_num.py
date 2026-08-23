@@ -111,9 +111,11 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     settings: dict = args
 
     try:
-        num_range = (int(settings.get("r", "0~100").split("~")[0]), int(settings.get("r", "0~100").split("~")[1]))
+        num_range = list((int(settings.get("r", "0~100").split("~")[0]), int(settings.get("r", "0~100").split("~")[1])))
     except Exception as ex:
         return return_state(f"{get_message('plugins', cmd_name, name, 'range_error', ex=ex)}", "ERROR")
+    if num_range[0] == num_range[1]:
+        return return_state(f"{get_message('plugins', cmd_name, name, 'range_equals')}", "ERROR")
 
     default_times_limit = min(int(math.log2(sum([abs(num) for num in num_range])) + 2), MAX_LIMIT)
 
@@ -126,8 +128,6 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
         return return_state(f"{get_message('plugins', cmd_name, name, 'range_out_of_range', max_range=format(MAX_RANGE, ','))}", "ERROR")
     elif num_range[0] > num_range[1]:
         num_range[0], num_range[1] = num_range[1], num_range[0]
-    elif num_range[0] == num_range[1]:
-        return return_state(f"{get_message('plugins', cmd_name, name, 'range_equals')}", "ERROR")
     if times_limit > MAX_LIMIT:
         return return_state(f"{get_message('plugins', cmd_name, name, 'times_out_of_range', max_limit=format(MAX_LIMIT, ','))}", "ERROR")
 

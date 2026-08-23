@@ -84,7 +84,7 @@ async def _(session: CommandSession):
     health, health_data = await check_health()
     if not health:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'server_error', data=health_data))
-    if arg and arg.isdigit():
+    if arg and arg.isdecimal():
         return await get_jianmao_data(session, get_jianmao_data_from_id, id=arg)
     elif arg:
         return await get_jianmao_data(session, get_jianmao_data_from_name, name=arg)

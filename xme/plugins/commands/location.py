@@ -57,7 +57,7 @@ async def _(session: CommandSession, user: User):
             if target == "CMD_END":
                 return False
             target = target.replace(".", "").strip()
-            if target.isdigit():
+            if target.isdecimal():
                 has_target = True
             times += 1
         if times >= 3:

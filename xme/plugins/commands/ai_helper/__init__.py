@@ -96,8 +96,9 @@ class AIHelper:
             ans = result_response.choices[0].message.content
             build_history(user=user, ask=text, ans=ans)
             logger.info(f"AI 返回了以下 response：{result_response}")
-            tokens_use = result_response.usage.total_tokens
+            tokens_use = result_response.usage.total_tokens - result_response.usage.prompt_tokens_details['cached_tokens']
             debug_msg("处理结果")
+            logger.info(f"缓存tokens {result_response.usage.prompt_tokens_details['cached_tokens']}, 减少 {tokens_use} 个 tokens")
             return result_response.choices[0].message.content, tokens_use
         except AttributeError as ex:
             logger.error("attribute 错误:", ex)

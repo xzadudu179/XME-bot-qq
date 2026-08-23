@@ -26,7 +26,7 @@ async def drop(session, user: u.User, arg):
     if len(args) <= 1:
         args.append("")
 
-    if args[0].strip().isdigit():
+    if args[0].strip().isdecimal():
         result = await reduce_item.reduce_item_by_index(
             session, user, args[0].strip(), args[1],
             action=valid_drop,

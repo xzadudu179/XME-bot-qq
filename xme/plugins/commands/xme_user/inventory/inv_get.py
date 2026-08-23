@@ -24,7 +24,7 @@ async def get_inv_item_by_index(session, user: u.User, index_str: str, default=F
     """
     if not index_str and not silent:
         await send_session_msg(session,  get_message("plugins", __plugin_name__, cmd_name, name, "no_num"))
-    if index_str.isdigit():
+    if index_str.isdecimal():
         index = int(index_str) - 1
     else:
         if not silent:
@@ -81,7 +81,7 @@ async def get_item_by_id(session, id_str: str, default=False, silent=False) -> I
     Returns:
         Item | Any: 获取结果
     """
-    if id_str.isdigit():
+    if id_str.isdecimal():
         id = int(id_str)
     else:
         if not silent:

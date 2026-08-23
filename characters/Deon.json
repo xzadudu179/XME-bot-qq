@@ -2245,7 +2245,7 @@
     },
     "ai_helper": {
       "desc": "AI 助手",
-      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
+      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens（不包含缓存）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
       "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
       "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
       "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",

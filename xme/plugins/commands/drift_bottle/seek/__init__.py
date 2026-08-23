@@ -330,7 +330,7 @@ class SeekStep:
 
 
 def is_stepping(reply, step_name="s"):
-    return reply.startswith(step_name) and len(reply.split(step_name)) > 1 and reply.split(step_name)[1].strip().isdigit()
+    return reply.startswith(step_name) and len(reply.split(step_name)) > 1 and reply.split(step_name)[1].strip().isdecimal()
 
 seek_alias = ["寻宝", 'sk']
 command_name = "seek"

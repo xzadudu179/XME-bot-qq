@@ -59,16 +59,16 @@
 #     lan_arg = args[0] if len(args) >= 1 else ""
 #     count_arg: str = args[1] if len(args) > 1 else ""
 #     count = 1
-#     if lan_arg.isdigit() and not count_arg:
+#     if lan_arg.isdecimal() and not count_arg:
 #         count_arg = lan_arg
 #         lan_arg = ""
-#     elif lan_arg.isdigit() and count_arg and not count_arg.isdigit():
+#     elif lan_arg.isdecimal() and count_arg and not count_arg.isdecimal():
 #         count_arg, lan_arg = lan_arg, count_arg
 #         # lan_arg = count_arg
 #     print(f"count: {count_arg}, lan: {lan_arg}")
 #     if not count_arg:
 #         count = 1
-#     elif not count_arg.isdigit():
+#     elif not count_arg.isdecimal():
 #         return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'invalid_count'))
 #     elif int(count_arg) < 1:
 #         return await send_event_msg(bot, event, get_message("plugins", __plugin_name__, 'count_too_low'))

@@ -29,11 +29,11 @@
 #     if not is_galaxy_loaded():
 #         await send_session_msg(session, get_message("user", "no_galaxy"))
 #     starfield: Starfield = user.get_starfield()
-#     if arg_list[0].isdigit() and arg_list[1].isdigit():
+#     if arg_list[0].isdecimal() and arg_list[1].isdecimal():
 #         celestial = starfield.get_celestial(tuple([int(a) for a in arg_list]))
 #         if not celestial:
 #             return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'no_celestial'))
-#     elif (not arg_list[0].isdigit() or not arg_list[1].isdigit()) and arg_list[0]:
+#     elif (not arg_list[0].isdecimal() or not arg_list[1].isdecimal()) and arg_list[0]:
 #         return await send_session_msg(session, get_message("plugins", __plugin_name__, cmd_name, 'invalid_args'))
 #     else:
 #         celestial = user.celestial

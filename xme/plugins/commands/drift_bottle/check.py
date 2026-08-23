@@ -40,7 +40,7 @@ async def _(session: CommandSession, user: u.User):
         return await send_session_msg(session, "这个编号没有瓶子哦")
     index = bottle.bottle_id
     logger.info("捡到了瓶子")
-    index_is_int = index.isdigit()
+    index_is_int = index.isdecimal()
     # 混乱值根据浏览量计算
     messy_rate: float = min(100, max(0, bottle.views * 2 - bottle.likes * 3)) if index_is_int or index != '-179' else 0
     messy_rate_string = ""

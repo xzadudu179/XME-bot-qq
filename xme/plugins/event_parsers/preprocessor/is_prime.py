@@ -22,7 +22,7 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
     punc = ("呢", "呀", "哦", "哇", "诶", "耶", "唔", "啊", "阿")
     msgs = text_combinations(("是不是{prime}", "是不是{prime}{punc}", "是否是{prime}", "是{prime}吗", "是{prime}嘛"), punc=punc, prime=prime)
     # print(no_punc_msg, msgs, no_punc_msg.endswith(tuple(msgs)), remove_suffix(no_punc_msg, tuple(msgs)))
-    if no_punc_msg.endswith(tuple(msgs)) and (x:=remove_suffix(no_punc_msg, tuple(msgs))).isdigit():
+    if no_punc_msg.endswith(tuple(msgs)) and (x:=remove_suffix(no_punc_msg, tuple(msgs))).isdecimal():
         if len(x) > 576:
             try:
                 del last_process[id]

@@ -86,7 +86,7 @@ async def talk_to_bot(_, session: CommandSession, user):
             prompt = "[请发送合理的序号...]"
             continue
         prompt = "[请发送合理的序号...]"
-        if not result.isdigit() and '-' not in result:
+        if not result.isdecimal() and '-' not in result:
             prompt = ""
             continue
         result_int = int(result) - 1

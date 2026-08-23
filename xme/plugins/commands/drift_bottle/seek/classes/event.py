@@ -262,7 +262,7 @@ class Event:
                 return get_message("plugins", __plugin_name__, command_name, 'quit_success')
             elif reply == "stop":
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'quit_fail'))
-            if reply.isdigit() and int(reply) <= len(decisions) and int(reply) > 0:
+            if reply.isdecimal() and int(reply) <= len(decisions) and int(reply) > 0:
                 reply_valid = True
         next_event = decisions[int(reply) - 1]
         return self.build_event(next_event, current_region, html=False, event_datas=event_datas)

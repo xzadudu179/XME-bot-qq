@@ -25,4 +25,5 @@ httpx
 anyio
 zhipuai
 pyzbar
+zai-sdk
 # opencv-python

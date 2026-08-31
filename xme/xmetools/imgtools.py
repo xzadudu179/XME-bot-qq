@@ -177,14 +177,30 @@ def                                                                             
         # img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
         return img, state
 
-async def get_url_image(url):
-    response = await fetch_data(url, 'byte')
-    # 将图片数据转换为二进制流
-    img_data = BytesIO(response)
+async def get_url_image(url, headers={}):
+    response = await fetch_data(url, "byte", headers=headers)
 
-    # 打开图片
-    img = Image.open(img_data)
-    return img
+    if not isinstance(response, (bytes, bytearray)):
+        raise TypeError(
+            f"fetch_data 返回类型错误: {type(response)!r}"
+        )
+
+    if len(response) == 0:
+        raise ValueError("下载到的图片数据为空")
+
+    try:
+        image = Image.open(BytesIO(response))
+
+        # 确认整个图片文件确实可被 PIL 解码
+        image.load()
+
+        return image
+
+    except Exception as e:
+        raise ValueError(
+            f"无法识别图片，URL={url!r}, "
+            f"数据大小={len(response)} bytes"
+        ) from e
 
 def hash_image(img):
     buffer = BytesIO()
@@ -228,23 +244,52 @@ def convert_no_alpha(img: Image.Image):
 
 def image_to_base64(img: Image.Image, to_jpeg=True, ignore_alpha=False) -> str:
     output_buffer = BytesIO()
-    if img.mode == "P":
-        img = img.convert("RGBA")
+    # if img.mode == "P":
+    #     img = img.convert("RGBA")
     debug_msg("正在将图片转为base64")
+    # if (img.mode in ["RGBA", "P"] and not ignore_alpha) or not to_jpeg:
+    #     img_mode_dict = {
+    #         "RGBA": "PNG",
+    #         "LA": "PNG",
+    #         "P": "GIF"
+    #     }
+    #     debug_msg("save to normal")
+    #     logger.info("使用 PNG 存储")
+    #     img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
+    # else:
+    #     logger.info("使用 JPEG 格式")
+    #     img = convert_no_alpha(img)
+    #     img.save(output_buffer, format="JPEG", quality=75)
+    # b64 必须压缩
     if (img.mode in ["RGBA", "P"] and not ignore_alpha) or not to_jpeg:
         img_mode_dict = {
             "RGBA": "PNG",
             "LA": "PNG",
-            "P": "GIF"
+            "P": "GIF",
         }
+
         debug_msg("save to normal")
         logger.info("使用 PNG 存储")
-        img.save(output_buffer, format=img_mode_dict.get(img.mode, "PNG"))
+
+        img.save(
+            output_buffer,
+            format=img_mode_dict.get(img.mode, "PNG")
+        )
+
     else:
         logger.info("使用 JPEG 格式")
+
         img = convert_no_alpha(img)
-        img.save(output_buffer, format="JPEG", quality=75)
-    byte_data = output_buffer.getvalue()
+
+        img.save(
+            output_buffer,
+            format="JPEG",
+            quality=75
+        )
+
+    original_bytes = output_buffer.getvalue()
+    byte_data = compress_image_to_size(img, to_jpeg, ignore_alpha, original_bytes )
+    # byte_data = output_buffer.getvalue()
     base64_str = base64.b64encode(byte_data).decode()
     debug_msg("result len", len(base64_str))
     return base64_str
@@ -280,7 +325,85 @@ def limit_size(image: Image.Image, max_value) -> Image.Image:
     new_height = int(height * ratio)
     image_resized = image.resize((new_width, new_height))
     return image_resized
+def compress_image_to_size(
+    image: Image.Image,
+    to_jpeg: bool,
+    ignore_alpha: bool,
+    original_bytes: bytes,
+    max_bytes: int = 2 * 1024 * 1024,
+) -> bytes:
+    if len(original_bytes) <= max_bytes:
+        return original_bytes
+    has_alpha = image.mode in ("RGBA", "LA", "PA")
 
+    use_png = (
+        (has_alpha and not ignore_alpha)
+        or not to_jpeg
+    )
+    if use_png:
+        current = image
+        # P 模式如果需要保留透明度，转 RGBA
+        if current.mode == "P":
+            current = current.convert("RGBA")
+
+        while True:
+            buffer = BytesIO()
+
+            current.save(
+                buffer,
+                format="PNG",
+                optimize=True,
+            )
+
+            data = buffer.getvalue()
+
+            if len(data) <= max_bytes:
+                return data
+
+            width, height = current.size
+
+            if width <= 256 or height <= 256:
+                return data
+
+            current = current.resize(
+                (
+                    max(1, int(width * 0.8)),
+                    max(1, int(height * 0.8)),
+                ),
+                Image.Resampling.LANCZOS,
+            )
+    else:
+        if image.mode not in ("RGB", "L"):
+            current = image.convert("RGB")
+        else:
+            current = image
+        quality = 90
+        while True:
+            while quality >= 30:
+                buffer = BytesIO()
+                current.save(
+                    buffer,
+                    format="JPEG",
+                    quality=quality,
+                    optimize=True,
+                )
+                data = buffer.getvalue()
+
+                if len(data) <= max_bytes:
+                    return data
+
+                quality -= 5
+            width, height = current.size
+            if width <= 256 or height <= 256:
+                return data
+            current = current.resize(
+                (
+                    max(1, int(width * 0.8)),
+                    max(1, int(height * 0.8)),
+                ),
+                Image.Resampling.LANCZOS,
+            )
+            quality = 90
 # async def gif_msg(input_path, scale=1):
 #     img = Image.open(input_path)
 

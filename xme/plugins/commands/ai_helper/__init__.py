@@ -1,11 +1,12 @@
-from nonebot import CommandSession
+from nonebot import CommandSession, Message, MessageSegment
 from xme.xmetools.plugintools import on_command
 # from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 # from nonebot.argparse import ArgumentParser
 from xme.xmetools.bottools import XmeArgumentParser
+from xme.xmetools.texttools import get_images_from_message
 from .commands import clear_history
-import cn2an
+# import asyncio
 from traceback import format_exc
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -19,97 +20,370 @@ from character import get_message, get_character_item, character_format
 from xme.xmetools.timetools import TimeUnit, Timer, get_time_now
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
-from zhipuai import ZhipuAI
-from zhipuai.core._errors import ZhipuAIError
+from zai import ZhipuAiClient
+from .functions import get_telia_clock_state, gen_image, get_image_msg
+# from zhipuai.core._errors import ZhipuAIError
+import json
+import inspect
 MAX_CHECK_TIMES = 1000
+MAX_TOOL_CALL_TIMES = 20
+
+# 用户: stats
+curr_sessions = {}
 
 class AIHelper:
-    def __init__(self, ai_client: ZhipuAI):
+    def __init__(self, ai_client: ZhipuAiClient):
         self.client = ai_client
-
-
-    async def ai_init(self, messages):
-        response = self.client.chat.asyncCompletions.create(
-            # model="glm-4-flashx",
-            model="glm-5.3",
-            messages=messages,
-            tools=[
-                {
-                    "type": "web_search",
-                    "web_search": {
-                        "enable": "True",
-                        "search_engine": "search_pro",
-                        "search_result": "True",
-                        "search_prompt": "你可以进行数据汇总，语义理解与矛盾信息清洗处理。参考以下信息，间接、准确地回答搜索结果：{{search_result}}中的关键信息，并且根据实际对话情况整理自己搜到的数据并作出回答。",
-                        "search_intent": "True",
-                        "count": "7",
-                        "search_recency_filter": "oneYear",
-                        "content_size": "medium"
+        self.tool_functions = {
+            "get_telia_clock_state": get_telia_clock_state,
+            "gen_image": gen_image,
+            "get_image_msg": get_image_msg,
+        }
+        self.pending_messages = []
+        self.tools = [
+            {
+                "type": "web_search",
+                "web_search": {
+                    "enable": "True",
+                    "search_engine": "search_pro",
+                    "search_result": "True",
+                    "search_prompt": "你可以进行数据汇总，语义理解与矛盾信息清洗处理。参考以下信息，间接、准确地回答搜索结果：{{search_result}}中的关键信息，并且根据实际对话情况整理自己搜到的数据并作出回答。",
+                    "search_intent": "True",
+                    "count": "7",
+                    "search_recency_filter": "oneYear",
+                    "content_size": "medium"
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_telia_clock_state",
+                    "description": "获取漠月世界观里的忒利亚当前的季节（雨季/旱季）和时期（凌空期/白日期/血日期）",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                        },
+                        "required": []
                     }
                 }
-            ],
-            # tools=[
-            #     {
-            #         "type": "retrieval",
-            #         "retrieval": {
-            #             "knowledge_id": knowledge_id,
-            #             "prompt_template": "若用户提出 BOT/漠月/指令 相关问题或其他问题，默认先从文档\n\"\"\"\n{{knowledge}}\n\"\"\"\n中找问题\n\"\"\"\n{{question}}\n\"\"\"\n的答案，找不到答案就用自身知识回答并且告诉用户该信息不是来自文档。\n不要复述问题，直接开始回答。"
-            #         }
-            #     }
-            # ],
-            temperature=0.3
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "gen_image",
+                    "description": "通过提示词和指定大小和质量调用 ai 生成图片，图片生成成功会返回 url，失败会返回 \"图片生成失败：原因\"",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "prompt": {
+                                "type": "string",
+                                "description": "你要生成的图片的提示词"
+                            },
+                            "size": {
+                                "type": "string",
+                                "description": "图片大小，格式为 数字x数字（默认1024x1024）"
+                            },
+                            "quality": {
+                                "type": "string",
+                                "description": "图片质量，分为 standard 和 hd 两个等级"
+                            }
+                        },
+                        "required": ["prompt"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_image_msg",
+                    "description": "将图片 url 直接转为可以被 qq 解析的图片，一般在使用图片生成或者得到图片 url 之后调用。失败会出现 \"[图片加载失败]\" 的 cq messagesegment。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "图片url"
+                            },
+                            "max_size": {
+                                "type": "integer",
+                                "description": "最大大小，格式为数字（默认1024）"
+                            }
+                        },
+                        "required": ["url"]
+                    }
+                }
+            }
+        ]
 
+    async def run_agent(self, session, messages, model):
+        for _ in range(MAX_TOOL_CALL_TIMES):  # 最多允许 20 轮工具调用
+
+            result = await self.create_and_wait(session, messages, model)
+            if result == False:
+                return False
+            message = result.choices[0].message
+
+            if message.reasoning_content:
+                logger.info(
+                    f"\n===== GLM Reasoning =====\n"
+                    f"{message.reasoning_content}\n"
+                    f"========================="
+                )
+
+
+            # 没有工具调用
+            if not message.tool_calls:
+                return result
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    logger.info(
+                        f"[GLM Tool Call] "
+                        f"{tool_call.function.name}"
+                        f"({tool_call.function.arguments})"
+                    )
+
+            # 把 assistant 的原始消息加入历史
+            assistant_message = message.model_dump(exclude_none=True)
+            # assistant_message = {
+            #     "role": "assistant",
+            #     "content": message.content or "",
+            #     "tool_calls": [
+            #         {
+            #             "id": call.id,
+            #             "type": "function",
+            #             "function": {
+            #                 "name": call.function.name,
+            #                 "arguments": call.function.arguments,
+            #             }
+            #         }
+            #         for call in message.tool_calls
+            #     ]
+            # }
+
+            # if getattr(message, "reasoning_content", None):
+            #     assistant_message["reasoning_content"] = message.reasoning_content
+
+            messages.append(assistant_message)
+
+            # 执行所有工具
+            for tool_call in message.tool_calls:
+
+                result_text = str(await self.execute_tool(session, tool_call))
+                logger.info(
+                    f"加入 tool message: {str(result_text)!r}"
+                )
+
+                # messages.append({
+                #     "role": "tool",
+                #     "content": tool_result,
+                #     "tool_call_id": tool_call.id
+                # })
+                # if isinstance(result_text, dict) or isinstance(result_text, list):
+                #     tool_result = json.dumps(
+                #             result_text,
+                #             ensure_ascii=False
+                #         )
+                # else:
+                #     tool_result = result_text
+                messages.append({
+                    "role": "tool",
+                    "content": result_text,
+                    "tool_call_id": tool_call.id
+                })
+        raise RuntimeError("Tool Call 次数超过限制")
+
+    async def execute_tool(self, session, tool_call):
+        name = tool_call.function.name
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "call_tool", tool_name=name))
+        try:
+            arguments = json.loads(tool_call.function.arguments)
+
+            func = self.tool_functions.get(name)
+
+            if func is None:
+                return f"工具 {name} 不存在"
+
+            if inspect.iscoroutinefunction(func):
+                result = await func(**arguments)
+            else:
+                result = func(**arguments)
+            logger.info(
+                f"Tool {name} result type={type(result)}, "
+                f"value={result!r}, "
+                f"str={str(result)[:100]!r}...{str(result)[-100:]!r}"
+            )
+            if isinstance(result, MessageSegment):
+                self.pending_messages.append(result)
+                return f"\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。"
+            return result
+        except Exception as e:
+            logger.exception(f"执行工具 {name} 失败")
+            return f"工具执行失败：{type(e).__name__}: {e}"
+
+
+    # async def ai_init(self, messages, model="glm-5.3"):
+    #     response = self.client.chat.asyncCompletions.create(
+    #         # model="glm-4-flashx",
+    #         model=model,
+    #         messages=messages,
+    #         tools=self.tools,
+    #         thinking={
+    #             "type": "enabled"
+    #         },
+    #         tool_choice="auto",
+    #         temperature=0.3
+
+    #     )
+    #     return response
+
+
+    async def create_and_wait(self, session, messages, model):
+        response = self.client.chat.asyncCompletions.create(
+            model=model,
+            messages=messages,
+            tools=self.tools,
+            thinking={
+                "type": "enabled"
+            },
+            tool_choice="auto",
+            temperature=0.3
         )
-        return response
+        task_id = response.id
+        check_times = 0
+        while check_times <= MAX_CHECK_TIMES:
+            result = self.client.chat.asyncCompletions.retrieve_completion_result(
+                id=task_id
+            )
+
+            if result.task_status == "SUCCESS":
+                return result
+
+            if result.task_status == "FAIL":
+                raise RuntimeError(result)
+            check_times += 1
+            reply = await aget_arg_with_timeout(session, 0.5)
+            if reply is not None and reply.strip() == "aistop":
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+                return False
+            # await asyncio.sleep(0.5)
+        raise RuntimeError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
     async def user_talk(self, session: CommandSession, role, user, text):
         # ai_helper = AIHelper(client)
-        response = await self.ai_init([
-            {"role": "system","content": role},
-            {"role": "user","content": f"{await get_history(user)}\n{text}"}
-        ])
-        task_id = response.id
-        task_status = ''
-        get_cnt = 0
+        self.pending_messages.clear()
+        history, curr_text = await get_history(user)
 
-        t = Timer()
-        t.start()
-        while task_status != 'SUCCESS' and task_status != 'FAILED' and get_cnt <= MAX_CHECK_TIMES:
-            debug_msg(f"尝试获取 AI 连接第 {get_cnt} 次")
-            reply = await aget_arg_with_timeout(session, 0.5)
-            if reply is not None and is_command(reply):
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_sending"))
-            if reply is not None and reply.strip() == "aistop":
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
-                return False, 0
-            # result_response = None
-            result_response = self.client.chat.asyncCompletions.retrieve_completion_result(id=task_id)
-            # print(result_response)
-            task_status = result_response.task_status
-            # await asyncio.sleep(0.5)
-            get_cnt += 1
-            if get_cnt >= MAX_CHECK_TIMES:
-                t.stop()
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
-                return False, 0
+        # 提取 text 里的图片
+        image_objects = await get_images_from_message(session.bot, text)
+        image_urls = [x["file"] for x in image_objects]
+        url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
+        logger.info(f"用户附带了以下图片url {url_dicts}")
+
+        ai_params = [
+            {"role": "system","content": role},
+            *history,
+            {"role": "user","content": [
+                    {"type": "text", "text": f"{curr_text}\n{text}"},
+                    *url_dicts
+                ]
+            },
+        ]
+        # logger.info(f"params:{ai_params}")
+        # response = await self.ai_init(ai_params, "glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
+        result =  await self.run_agent(session, ai_params, model="glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
+        if result == False:
+            return False, 0, []
         try:
-            ans = result_response.choices[0].message.content
-            build_history(user=user, ask=text, ans=ans)
-            logger.info(f"AI 返回了以下 response：{result_response}")
-            tokens_use = result_response.usage.total_tokens - result_response.usage.prompt_tokens_details['cached_tokens']
+            ans = result.choices[0].message.content
+            build_history(
+                user=user,
+                ask=text,
+                ans=ans
+            )
+            logger.info(
+                f"AI 返回了以下 response：{result}"
+            )
+            tokens_use = (
+                result.usage.total_tokens
+                - result.usage.prompt_tokens_details.cached_tokens
+            )
             debug_msg("处理结果")
-            logger.info(f"缓存tokens {result_response.usage.prompt_tokens_details['cached_tokens']}, 减少 {tokens_use} 个 tokens")
-            return result_response.choices[0].message.content, tokens_use
+            logger.info(
+                f"缓存tokens "
+                f"{result.usage.prompt_tokens_details.cached_tokens}, "
+                f"减少 {tokens_use} 个 tokens"
+            )
+            # pending_message = "\n".join(
+            #     str(s) for s in self.pending_messages
+            # )
+            # logger.info(
+            #     f"pending_messages count={len(self.pending_messages)}"
+            # )
+            # logger.info(
+            #     f"pending_messages{repr(pending_message[:500])!r}...{repr(pending_message[-200:])!r}"
+            # )
+            # logger.info(
+            #     f"pending_message length={len(pending_message)}"
+            # )
+            # logger.info(
+            #     f"answer length={len(ans)}"
+            # )
+
+            return ans, tokens_use, self.pending_messages
         except AttributeError as ex:
-            logger.error("attribute 错误:", ex)
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response, replace_cq_str=True))
-            return False, 0
-        except ZhipuAIError as ex:
+            logger.error(f"attribute 错误: {ex}")
+
+            await send_session_msg(
+                session,
+                get_message(
+                    "plugins",
+                    __plugin_name__,
+                    "attribute_error",
+                    content=result,
+                    replace_cq_str=True
+                )
+            )
+            return False, 0, []
+        except Exception as ex:
             logger.error(f"AI 出现错误: {ex}")
-            code = result_response.get("error", {}).get("code", "未知")
-            message = result_response.get("error", {}).get("message", "未知")
-            await send_session_msg(session, get_message("plugins", __plugin_name__,"ai_error", replace_cq_str=True, content=result_response, code=code, message=message))
-            return False, 0
+            await send_session_msg(
+                session,
+                get_message(
+                    "plugins",
+                    __plugin_name__,
+                    "ai_error",
+                    code="未知",
+                    msg=str(ex) + "\n" + format_exc()
+                )
+            )
+            return False, 0, []
+
+        #     # print(result_response)
+        #     task_status = result_response.task_status
+        #     # await asyncio.sleep(0.5)
+        #     get_cnt += 1
+        #     if get_cnt >= MAX_CHECK_TIMES:
+        #         t.stop()
+        #         await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
+        #         return False, 0
+        # try:
+        #     ans = result_response.choices[0].message.content
+        #     build_history(user=user, ask=text, ans=ans)
+        #     logger.info(f"AI 返回了以下 response：{result_response}")
+        #     tokens_use = result_response.usage.total_tokens - result_response.usage.prompt_tokens_details['cached_tokens']
+        #     debug_msg("处理结果")
+        #     logger.info(f"缓存tokens {result_response.usage.prompt_tokens_details['cached_tokens']}, 减少 {tokens_use} 个 tokens")
+        #     return result_response.choices[0].message.content, tokens_use
+        # except AttributeError as ex:
+        #     logger.error("attribute 错误:", ex)
+        #     await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response, replace_cq_str=True))
+        #     return False, 0
+        # except Exception as ex:
+        #     logger.error(f"AI 出现错误: {ex}")
+        #     code = result_response.get("error", {}).get("code", "未知")
+        #     message = result_response.get("error", {}).get("message", "未知")
+        #     await send_session_msg(session, get_message("plugins", __plugin_name__,"ai_error", replace_cq_str=True, content=result_response, code=code, message=message))
+            # return False, 0
 cmds = {
         "clear": {
             "content": clear_history,
@@ -170,8 +444,13 @@ TOKENS_LIMIT = 500000
 @u.using_user(save_data=True)
 @u.custom_limit(__plugin_name__, 1, unit=TimeUnit.DAY, count_limit=TOKENS_LIMIT)
 async def _(session: CommandSession, user: u.User, validate, count_tick):
+    global curr_sessions
     if validate():
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
+        return False
+    # 如果有 session 在运行
+    if curr_sessions.get(user.id):
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
         return False
     MAX_LENGTH = 3000
     intext = ""
@@ -201,32 +480,50 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
         # print("正常")
-        t, tokens_use = await talk(session, text, user)
+        t, tokens_use, pending_messages = await talk(session, text, user)
         if not t:
             return False
         count_tick(tokens_use)
         tokens_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
+        message = "\n".join([str(s) for s in pending_messages])
+        logger.info(f"msg {message}")
+        t = t.replace("[", "&#91;").replace("]","&#93;")
+        message += t
+        send_msg = get_message("plugins", __plugin_name__, 'talk_result', talk=message, tokens_left_now=tokens_left_now)
+        logger.info(f"send msg {send_msg}")
         await send_session_msg(
             session,
-            get_message("plugins", __plugin_name__, 'talk_result', talk=t, tokens_left_now=tokens_left_now, replace_cq_str=True), tips=True
+            send_msg, tips=True
         )
         return True
     except Exception:
         logger.error("错误：", format_exc())
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
+    finally:
+        curr_sessions[user.id] = False
 
 async def get_history(user: u.User):
     user_history = user.ai_history
     if not user_history:
-        return ""
-    build_str = "历史记录：\n"
+        return "", ""
+    # build_str = "历史记录：\n"
+    build_list = []
     uname = await get_user_name(user.id, default='未知用户')
-    for i, item in enumerate(user_history):
-        build_str += f"{i + 1}. [{item.get('time', '未知时间')}]][{uname}(qq{user.id})]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
-    build_str += "=" * 15
-    build_str += f"\n当前对话（时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
-    return build_str
+    for _, item in enumerate(user_history):
+        build_dicts = [{
+            "role": "user",
+            "content": f"{item['ask']}",
+        },
+        {
+            "role": "assistant",
+            "content": f"[上句用户输入历史消息详情 {item.get('time', '未知时间')}]][{uname}(qq{user.id})] {item['ans']}"
+        }]
+        build_list += build_dicts
+        # build_str += f"{i + 1}. [{item.get('time', '未知时间')}]][{uname}(qq{user.id})]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
+    # build_str += "=" * 15
+    build_str = f"\n当前对话（时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
+    return build_list, build_str
 
 def build_history(user: u.User, ask, ans):
     # user_history = user.ai_history
@@ -252,7 +549,9 @@ async def talk(session: CommandSession, text, user: u.User):
         trust_env=False,
         timeout=60.0
     )
-    client = ZhipuAI(api_key=GLM_API_KEY, http_client=httpx_client)
+    global curr_sessions
+    curr_sessions[user.id] = True
+    client = ZhipuAiClient(api_key=GLM_API_KEY, http_client=httpx_client)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
     with open("./static/telia.txt") as tel:

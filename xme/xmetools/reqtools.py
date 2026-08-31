@@ -20,16 +20,21 @@ async def fetch_data_post(url, json, *args, **kwargs):
         logger.exception(e)
         raise
 
-async def fetch_data(url, response_type="json", *args, **kwargs):
+async def fetch_data(url, response_type="json", **args):
     async with aiohttp.ClientSession() as aiosession:
-        async with aiosession.get(url, *args, **kwargs) as response:
+        async with aiosession.get(url, **args) as response:
+            response.raise_for_status()
             match response_type:
                 case "json":
                     data = await response.json()
+
                 case "text":
                     data = await response.text()
+
                 case "byte":
                     data = await response.read()
                 case _:
-                    raise ValueError("返回类型只能是 json, byte 或 text")
+                    raise ValueError(
+                        "返回类型只能是 json, byte 或 text"
+                    )
             return data

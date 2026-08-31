@@ -2249,10 +2249,12 @@
       "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
       "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
       "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
+      "call_tool": "正在调用工具 \"{tool_name}\"...",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
-      "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{message}",
+      "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
       "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}",
       "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
+      "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
       "ai_send_timeout": "{negative} AI 发送消息 token 数超过上限（{secs}s）",
       "limited": "{negative}，你和 AI 对话的 token 数已经达到上限啦，下一天再来吧...",
       "too_long": "你输入的语句太长啦！要在 {count} 字以内哦"

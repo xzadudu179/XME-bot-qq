@@ -1,10 +1,15 @@
+from pathlib import Path
+import shutil
+
 from nonebot import CommandSession, Message, MessageSegment
+from xme.xmetools import jsontools
+from xme.xmetools.filetools import dict_to_file, text_to_file
 from xme.xmetools.plugintools import on_command
 # from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 # from nonebot.argparse import ArgumentParser
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.texttools import get_images_from_message
+from xme.xmetools.texttools import get_images_from_message, most_similarity_str_diff
 from .commands import clear_history
 # import asyncio
 from traceback import format_exc
@@ -21,39 +26,63 @@ from xme.xmetools.timetools import TimeUnit, Timer, get_time_now
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
-from .functions import get_telia_clock_state, gen_image, get_image_msg
+from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, ocr_image, web_search
 # from zhipuai.core._errors import ZhipuAIError
 import json
+from functools import partial
 import inspect
-MAX_CHECK_TIMES = 1000
-MAX_TOOL_CALL_TIMES = 20
+MAX_CHECK_TIMES = 1500
+MAX_TOOL_CALL_TIMES = 50
 
 # 用户: stats
 curr_sessions = {}
 
 class AIHelper:
-    def __init__(self, ai_client: ZhipuAiClient):
+    def get_temp_path(self, string=False):
+        self._check_user_path()
+        if string:
+            return f"./data/temp/{self.user_id}"
+        return Path(f"./data/temp/{self.user_id}")
+
+    def delete_temp(self):
+        for item in self.get_temp_path().iterdir():
+            if item.is_file() or item.is_symlink():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
+
+    def _check_user_path(self):
+        Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
+
+    def list_temp_files(self):
+        files = [f for f in self.get_temp_path().iterdir() if f.is_file()]
+        return "\n".join(files)
+
+    def check_file(self, file_name: str, line_start=0, line_end=0):
+        lines = []
+        with open(f"{self.get_temp_path(True)}/{file_name}", 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
+        return {"result": "\n".join(get_lines), "no_compress": True}
+
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int):
+        self.tokens = 0
+        self.cached_tokens = 0
         self.client = ai_client
+        self.user_id = user_id
         self.tool_functions = {
             "get_telia_clock_state": get_telia_clock_state,
-            "gen_image": gen_image,
-            "get_image_msg": get_image_msg,
+            "gen_image": partial(gen_image, agent=self),
+            # "get_image_msg": get_image_msg,
+            "get_skill_md": get_skill_md,
+            "check_file": self.check_file,
+            "list_temp_files": self.list_temp_files,
+            "ocr_image": partial(ocr_image, agent=self),
+            "web_search": web_search,
+            "get_webs_partial": partial(get_webs_partial, agent=self),
         }
         self.pending_messages = []
         self.tools = [
-            {
-                "type": "web_search",
-                "web_search": {
-                    "enable": "True",
-                    "search_engine": "search_pro",
-                    "search_result": "True",
-                    "search_prompt": "你可以进行数据汇总，语义理解与矛盾信息清洗处理。参考以下信息，间接、准确地回答搜索结果：{{search_result}}中的关键信息，并且根据实际对话情况整理自己搜到的数据并作出回答。",
-                    "search_intent": "True",
-                    "count": "7",
-                    "search_recency_filter": "oneYear",
-                    "content_size": "medium"
-                }
-            },
             {
                 "type": "function",
                 "function": {
@@ -82,11 +111,11 @@ class AIHelper:
                             "size": {
                                 "type": "string",
                                 "description": "图片大小，格式为 数字x数字（默认1024x1024）"
-                            },
-                            "quality": {
-                                "type": "string",
-                                "description": "图片质量，分为 standard 和 hd 两个等级"
                             }
+                            # "quality": {
+                            #     "type": "string",
+                            #     "description": "图片质量，分为 standard 和 hd 两个等级"
+                            # }
                         },
                         "required": ["prompt"]
                     }
@@ -95,34 +124,145 @@ class AIHelper:
             {
                 "type": "function",
                 "function": {
-                    "name": "get_image_msg",
-                    "description": "将图片 url 直接转为可以被 qq 解析的图片，一般在使用图片生成或者得到图片 url 之后调用。失败会出现 \"[图片加载失败]\" 的 cq messagesegment。",
+                    "name": "get_skill_md",
+                    "description": "获取内部的 skill md文件的内容。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "skill名称，必须完全对应。"
+                            }
+                        },
+                        "required": ["name"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "check_file",
+                    "description": "获取保存进用户 temp 的文件的内容。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "file_name": {
+                                "type": "string",
+                                "description": "temp 文件夹下文件名"
+                            },
+                            "line_start": {
+                                "type": "integer",
+                                "description": "要查看的首行索引，填写 0 以下会从行尾往前计算，默认 0。"
+                            },
+                            "line_end": {
+                                "type": "integer",
+                                "description": "要查看的尾行索引，填写 0 会直接当作看到结尾，其他和 python 列表索引差不多。默认 0。"
+                            },
+                        },
+                        "required": ["file_name"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "list_temp_files",
+                    "description": "获取用户 temp 路径下的所有文件列表。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "ocr_image",
+                    "description": "对一个图片 url 进行 ocr，并获取识别内容 markdown。",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "url": {
                                 "type": "string",
-                                "description": "图片url"
-                            },
-                            "max_size": {
-                                "type": "integer",
-                                "description": "最大大小，格式为数字（默认1024）"
+                                "description": "要识别的图片 url"
                             }
                         },
                         "required": ["url"]
                     }
                 }
-            }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "web_search",
+                    "description": "对一个 query 进行联网搜索，并获取识别内容字典列表。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "搜索内容"
+                            },
+                            "max_results": {
+                                "type": "integer",
+                                "description": "结果数量，默认 10"
+                            },
+                            "depth": {
+                                "type": "string",
+                                "description": "搜索深度，分为\"basic\" \"advanced\" \"fast\" \"ultra-fast\" 四个等级，默认 basic"
+                            },
+                            "time_range": {
+                                "type": "string",
+                                "description": "时间范围，默认 year"
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_webs_partial",
+                    "description": "得到联网搜索内容的部分最接近指定关键词的结果，或指定搜索规则的结果。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "key": {
+                                "type": "string",
+                                "description": "要搜索的部分名，有 \"title\" \"url\" 和 \"content\" 可选。"
+                            },
+                            "file_name": {
+                                "type": "string",
+                                "description": "要搜索的内容文件名，例如 \"xxx.json\""
+                            },
+                            "search_str": {
+                                "type": "string",
+                                "description": "搜索文本/表达式本身"
+                            },
+                            "search_method": {
+                                "type": "string",
+                                "description": "要使用的搜索方法，默认 \"re_search\" 会模糊匹配关键字。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
+                            },
+                        },
+                        "required": ["key", "file_name", "search_str"]
+                    }
+                }
+            },
         ]
 
     async def run_agent(self, session, messages, model):
-        for _ in range(MAX_TOOL_CALL_TIMES):  # 最多允许 20 轮工具调用
-
+        # for _ in range(MAX_TOOL_CALL_TIMES):  # 最多允许 20 轮工具调用
+        curr_tool_call_times = 0
+        while True:
             result = await self.create_and_wait(session, messages, model)
             if result == False:
-                return False
+                return False, 0
             message = result.choices[0].message
-
+            self.tokens += result.usage.total_tokens
+            self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
             if message.reasoning_content:
                 logger.info(
                     f"\n===== GLM Reasoning =====\n"
@@ -133,7 +273,8 @@ class AIHelper:
 
             # 没有工具调用
             if not message.tool_calls:
-                return result
+                return result, curr_tool_call_times
+            curr_tool_call_times += 1
             if message.tool_calls:
                 for tool_call in message.tool_calls:
                     logger.info(
@@ -144,22 +285,6 @@ class AIHelper:
 
             # 把 assistant 的原始消息加入历史
             assistant_message = message.model_dump(exclude_none=True)
-            # assistant_message = {
-            #     "role": "assistant",
-            #     "content": message.content or "",
-            #     "tool_calls": [
-            #         {
-            #             "id": call.id,
-            #             "type": "function",
-            #             "function": {
-            #                 "name": call.function.name,
-            #                 "arguments": call.function.arguments,
-            #             }
-            #         }
-            #         for call in message.tool_calls
-            #     ]
-            # }
-
             # if getattr(message, "reasoning_content", None):
             #     assistant_message["reasoning_content"] = message.reasoning_content
 
@@ -168,33 +293,26 @@ class AIHelper:
             # 执行所有工具
             for tool_call in message.tool_calls:
 
-                result_text = str(await self.execute_tool(session, tool_call))
+                result_text = str(await self.execute_tool(session, tool_call, curr_tool_call_times))
                 logger.info(
-                    f"加入 tool message: {str(result_text)!r}"
+                    f"加入 tool message: {str(result_text)[:100]!r}..."
                 )
-
-                # messages.append({
-                #     "role": "tool",
-                #     "content": tool_result,
-                #     "tool_call_id": tool_call.id
-                # })
-                # if isinstance(result_text, dict) or isinstance(result_text, list):
-                #     tool_result = json.dumps(
-                #             result_text,
-                #             ensure_ascii=False
-                #         )
-                # else:
-                #     tool_result = result_text
                 messages.append({
                     "role": "tool",
                     "content": result_text,
                     "tool_call_id": tool_call.id
                 })
-        raise RuntimeError("Tool Call 次数超过限制")
+        # 改一下 超过限制不允许调用工具
+        # raise RuntimeError("Tool Call 次数超过限制")
 
-    async def execute_tool(self, session, tool_call):
+    async def execute_tool(self, session, tool_call, curr_tool_call_times):
+        prefix = ""
+        if curr_tool_call_times >= MAX_TOOL_CALL_TIMES:
+            return f"[工具执行失败：次数已达到上限，请在下一个会话继续]"
+        if curr_tool_call_times >= MAX_TOOL_CALL_TIMES - 7:
+            prefix = f"[警告：剩余 {MAX_TOOL_CALL_TIMES - curr_tool_call_times} 次 tools 调用次数]\n"
         name = tool_call.function.name
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "call_tool", tool_name=name))
+        debug_msg(get_message("plugins", __plugin_name__, "call_tool", tool_name=name))
         try:
             arguments = json.loads(tool_call.function.arguments)
 
@@ -202,23 +320,31 @@ class AIHelper:
 
             if func is None:
                 return f"工具 {name} 不存在"
-
+            no_compress = False
             if inspect.iscoroutinefunction(func):
                 result = await func(**arguments)
             else:
                 result = func(**arguments)
             logger.info(
                 f"Tool {name} result type={type(result)}, "
-                f"value={result!r}, "
                 f"str={str(result)[:100]!r}...{str(result)[-100:]!r}"
             )
-            if isinstance(result, MessageSegment):
+            if isinstance(result, list) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
+                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{dict_to_file(result, self.user_id, name + "_")}'
+
+            if isinstance(result, dict):
+                no_compress = result.get("no_compress", False)
+                result = result.get("result", result)
+            if isinstance(result, MessageSegment) or str(result).startswith("[CQ:"):
                 self.pending_messages.append(result)
-                return f"\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。"
-            return result
+                return prefix + f"[\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
+            if isinstance(result, str) and len(result) > 5000 and not no_compress:
+                return prefix + f"[工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_id` 预览。数据如下]：\n{text_to_file(result, self.user_id)}"
+
+            return prefix + result if isinstance(result, str) else result
         except Exception as e:
             logger.exception(f"执行工具 {name} 失败")
-            return f"工具执行失败：{type(e).__name__}: {e}"
+            return f"[工具执行失败：{type(e).__name__}: {e}]"
 
 
     # async def ai_init(self, messages, model="glm-5.3"):
@@ -261,7 +387,7 @@ class AIHelper:
             if result.task_status == "FAIL":
                 raise RuntimeError(result)
             check_times += 1
-            reply = await aget_arg_with_timeout(session, 0.5)
+            reply = await aget_arg_with_timeout(session, 1)
             if reply is not None and reply.strip() == "aistop":
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
@@ -290,9 +416,9 @@ class AIHelper:
         ]
         # logger.info(f"params:{ai_params}")
         # response = await self.ai_init(ai_params, "glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
-        result =  await self.run_agent(session, ai_params, model="glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
+        result, tool_call_times =  await self.run_agent(session, ai_params, model="glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
         if result == False:
-            return False, 0, []
+            return False, 0, [], 0
         try:
             ans = result.choices[0].message.content
             build_history(
@@ -304,13 +430,13 @@ class AIHelper:
                 f"AI 返回了以下 response：{result}"
             )
             tokens_use = (
-                result.usage.total_tokens
-                - result.usage.prompt_tokens_details.cached_tokens
+                self.tokens
+                - self.cached_tokens
             )
             debug_msg("处理结果")
             logger.info(
                 f"缓存tokens "
-                f"{result.usage.prompt_tokens_details.cached_tokens}, "
+                f"{self.cached_tokens}, "
                 f"减少 {tokens_use} 个 tokens"
             )
             # pending_message = "\n".join(
@@ -329,7 +455,7 @@ class AIHelper:
             #     f"answer length={len(ans)}"
             # )
 
-            return ans, tokens_use, self.pending_messages
+            return ans, tokens_use, self.pending_messages, tool_call_times
         except AttributeError as ex:
             logger.error(f"attribute 错误: {ex}")
 
@@ -343,7 +469,7 @@ class AIHelper:
                     replace_cq_str=True
                 )
             )
-            return False, 0, []
+            return False, 0, [], 0
         except Exception as ex:
             logger.error(f"AI 出现错误: {ex}")
             await send_session_msg(
@@ -356,7 +482,7 @@ class AIHelper:
                     msg=str(ex) + "\n" + format_exc()
                 )
             )
-            return False, 0, []
+            return False, 0, [], 0
 
         #     # print(result_response)
         #     task_status = result_response.task_status
@@ -480,7 +606,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
     try:
         # print("正常")
-        t, tokens_use, pending_messages = await talk(session, text, user)
+        t, tokens_use, pending_messages, tool_call_times = await talk(session, text, user)
         if not t:
             return False
         count_tick(tokens_use)
@@ -489,7 +615,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         logger.info(f"msg {message}")
         t = t.replace("[", "&#91;").replace("]","&#93;")
         message += t
-        send_msg = get_message("plugins", __plugin_name__, 'talk_result', talk=message, tokens_left_now=tokens_left_now)
+        send_msg = get_message("plugins", __plugin_name__, 'talk_result', talk=message, tokens_left_now=tokens_left_now, tool_call_times=tool_call_times)
         logger.info(f"send msg {send_msg}")
         await send_session_msg(
             session,
@@ -513,16 +639,16 @@ async def get_history(user: u.User):
     for _, item in enumerate(user_history):
         build_dicts = [{
             "role": "user",
-            "content": f"{item['ask']}",
+            "content": f"[历史记录-{item.get('time', '未知时间')}][{uname}(qq{user.id})] {item['ask']}",
         },
         {
             "role": "assistant",
-            "content": f"[上句用户输入历史消息详情 {item.get('time', '未知时间')}]][{uname}(qq{user.id})] {item['ans']}"
+            "content": f"{item['ans']}"
         }]
         build_list += build_dicts
         # build_str += f"{i + 1}. [{item.get('time', '未知时间')}]][{uname}(qq{user.id})]: {item['ask']};\n\t你回答：{item['ans']}\n----------\n"
     # build_str += "=" * 15
-    build_str = f"\n当前对话（时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
+    build_str = f"\n当前对话（现在时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
     return build_list, build_str
 
 def build_history(user: u.User, ask, ans):
@@ -534,7 +660,7 @@ def build_history(user: u.User, ask, ans):
         "ans": ans,
         "time": get_time_now()
     })
-    if len(user.ai_history) > 20:
+    if len(user.ai_history) > 30:
         del user.ai_history[-1]
 #     save_history()
 
@@ -564,6 +690,14 @@ async def talk(session: CommandSession, text, user: u.User):
     else:
         tips = [tips]
     tips_str = [f"- {t}\n" for t in tips]
-    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia)
-    ai_helper = AIHelper(client)
-    return await ai_helper.user_talk(session, role, user, text)
+    skills = {
+        "worldview_settings": "漠月、漠星和九九/九镹所在世界观相关的设定合集，在有世界观相关的问题可以调用。"
+    }
+    skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
+    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES)
+    ai_helper = AIHelper(client, user.id)
+    # 开始前先清空放置上轮会话强制结束之类的问题
+    ai_helper.delete_temp()
+    result = await ai_helper.user_talk(session, role, user, text)
+    ai_helper.delete_temp()
+    return result

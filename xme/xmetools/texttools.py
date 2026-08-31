@@ -165,6 +165,42 @@ def fuzzy_search(text, contents, ratio=0.65):
     """
     return x[-1][0] if (x:=most_similarity_str_diff(text, [c for c in contents], ratio)) else None
 
+def regex_search(r: str, search_list: list[str], **_) -> list[str]:
+    """正则表达式搜索
+
+    Args:
+        r (str): 正则表达式
+        search_list (list[str]): 待搜索列表
+
+    Returns:
+        list[str]: 匹配字符串列表
+    """
+    pattern = re.compile(r)
+
+    return [
+        item
+        for item in search_list
+        if pattern.search(item)
+    ]
+
+def regex_filter(r: str, search_list: list[str], **_) -> list[str]:
+    """正则表达式列表过滤
+
+    Args:
+        r (str): 表达式
+        search_list (list[str]): 待过滤列表
+
+    Returns:
+        list[str]: 结果字符串列表
+    """
+    pattern = re.compile(r)
+
+    return [
+        item
+        for item in search_list
+        if pattern.fullmatch(item)
+    ]
+
 def find_symmetric_around(s: str, center: str) -> tuple[str, str]:
     if center not in s:
         return "", 0

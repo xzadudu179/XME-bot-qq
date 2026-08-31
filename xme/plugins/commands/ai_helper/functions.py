@@ -1,19 +1,24 @@
+from pathlib import Path
 import traceback
 
 from nonebot import MessageSegment
 
 from nonebot.log import logger
+from xme.xmetools.filetools import search_json
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
+from xme.xmetools.texttools import regex_filter
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
-from keys import GLM_API_KEY
+from keys import GLM_API_KEY, TAVILY_API_KEY
 from typing import Literal
+from tavily import AsyncTavilyClient
 from xme.xmetools.msgtools import create_image_message
 import asyncio
 
 def get_telia_clock_state():
     return TELIA_CLOCK.get_current_state()
 
+# 将其作为内部函数
 async def get_image_msg(url, max_size = 1024):
     image = await get_url_image(url, headers={
         "Authorization": f"Bearer {GLM_API_KEY}"
@@ -31,17 +36,89 @@ async def get_image_msg(url, max_size = 1024):
         logger.exception(traceback.format_exc())
         return MessageSegment.text("[图片加载失败]")
 
-async def gen_image(prompt, size="1024x1024", quality: Literal['standard', 'hd'] ="standard"):
+def get_skill_md(name: str):
+    skill = ""
+    content = ""
+    try:
+        with open(f"./static/skills/{name}.md", 'r', encoding="utf-8") as file:
+            skill = file.read()
+    except Exception as ex:
+        content = f"[寻找 skill 文件发生错误：{ex}]"
+    if skill == "":
+        content = "[这个 skill 似乎是空白的。]"
+    content = skill
+    return {"result": content, "no_compress": True}
+
+async def ocr_image(url, agent=None):
+    client = ZhipuAiClient(api_key=GLM_API_KEY)
+    try:
+        response = await asyncio.to_thread(
+            client.layout_parsing.create,
+            model="glm-ocr",
+            file=url
+        )
+        result = response.md_results
+        if agent is not None:
+            agent.tokens += response.usage.total_tokens * 0.0125
+        # response.usage.prompt_tokens_details.
+        if result is None:
+            return "[没有识别到内容]"
+        return result
+    except Exception as ex:
+        logger.exception(f"图片 OCR 失败: {ex}")
+        return f"[图片 OCR 失败: {ex}]"
+
+async def gen_image(prompt, size="1024x1024", agent=None):
     client = ZhipuAiClient(api_key=GLM_API_KEY)
     try:
         response = await asyncio.to_thread(
             client.images.generations,
-            model="cogview-3-plus",
+            model="glm-image",
             prompt=prompt,
             size=size,
-            quality=quality,
+            # quality=quality,
+            quality="hd",
         )
-        return response.data[0].url
+        if agent is not None:
+            # 图片生成按 10000 tokens 算
+            agent.tokens += 10000
+        image_msg = await get_image_msg(response.data[0].url)
+        return image_msg
     except Exception as e:
         logger.exception(f"图片生成失败: {e}")
-        return f"图片生成失败: {e}"
+        return f"[图片生成失败: {e}]"
+
+def get_webs_partial(key, file_name, search_str, search_method: Literal["fuzzy_match", "re_search", "re_filter"] = "fuzzy_match", agent=None):
+    path = agent.get_temp_path() / file_name
+    method = None
+    search_methods = {
+        # "re_search": regex_search,
+        "re_search": None,
+        "re_filter": regex_filter,
+        # "fuzzy_match": None,
+    }
+    method = search_methods.get(search_method, None)
+
+    return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_json(search_str, path, key, search_func=method))]), "no_compress": True}
+
+async def web_search(query: str, max_results: int = 10, depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "basic", time_range: str = "year"):
+    tavily = AsyncTavilyClient(
+        api_key=TAVILY_API_KEY
+    )
+    result = await tavily.search(
+        query=query,
+        max_results=max_results,
+        search_depth=depth,
+        time_range=time_range
+    )
+    return {
+        "query": query,
+        "results": [
+            {
+                "title": item["title"],
+                "url": item["url"],
+                "content": item["content"],
+            }
+            for item in result["results"]
+        ]
+    }

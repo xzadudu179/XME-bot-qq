@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 # from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import nonebot
@@ -128,17 +129,18 @@ def init_json(path, data):
 
 def create_folder_if_not_exists(*paths):
     for path in paths:
-        if os.path.exists(path):
-            continue
+        # if os.path.exists(path):
+        #     continue
         logger.info(f"创建 {path} 文件夹")
-        os.mkdir(path)
+        Path(path).mkdir(parents=True, exist_ok=True)
+        # os.mkdir(path)
 
 def bot_init():
-    create_folder_if_not_exists("./logs", "./data", "./data/xme", "./data/temp")
+    create_folder_if_not_exists("./logs", "./data", "./data/xme", "./data/temp", "./data/ai_historys")
+    # Path("./data/ai_historys").mkdir(parents=True, exist_ok=True)
     # 老婆数据
     wife_path = "./data/wife.json"
     init_json(wife_path, WIFE_INFO)
-
     # botinfo
     # botinfo_path = f'./data/_botinfo.json'
     # init_json(botinfo_path, BASIC_INFO)

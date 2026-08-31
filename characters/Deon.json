@@ -155,7 +155,8 @@
       "如果对九九的个人生活好奇的话，可以去 https://blog.xzadudu179.top/ 查看九九的个人博客~",
       "如果你不知道漠月的一些功能怎么用，可以试试用 \"/ai 问题\" 来询问 AI-Helper 哦！",
       "漠月喜欢吃饼干...而且漠月虽然是小狗，但是可以吃巧克力！",
-      "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xme.179.life/glossary 看看，说不定会帮上忙~"
+      "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xme.179.life/glossary 看看，说不定会帮上忙~",
+      "你让 \"/ai\" 生成图片的时候，假如你刻意让他生成非常华丽或者复杂细节丰富的图片，又或者是提供很长的提示词，他可能会超常发挥哦（？）"
     ]
   },
   "apis": {
@@ -2246,16 +2247,16 @@
     "ai_helper": {
       "desc": "AI 助手",
       "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens（不包含缓存）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
-      "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\"",
+      "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
       "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
-      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
-      "call_tool": "正在调用工具 \"{tool_name}\"...",
+      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\nAI 使用了 {tool_call_times} 次 tools\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
+      "call_tool": "[Beta debug] 正在调用工具 \"{tool_name}\"...",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
       "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}",
       "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
       "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
-      "ai_send_timeout": "{negative} AI 发送消息 token 数超过上限（{secs}s）",
+      "ai_send_timeout": "{negative} AI 发送消息秒数超过上限（{secs}s）",
       "limited": "{negative}，你和 AI 对话的 token 数已经达到上限啦，下一天再来吧...",
       "too_long": "你输入的语句太长啦！要在 {count} 字以内哦"
     },

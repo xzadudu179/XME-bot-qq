@@ -4,6 +4,35 @@ import base64
 from pathlib import Path
 from datetime import datetime
 import shutil
+import json
+from xme.xmetools import jsontools
+from xme.xmetools.texttools import hash_text, most_similarity_str_diff, regex_search
+
+def text_to_file(text: str, dir_name) -> dict:
+    file_id = hash_text(text)
+    file_name = file_id + ".txt"
+    Path(f"./data/temp/{dir_name}").mkdir(parents=True, exist_ok=True)
+    with open(f"./data/temp/{dir_name}/{file_name}", 'w', encoding='utf-8') as file:
+        file.write(text)
+    return {
+        "id": file_id,
+        "total_len": len(text),
+        "total_line_count": text.replace("\r\n", "\n").replace("\r", "\n").count("\n"),
+        "preview": text[:200],
+    }
+
+def dict_to_file(d: dict, dir_name, prefix = "") -> dict:
+    file_id = hash_text(str(d))
+    file_name = prefix + file_id + ".json"
+    path = f"./data/temp/{dir_name}/{file_name}"
+    Path(f"./data/temp/{dir_name}").mkdir(parents=True, exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as file:
+        # file.write(text)
+        file.write(json.dumps(d,ensure_ascii=False))
+    return {
+        "id": file_id,
+        "path": path
+    }
 
 def cleanup_old_backups(
         backup_root: Path,
@@ -24,7 +53,7 @@ def cleanup_old_backups(
 def backup_data_dir(
         data_dir: Path = Path("data"),
         backup_root: Path = Path(".backup"),
-        max_backups: int = 100
+        max_backups: int = 500
     ) -> Path:
     """
     将 data 目录备份到 .backup/datas-YYYY-MM-DD_HH-MM-SS
@@ -38,6 +67,36 @@ def backup_data_dir(
     shutil.copytree(data_dir, backup_dir)
     cleanup_old_backups(backup_root, keep=max_backups)
     return backup_dir
+
+
+def search_json(s, path, *key_names, d=None, search_func=None, **kwargs):
+    if d is None:
+        d: dict = jsontools.read_from_path(path)
+    if not isinstance(d, dict):
+        raise ValueError("不能直接在列表里调用 search_json")
+    # 需要有 results
+    item_list: list = d.get("results", None)
+    if item_list is None or not isinstance(item_list, list):
+        raise ValueError("传入字典没有 results 列表")
+    if len(item_list) < 1:
+        return []
+    search_list = []
+    for i in item_list:
+        for k in key_names:
+            # 空的忽略了
+            if not isinstance(i, dict):
+                i = ""
+                break
+        i = i.get(k, "")
+        item = i
+        if not isinstance(item, str):
+            raise ValueError("不能选择非 str 类型的字段查询")
+        search_list.append(item)
+    if search_func is None:
+        return [x[0] for x in regex_search(s, search_list)]
+    else:
+        # return search_func(s, search_list, threshold=0.7, **kwargs)
+        return search_func(s, search_list, **kwargs)
 
 
 def b64_encode_file(file_path):

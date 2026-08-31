@@ -262,16 +262,28 @@ def image_to_base64(img: Image.Image, to_jpeg=True, ignore_alpha=False) -> str:
     #     img.save(output_buffer, format="JPEG", quality=75)
     # b64 必须压缩
     if (img.mode in ["RGBA", "P"] and not ignore_alpha) or not to_jpeg:
+        # Prefer PNG for modes with transparency. Avoid saving palette (P) as GIF
+        # because PIL may expose transparency bytes leading to TypeError.
         img_mode_dict = {
             "RGBA": "PNG",
             "LA": "PNG",
-            "P": "GIF",
+            # Save palette images as PNG after converting to RGBA to be safe
+            "P": "PNG",
         }
 
         debug_msg("save to normal")
         logger.info("使用 PNG 存储")
 
-        img.save(
+        # Convert palette images to RGBA to avoid GIF transparency issues
+        save_img = img
+        if save_img.mode == "P":
+            try:
+                save_img = save_img.convert("RGBA")
+            except Exception:
+                # Fallback: convert to RGB if RGBA conversion fails
+                save_img = save_img.convert("RGB")
+
+        save_img.save(
             output_buffer,
             format=img_mode_dict.get(img.mode, "PNG")
         )

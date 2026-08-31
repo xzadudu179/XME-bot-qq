@@ -1,0 +1,22 @@
+import time
+import jwt
+from hashlib import md5
+
+
+GLM_API_KEY = ""
+TAVILY_API_KEY = ""
+# ACCESS_TOKEN = ""
+WEATHER_API_KEY = ""
+JIANMAO_TOKEN = ""
+JIANMAO_QQ = ""
+BOTTLE_IMAGE_KEY = ""
+AFDIAN_USER_ID = ''
+AFDIAN_TOKEN = ''
+AFDIAN_OAUTH_SECRET = ""
+AFDIAN_OAUTH_CLIENT_ID = ""
+
+def generate_jwt(qq: str, secret_key: str) -> str:
+    ...
+
+def afdian_sign(params: str) -> dict:
+    ...

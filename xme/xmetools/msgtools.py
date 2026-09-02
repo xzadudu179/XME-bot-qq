@@ -26,15 +26,12 @@ import os
 def get_tips():
     return get_message("bot_info", "tips")
 
-def setup_send_logger():
-    log_dir = "./logs/send"
+def setup_logger(name: str, filename: str):
+    log_dir = f"./logs/{name}"
     os.makedirs(log_dir, exist_ok=True)
-
-    logger = logging.getLogger("send")
+    logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-
-    log_file = os.path.join(log_dir, "bot_send_logs.log")
-
+    log_file = os.path.join(log_dir, f"{filename}.log")
     handler = TimedRotatingFileHandler(
         log_file,
         when="midnight",
@@ -42,22 +39,51 @@ def setup_send_logger():
         backupCount=30,
         encoding="utf-8"
     )
-
     handler.suffix = "%Y-%m-%d"
-
     formatter = logging.Formatter(
         "[%(asctime)s] [%(levelname)s] %(message)s"
     )
     handler.setFormatter(formatter)
-
     logger.addHandler(handler)
-
     # 控制台输出
     console = logging.StreamHandler()
     console.setFormatter(formatter)
     logger.addHandler(console)
-
     return logger
+
+def setup_send_logger():
+    return setup_logger("send", "bot_send_logs")
+    # log_dir = "./logs/send"
+    # os.makedirs(log_dir, exist_ok=True)
+
+    # logger = logging.getLogger("send")
+    # logger.setLevel(logging.INFO)
+
+    # log_file = os.path.join(log_dir, "bot_send_logs.log")
+
+    # handler = TimedRotatingFileHandler(
+    #     log_file,
+    #     when="midnight",
+    #     interval=1,
+    #     backupCount=30,
+    #     encoding="utf-8"
+    # )
+
+    # handler.suffix = "%Y-%m-%d"
+
+    # formatter = logging.Formatter(
+    #     "[%(asctime)s] [%(levelname)s] %(message)s"
+    # )
+    # handler.setFormatter(formatter)
+
+    # logger.addHandler(handler)
+
+    # # 控制台输出
+    # console = logging.StreamHandler()
+    # console.setFormatter(formatter)
+    # logger.addHandler(console)
+
+    # return logger
 
 SEND_LOGGER = setup_send_logger()
 

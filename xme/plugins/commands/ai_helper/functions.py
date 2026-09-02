@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 import traceback
 
 from nonebot import MessageSegment
@@ -12,7 +13,8 @@ from zai import ZhipuAiClient
 from keys import GLM_API_KEY, TAVILY_API_KEY
 from typing import Literal
 from tavily import AsyncTavilyClient
-from xme.xmetools.msgtools import create_image_message
+from xme.xmetools.msgtools import create_image_message, send_session_msg
+from character import get_message
 import asyncio
 
 def get_telia_clock_state():
@@ -67,6 +69,23 @@ async def ocr_image(url, agent=None):
     except Exception as ex:
         logger.exception(f"图片 OCR 失败: {ex}")
         return f"[图片 OCR 失败: {ex}]"
+
+async def inprocess_report(message: str, agent):
+    from . import __plugin_name__
+    # 最小间隔s
+    MIN_INTERVAL = 30
+    try:
+        last_response_time = agent.last_response
+        curr_response_time = time.time()
+        interval = curr_response_time - last_response_time
+        if interval < 30:
+            return f"[调用回复失败：最小间隔为 {MIN_INTERVAL}s，当前距离上次调用间隔为 {interval}s。]"
+        # 中途汇报内容给用户
+        await send_session_msg(agent.session, get_message("plugins", __plugin_name__, "inprocess_report", message=message))
+        agent.last_response = time.time()
+        return f"成功向用户发送消息"
+    except Exception as ex:
+        return f"[发送消息失败：{ex}]"
 
 async def gen_image(prompt, size="1024x1024", agent=None):
     client = ZhipuAiClient(api_key=GLM_API_KEY)

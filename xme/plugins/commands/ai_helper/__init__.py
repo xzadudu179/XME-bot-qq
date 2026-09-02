@@ -21,7 +21,7 @@ import httpx
 # from xme.xmetools.texttools import dec_to_chinese
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.cmdtools import is_command
-from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout
+from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
 from xme.xmetools.bottools import get_user_name
 from character import get_message, get_character_item, character_format
 from xme.xmetools.timetools import TimeUnit, Timer, get_time_now
@@ -29,7 +29,7 @@ from xme.xmetools.dicttools import reverse_dict
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
-from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, ocr_image, web_search
+from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, inprocess_report, ocr_image, web_search
 # from zhipuai.core._errors import ZhipuAIError
 import json
 from functools import partial
@@ -37,6 +37,8 @@ import inspect
 MAX_CHECK_TIMES = 1000
 MAX_HISTORY_COUNT = 50
 MAX_TOOL_CALL_TIMES = 50
+
+ai_logger = setup_logger("aihelper", "ai_helper_log")
 
 # 用户: stats
 curr_sessions = {}
@@ -52,6 +54,8 @@ cmds = {
 
 
 class AIHelper:
+    """AIHelper Agent 实例，生命周期仅存在于单个用户会话中
+    """
     def get_temp_path(self, string=False):
         self._check_user_path()
         if string:
@@ -81,14 +85,17 @@ class AIHelper:
         get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
         return {"result": "\n".join(get_lines), "no_compress": True}
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, model="flash"):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
         self.REF_MAP = {}
         self.tokens = 0
         self.other_credits = 0
         self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
         self.cached_tokens = 0
         self.client = ai_client
+        self.session = session
         self.user_id = user_id
+        # 上次回应时间
+        self.last_response = 0
         self.tool_functions = {
             "get_telia_clock_state": get_telia_clock_state,
             "gen_image": partial(gen_image, agent=self),
@@ -96,6 +103,7 @@ class AIHelper:
             "get_skill_md": get_skill_md,
             "check_file": self.check_file,
             "list_temp_files": self.list_temp_files,
+            "inprocess_report": partial(inprocess_report, agent=self),
             "ocr_image": partial(ocr_image, agent=self),
             "web_search": web_search,
             "get_webs_partial": partial(get_webs_partial, agent=self),
@@ -266,7 +274,24 @@ class AIHelper:
                                 "description": "要使用的搜索方法，默认 \"re_search\" 会模糊匹配关键字。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
                             },
                         },
-                        "required": ["key", "file_name", "search_str"]
+                        "required": ["key", "file_ref", "search_str"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "inprocess_report",
+                    "description": "在会话途中跟用户反馈消息，不会被记录到历史记录，通常可用于表示自己在做什么或者将要做什么防止用户等待太久关闭会话。两次发送最小间隔 30s",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string",
+                                "description": "要发送的消息内容"
+                            }
+                        },
+                        "required": ["message"]
                     }
                 }
             },
@@ -275,15 +300,23 @@ class AIHelper:
     async def run_agent(self, session, messages, model):
         # for _ in range(MAX_TOOL_CALL_TIMES):  # 最多允许 20 轮工具调用
         curr_tool_call_times = 0
+        MAX_RETRY_TIMES = 5
+        retry_times = 0
         while True:
-            result = await self.create_and_wait(session, messages, model)
+            try:
+                result = await self.create_and_wait(session, messages, model)
+            except RuntimeError:
+                if retry_times >= MAX_RETRY_TIMES:
+                    raise
+                retry_times += 1
+                continue
             if result == False:
                 return False, 0
             message = result.choices[0].message
             self.tokens += result.usage.total_tokens
             self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
             if message.reasoning_content:
-                logger.info(
+                ai_logger.info(
                     f"\n===== GLM Reasoning =====\n"
                     f"{message.reasoning_content}\n"
                     f"========================="
@@ -296,7 +329,7 @@ class AIHelper:
             curr_tool_call_times += 1
             if message.tool_calls:
                 for tool_call in message.tool_calls:
-                    logger.info(
+                    ai_logger.info(
                         f"[GLM Tool Call] "
                         f"{tool_call.function.name}"
                         f"({tool_call.function.arguments})"
@@ -313,7 +346,7 @@ class AIHelper:
             for tool_call in message.tool_calls:
 
                 result_text = str(await self.execute_tool(session, tool_call, curr_tool_call_times))
-                logger.info(
+                ai_logger.info(
                     f"加入 tool message: {str(result_text)[:100]!r}..."
                 )
                 messages.append({
@@ -331,9 +364,9 @@ class AIHelper:
         if curr_tool_call_times >= MAX_TOOL_CALL_TIMES - 7:
             prefix = f"[警告：剩余 {MAX_TOOL_CALL_TIMES - curr_tool_call_times} 次 tools 调用次数]\n"
         name = tool_call.function.name
-        debug_msg(get_message("plugins", __plugin_name__, "call_tool", tool_name=name))
         try:
             arguments = json.loads(tool_call.function.arguments)
+            ai_logger.info(get_message("plugins", __plugin_name__, "call_tool", tool_name=name, arguments=tool_call.function.arguments))
 
             func = self.tool_functions.get(name)
 
@@ -344,21 +377,24 @@ class AIHelper:
                 result = await func(**arguments)
             else:
                 result = func(**arguments)
-            logger.info(
-                f"Tool {name} result type={type(result)}, "
-                f"str={str(result)[:100]!r}...{str(result)[-100:]!r}"
+            ai_logger.info(
+                f"工具调用完毕，名称 {name} 结果类型={type(result)}, str={str(result)[:100]!r}...{str(result)[-100:]!r}"
             )
-            if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
-                res = dict_to_file(result, self.user_id, name + "_", agent=self)
-
-                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{res}'
 
             if isinstance(result, dict):
                 no_compress = result.get("no_compress", False)
                 result = result.get("result", result)
+
             if isinstance(result, MessageSegment) or str(result).startswith("[CQ:"):
                 self.pending_messages.append(result)
                 return prefix + f"[\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
+
+            ####### 压缩 #######
+
+            if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
+                res = dict_to_file(result, self.user_id, name + "_", agent=self)
+                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{res}'
+
             if isinstance(result, str) and len(result) > 5000 and not no_compress:
                 res = text_to_file(result, self.user_id, self)
                 self.REF_MAP[res["ref"]] = res["file_name"]
@@ -366,7 +402,7 @@ class AIHelper:
 
             return prefix + result if isinstance(result, str) else result
         except Exception as e:
-            logger.exception(f"执行工具 {name} 失败")
+            ai_logger.exception(f"执行工具 {name} 失败")
             return f"[工具执行失败：{type(e).__name__}: {e}]"
 
 
@@ -399,7 +435,7 @@ class AIHelper:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
             # await asyncio.sleep(0.5)
-        raise RuntimeError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
+        raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
     async def user_talk(self, session: CommandSession, role, user, text):
         # ai_helper = AIHelper(client)
@@ -410,7 +446,8 @@ class AIHelper:
         image_objects = await get_images_from_message(session.bot, text)
         image_urls = [x["file"] for x in image_objects]
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
-        logger.info(f"用户附带了以下图片url {url_dicts}")
+        ai_logger.info(f"用户说：{text}")
+        ai_logger.info(f"用户附带了以下图片url {url_dicts}")
 
         ai_params = [
             {"role": "system","content": role},
@@ -437,7 +474,7 @@ class AIHelper:
                 ask=text,
                 ans=ans
             )
-            logger.info(
+            ai_logger.info(
                 f"AI 返回了以下 response：{result}"
             )
             # 缓存 tokens 占 1/4
@@ -462,7 +499,7 @@ class AIHelper:
             # self.pending_messages = self.pending_messages
             return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix}, tool_call_times
         except AttributeError as ex:
-            logger.error(f"attribute 错误: {ex}")
+            ai_logger.error(f"attribute 错误: {ex}")
 
             await send_session_msg(
                 session,
@@ -476,7 +513,7 @@ class AIHelper:
             )
             return False, {}, {}, 0
         except Exception as ex:
-            logger.error(f"AI 出现错误: {ex}")
+            ai_logger.error(f"AI 出现错误: {ex}")
             await send_session_msg(
                 session,
                 get_message(
@@ -604,7 +641,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             count_tick(credits_use)
         credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
         message = "\n".join([str(s) for s in pending_messages])
-        logger.info(f"msg {message}")
+        ai_logger.info(f"msg {message}")
         t = t.replace("[", "&#91;").replace("]","&#93;")
         message += t
         send_msg = get_message(
@@ -621,14 +658,14 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             credits=f"{credits_use:,.2f}".rstrip('0').rstrip('.'),
             prefix=prefix
         )
-        logger.info(f"send msg {send_msg}")
+        ai_logger.info(f"send msg {send_msg}")
         await send_session_msg(
             session,
             send_msg, tips=True
         )
         return True
     except Exception:
-        logger.error("错误：", format_exc())
+        ai_logger.error("错误：", format_exc())
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     finally:
@@ -701,7 +738,7 @@ async def talk(session: CommandSession, text, user: u.User, model: str):
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES)
-    ai_helper = AIHelper(client, user.id, model)
+    ai_helper = AIHelper(client, user.id, session=session, model=model)
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)

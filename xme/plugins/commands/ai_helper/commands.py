@@ -15,4 +15,4 @@ def clear_history(user, **kwargs) -> str:
     if not u_history and cleared_files == 0:
         return "历史记录清除失败：没有历史记录"
     user.ai_history = []
-    return f"历史记录清除成功（已清空 {cleared_files} 个历史文件）"
+    return f"历史记录清除成功（包含 {cleared_files} 个历史文件）"

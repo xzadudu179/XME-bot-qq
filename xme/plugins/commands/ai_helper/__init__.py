@@ -141,7 +141,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
 
-        credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
+        credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - credits_use
         message = "\n".join([str(s) for s in pending_messages])
         ai_logger.info(f"msg {message}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")

@@ -41,6 +41,11 @@ __tools__ = [
     "get_user_input_urls"
 ]
 
+# TODO： AI 能够写入自己的 temp 文件（或许也可以包括 history 文件）
+# TODO: AI 能够删除任意一个 history 文件 还有重命名 history 文件
+
+# 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
+
 def get_user_input_urls(agent):
     return agent.user_input_urls
 

@@ -35,15 +35,17 @@ def glm_headers() -> dict:
 
 async def glm_api_request(path: str, method: str = "POST", **payload) -> dict:
     """调用智谱(GLM) 开放平台接口，统一处理 base url、认证头与 request_id。
-
+    payload 参数前面的 _ 会被 strip 掉
     之后新增 GLM 工具接口（网页搜索、文件、知识库等）只需调用本函数并传入 path 与参数：
         result = await glm_api_request("/paas/v4/reader", url="https://...")
     失败时会抛出异常。
     """
     from xme.plugins.commands.ai_helper.functions import GLM_API_BASE
     import uuid
+    path = path if path.startswith("/") else "/" + path
     url = GLM_API_BASE + path
     headers = glm_headers()
+    payload = {k.lstrip("_"): v for k, v in payload.items()}
     if method.upper() == "GET":
         return await fetch_data(url, response_type="json", headers=headers, params=payload)
     body = dict(payload)

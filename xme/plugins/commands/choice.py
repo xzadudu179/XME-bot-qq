@@ -9,7 +9,7 @@ import re
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools import texttools
 from character import get_message
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import is_text_can_send, send_session_msg
 random.seed()
 
 alias = ['选择', 'cho', '决定']
@@ -83,14 +83,15 @@ async def _(session: CommandSession):
     # except ValueError as ex:
     #     debug_msg("error", ex)
     #     pass
+    text = get_message("plugins", __plugin_name__, 'choice_message', choice=choice)
+    moderation_result = await is_text_can_send(session, text)
+    can_send = moderation_result["result"]
+    reason = moderation_result["reason"]
+    if not can_send:
+        return await send_session_msg(session, get_message("config", "moderation_danger_send", reason=reason))
     await send_session_msg(
             session,
-            get_message(
-                "plugins",
-                __plugin_name__,
-                'choice_message',
-                choice=choice,
-            ),
+            text,
             tips=True,
             tips_percent=20,
         )

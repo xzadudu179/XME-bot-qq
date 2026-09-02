@@ -3,7 +3,7 @@ from datetime import datetime
 from .pickup import report
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import is_text_can_send, send_session_msg
 # from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.bottools import permission
 from xme.plugins.commands.drift_bottle import __plugin_name__
@@ -43,6 +43,13 @@ async def _(session: CommandSession, user):
 
     arg = remove_invisible(session.current_arg.strip())
     logger.info(f"arg is {arg}")
+    text = arg
+    moderation_result = await is_text_can_send(session, text)
+    can_send = moderation_result["result"]
+    reason = moderation_result["reason"]
+    if not can_send:
+        await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
+        return False
     debug_msg(arg)
     try:
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"

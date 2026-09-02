@@ -1,4 +1,5 @@
 import re
+import traceback
 from pypinyin import lazy_pinyin
 import itertools
 import base64
@@ -11,8 +12,16 @@ import hashlib
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 import enchant
+from xme.xmetools.reqtools import glm_api_request
 import cn2an
 d = enchant.Dict("en_US")
+
+async def text_moderations(text: str):
+    if len(text) > 2000:
+        raise ValueError("文本长度不能大于 2000")
+    response = await glm_api_request("/paas/v4/moderations", _input=text)
+    return response
+
 
 def no_except_cn2an(content: str, *args,**kwargs):
     try:

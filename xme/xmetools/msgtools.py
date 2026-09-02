@@ -2,10 +2,10 @@ from nonebot import MessageSegment, Message, NoneBot
 from aiocqhttp import Event, ApiError, ActionFailed
 import config
 # import config
-from xme.xmetools.texttools import get_msg_len
+from xme.xmetools.texttools import get_msg_len, text_moderations
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
-from xme.xmetools.bottools import get_user_name
+from xme.xmetools.bottools import get_group_name, get_stranger_name, get_user_name
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -21,6 +21,51 @@ from character import get_message
 from logging.handlers import TimedRotatingFileHandler
 import logging
 import os
+
+# TODO: 图片风控适配
+
+async def is_text_can_send(session: CommandSession, text: str):
+    if not text:
+        return {"result": True, "reason": ""}
+    if len(text) > 2000:
+        return {"result": False, "reason": "文本过长"}
+    try:
+        logger.info(f"正在分析 \"{text}\"")
+        response = await text_moderations(text)
+        result = response["result_list"][0]
+        risk = result['risk_level']
+        level = {
+            "PASS": "无危害",
+            "REVIEW": "需要审查",
+            "BLOCK": "是违规内容",
+            "REJECT": "是明显违规内容",
+            "HIGH": "是高危内容",
+        }
+        logger.info(f"分析完成，risk: {risk} {level.get(risk, '风险性未知')}")
+        warning_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}发送的参数为 \"{session.current_arg_text.strip()}\"\n识别的 \"{text}\" 可能有风险。"
+        risk_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}调用的指令{level.get(risk, '风险性未知')}。"
+        match risk:
+            case "PASS":
+                return {"result": True, "reason": f""}
+            case "REVIEW":
+                logger.warning(warning_text)
+                await send_to_superusers(warning_text)
+                return {"result": True, "reason": f""}
+            case "BLOCK":
+                logger.warning(risk_text)
+                await send_to_superusers(risk_text)
+                return {"result": False, "reason": "可能有违规内容"}
+            case "REJECT":
+                logger.warning(risk_text)
+                await send_to_superusers(risk_text)
+                return {"result": False, "reason": "有违规内容"}
+            case "HIGH":
+                logger.warning(risk_text)
+                await send_to_superusers(risk_text)
+                return {"result": False, "reason": "有高危内容"}
+    except Exception as ex:
+        logger.exception(traceback.format_exc())
+        return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
 
 
 def get_tips():

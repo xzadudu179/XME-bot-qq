@@ -8,7 +8,7 @@ from traceback import format_exc
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import is_text_can_send, send_session_msg
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import TimeUnit, get_time_now
 from character import get_message, get_character_item, character_format
@@ -107,6 +107,14 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     parser.add_argument('text', nargs='*')
     args = parser.parse_args(session.argv)
     text = ' '.join(args.r or args.text).strip()
+    # 输入风控
+    moderation_result = await is_text_can_send(session, text)
+    can_send = moderation_result["result"]
+    reason = moderation_result["reason"]
+    if not can_send:
+        await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
+        return False
+    # ---------
     if args.ctrl and text and len(text) <= MAX_LENGTH:
         await send_session_msg(session, parse_control(session, text, user))
         return 2
@@ -132,8 +140,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         credits_use = tokens_use_dict["credits_use"]
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
-        if not superuser_mode:
-            count_tick(credits_use)
+
         credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
         message = "\n".join([str(s) for s in pending_messages])
         ai_logger.info(f"msg {message}")
@@ -154,10 +161,22 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             prefix=prefix
         )
         ai_logger.info(f"send msg {send_msg}")
+        # 输出风控
+        if len(send_msg) <= 2000:
+            moderation_result = await is_text_can_send(session, send_msg)
+            can_send = moderation_result["result"]
+            reason = moderation_result["reason"]
+            if not can_send:
+                await send_session_msg(session, get_message("config", "moderation_danger_send", reason=reason))
+                return False
+        # ---------
+
         await send_session_msg(
             session,
             send_msg, tips=True
         )
+        if not superuser_mode:
+            count_tick(credits_use)
         return True
     except Exception:
         ai_logger.error("错误：", format_exc())

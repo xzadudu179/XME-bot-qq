@@ -164,6 +164,8 @@
     "search_location_error": "搜索地区出现错误 {negative}\n错误码：{code}\n错误消息：{msg}"
   },
   "config": {
+    "moderation_danger_send": "我无法发送即将发送的消息哦 {negative} 因为：{reason}",
+    "moderation_danger_input": "我无法处理你输入的消息哦 {negative} 因为：{reason}",
     "arg_failed": "指令参数有误哦 {neutral} 试试发送 \"{command}\" 吧{positive_punc}",
     "aget_no_content": "你没有输入任何内容诶 {negative}",
     "image_summary": "[漠月的图片]",

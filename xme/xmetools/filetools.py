@@ -1,3 +1,5 @@
+import re
+
 from nonebot import log
 import os
 import base64
@@ -81,66 +83,6 @@ def dict_to_file(d: dict, dir_name, prefix="", agent=None,
         "preview": text[:200],
     }
 
-
-# def text_to_file(text: str, agent, dir_name) -> dict:
-#     HEAD = "text_"
-#     file_id = hash_text(text)
-#     file_name = file_id + ".txt"
-#     path = Path(f"./data/temp/{dir_name}")
-#     # file_count = len([f for f in path.iterdir() if f.is_file()])
-#     used = []
-#     ref_map = agent.REF_MAP
-#     if ref_map is not None:
-#         for k in ref_map.keys():
-#             num = try_parse(k.replace(HEAD, ""), int)
-#             if num is None:
-#                 continue
-#             used.append(num)
-#     used = set(used)
-#     n = 1
-#     while n in used:
-#         n += 1
-#     path.mkdir(parents=True, exist_ok=True)
-#     with open(path / f"{file_name}", 'w', encoding='utf-8') as file:
-#         file.write(text)
-#     agent.REF_MAP[f"{HEAD}{n}"] = file_name
-#     return {
-#         "file_name": file_name,
-#         "ref": f"{HEAD}{n}",
-#         "total_len": len(text),
-#         "total_line_count": text.replace("\r\n", "\n").replace("\r", "\n").count("\n"),
-#         "preview": text[:200],
-#     }
-
-# def dict_to_file(d: dict, dir_name, agent, prefix = "") -> dict:
-#     HEAD = "json_"
-#     file_id = hash_text(str(d))
-#     file_name = prefix + file_id + ".json"
-#     path = Path(f"./data/temp/{dir_name}")
-#     # path = f"./data/temp/{dir_name}/{file_name}"
-#     path.mkdir(parents=True, exist_ok=True)
-#     used = []
-#     ref_map = agent.REF_MAP
-#     if ref_map is not None:
-#         for k in ref_map.keys():
-#             num = try_parse(k.replace(HEAD, ""), int)
-#             if num is None:
-#                 continue
-#             used.append(num)
-#     used = set(used)
-#     n = 1
-#     while n in used:
-#         n += 1
-#     with open(path / file_name, 'w', encoding='utf-8') as file:
-#         # file.write(text)
-#         file.write(json.dumps(d,ensure_ascii=False))
-#     agent.REF_MAP[f"{HEAD}{n}"] = file_name
-#     return {
-#         "file_name": file_name,
-#         "ref": f"{HEAD}{n}",
-#         "path": path
-#     }
-
 def cleanup_old_backups(
         backup_root: Path,
         keep: int = 100
@@ -204,6 +146,18 @@ def search_json(s, path, *key_names, d=None, search_func=None, **kwargs):
     else:
         # return search_func(s, search_list, threshold=0.7, **kwargs)
         return search_func(s, search_list, **kwargs)
+
+def search_text(s, path, search_func=None, **kwargs):
+    text = ""
+    with open(path, "r", encoding="utf-8") as file:
+        text = file.read()
+    if search_func is None:
+        pattern = re.compile(s)
+        results = pattern.findall(text)
+        return results
+    else:
+        # return search_func(s, search_list, threshold=0.7, **kwargs)
+        return search_func(s, text, **kwargs)
 
 
 def b64_encode_file(file_path):

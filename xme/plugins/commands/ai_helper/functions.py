@@ -5,10 +5,10 @@ import traceback
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json
+from xme.xmetools.filetools import search_json, search_text
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import fetch_data_post
-from xme.xmetools.texttools import regex_filter
+from xme.xmetools.texttools import regex_filter, regex_filter_text
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
 from keys import GLM_API_KEY, TAVILY_API_KEY
@@ -108,7 +108,21 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         logger.exception(f"图片生成失败: {e}")
         return f"[图片生成失败: {e}]"
 
-def get_webs_partial(key, file_ref, search_str, search_method: Literal["fuzzy_match", "re_search", "re_filter"] = "fuzzy_match", agent=None):
+def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
+    file_name = agent.REF_MAP[file_ref]
+    path = agent.get_temp_path() / file_name
+    method = None
+    search_methods = {
+        # "re_search": regex_search,
+        "re_search": None,
+        "re_filter": regex_filter_text,
+        # "fuzzy_match": None,
+    }
+    method = search_methods.get(search_method, None)
+    return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_text(param, path, search_func=method))]), "no_compress": True}
+
+
+def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
     file_name = agent.REF_MAP[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
@@ -250,15 +264,16 @@ async def read_webpage(
         if not isinstance(result, dict) or "reader_result" not in result:
             return f"[网页阅读失败: {result}]"
         reader_result = result.get("reader_result", {}) or {}
-        # content = reader_result.get("content", "")
+        content = reader_result.get("content", "")
+        description = reader_result.get("description", "")
         if not reader_result:
             return "[网页内容为空或无法解析]"
         # 计费 tokens 到 credits（接口不返回用量，按内容长度估算）
         # if agent is not None:
             # agent.other_credits += len(content) / CHARS_PER_TOKEN
-        # title = reader_result.get("title", "")
-        # return f"【{title}】\n{content}" if title else content
-        return reader_result
+        title = reader_result.get("title", "")
+        return f"{('【' + title + '】') if title else ''}{description}\n{content}" if title else content
+        # return reader_result
     except Exception as ex:
         logger.exception(f"网页阅读失败: {ex}")
         return f"[网页阅读失败: {ex}]"

@@ -183,6 +183,19 @@ def regex_search(r: str, search_list: list[str], **_) -> list[str]:
         if pattern.search(item)
     ]
 
+
+def regex_filter_text(r: str, search: str, **_) -> list[str]:
+    """正则表达式过滤
+
+    Args:
+        r (str): 表达式
+        search (str): 待过滤文本
+
+    Returns:
+        list[str]: 结果字符串列表
+    """
+    return re.split(r, search)
+
 def regex_filter(r: str, search_list: list[str], **_) -> list[str]:
     """正则表达式列表过滤
 

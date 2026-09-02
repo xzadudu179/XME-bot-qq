@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import shutil
 
 import config
@@ -11,7 +12,7 @@ from xme.xmetools.doctools import CommandDoc, shell_like_usage
 # from nonebot.argparse import ArgumentParser
 import argparse
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.texttools import get_images_from_message, most_similarity_str_diff
+from xme.xmetools.texttools import get_images_from_message, hash_text, most_similarity_str_diff
 from .commands import clear_history
 # import asyncio
 from traceback import format_exc
@@ -29,7 +30,7 @@ from xme.xmetools.dicttools import reverse_dict
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
-from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, inprocess_report, ocr_image, web_search
+from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, inprocess_report, ocr_image, web_search, content_search
 from .functions import read_webpage, view_file, view_image, view_video
 # from zhipuai.core._errors import ZhipuAIError
 import json
@@ -100,7 +101,6 @@ class AIHelper:
         self.tool_functions = {
             "get_telia_clock_state": get_telia_clock_state,
             "gen_image": partial(gen_image, agent=self),
-            # "get_image_msg": get_image_msg,
             "get_skill_md": get_skill_md,
             "check_file": self.check_file,
             "list_temp_files": self.list_temp_files,
@@ -111,6 +111,7 @@ class AIHelper:
             "view_video": partial(view_video, agent=self),
             "read_webpage": read_webpage,
             "web_search": web_search,
+            "content_search": partial(content_search, agent=self),
             "get_webs_partial": partial(get_webs_partial, agent=self),
         }
         self.pending_messages = []
@@ -372,10 +373,35 @@ class AIHelper:
                             },
                             "search_method": {
                                 "type": "string",
-                                "description": "要使用的搜索方法，默认 \"re_search\" 会模糊匹配关键字。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
+                                "description": "要使用的搜索方法，默认 \"re_search\" 会使用正则表达式 search。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
                             },
                         },
                         "required": ["key", "file_ref", "search_str"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "content_search",
+                    "description": "使用正则表达式搜索文件内容。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "param": {
+                                "type": "string",
+                                "description": "正则表达式语句"
+                            },
+                            "file_ref": {
+                                "type": "string",
+                                "description": "要搜索的内容文件引用名，例如 \"text_1\""
+                            },
+                            "search_method": {
+                                "type": "string",
+                                "description": "要使用的搜索方法，默认 \"re_search\" 会匹配所有正则匹配到的内容。还有 \"re_filter\" 只保留正则没搜索到的内容，输入其他内容会回退至 \"re_search\""
+                            },
+                        },
+                        "required": ["param", "file_ref"]
                     }
                 }
             },
@@ -545,6 +571,10 @@ class AIHelper:
 
         # 提取 text 里的图片
         image_objects = await get_images_from_message(session.bot, text)
+        pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+        matches = re.findall(pattern, text)
+        for image_cq in matches:
+            arg = arg.replace(f"[图片{hash_text(image_cq)}]")
         image_urls = [x["file"] for x in image_objects]
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
         ai_logger.info(f"用户说：{text}")

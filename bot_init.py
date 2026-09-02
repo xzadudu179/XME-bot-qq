@@ -165,6 +165,39 @@ def bot_init():
 
     gen_doc_md()
 
+    # 启动时显式检测并迁移所有数据库表结构（字段减少/增加自动重建表）
+    init_all_databases()
+
+
+def init_all_databases():
+    """启动时检测所有数据库表的结构，与模型不一致则自动迁移（见 dbtools._ensure_table_schema）。
+
+    用模型的最小实例推导字段；某张表检查失败不阻塞启动（首次保存时会再次自动检查）。
+    """
+    from xme.xmetools.dbtools import DATABASE
+    from xme.plugins.commands.xme_user.classes.user import User
+    from xme.xmetools.plugintools import PluginCallData
+    from xme.plugins.commands.drift_bottle import DriftBottle
+
+    # (模型类, 用于推导字段的最小实例构造参数)
+    models = [
+        (User, (0,)),
+        (PluginCallData, (0, 0, 0, 0, 0, 0)),
+        (DriftBottle, ()),
+    ]
+    checked = 0
+    for cls, args in models:
+        try:
+            instance = cls(*args)
+            DATABASE.create_class_table(instance)
+            checked += 1
+            logger.info(f"数据库表 {cls.get_table_name()} 结构检查完成")
+        except Exception as ex:
+            logger.warning(
+                f"数据库模型 {cls.get_table_name()} 检查失败（不影响启动，首次保存时会自动重试）: {ex}"
+            )
+    logger.info(f"数据库启动检查完成：{checked}/{len(models)} 张表通过")
+
 
 def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
     # 设置日志的格式

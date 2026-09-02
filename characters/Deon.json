@@ -2254,7 +2254,7 @@
       "error_model": "没有称为 \"{model}\" 的模型哦，只能指定为 {models} 中的任意一个呢",
       "talk_result": "{prefix}{positive}， AI 说：\"{talk}\"\n=======================\nAI 使用了 {tool_call_times} 次 tools\ntokens 消耗 {tokens} ({cached} 已缓存)\n减少 {credits} credits。\n你今天还剩下 {tokens_left_now} 个 credits 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
       "call_tool": "正在调用工具 \"{tool_name}\"...参数为{arguments}",
-      "inprocess_report": "{positive} AI 中途回应：\"{message}\"",
+      "inprocess_report": "{positive} AI 中途回应：\"{msg}\"",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
       "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}",

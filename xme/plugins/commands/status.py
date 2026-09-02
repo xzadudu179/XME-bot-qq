@@ -15,7 +15,7 @@ from collections import defaultdict
 
 from datetime import datetime, timedelta
 
-TOP_K = 5
+TOP_K = 8
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'

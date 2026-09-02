@@ -347,7 +347,7 @@ class AIHelper:
 
                 result_text = str(await self.execute_tool(session, tool_call, curr_tool_call_times))
                 ai_logger.info(
-                    f"加入 tool message: {str(result_text)[:100]!r}..."
+                    f"加入 tool message: {str(result_text)[:500]!r}..."
                 )
                 messages.append({
                     "role": "tool",
@@ -393,7 +393,7 @@ class AIHelper:
 
             if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
                 res = dict_to_file(result, self.user_id, name + "_", agent=self)
-                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{res}'
+                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看 数据如下]：{res}'
 
             if isinstance(result, str) and len(result) > 5000 and not no_compress:
                 res = text_to_file(result, self.user_id, self)

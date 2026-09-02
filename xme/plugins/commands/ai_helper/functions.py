@@ -81,7 +81,7 @@ async def inprocess_report(message: str, agent):
         if interval < 30:
             return f"[调用回复失败：最小间隔为 {MIN_INTERVAL}s，当前距离上次调用间隔为 {interval}s。]"
         # 中途汇报内容给用户
-        await send_session_msg(agent.session, get_message("plugins", __plugin_name__, "inprocess_report", message=message))
+        await send_session_msg(agent.session, get_message("plugins", __plugin_name__, "inprocess_report", msg=message))
         agent.last_response = time.time()
         return f"成功向用户发送消息"
     except Exception as ex:

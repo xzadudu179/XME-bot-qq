@@ -207,13 +207,32 @@ def generate_command_trend_chart(
         return image_path, True
 
     plt.figure(figsize=(10, 6), facecolor=BG_COLOR)
-    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#448fff", len(data_list))]
+    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#4c94ff", "#e875ff", num_colors=len(data_list))]
     for i, (x, y, label) in enumerate(data_list):
-        plt.plot(x, y, color=colors[i], label=label, marker='o', markersize=3)
+        if not x or not y:
+            continue
+        y_arr = np.asarray(y, dtype=float)
+        if np.any(y_arr <= 0):
+            y_arr = np.clip(y_arr, 0.1, None)
+        x_arr = np.asarray(x, dtype=float)
+        line, = plt.plot(x_arr, y_arr, color=colors[i], label=label, marker='o', markersize=3)
+        ax = plt.gca()
+        ax.annotate(
+            f"{y_arr[-1]:.3g}",
+            xy=(x_arr[-1], y_arr[-1]),
+            xytext=(8, 0),
+            textcoords='offset points',
+            color=line.get_color(),
+            fontsize=9,
+            va='center',
+            ha='left',
+            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
+        )
     plt.xlabel(xlabel, fontsize=FONT_SIZE, color=FONT_COLOR)
     plt.ylabel(ylabel, fontsize=FONT_SIZE, color=FONT_COLOR)
     plt.title(title, fontsize=FONT_SIZE, color=FONT_COLOR)
     ax = plt.gca()
+    ax.set_yscale('log')
     ax.set_facecolor(BG_COLOR)
     ax.tick_params(axis='x', colors=FONT_COLOR)
     ax.tick_params(axis='y', colors=FONT_COLOR)

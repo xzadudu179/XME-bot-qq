@@ -130,27 +130,45 @@ def mix_hex_color_lab(hex_color1, hex_color2, ratio):
     return lab_to_hex(mixed_lab)
 
 
-def gradient_hex_color(hex_color1, hex_color2, num_colors):
-    """将两个十六进制颜色进行渐变处理，返回指定数量的十六进制颜色列表
+def gradient_hex_color(*hex_colors, num_colors):
+    """将多个十六进制颜色进行渐变处理。
+
+    首尾颜色始终保留，中间颜色在整个渐变区间中均匀分布。
 
     Args:
-        hex_color1 (_type_): 第一个颜色
-        hex_color2 (_type_): 第二个颜色
-        num_colors (_type_): 列表长度
+        hex_colors (str): 渐变控制颜色
+        num_colors (int): 最终颜色数量
 
     Returns:
-        _type_: 渐变颜色列表
+        list[str]: 渐变颜色列表
     """
-    lab1 = hex_to_lab(hex_color1)
-    lab2 = hex_to_lab(hex_color2)
+    if not hex_colors or num_colors <= 0:
+        return []
+    if num_colors == 1:
+        return [hex_colors[0]]
+    if len(hex_colors) == 1:
+        return [hex_colors[0]] * num_colors
 
-    # 进行渐变
-    interpolated_colors = np.linspace(lab1, lab2, num_colors)
+    labs = np.array([
+        hex_to_lab(color)
+        for color in hex_colors
+    ])
 
-    # 返回列表
-    gradient_colors = [lab_to_hex(color) for color in interpolated_colors]
+    # 控制色在 [0, len(hex_colors) - 1] 上均匀分布
+    positions = np.linspace(
+        0,
+        len(hex_colors) - 1,
+        num_colors
+    )
 
-    return gradient_colors
+    result = []
+    for position in positions:
+        left = int(np.floor(position))
+        right = min(left + 1, len(labs) - 1)
+        ratio = position - left
+        lab = labs[left] * (1 - ratio) + labs[right] * ratio
+        result.append(lab_to_hex(lab))
+    return result
 
 def gradient_text(*hex_colors, text: str, background=False, bgc=(255, 255, 255), use_list = False) -> str:
     """生成渐变字符串
@@ -178,7 +196,7 @@ def gradient_text(*hex_colors, text: str, background=False, bgc=(255, 255, 255),
     splits = []
     reg_splits = split_string(text, text_split_count)
     for i, split in enumerate(reg_splits):
-        colors = gradient_hex_color(parsed_colors[i], parsed_colors[i + 1], len(split))
+        colors = gradient_hex_color(parsed_colors[i], parsed_colors[i + 1], num_colors=len(split))
         color_split = ""
         split = split[1:] if i > 0 else split
         for j, char in enumerate(split):

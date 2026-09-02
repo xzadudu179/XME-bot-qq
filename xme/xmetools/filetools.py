@@ -40,7 +40,7 @@ def text_to_file(text: str, dir_name, agent=None) -> dict:
     HEAD = "text_"
 
     file_id = hash_text(text)
-    file_name = file_id + ".txt"
+    file_name = file_id + ".tmp"
 
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
 
@@ -56,6 +56,7 @@ def text_to_file(text: str, dir_name, agent=None) -> dict:
                 .replace("\r", "\n")
                 .count("\n")
         ),
+        "path": path,
         "preview": text[:200],
     }
 
@@ -68,14 +69,16 @@ def dict_to_file(d: dict, dir_name, prefix="", agent=None,
     file_name = prefix + file_id + ".json"
 
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
-
+    text = json.dumps(d, ensure_ascii=False)
     with open(path / file_name, "w", encoding="utf-8") as file:
-        file.write(json.dumps(d, ensure_ascii=False))
+        file.write(text)
 
     return {
         "file_name": file_name,
         "ref": ref,
+        "total_len": len(text),
         "path": path,
+        "preview": text[:200],
     }
 
 

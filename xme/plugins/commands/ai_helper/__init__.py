@@ -5,6 +5,7 @@ import config
 from nonebot import CommandSession
 
 from traceback import format_exc
+from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
@@ -17,7 +18,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger
-from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES
+from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
 from .commands import clear_history
 
 
@@ -149,6 +150,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         ai_logger.info(f"msg {message}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
+        user_history = history.load_history(session.event.user_id)
+        _, normals = history.split(user_history)
         send_msg = get_message(
             "plugins",
             __plugin_name__,
@@ -161,6 +164,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             cached=f"{cached:,.2f}".rstrip('0').rstrip('.'),
             tokens=f"{total:,.2f}".rstrip('0').rstrip('.'),
             credits=f"{credits_use:,.2f}".rstrip('0').rstrip('.'),
+            history_used=f"{len(normals):,} / {MAX_HISTORY_COUNT}",
             prefix=prefix
         )
         ai_logger.info(f"send msg {send_msg}")

@@ -51,9 +51,53 @@ class XmeDatabase:
     def create_class_table(self, cls: T_DbReadWriteable):
         table_name = cls.get_table_name()
         fields = {k: v for k, v in cls.to_dict().items() if k != 'id' and k != 'database'}
-        # types = ['TEXT' if isinstance(value, str) else 'INTEGER' if isinstance(value, int) else 'BLOB' for value in fields.values()]
-        self.create_table_from_values(table_name, fields.keys(),  fields.values())
+        # 自动检测模型字段与库表结构是否一致，不一致则重建表并迁移数据
+        self._ensure_table_schema(table_name, fields)
         return table_name
+
+    def _get_table_columns(self, table_name: str) -> list[tuple[str, str]] | None:
+        """获取表的所有列 (列名, 类型)；表不存在返回 None。"""
+        rows = self.exec_query(f"PRAGMA table_info({table_name})")
+        if not rows:
+            return None
+        return [(row[1], row[2]) for row in rows]
+
+    def _value_to_sql_type(self, value) -> str:
+        """根据值推导 SQLite 类型（无副作用，不会递归入库）。"""
+        if value is None:
+            return "TEXT"
+        if isinstance(value, bool):
+            return "INTEGER"
+        if isinstance(value, int):
+            return "INTEGER"
+        if isinstance(value, float):
+            return "REAL"
+        if isinstance(value, (bytes, bytearray)):
+            return "BLOB"
+        if isinstance(value, DbReadWriteable):
+            return "INTEGER"
+        return "TEXT"
+
+    def _ensure_table_schema(self, table_name: str, fields: dict) -> None:
+        """检测模型字段与实际表结构是否一致；不一致时自动重建表并迁移数据。
+
+        处理字段减少（如删除的列）、字段增加（新列默认 NULL）两种情况。
+        """
+        existing = self._get_table_columns(table_name)
+        if existing is None:
+            # 表不存在，正常创建
+            self.create_table_from_values(table_name, fields.keys(), fields.values())
+            return
+        # id 是主键（由模型统一使用，不参与字段比对）
+        existing_cols = {name for name, _ in existing} - {"id"}
+        wanted = set(fields.keys())
+        if existing_cols == wanted:
+            return
+        log.logger.warning(
+            f"检测到数据表 {table_name} 结构不一致，开始自动迁移。"
+            f" 旧列: {sorted(existing_cols)} / 新列: {sorted(wanted)}"
+        )
+        self._migrate_table(table_name, existing, fields)
 
 
     # def save_class(cls_example: T_DbReadWriteable):
@@ -146,6 +190,50 @@ class XmeDatabase:
         column_defs = ', '.join(f"{f} {t}" for f, t in zip(keys, types))
         create_sql = f"CREATE TABLE IF NOT EXISTS {name} (id INTEGER PRIMARY KEY, {column_defs})"
         self.exec_query(create_sql)
+
+    @database_connect
+    def _migrate_table(self, cursor, table_name: str, existing_cols_info, fields: dict):
+        """单事务内完成：旧表改名备份 → 建新表 → 拷贝公共列 → 校验行数 → 删除备份表。
+
+        任何一步出错都会整体回滚，旧表原样保留；行数校验不通过同样回滚。
+        """
+        import time
+        backup_table = f"{table_name}__backup__{int(time.time())}"
+        old_types = dict(existing_cols_info)
+        model_cols = set(fields.keys())
+        # 拷贝主键 id 与所有公共模型列，保证外键引用与数据不丢
+        listed = [c for c, _ in existing_cols_info if c in model_cols]
+        common_cols = ["id"] + listed
+        column_defs = [
+            f"{name} {old_types[name]}" if name in old_types
+            else f"{name} {self._value_to_sql_type(fields[name])}"
+            for name in fields.keys()
+        ]
+        # 1. 旧表改名（数据完整保留）
+        cursor.execute(f"ALTER TABLE {table_name} RENAME TO {backup_table}")
+        # 2. 按当前模型建新表
+        cursor.execute(
+            f"CREATE TABLE {table_name} (id INTEGER PRIMARY KEY, {', '.join(column_defs)})"
+        )
+        # 3. 拷贝公共列数据
+        if common_cols:
+            cols = ", ".join(common_cols)
+            cursor.execute(
+                f"INSERT INTO {table_name} ({cols}) SELECT {cols} FROM {backup_table}"
+            )
+        # 4. 校验行数，不一致则回滚（旧表恢复）
+        old_n = cursor.execute(f"SELECT COUNT(*) FROM {backup_table}").fetchone()[0]
+        new_n = cursor.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+        if old_n != new_n:
+            raise RuntimeError(
+                f"表 {table_name} 迁移校验失败：旧表 {old_n} 行 / 新表 {new_n} 行，已回滚"
+            )
+        # 5. 校验通过，删除备份表（bot 启动前已有 .backup/ 全量备份兜底）
+        cursor.execute(f"DROP TABLE {backup_table}")
+        log.logger.info(
+            f"数据表 {table_name} 迁移完成：复制公共列 {len(common_cols)} 个，"
+            f"共 {new_n} 行，备份表 {backup_table} 已删除"
+        )
 
     def adapt_value(self, value: Any) -> Any:
         """解析给定的类型是否能存入数据库

@@ -86,7 +86,6 @@ class User:
             # timers: dict = {},
             plugin_datas: dict | None = None, # 插件数据，比如 weather 保存用户位置之类的
             achievements: list | None = None,
-            ai_history: list[dict] | None = None,
             last_call_time: float | None = None,
         ):
         self.db_id: int = db_id
@@ -108,8 +107,6 @@ class User:
         # reg_time = datas.get("register_time", -1)
 
         self.achievements: list = achievements if achievements is not None else []
-        self.ai_history: list = ai_history if ai_history is not None else []
-        # debug_msg(self.ai_history)
         # 用户所在天体
         # debug_msg("dbid", self.db_id)
         # self.celestial_uid = celestial_uid
@@ -254,7 +251,6 @@ class User:
             "inventory": self.inventory.__list__(),
             "talked_to_bot": self.talked_to_bot,
             "achievements": self.achievements,
-            "ai_history": self.ai_history,
             "last_call_time": self.last_call_time,
         }
 
@@ -571,14 +567,12 @@ def load_dict_user(data: dict):
     # debug_msg(celestial)
     plugin_datas = {}
     counters = {}
-    ai_history = []
     achievements = []
     talked_to_bot = []
     try:
         inventory_data = json.loads(data.get('inventory', None))
         plugin_datas = json.loads(data.get('plugin_datas', "{}"))
         counters = json.loads(data.get('counters', "{}"))
-        ai_history = json.loads(data.get('ai_history', "[]"))
         achievements = data.get('achievements', "[]")
         if achievements is None:
             achievements = "[]"
@@ -608,7 +602,6 @@ def load_dict_user(data: dict):
             "inventory": inventory,
             "talked_to_bot": talked_to_bot,
             "celestial": celestial,
-            "ai_history": ai_history,
             "last_call_time": data.get('last_call_time', 0),
     }
 
@@ -642,7 +635,6 @@ def load_from_dict(data: dict, id: int) -> User:
         xme_favorability=data.get('xme_favorability', 0),
         counters=counters,
         # timers=timers,
-        ai_history=json.loads(data.get('ai_history', "[]")),
         last_call_time=data.get('last_call_time', 0)
     )
     # user.counters = data.get('counters', {})

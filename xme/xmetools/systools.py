@@ -1,3 +1,5 @@
+import json
+
 import psutil as pt
 import platform
 import time
@@ -32,12 +34,8 @@ def get_disks():
         text=True,
         check=True,
     )
-
-    import json
     data = json.loads(result.stdout)
-
     disks = []
-
     def walk(devices):
         for device in devices:
             # 只处理分区
@@ -61,9 +59,7 @@ def get_disks():
             # 递归处理子设备
             if "children" in device:
                 walk(device["children"])
-
     walk(data["blockdevices"])
-
     return disks
 
 

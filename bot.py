@@ -44,6 +44,14 @@ if __name__ == '__main__':
     )
 
     bot_init.bot_init()
+
+    # 迁移旧的 ai_history -> data/ai_historys/<用户id>（自动迁移；跑完可删掉 migrate_ai_history.py）
+    try:
+        import migrate_ai_history
+        migrate_ai_history.migrate()
+    except Exception as _e:
+        logger.warning(f"ai_history 迁移失败（可忽略，可能是 User 表尚未创建）: {_e}")
+
     # 初始化银河系地图
     # locations = jsontools.read_from_path(BOT_SETTINGS_PATH)["locations"]
     # GalaxyMap()

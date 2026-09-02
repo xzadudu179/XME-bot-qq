@@ -27,6 +27,7 @@ from .constants import (
     MAX_HISTORY_COUNT,
 )
 from . import functions
+from . import history
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 
@@ -344,7 +345,7 @@ class AIHelper:
 
 
 async def get_history(user: u.User):
-    user_history = user.ai_history
+    user_history = history.load_history(user.id)
     if not user_history:
         return "", ""
     build_list = []
@@ -364,11 +365,13 @@ async def get_history(user: u.User):
 
 
 def build_history(user: u.User, ask, ans):
-    user.ai_history.append({
+    user_history = history.load_history(user.id)
+    user_history.append({
         "ask": ask,
         "ans": ans,
         "time": get_time_now()
     })
-    if len(user.ai_history) > MAX_HISTORY_COUNT:
+    if len(user_history) > MAX_HISTORY_COUNT:
         # TODO 压缩上下文
-        del user.ai_history[-1]
+        user_history = user_history[-MAX_HISTORY_COUNT:]
+    history.save_history(user.id, user_history)

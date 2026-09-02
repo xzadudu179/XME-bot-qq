@@ -1,6 +1,7 @@
 from pathlib import Path
 import time
 import traceback
+import functools
 
 from nonebot import MessageSegment
 
@@ -8,7 +9,7 @@ from nonebot.log import logger
 from xme.xmetools.filetools import search_json, search_text
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
-from xme.xmetools.reqtools import fetch_data_post
+from xme.xmetools.reqtools import fetch_data, fetch_data_post, glm_api_request
 from xme.xmetools.texttools import regex_filter, regex_filter_text
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
@@ -253,12 +254,8 @@ async def view_item(url: str, prompt: str, item_type: str, agent=None):
         logger.exception(f"查看 url 内容失败: {ex}")
         return f"[查看文件失败: {ex}]"
 
-READER_API_URL = "https://open.bigmodel.cn/api/paas/v4/reader"
+GLM_API_BASE = "https://open.bigmodel.cn/api"
 
-
-# 目前不计费
-# 网页阅读接口不返回 token 用量，这里按返回内容长度估算 token 用于计费（约 4 字符 ≈ 1 token）
-# CHARS_PER_TOKEN = 4
 async def read_webpage(
     url: str,
     timeout: int = 20,
@@ -269,23 +266,19 @@ async def read_webpage(
     """读取并解析指定 url 的网页内容，返回网页正文（默认 markdown）。
 
     作为 AI 可调用 tool 使用：AI 传入 url 与可选参数，调用智谱「网页阅读」工具 API
-    （POST /paas/v4/reader），返回网页解析后的主要内容。按返回内容长度估算 tokens
-    计入用户 credits。
+    （POST /paas/v4/reader），返回网页解析后的主要内容。
     """
-    import uuid
     if timeout > 100:
         return f"[网页阅读：timeout 值不能大于 100 秒]"
-    headers = {"Authorization": f"Bearer {GLM_API_KEY}"}
-    params = {
-        "url": url,
-        "timeout": timeout,
-        "return_format": return_format,
-        "no_cache": no_cache,
-        "retain_images": retain_images,
-        "request_id": str(uuid.uuid4()),
-    }
     try:
-        result = await fetch_data_post(READER_API_URL, json=params, headers=headers)
+        result = await glm_api_request(
+            "/paas/v4/reader",
+            url=url,
+            timeout=timeout,
+            return_format=return_format,
+            no_cache=no_cache,
+            retain_images=retain_images,
+        )
         if not isinstance(result, dict) or "reader_result" not in result:
             return f"[网页阅读失败: {result}]"
         reader_result = result.get("reader_result", {}) or {}

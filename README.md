@@ -4,6 +4,6 @@
 
 个人制作 qq 机器人 XME bot
 
-使用 Nonebot 1 + 实现 Onebot 11 API 的客户端（推荐 Napcat 或 SnowLuma（正在转向 SnowLuma
+使用 Nonebot 1 + 实现 Onebot 11 API 的客户端（推荐 Napcat 或 SnowLuma（目前使用 SnowLuma））
 
 使用方法正在搭建中！

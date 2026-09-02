@@ -77,6 +77,22 @@ class AIHelper:
         path.mkdir(parents=True, exist_ok=True)
         return path
 
+    def resolve_ref(self, ref: str) -> str:
+        """解析 ref 对应的文件名（相对 temp 根目录），支持跨会话的 history 引用。
+
+        history 文件按 history_N.tmp 命名，其引用 history_N 可由此推导，
+        因此即使当前会话 ref_map 未注册，也能直接解析。
+        """
+        file_name = self.ref_map.get(ref, None)
+        if file_name is not None:
+            return file_name
+        if ref.startswith("history_") and ref[len("history_"):].isdigit():
+            candidate = f"history/{ref}.tmp"
+            if (self.get_temp_path() / candidate).exists():
+                self.ref_map[ref] = candidate
+                return candidate
+        raise KeyError(f"无法找到引用 {ref}")
+
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
         self.ref_map = {}
         self.tokens = 0

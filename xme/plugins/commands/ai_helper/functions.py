@@ -110,7 +110,7 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         return f"[图片生成失败: {e}]"
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.ref_map[file_ref]
+    file_name = agent.resolve_ref(file_ref)
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {
@@ -124,7 +124,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
 
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.ref_map[file_ref]
+    file_name = agent.resolve_ref(file_ref)
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {
@@ -282,7 +282,7 @@ async def read_webpage(
 
 def check_file(ref: str, line_start=0, line_end=0, agent=None):
     """获取保存进用户 temp 的文件的内容。"""
-    file_name = agent.ref_map[ref]
+    file_name = agent.resolve_ref(ref)
     lines = []
     with open(f"{agent.get_temp_path(True)}/{file_name}", "r", encoding="utf-8") as file:
         lines = file.readlines()

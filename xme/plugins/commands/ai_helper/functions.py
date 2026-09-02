@@ -7,6 +7,7 @@ from nonebot import MessageSegment
 from nonebot.log import logger
 from xme.xmetools.filetools import search_json
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
+from xme.xmetools.reqtools import fetch_data_post
 from xme.xmetools.texttools import regex_filter
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
@@ -142,3 +143,122 @@ async def web_search(query: str, max_results: int = 10, depth: Literal["basic", 
             for item in result["results"]
         ]
     }
+
+async def view_file(url: str, prompt: str, agent):
+    return await view_item(url, prompt, item_type="file", agent=agent)
+
+async def view_video(url: str, prompt: str, agent):
+    return await view_item(url, prompt, item_type="video_url", agent=agent)
+
+async def view_image(url: str, prompt: str, agent):
+    return await view_item(url, prompt, item_type="image_url", agent=agent)
+
+async def view_item(url: str, prompt: str, item_type: str, agent=None):
+    """调用 glm-5.3-flash 查看 url 里的内容，并按用户 prompt 回答。
+
+    作为 AI 可调用 tool 使用：AI 传入 url 和 prompt，本函数使用 glm-5.3-flash
+    查看该 url 的内容（图片/视频/文件等），并将模型解读结果返回给 AI。
+    模型消耗的 tokens 会通过 agent 计入用户 credits。
+    """
+    client = ZhipuAiClient(api_key=GLM_API_KEY)
+    system_prompt = (
+        "你是一个用于查看并解析指定 url 内容的模型。"
+        "请根据用户给出的 prompt，仔细查看 url 里的内容并回答。"
+        "如果内容是一张图片或视频，描述/分析其内容；如果是文件，提取并总结关键信息。"
+        "输出应当准确、简洁、直接，不要编造图片或文本里不存在的内容。"
+    )
+    name = ""
+    match item_type:
+        case "file":
+            name = "file_url"
+        case "image_url":
+            name = "url"
+        case "video_url":
+            name = "url"
+        case _:
+            raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": item_type, item_type: {name: url}},
+        ]},
+    ]
+    try:
+        response = await asyncio.to_thread(
+            client.chat.asyncCompletions.create,
+            model="glm-5.3-flash",
+            messages=messages,
+            temperature=0.3,
+        )
+        task_id = response.id
+        MAX_TRY_TIMES = 500
+        try_times = 0
+        while try_times < MAX_TRY_TIMES:
+            try_times += 1
+            result = await asyncio.to_thread(
+                client.chat.asyncCompletions.retrieve_completion_result,
+                id=task_id,
+            )
+            if result.task_status == "SUCCESS":
+                break
+            if result.task_status == "FAIL":
+                raise RuntimeError("view_file 模型任务失败")
+            await asyncio.sleep(0.5)
+        # 计费 tokens 到 credits（跟随会话模型倍率折算）
+        if agent is not None:
+            agent.other_credits += result.usage.total_tokens
+        content = result.choices[0].message.content
+        return content if content else "[没有识别到内容]"
+    except Exception as ex:
+        logger.exception(f"查看 url 内容失败: {ex}")
+        return f"[查看文件失败: {ex}]"
+
+READER_API_URL = "https://open.bigmodel.cn/api/paas/v4/reader"
+
+
+# 目前不计费
+# 网页阅读接口不返回 token 用量，这里按返回内容长度估算 token 用于计费（约 4 字符 ≈ 1 token）
+# CHARS_PER_TOKEN = 4
+async def read_webpage(
+    url: str,
+    timeout: int = 20,
+    return_format: str = "markdown",
+    no_cache: bool = False,
+    retain_images: bool = True,
+):
+    """读取并解析指定 url 的网页内容，返回网页正文（默认 markdown）。
+
+    作为 AI 可调用 tool 使用：AI 传入 url 与可选参数，调用智谱「网页阅读」工具 API
+    （POST /paas/v4/reader），返回网页解析后的主要内容。按返回内容长度估算 tokens
+    计入用户 credits。
+    """
+    import uuid
+    if timeout > 100:
+        return f"[网页阅读：timeout 值不能大于 100 秒]"
+    headers = {"Authorization": f"Bearer {GLM_API_KEY}"}
+    params = {
+        "url": url,
+        "timeout": timeout,
+        "return_format": return_format,
+        "no_cache": no_cache,
+        "retain_images": retain_images,
+        "request_id": str(uuid.uuid4()),
+    }
+    try:
+        result = await fetch_data_post(READER_API_URL, json=params, headers=headers)
+        if not isinstance(result, dict) or "reader_result" not in result:
+            return f"[网页阅读失败: {result}]"
+        reader_result = result.get("reader_result", {}) or {}
+        # content = reader_result.get("content", "")
+        if not reader_result:
+            return "[网页内容为空或无法解析]"
+        # 计费 tokens 到 credits（接口不返回用量，按内容长度估算）
+        # if agent is not None:
+            # agent.other_credits += len(content) / CHARS_PER_TOKEN
+        # title = reader_result.get("title", "")
+        # return f"【{title}】\n{content}" if title else content
+        return reader_result
+    except Exception as ex:
+        logger.exception(f"网页阅读失败: {ex}")
+        return f"[网页阅读失败: {ex}]"

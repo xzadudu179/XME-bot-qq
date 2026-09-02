@@ -30,6 +30,7 @@ from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_partial, inprocess_report, ocr_image, web_search
+from .functions import read_webpage, view_file, view_image, view_video
 # from zhipuai.core._errors import ZhipuAIError
 import json
 from functools import partial
@@ -105,6 +106,10 @@ class AIHelper:
             "list_temp_files": self.list_temp_files,
             "inprocess_report": partial(inprocess_report, agent=self),
             "ocr_image": partial(ocr_image, agent=self),
+            "view_file": partial(view_file, agent=self),
+            "view_image": partial(view_image, agent=self),
+            "view_video": partial(view_video, agent=self),
+            "read_webpage": read_webpage,
             "web_search": web_search,
             "get_webs_partial": partial(get_webs_partial, agent=self),
         }
@@ -246,6 +251,102 @@ class AIHelper:
                             }
                         },
                         "required": ["query"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "view_file",
+                    "description": "使用 glm-5.3-flash 查看指定 url 里的文件，并按你给的 prompt 解析回答。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "要查看的内容 url"
+                            },
+                            "prompt": {
+                                "type": "string",
+                                "description": "你想让模型针对该 url 内容做什么"
+                            }
+                        },
+                        "required": ["url", "prompt"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "view_image",
+                    "description": "使用 glm-5.3-flash 查看指定 url 里的图片，并按你给的 prompt 解析回答。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "要查看的内容 url"
+                            },
+                            "prompt": {
+                                "type": "string",
+                                "description": "你想让模型针对该 url 内容做什么"
+                            }
+                        },
+                        "required": ["url", "prompt"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "view_video",
+                    "description": "使用 glm-5.3-flash 查看指定 url 里的视频，并按你给的 prompt 解析回答。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "要查看的内容 url"
+                            },
+                            "prompt": {
+                                "type": "string",
+                                "description": "你想让模型针对该 url 内容做什么"
+                            }
+                        },
+                        "required": ["url", "prompt"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "read_webpage",
+                    "description": "读取并解析指定 url 的网页内容，返回网页正文（默认 markdown）。可传入 url 与可选参数。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "要读取的网页 url"
+                            },
+                            "timeout": {
+                                "type": "integer",
+                                "description": "请求超时时间（秒），默认 20，最大 100"
+                            },
+                            "return_format": {
+                                "type": "string",
+                                "description": "返回格式， markdown / text，默认 markdown"
+                            },
+                            "no_cache": {
+                                "type": "boolean",
+                                "description": "是否禁用缓存，默认 false"
+                            },
+                            "retain_images": {
+                                "type": "boolean",
+                                "description": "是否保留图片，默认 true"
+                            }
+                        },
+                        "required": ["url"]
                     }
                 }
             },
@@ -415,7 +516,7 @@ class AIHelper:
                 "type": "enabled"
             },
             tool_choice="auto",
-            temperature=0.3
+            temperature=0.5
         )
         task_id = response.id
         check_times = 0

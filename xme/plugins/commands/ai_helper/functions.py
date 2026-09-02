@@ -109,7 +109,7 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         return f"[图片生成失败: {e}]"
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.REF_MAP[file_ref]
+    file_name = agent.ref_map[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {
@@ -123,7 +123,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
 
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.REF_MAP[file_ref]
+    file_name = agent.ref_map[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {

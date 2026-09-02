@@ -65,7 +65,10 @@ class AIHelper:
         return Path(f"./data/temp/{self.user_id}")
 
     def delete_temp(self):
+        # 清空临时目录，但保留 history 目录（history 仅在 /ai -c clear 时清空）
         for item in self.get_temp_path().iterdir():
+            if item.name == "history":
+                continue
             if item.is_file() or item.is_symlink():
                 item.unlink()
             elif item.is_dir():
@@ -74,21 +77,102 @@ class AIHelper:
     def _check_user_path(self):
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
 
-    def list_temp_files(self):
-        reversed_ref_map = reverse_dict(self.REF_MAP)
+    def list_temp_files(self, folder="temp"):
+        """列出指定文件夹（temp / history）下的文件列表。"""
+        if folder == "history":
+            hist_path = self.get_history_path()
+            files = sorted(
+                [f for f in hist_path.iterdir() if f.is_file()],
+                key=lambda f: f.name,
+            )
+            lines = []
+            for f in files:
+                ref = f.stem if f.stem.startswith("history_") else None
+                if ref is None:
+                    continue
+                # 注册引用，便于 check_file 使用
+                self.ref_map[ref] = f"history/{f.name}"
+                lines.append(f"{ref}: {f.name}")
+            return "\n".join(lines)
+        reversed_ref_map = reverse_dict(self.ref_map)
         files = [f"{reversed_ref_map.get(f.name, None)}: {f.name}" for f in self.get_temp_path().iterdir() if f.is_file()]
         return "\n".join(files)
 
     def check_file(self, ref: str, line_start=0, line_end=0):
-        file_name = self.REF_MAP[ref]
+        file_name = self.ref_map[ref]
         lines = []
         with open(f"{self.get_temp_path(True)}/{file_name}", 'r', encoding='utf-8') as file:
             lines = file.readlines()
         get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
         return {"result": "\n".join(get_lines), "no_compress": True}
 
+    def get_history_path(self):
+        path = self.get_temp_path() / "history"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def save_to_history(self, ref="", content=""):
+        """转存内容/文件到 history 文件夹，返回 history 引用信息。
+
+        若传入 ref，则读取 temp 中对应文件的内容转存；否则使用 content 文本。
+        history 文件以 history_N.tmp 命名，其引用 history_N 可由文件名推导，
+        因此跨会话也能稳定复用。
+        """
+        if ref:
+            file_name = self.ref_map.get(ref, None)
+            if file_name is None:
+                return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
+            src_path = self.get_temp_path() / file_name
+            with open(src_path, "r", encoding="utf-8") as f:
+                text = f.read()
+        else:
+            text = content or ""
+        if not text:
+            return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
+        hist_path = self.get_history_path()
+        used = set()
+        for item in hist_path.iterdir():
+            if item.is_file() and item.name.endswith(".tmp"):
+                stem = item.stem
+                if stem.startswith("history_"):
+                    try:
+                        used.add(int(stem[len("history_"):]))
+                    except ValueError:
+                        pass
+        n = 1
+        while n in used:
+            n += 1
+        ref_id = f"history_{n}"
+        file_name = f"{ref_id}.tmp"
+        self.ref_map[ref_id] = f"history/{file_name}"
+        with open(hist_path / file_name, "w", encoding="utf-8") as f:
+            f.write(text)
+        return {
+            "result": f"已转存至 history，引用 {ref_id}，可通过 check_file 传入 \"{ref_id}\" 查看内容。",
+            "ref": ref_id,
+            "file_name": f"history/{file_name}",
+            "total_len": len(text),
+            "preview": text[:200],
+            "no_compress": True,
+        }
+
+    def clear_history_files(self):
+        """清空 history 文件夹里的所有文件，并移除对应引用。"""
+        hist_path = self.get_history_path()
+        removed = 0
+        if hist_path.is_dir():
+            for item in hist_path.iterdir():
+                if item.is_file() or item.is_symlink():
+                    item.unlink()
+                    removed += 1
+        self.ref_map = {
+            k: v for k, v in self.ref_map.items()
+            if not str(v).startswith("history/")
+        }
+        return {"result": f"已清空 history，共删除 {removed} 个文件", "no_compress": True}
+
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
-        self.REF_MAP = {}
+        self.ref_map = {}
         self.tokens = 0
         self.other_credits = 0
         self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
@@ -104,6 +188,8 @@ class AIHelper:
             "get_skill_md": get_skill_md,
             "check_file": self.check_file,
             "list_temp_files": self.list_temp_files,
+            "save_to_history": self.save_to_history,
+            "clear_history_files": self.clear_history_files,
             "inprocess_report": partial(inprocess_report, agent=self),
             "ocr_image": partial(ocr_image, agent=self),
             "view_file": partial(view_file, agent=self),
@@ -200,10 +286,14 @@ class AIHelper:
                 "type": "function",
                 "function": {
                     "name": "list_temp_files",
-                    "description": "获取用户 temp 路径下的所有文件列表。会以 \"索引: 名称\" 的形式显示",
+                    "description": "获取指定文件夹下的文件列表（temp 或 history），会以 \"索引: 名称\" 的形式显示。history 是跨单会话保留的历史文件",
                     "parameters": {
                         "type": "object",
                         "properties": {
+                            "folder": {
+                                "type": "string",
+                                "description": "要列出的文件夹，\"temp\"（默认，临时文件）或 \"history\"（跨单会话保留的历史文件）不填或者其他都会自动变为 temp。"
+                            }
                         },
                         "required": []
                     }
@@ -422,6 +512,40 @@ class AIHelper:
                     }
                 }
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "save_to_history",
+                    "description": "将一个文件/内容转存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "ref": {
+                                "type": "string",
+                                "description": "要转存的 temp 文件引用名，例如 text_1；与 content 二选一"
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "要保存到 history 的文本内容；当 ref 为空时备用"
+                            }
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "clear_history_files",
+                    "description": "清空 history 文件夹里的所有文件（跨单会话保留的历史文件）。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                        },
+                        "required": []
+                    }
+                }
+            },
         ]
 
     async def run_agent(self, session, messages, model):
@@ -524,7 +648,7 @@ class AIHelper:
 
             if isinstance(result, str) and len(result) > 5000 and not no_compress:
                 res = text_to_file(result, self.user_id, self)
-                self.REF_MAP[res["ref"]] = res["file_name"]
+                self.ref_map[res["ref"]] = res["file_name"]
                 return prefix + f"[工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 
             return prefix + result if isinstance(result, str) else result

@@ -5,34 +5,138 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 import json
+from xme.xmetools.typetools import try_parse
 from xme.xmetools import jsontools
-from xme.xmetools.texttools import hash_text, most_similarity_str_diff, regex_search
+from xme.xmetools.texttools import hash_text, regex_search
 
-def text_to_file(text: str, dir_name) -> dict:
+def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
+) -> tuple[Path, str]:
+    path = Path(f"./data/temp/{dir_name}")
+    path.mkdir(parents=True, exist_ok=True)
+
+    used = set()
+    ref_map = agent.REF_MAP if agent is not None else None
+
+    if ref_map is not None:
+        for k in ref_map:
+            if not k.startswith(head):
+                continue
+
+            num = try_parse(k[len(head):], int)
+            if num is not None:
+                used.add(num)
+
+    n = 1
+    while n in used:
+        n += 1
+
+    ref = f"{head}{n}"
+    agent.REF_MAP[ref] = file_name
+
+    return path, ref
+
+
+def text_to_file(text: str, dir_name, agent=None) -> dict:
+    HEAD = "text_"
+
     file_id = hash_text(text)
     file_name = file_id + ".txt"
-    Path(f"./data/temp/{dir_name}").mkdir(parents=True, exist_ok=True)
-    with open(f"./data/temp/{dir_name}/{file_name}", 'w', encoding='utf-8') as file:
+
+    path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
+
+    with open(path / file_name, "w", encoding="utf-8") as file:
         file.write(text)
+
     return {
-        "id": file_id,
+        "file_name": file_name,
+        "ref": ref,
         "total_len": len(text),
-        "total_line_count": text.replace("\r\n", "\n").replace("\r", "\n").count("\n"),
+        "total_line_count": (
+            text.replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .count("\n")
+        ),
         "preview": text[:200],
     }
 
-def dict_to_file(d: dict, dir_name, prefix = "") -> dict:
+
+def dict_to_file(d: dict, dir_name, prefix="", agent=None,
+) -> dict:
+    HEAD = "json_"
+
     file_id = hash_text(str(d))
     file_name = prefix + file_id + ".json"
-    path = f"./data/temp/{dir_name}/{file_name}"
-    Path(f"./data/temp/{dir_name}").mkdir(parents=True, exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as file:
-        # file.write(text)
-        file.write(json.dumps(d,ensure_ascii=False))
+
+    path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
+
+    with open(path / file_name, "w", encoding="utf-8") as file:
+        file.write(json.dumps(d, ensure_ascii=False))
+
     return {
-        "id": file_id,
-        "path": path
+        "file_name": file_name,
+        "ref": ref,
+        "path": path,
     }
+
+
+# def text_to_file(text: str, agent, dir_name) -> dict:
+#     HEAD = "text_"
+#     file_id = hash_text(text)
+#     file_name = file_id + ".txt"
+#     path = Path(f"./data/temp/{dir_name}")
+#     # file_count = len([f for f in path.iterdir() if f.is_file()])
+#     used = []
+#     ref_map = agent.REF_MAP
+#     if ref_map is not None:
+#         for k in ref_map.keys():
+#             num = try_parse(k.replace(HEAD, ""), int)
+#             if num is None:
+#                 continue
+#             used.append(num)
+#     used = set(used)
+#     n = 1
+#     while n in used:
+#         n += 1
+#     path.mkdir(parents=True, exist_ok=True)
+#     with open(path / f"{file_name}", 'w', encoding='utf-8') as file:
+#         file.write(text)
+#     agent.REF_MAP[f"{HEAD}{n}"] = file_name
+#     return {
+#         "file_name": file_name,
+#         "ref": f"{HEAD}{n}",
+#         "total_len": len(text),
+#         "total_line_count": text.replace("\r\n", "\n").replace("\r", "\n").count("\n"),
+#         "preview": text[:200],
+#     }
+
+# def dict_to_file(d: dict, dir_name, agent, prefix = "") -> dict:
+#     HEAD = "json_"
+#     file_id = hash_text(str(d))
+#     file_name = prefix + file_id + ".json"
+#     path = Path(f"./data/temp/{dir_name}")
+#     # path = f"./data/temp/{dir_name}/{file_name}"
+#     path.mkdir(parents=True, exist_ok=True)
+#     used = []
+#     ref_map = agent.REF_MAP
+#     if ref_map is not None:
+#         for k in ref_map.keys():
+#             num = try_parse(k.replace(HEAD, ""), int)
+#             if num is None:
+#                 continue
+#             used.append(num)
+#     used = set(used)
+#     n = 1
+#     while n in used:
+#         n += 1
+#     with open(path / file_name, 'w', encoding='utf-8') as file:
+#         # file.write(text)
+#         file.write(json.dumps(d,ensure_ascii=False))
+#     agent.REF_MAP[f"{HEAD}{n}"] = file_name
+#     return {
+#         "file_name": file_name,
+#         "ref": f"{HEAD}{n}",
+#         "path": path
+#     }
 
 def cleanup_old_backups(
         backup_root: Path,

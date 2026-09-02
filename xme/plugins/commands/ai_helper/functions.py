@@ -59,7 +59,7 @@ async def ocr_image(url, agent=None):
         )
         result = response.md_results
         if agent is not None:
-            agent.tokens += response.usage.total_tokens * 0.0125
+            agent.tokens += response.usage.total_tokens * 0.125
         # response.usage.prompt_tokens_details.
         if result is None:
             return "[没有识别到内容]"
@@ -80,15 +80,16 @@ async def gen_image(prompt, size="1024x1024", agent=None):
             quality="hd",
         )
         if agent is not None:
-            # 图片生成按 10000 tokens 算
-            agent.tokens += 10000
+            # 图片生成按 80000 tokens 算
+            agent.other_credits += 80000
         image_msg = await get_image_msg(response.data[0].url)
         return image_msg
     except Exception as e:
         logger.exception(f"图片生成失败: {e}")
         return f"[图片生成失败: {e}]"
 
-def get_webs_partial(key, file_name, search_str, search_method: Literal["fuzzy_match", "re_search", "re_filter"] = "fuzzy_match", agent=None):
+def get_webs_partial(key, file_ref, search_str, search_method: Literal["fuzzy_match", "re_search", "re_filter"] = "fuzzy_match", agent=None):
+    file_name = agent.REF_MAP[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {

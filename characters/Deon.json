@@ -156,7 +156,8 @@
       "如果你不知道漠月的一些功能怎么用，可以试试用 \"/ai 问题\" 来询问 AI-Helper 哦！",
       "漠月喜欢吃饼干...而且漠月虽然是小狗，但是可以吃巧克力！",
       "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xme.179.life/glossary 看看，说不定会帮上忙~",
-      "你让 \"/ai\" 生成图片的时候，假如你刻意让他生成非常华丽或者复杂细节丰富的图片，又或者是提供很长的提示词，他可能会超常发挥哦（？）"
+      "你让 \"/ai\" 生成图片的时候，假如你刻意让他生成非常华丽或者复杂细节丰富的图片，又或者是提供很长的提示词，他可能会超常发挥哦（？）",
+      "\"/ai\" 默认会使用 flash 模型，如果你想用 pro 模型，可以使用 \"/ai -m pro xxx\" 来使用 pro 模型问 AI xxx"
     ]
   },
   "apis": {
@@ -2246,10 +2247,12 @@
     },
     "ai_helper": {
       "desc": "AI 助手",
-      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 500000 tokens（不包含缓存）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
-      "no_arg": "你没有指定参数哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
-      "talking_to_ai": "正在询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
-      "talk_result": "{positive}， AI 说：\"{talk}\"\n=======================\nAI 使用了 {tool_call_times} 次 tools\n你今天还剩下 {tokens_left_now} 个 tokens 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
+      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，每天可使用 6,000,000 credits（按 flash 消耗 tokens为基准计算，缓存消耗量 0.25x，使用 pro 模型消耗量 x10，flash 限时消耗量 *0.5，图片生成一张算 80000 credits，OCR 消耗量 0.125x。）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
+      "no_arg": "你好像没有写内容哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
+      "talking_to_ai": "正在使用 \"{model}\" 模型询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦",
+      "model_change_prefix": "[BOT] 注意：{model} 模型没有多模态，自动转为 {vision_model}\n",
+      "error_model": "没有称为 \"{model}\" 的模型哦，只能指定为 {models} 中的任意一个呢",
+      "talk_result": "{prefix}{positive}， AI 说：\"{talk}\"\n=======================\nAI 使用了 {tool_call_times} 次 tools\ntokens 消耗 {tokens} ({cached} 已缓存)\n减少 {credits} credits。\n你今天还剩下 {tokens_left_now} 个 credits 哦 {neutral}\n使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
       "call_tool": "[Beta debug] 正在调用工具 \"{tool_name}\"...",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
@@ -2257,7 +2260,7 @@
       "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
       "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
       "ai_send_timeout": "{negative} AI 发送消息秒数超过上限（{secs}s）",
-      "limited": "{negative}，你和 AI 对话的 token 数已经达到上限啦，下一天再来吧...",
+      "limited": "{negative}，你和 AI 对话的 credits 数已经用完啦，下一天再来吧...",
       "too_long": "你输入的语句太长啦！要在 {count} 字以内哦"
     },
     "essence": {

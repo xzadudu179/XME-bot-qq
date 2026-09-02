@@ -1,13 +1,15 @@
 from pathlib import Path
 import shutil
 
-from nonebot import CommandSession, Message, MessageSegment
-from xme.xmetools import jsontools
+import config
+from nonebot import CommandSession, MessageSegment
+# from xme.xmetools import jsontools
 from xme.xmetools.filetools import dict_to_file, text_to_file
 from xme.xmetools.plugintools import on_command
 # from xme.xmetools.cmdtools import use_args
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 # from nonebot.argparse import ArgumentParser
+import argparse
 from xme.xmetools.bottools import XmeArgumentParser
 from xme.xmetools.texttools import get_images_from_message, most_similarity_str_diff
 from .commands import clear_history
@@ -23,6 +25,7 @@ from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout
 from xme.xmetools.bottools import get_user_name
 from character import get_message, get_character_item, character_format
 from xme.xmetools.timetools import TimeUnit, Timer, get_time_now
+from xme.xmetools.dicttools import reverse_dict
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
@@ -31,11 +34,22 @@ from .functions import get_telia_clock_state, gen_image, get_skill_md, get_webs_
 import json
 from functools import partial
 import inspect
-MAX_CHECK_TIMES = 1500
+MAX_CHECK_TIMES = 1000
+MAX_HISTORY_COUNT = 50
 MAX_TOOL_CALL_TIMES = 50
 
 # 用户: stats
 curr_sessions = {}
+
+# 用户可用指令
+cmds = {
+        "clear": {
+            "content": clear_history,
+            "args": "",
+            "desc": "清除你的所有对话历史"
+        }
+    }
+
 
 class AIHelper:
     def get_temp_path(self, string=False):
@@ -55,18 +69,23 @@ class AIHelper:
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
 
     def list_temp_files(self):
-        files = [f for f in self.get_temp_path().iterdir() if f.is_file()]
+        reversed_ref_map = reverse_dict(self.REF_MAP)
+        files = [f"{reversed_ref_map.get(f.name, None)}: {f.name}" for f in self.get_temp_path().iterdir() if f.is_file()]
         return "\n".join(files)
 
-    def check_file(self, file_name: str, line_start=0, line_end=0):
+    def check_file(self, ref: str, line_start=0, line_end=0):
+        file_name = self.REF_MAP[ref]
         lines = []
         with open(f"{self.get_temp_path(True)}/{file_name}", 'r', encoding='utf-8') as file:
             lines = file.readlines()
         get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
         return {"result": "\n".join(get_lines), "no_compress": True}
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, model="flash"):
+        self.REF_MAP = {}
         self.tokens = 0
+        self.other_credits = 0
+        self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
         self.cached_tokens = 0
         self.client = ai_client
         self.user_id = user_id
@@ -146,9 +165,9 @@ class AIHelper:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "file_name": {
+                            "ref": {
                                 "type": "string",
-                                "description": "temp 文件夹下文件名"
+                                "description": "temp 文件夹下引用名 例如 text_1"
                             },
                             "line_start": {
                                 "type": "integer",
@@ -159,7 +178,7 @@ class AIHelper:
                                 "description": "要查看的尾行索引，填写 0 会直接当作看到结尾，其他和 python 列表索引差不多。默认 0。"
                             },
                         },
-                        "required": ["file_name"]
+                        "required": ["ref"]
                     }
                 }
             },
@@ -167,7 +186,7 @@ class AIHelper:
                 "type": "function",
                 "function": {
                     "name": "list_temp_files",
-                    "description": "获取用户 temp 路径下的所有文件列表。",
+                    "description": "获取用户 temp 路径下的所有文件列表。会以 \"索引: 名称\" 的形式显示",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -226,7 +245,7 @@ class AIHelper:
                 "type": "function",
                 "function": {
                     "name": "get_webs_partial",
-                    "description": "得到联网搜索内容的部分最接近指定关键词的结果，或指定搜索规则的结果。",
+                    "description": "得到联网搜索内容的部分最接近指定搜索规则的结果。",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -234,9 +253,9 @@ class AIHelper:
                                 "type": "string",
                                 "description": "要搜索的部分名，有 \"title\" \"url\" 和 \"content\" 可选。"
                             },
-                            "file_name": {
+                            "file_ref": {
                                 "type": "string",
-                                "description": "要搜索的内容文件名，例如 \"xxx.json\""
+                                "description": "要搜索的内容文件引用名，例如 \"json_1\""
                             },
                             "search_str": {
                                 "type": "string",
@@ -329,8 +348,10 @@ class AIHelper:
                 f"Tool {name} result type={type(result)}, "
                 f"str={str(result)[:100]!r}...{str(result)[-100:]!r}"
             )
-            if isinstance(result, list) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
-                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{dict_to_file(result, self.user_id, name + "_")}'
+            if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
+                res = dict_to_file(result, self.user_id, name + "_", agent=self)
+
+                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看]{res}'
 
             if isinstance(result, dict):
                 no_compress = result.get("no_compress", False)
@@ -339,28 +360,14 @@ class AIHelper:
                 self.pending_messages.append(result)
                 return prefix + f"[\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
             if isinstance(result, str) and len(result) > 5000 and not no_compress:
-                return prefix + f"[工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_id` 预览。数据如下]：\n{text_to_file(result, self.user_id)}"
+                res = text_to_file(result, self.user_id, self)
+                self.REF_MAP[res["ref"]] = res["file_name"]
+                return prefix + f"[工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 
             return prefix + result if isinstance(result, str) else result
         except Exception as e:
             logger.exception(f"执行工具 {name} 失败")
             return f"[工具执行失败：{type(e).__name__}: {e}]"
-
-
-    # async def ai_init(self, messages, model="glm-5.3"):
-    #     response = self.client.chat.asyncCompletions.create(
-    #         # model="glm-4-flashx",
-    #         model=model,
-    #         messages=messages,
-    #         tools=self.tools,
-    #         thinking={
-    #             "type": "enabled"
-    #         },
-    #         tool_choice="auto",
-    #         temperature=0.3
-
-    #     )
-    #     return response
 
 
     async def create_and_wait(self, session, messages, model):
@@ -416,9 +423,13 @@ class AIHelper:
         ]
         # logger.info(f"params:{ai_params}")
         # response = await self.ai_init(ai_params, "glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
-        result, tool_call_times =  await self.run_agent(session, ai_params, model="glm-5.3-flash" if len(url_dicts) > 0 else "glm-5.3")
+        prefix = ""
+        real_model = "glm-5.3-flash" if len(url_dicts) > 0 else self.model
+        if real_model != self.model:
+            prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
+        result, tool_call_times =  await self.run_agent(session, ai_params, model=real_model)
         if result == False:
-            return False, 0, [], 0
+            return False, {}, {}, 0
         try:
             ans = result.choices[0].message.content
             build_history(
@@ -429,33 +440,27 @@ class AIHelper:
             logger.info(
                 f"AI 返回了以下 response：{result}"
             )
-            tokens_use = (
+            # 缓存 tokens 占 1/4
+            credits_use = (
                 self.tokens
-                - self.cached_tokens
+                - self.cached_tokens * 0.75
             )
+            multis = 1
+            match real_model:
+                case "glm-5.3":
+                    multis = 10
+                case "glm-5.3-flash":
+                    multis = 0.5
+            credits_use *= multis
+            credits_use += self.other_credits
             debug_msg("处理结果")
             logger.info(
                 f"缓存tokens "
                 f"{self.cached_tokens}, "
-                f"减少 {tokens_use} 个 tokens"
+                f"减少 {credits_use} 个 tokens"
             )
-            # pending_message = "\n".join(
-            #     str(s) for s in self.pending_messages
-            # )
-            # logger.info(
-            #     f"pending_messages count={len(self.pending_messages)}"
-            # )
-            # logger.info(
-            #     f"pending_messages{repr(pending_message[:500])!r}...{repr(pending_message[-200:])!r}"
-            # )
-            # logger.info(
-            #     f"pending_message length={len(pending_message)}"
-            # )
-            # logger.info(
-            #     f"answer length={len(ans)}"
-            # )
-
-            return ans, tokens_use, self.pending_messages, tool_call_times
+            # self.pending_messages = self.pending_messages
+            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix}, tool_call_times
         except AttributeError as ex:
             logger.error(f"attribute 错误: {ex}")
 
@@ -469,7 +474,7 @@ class AIHelper:
                     replace_cq_str=True
                 )
             )
-            return False, 0, [], 0
+            return False, {}, {}, 0
         except Exception as ex:
             logger.error(f"AI 出现错误: {ex}")
             await send_session_msg(
@@ -482,41 +487,7 @@ class AIHelper:
                     msg=str(ex) + "\n" + format_exc()
                 )
             )
-            return False, 0, [], 0
-
-        #     # print(result_response)
-        #     task_status = result_response.task_status
-        #     # await asyncio.sleep(0.5)
-        #     get_cnt += 1
-        #     if get_cnt >= MAX_CHECK_TIMES:
-        #         t.stop()
-        #         await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_timeout", secs=t.get_timer_value()))
-        #         return False, 0
-        # try:
-        #     ans = result_response.choices[0].message.content
-        #     build_history(user=user, ask=text, ans=ans)
-        #     logger.info(f"AI 返回了以下 response：{result_response}")
-        #     tokens_use = result_response.usage.total_tokens - result_response.usage.prompt_tokens_details['cached_tokens']
-        #     debug_msg("处理结果")
-        #     logger.info(f"缓存tokens {result_response.usage.prompt_tokens_details['cached_tokens']}, 减少 {tokens_use} 个 tokens")
-        #     return result_response.choices[0].message.content, tokens_use
-        # except AttributeError as ex:
-        #     logger.error("attribute 错误:", ex)
-        #     await send_session_msg(session, get_message("plugins", __plugin_name__, "attribute_error", content=result_response, replace_cq_str=True))
-        #     return False, 0
-        # except Exception as ex:
-        #     logger.error(f"AI 出现错误: {ex}")
-        #     code = result_response.get("error", {}).get("code", "未知")
-        #     message = result_response.get("error", {}).get("message", "未知")
-        #     await send_session_msg(session, get_message("plugins", __plugin_name__,"ai_error", replace_cq_str=True, content=result_response, code=code, message=message))
-            # return False, 0
-cmds = {
-        "clear": {
-            "content": clear_history,
-            "args": "",
-            "desc": "清除你的所有对话历史"
-        }
-    }
+            return False, {}, {}, 0
 
 def get_command_list():
     cmd_list_str = "当前指令参数列表：\n"
@@ -542,14 +513,18 @@ arg_usage = shell_like_usage("OPTION", [
     {
         "name": "raw",
         "abbr": "r",
-        "desc": "会把之后的文本全都解析为单纯的文本（注：这个参数优先级最大）"
+        "desc": "会把之后的文本全都解析为单纯的文本，如果你在发东西给 ai 的时候出现了 \"指令执行的参数有问题哦\" 的问题，可以试试在发送的内容前加上 -r 哦"
+    },
+    {
+        "name": "model",
+        "abbr": "m",
+        "desc": "切换模型，可使用 \"pro\" 或 \"flash\" 两种，默认 \"flash\"。"
     },
     {
         "name": "ctrl",
         "abbr": "c",
         "desc": f"只需要在任意地方输入 -c 即可将原本输入给 AI 的内容变为指令\n{get_command_list()}"
     }
-
 ])
 
 alias = ['ai']
@@ -565,13 +540,17 @@ __plugin_usage__ = CommandDoc(
 
 # history = read_from_path("./ai_configs.json")[__plugin_name__]["history"]
 
-TOKENS_LIMIT = 500000
+TOKENS_LIMIT = 6000000
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=True)
 @u.custom_limit(__plugin_name__, 1, unit=TimeUnit.DAY, count_limit=TOKENS_LIMIT)
 async def _(session: CommandSession, user: u.User, validate, count_tick):
     global curr_sessions
-    if validate():
+    superuser_mode = False
+    # 先去掉
+    # if user.id in config.SUPERUSERS:
+        # superuser_mode = True
+    if validate() and user.id not in config.SUPERUSERS:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
     # 如果有 session 在运行
@@ -579,43 +558,69 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
         return False
     MAX_LENGTH = 3000
-    intext = ""
-    if "-r " in session.current_arg_text:
-        intext = "-r"
-    elif "--raw " in session.current_arg_text:
-        intext = '--raw'
-    if intext:
-        text = intext.join(session.current_arg_text.split(intext)[1:])
-    else:
-        parser = XmeArgumentParser(session=session, usage=arg_usage)
-        parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
-        parser.add_argument('-c', '--ctrl', action='store_true', default=False)
-        parser.add_argument('text', nargs='*')
-        args = parser.parse_args(session.argv)
-        # print(session.argv)
-        text =  ' '.join(args.text).strip()
-        if args.ctrl and text and len(text) <= MAX_LENGTH:
-            await send_session_msg(session, parse_control(session, text, user))
-            return 2
+    # intext = ""
+    # if "-r " in session.current_arg_text:
+    #     intext = "-r"
+    # elif "--raw " in session.current_arg_text:
+    #     intext = '--raw'
+    # if intext:
+        # text = intext.join(session.current_arg_text.split(intext)[1:])
+    # else:
+    parser = XmeArgumentParser(session=session, usage=arg_usage)
+    parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
+    parser.add_argument('-c', '--ctrl', action='store_true', default=False)
+    parser.add_argument('-m', '--model', type=str)
+    parser.add_argument("-r", nargs=argparse.REMAINDER)
+    parser.add_argument('text', nargs='*')
+    args = parser.parse_args(session.argv)
+    text = ' '.join(args.r or args.text).strip()
+    if args.ctrl and text and len(text) <= MAX_LENGTH:
+        await send_session_msg(session, parse_control(session, text, user))
+        return 2
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False
     if len(text) > MAX_LENGTH:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=MAX_LENGTH))
         return False
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai'))
+
+    available_models = ["flash", "pro"]
+    model = args.model if args.model else "flash"
+    if model not in available_models:
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
+
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, models = ""))
     try:
         # print("正常")
-        t, tokens_use, pending_messages, tool_call_times = await talk(session, text, user)
+        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model)
         if not t:
             return False
-        count_tick(tokens_use)
-        tokens_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
+        pending_messages = messages_dict["messages"]
+        prefix = messages_dict["prefix"]
+        credits_use = tokens_use_dict["credits_use"]
+        cached = tokens_use_dict["cached"]
+        total = tokens_use_dict["total"]
+        if not superuser_mode:
+            count_tick(credits_use)
+        credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1]
         message = "\n".join([str(s) for s in pending_messages])
         logger.info(f"msg {message}")
         t = t.replace("[", "&#91;").replace("]","&#93;")
         message += t
-        send_msg = get_message("plugins", __plugin_name__, 'talk_result', talk=message, tokens_left_now=tokens_left_now, tool_call_times=tool_call_times)
+        send_msg = get_message(
+            "plugins",
+            __plugin_name__,
+            'talk_result',
+            talk=message,
+            tokens_left_now=f"{credits_left_now:,.2f}".rstrip('0').rstrip('.')
+            if not superuser_mode
+            else "∞",
+            tool_call_times=tool_call_times,
+            cached=f"{cached:,.2f}".rstrip('0').rstrip('.'),
+            tokens=f"{total:,.2f}".rstrip('0').rstrip('.'),
+            credits=f"{credits_use:,.2f}".rstrip('0').rstrip('.'),
+            prefix=prefix
+        )
         logger.info(f"send msg {send_msg}")
         await send_session_msg(
             session,
@@ -660,7 +665,8 @@ def build_history(user: u.User, ask, ans):
         "ans": ans,
         "time": get_time_now()
     })
-    if len(user.ai_history) > 30:
+    if len(user.ai_history) > MAX_HISTORY_COUNT:
+        # TODO 压缩上下文
         del user.ai_history[-1]
 #     save_history()
 
@@ -669,7 +675,7 @@ def build_history(user: u.User, ask, ans):
 #     ai_conf[__plugin_name__]["history"] = history
 #     save_to_path("./ai_configs.json", ai_conf, indent=4)
 
-async def talk(session: CommandSession, text, user: u.User):
+async def talk(session: CommandSession, text, user: u.User, model: str):
     httpx_client = httpx.Client(
         proxy=None,
         trust_env=False,
@@ -695,7 +701,7 @@ async def talk(session: CommandSession, text, user: u.User):
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES)
-    ai_helper = AIHelper(client, user.id)
+    ai_helper = AIHelper(client, user.id, model)
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)

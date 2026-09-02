@@ -19,6 +19,30 @@ from xme.xmetools.msgtools import create_image_message, send_session_msg
 from character import get_message
 import asyncio
 
+# AI 用到的函数名列表，需要与实际定义的函数名相符
+__tools__ = [
+    "get_telia_clock_state",
+    "gen_image",
+    "get_skill_md",
+    "check_file",
+    "list_temp_files",
+    "save_to_history",
+    "clear_history_files",
+    "inprocess_report",
+    "ocr_image",
+    "view_file",
+    "view_image",
+    "view_video",
+    "read_webpage",
+    "web_search",
+    "content_search",
+    "get_webs_partial",
+    "get_user_input_urls"
+]
+
+def get_user_input_urls(agent):
+    return agent.user_input_urls
+
 def get_telia_clock_state():
     return TELIA_CLOCK.get_current_state()
 

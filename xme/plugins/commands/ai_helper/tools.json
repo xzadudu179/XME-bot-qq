@@ -366,5 +366,17 @@
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_user_input_urls",
+            "description": "得到用户本轮对话输入的所有内容（文件 视频 图片）的 urls。",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
     }
 ]

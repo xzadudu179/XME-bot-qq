@@ -26,25 +26,7 @@ from .constants import (
     MAX_TOOL_CALL_TIMES,
     MAX_HISTORY_COUNT,
 )
-from .functions import (
-    get_telia_clock_state,
-    gen_image,
-    get_skill_md,
-    check_file,
-    list_temp_files,
-    save_to_history,
-    clear_history_files,
-    inprocess_report,
-    ocr_image,
-    view_file,
-    view_image,
-    view_video,
-    read_webpage,
-    web_search,
-    content_search,
-    get_webs_partial,
-)
-
+from . import functions
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 
@@ -78,7 +60,7 @@ class AIHelper:
         return path
 
     def resolve_ref(self, ref: str) -> str:
-        """解析 ref 对应的文件名（相对 temp 根目录），支持跨会话的 history 引用。
+        """解析 ref 对应的文件名（相对 temp 根目录），支持多次会话的 history 引用。
 
         history 文件按 history_N.tmp 命名，其引用 history_N 可由此推导，
         因此即使当前会话 ref_map 未注册，也能直接解析。
@@ -102,28 +84,33 @@ class AIHelper:
         self.client = ai_client
         self.session = session
         self.user_id = user_id
+        self.user_input_urls = {}
         # 上次回应时间
         self.last_response = 0
         # 工具使用依赖注入：所有 tool 都是独立函数，需要 agent 的函数声明 agent 形参，
         # 由 execute_tool 在执行时注入，避免工具内部再实例化 agent 造成连环调用。
         self.tool_functions = {
-            "get_telia_clock_state": get_telia_clock_state,
-            "gen_image": gen_image,
-            "get_skill_md": get_skill_md,
-            "check_file": check_file,
-            "list_temp_files": list_temp_files,
-            "save_to_history": save_to_history,
-            "clear_history_files": clear_history_files,
-            "inprocess_report": inprocess_report,
-            "ocr_image": ocr_image,
-            "view_file": view_file,
-            "view_image": view_image,
-            "view_video": view_video,
-            "read_webpage": read_webpage,
-            "web_search": web_search,
-            "content_search": content_search,
-            "get_webs_partial": get_webs_partial,
+            name: getattr(functions, name)
+            for name in functions.__tools__
         }
+        # self.tool_functions = {
+        #     "get_telia_clock_state": get_telia_clock_state,
+        #     "gen_image": gen_image,
+        #     "get_skill_md": get_skill_md,
+        #     "check_file": check_file,
+        #     "list_temp_files": list_temp_files,
+        #     "save_to_history": save_to_history,
+        #     "clear_history_files": clear_history_files,
+        #     "inprocess_report": inprocess_report,
+        #     "ocr_image": ocr_image,
+        #     "view_file": view_file,
+        #     "view_image": view_image,
+        #     "view_video": view_video,
+        #     "read_webpage": read_webpage,
+        #     "web_search": web_search,
+        #     "content_search": content_search,
+        #     "get_webs_partial": get_webs_partial,
+        # }
         self.pending_messages = []
         # 工具 schema 从 tools.json 读取
         tools_path = Path(__file__).parent / "tools.json"
@@ -274,8 +261,9 @@ class AIHelper:
         pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
         matches = re.findall(pattern, text)
         for image_cq in matches:
-            arg = arg.replace(f"[图片{hash_text(image_cq)}]")
+            text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
         image_urls = [x["file"] for x in image_objects]
+        self.user_input_urls["images"] = image_urls
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
         ai_logger.info(f"用户说：{text}")
         ai_logger.info(f"用户附带了以下图片url {url_dicts}")

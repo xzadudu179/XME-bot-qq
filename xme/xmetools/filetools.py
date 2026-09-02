@@ -17,7 +17,7 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
     path.mkdir(parents=True, exist_ok=True)
 
     used = set()
-    ref_map = agent.REF_MAP if agent is not None else None
+    ref_map = agent.ref_map if agent is not None else None
 
     if ref_map is not None:
         for k in ref_map:
@@ -33,7 +33,7 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
         n += 1
 
     ref = f"{head}{n}"
-    agent.REF_MAP[ref] = file_name
+    agent.ref_map[ref] = file_name
 
     return path, ref
 

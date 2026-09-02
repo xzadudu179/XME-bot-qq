@@ -1,0 +1,370 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "get_telia_clock_state",
+            "description": "获取漠月世界观里的忒利亚当前的季节（雨季/旱季）和时期（凌空期/白日期/血日期）",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "gen_image",
+            "description": "通过提示词和指定大小和质量调用 ai 生成图片，图片生成成功会返回 url，失败会返回 \"图片生成失败：原因\"",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "你要生成的图片的提示词"
+                    },
+                    "size": {
+                        "type": "string",
+                        "description": "图片大小，格式为 数字x数字（默认1024x1024）"
+                    }
+                },
+                "required": [
+                    "prompt"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_skill_md",
+            "description": "获取内部的 skill md文件的内容。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "skill名称，必须完全对应。"
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "check_file",
+            "description": "获取保存进用户 temp 的文件的内容。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "temp 文件夹下引用名 例如 text_1"
+                    },
+                    "line_start": {
+                        "type": "integer",
+                        "description": "要查看的首行索引，填写 0 以下会从行尾往前计算，默认 0。"
+                    },
+                    "line_end": {
+                        "type": "integer",
+                        "description": "要查看的尾行索引，填写 0 会直接当作看到结尾，其他和 python 列表索引差不多。默认 0。"
+                    }
+                },
+                "required": [
+                    "ref"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_temp_files",
+            "description": "获取指定文件夹下的文件列表（temp 或 history），会以 \"索引: 名称\" 的形式显示。history 是跨单会话保留的历史文件",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "folder": {
+                        "type": "string",
+                        "description": "要列出的文件夹，\"temp\"（默认，临时文件）或 \"history\"（跨单会话保留的历史文件）不填或者其他都会自动变为 temp。"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "ocr_image",
+            "description": "对一个图片 url 进行 ocr，并获取识别内容 markdown。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要识别的图片 url"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "对一个 query 进行联网搜索，并获取识别内容字典列表。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "搜索内容"
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "结果数量，默认 10"
+                    },
+                    "depth": {
+                        "type": "string",
+                        "description": "搜索深度，分为\"basic\" \"advanced\" \"fast\" \"ultra-fast\" 四个等级，默认 basic"
+                    },
+                    "time_range": {
+                        "type": "string",
+                        "description": "时间范围，默认 year"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "view_file",
+            "description": "使用 glm-5.3-flash 查看指定 url 里的文件，并按你给的 prompt 解析回答。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要查看的内容 url"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "你想让模型针对该 url 内容做什么"
+                    }
+                },
+                "required": [
+                    "url",
+                    "prompt"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "view_image",
+            "description": "使用 glm-5.3-flash 查看指定 url 里的图片，并按你给的 prompt 解析回答。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要查看的内容 url"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "你想让模型针对该 url 内容做什么"
+                    }
+                },
+                "required": [
+                    "url",
+                    "prompt"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "view_video",
+            "description": "使用 glm-5.3-flash 查看指定 url 里的视频，并按你给的 prompt 解析回答。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要查看的内容 url"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "你想让模型针对该 url 内容做什么"
+                    }
+                },
+                "required": [
+                    "url",
+                    "prompt"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_webpage",
+            "description": "读取并解析指定 url 的网页内容，返回网页正文（默认 markdown）。可传入 url 与可选参数。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要读取的网页 url"
+                    },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "请求超时时间（秒），默认 20，最大 100"
+                    },
+                    "return_format": {
+                        "type": "string",
+                        "description": "返回格式， markdown / text，默认 markdown"
+                    },
+                    "no_cache": {
+                        "type": "boolean",
+                        "description": "是否禁用缓存，默认 false"
+                    },
+                    "retain_images": {
+                        "type": "boolean",
+                        "description": "是否保留图片，默认 true"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_webs_partial",
+            "description": "得到联网搜索内容的部分最接近指定搜索规则的结果。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "要搜索的部分名，有 \"title\" \"url\" 和 \"content\" 可选。"
+                    },
+                    "file_ref": {
+                        "type": "string",
+                        "description": "要搜索的内容文件引用名，例如 \"json_1\""
+                    },
+                    "search_str": {
+                        "type": "string",
+                        "description": "搜索文本/表达式本身"
+                    },
+                    "search_method": {
+                        "type": "string",
+                        "description": "要使用的搜索方法，默认 \"re_search\" 会使用正则表达式 search。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
+                    }
+                },
+                "required": [
+                    "key",
+                    "file_ref",
+                    "search_str"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "content_search",
+            "description": "使用正则表达式搜索文件内容。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "param": {
+                        "type": "string",
+                        "description": "正则表达式语句"
+                    },
+                    "file_ref": {
+                        "type": "string",
+                        "description": "要搜索的内容文件引用名，例如 \"text_1\""
+                    },
+                    "search_method": {
+                        "type": "string",
+                        "description": "要使用的搜索方法，默认 \"re_search\" 会匹配所有正则匹配到的内容。还有 \"re_filter\" 只保留正则没搜索到的内容，输入其他内容会回退至 \"re_search\""
+                    }
+                },
+                "required": [
+                    "param",
+                    "file_ref"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "inprocess_report",
+            "description": "在会话途中跟用户反馈消息，不会被记录到历史记录，通常可用于表示自己在做什么或者将要做什么防止用户等待太久关闭会话。两次发送最小间隔 30s",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "要发送的消息内容"
+                    }
+                },
+                "required": [
+                    "message"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "save_to_history",
+            "description": "将一个文件/内容转存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要转存的 temp 文件引用名，例如 text_1；与 content 二选一"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "要保存到 history 的文本内容；当 ref 为空时备用"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "clear_history_files",
+            "description": "清空 history 文件夹里的所有文件（跨单会话保留的历史文件）。",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    }
+]

@@ -272,7 +272,8 @@ class AIHelper:
             build_history(
                 user=user,
                 ask=text,
-                ans=ans
+                ans=ans,
+                agent=self,
             )
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"
@@ -333,9 +334,12 @@ async def get_history(user: u.User):
     build_list = []
     uname = await get_user_name(user.id, default='未知用户')
     for _, item in enumerate(user_history):
+        url_dicts = (item.get('urls', []))
+        url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
+        url_str = f"[附带URLs:{url_str}]" if url_str else ""
         build_dicts = [{
             "role": "user",
-            "content": f"[历史记录-{item.get('time', '未知时间')}][{uname}(qq{user.id})] {item['ask']}",
+            "content": f"[历史记录-{item.get('time', '未知时间')}][{uname}(qq{user.id})]{url_str} {item['ask']}",
         },
         {
             "role": "assistant",
@@ -346,12 +350,13 @@ async def get_history(user: u.User):
     return build_list, build_str
 
 
-def build_history(user: u.User, ask, ans):
+def build_history(user: u.User, ask, ans, agent):
     user_history = history.load_history(user.id)
     user_history.append({
         "ask": ask,
         "ans": ans,
-        "time": get_time_now()
+        "time": get_time_now(),
+        "urls": agent.user_input_urls
     })
     if len(user_history) > MAX_HISTORY_COUNT:
         # TODO 压缩上下文

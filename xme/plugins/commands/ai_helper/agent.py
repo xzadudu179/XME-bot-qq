@@ -3,6 +3,7 @@ import re
 import shutil
 import json
 import inspect
+import asyncio
 from traceback import format_exc
 
 import config
@@ -15,6 +16,7 @@ from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
 from xme.xmetools.bottools import get_user_name
 from xme.xmetools.timetools import get_time_now
+from xme.xmetools.jsontools import read_from_path
 from character import get_message
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
@@ -25,6 +27,9 @@ from .constants import (
     MAX_CHECK_TIMES,
     MAX_TOOL_CALL_TIMES,
     MAX_HISTORY_COUNT,
+    COMPRESS_TRIGGER,
+    CONTEXT_KEEP_RECENT,
+    COMPRESS_MAX_LENGTH,
 )
 from . import functions
 from . import history
@@ -56,23 +61,28 @@ class AIHelper:
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
 
     def get_history_path(self):
-        path = self.get_temp_path() / "history"
+        # AI 转存文件默认放到用户 AI 历史文件夹内、以会话命名的子文件夹
+        # data/ai_historys/<用户id>/<会话>/
+        path = history.session_dir(self.user_id)
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def resolve_ref(self, ref: str) -> str:
-        """解析 ref 对应的文件名（相对 temp 根目录），支持多次会话的 history 引用。
+    def resolve_ref(self, ref: str):
+        """解析 ref 对应的文件路径。
 
-        history 文件按 history_N.tmp 命名，其引用 history_N 可由此推导，
-        因此即使当前会话 ref_map 未注册，也能直接解析。
+        - temp 文件引用：ref_map 里存的是纯文件名，拼上 temp 目录路径；
+        - history 引用：ref_map 里存的是完整路径，或按 history_N 推导出会话文件夹内的路径，
+          因此即使当前会话 ref_map 未注册，也能直接解析。
         """
         file_name = self.ref_map.get(ref, None)
         if file_name is not None:
-            return file_name
+            if "/" in file_name or file_name.startswith("."):
+                return Path(file_name)
+            return self.get_temp_path() / file_name
         if ref.startswith("history_") and ref[len("history_"):].isdigit():
-            candidate = f"history/{ref}.tmp"
-            if (self.get_temp_path() / candidate).exists():
-                self.ref_map[ref] = candidate
+            candidate = self.get_history_path() / f"{ref}.tmp"
+            if candidate.exists():
+                self.ref_map[ref] = str(candidate)
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
@@ -235,8 +245,73 @@ class AIHelper:
                 return False
         raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
+    async def _glm_chat(self, messages, model="glm-5.3-flash"):
+        """通用的一次性 chat 完成调用（用于历史压缩等），返回模型文本。"""
+        response = self.client.chat.asyncCompletions.create(
+            model=model,
+            messages=messages,
+        )
+        task_id = response.id
+        while True:
+            result = self.client.chat.asyncCompletions.retrieve_completion_result(
+                id=task_id
+            )
+            self.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
+            if result.task_status == "SUCCESS":
+                return result.choices[0].message.content
+            if result.task_status == "FAIL":
+                raise RuntimeError("AI 压缩调用失败")
+            await asyncio.sleep(0.5)
+
+    @staticmethod
+    def _build_compress_input(summary, to_compress) -> str:
+        """构造压缩输入：[旧摘要] + [待压缩的对话历史]。"""
+        history_text = "\n".join([
+            f"[{it.get('time', '未知时间')}] 用户: {it.get('ask', '')}\nAI: {it.get('ans', '')}"
+            for it in to_compress
+        ])
+        return (
+            f"[旧摘要]\n{summary or '（无）'}\n\n"
+            f"[待压缩的对话历史]\n{history_text}"
+        )
+
+    async def _compress_context(self):
+        """历史超过阈值时，把最旧的一部分压缩成摘要，存回 history 文件。
+
+        摘要作为第一条特殊 history（携带 summary 键）存放；
+        后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
+        """
+        user_history = history.load_history(self.user_id)
+        summary, normals = history.split(user_history)
+        if len(normals) <= COMPRESS_TRIGGER:
+            return 0
+        to_compress = normals[:len(normals) - CONTEXT_KEEP_RECENT]
+        keep = normals[len(normals) - CONTEXT_KEEP_RECENT:]
+        try:
+            memory_prompt = read_from_path("./ai_configs.json")[__plugin_name__]["memory"]
+            if memory_prompt:
+                memory_prompt = memory_prompt.format(max_length=COMPRESS_MAX_LENGTH)
+            content = await self._glm_chat([
+                {"role": "system", "content": memory_prompt},
+                {"role": "user", "content": self._build_compress_input(summary, to_compress)},
+            ])
+            new_summary = (content or "").strip()
+            if new_summary:
+                summary = new_summary
+                new_history = history.merge(summary, keep, get_time_now())
+                history.save_history(self.user_id, new_history)
+                ai_logger.info(
+                    f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
+                )
+                return len(summary)
+        except Exception as ex:
+            ai_logger.exception(f"上下文压缩失败: {ex}")
+            return 0
+        return 0
+
     async def user_talk(self, session: CommandSession, role, user, text):
         self.pending_messages.clear()
+        compressed = await self._compress_context()
         history, curr_text = await get_history(user)
 
         # 提取 text 里的图片
@@ -297,7 +372,7 @@ class AIHelper:
                 f"{self.cached_tokens}, "
                 f"减少 {credits_use} 个 tokens"
             )
-            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix}, tool_call_times
+            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed}, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
 
@@ -332,8 +407,12 @@ async def get_history(user: u.User):
     if not user_history:
         return "", ""
     build_list = []
+    summary = None
     uname = await get_user_name(user.id, default='未知用户')
     for _, item in enumerate(user_history):
+        if history.is_summary(item):
+            summary = item.get("summary")
+            continue
         url_dicts = (item.get('urls', []))
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
         url_str = f"[附带URLs:{url_str}]" if url_str else ""
@@ -346,19 +425,22 @@ async def get_history(user: u.User):
             "content": f"{item['ans']}"
         }]
         build_list += build_dicts
+    if summary:
+        # 在上下文最前面注入长期记忆摘要，让 AI 知道这是此前对话的总结
+        build_list.insert(0, {"role": "user", "content": f"[长期记忆摘要（此前对话总结，供你参考）：\n{summary}\n]"})
     build_str = f"\n当前对话（现在时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
     return build_list, build_str
 
 
 def build_history(user: u.User, ask, ans, agent):
     user_history = history.load_history(user.id)
-    user_history.append({
+    summary, normals = history.split(user_history)
+    normals.append({
         "ask": ask,
         "ans": ans,
         "time": get_time_now(),
         "urls": agent.user_input_urls
     })
-    if len(user_history) > MAX_HISTORY_COUNT:
-        # TODO 压缩上下文
-        user_history = user_history[-MAX_HISTORY_COUNT:]
-    history.save_history(user.id, user_history)
+    if len(normals) > MAX_HISTORY_COUNT:
+        normals = normals[-MAX_HISTORY_COUNT:]
+    history.save_history(user.id, history.merge(summary, normals))

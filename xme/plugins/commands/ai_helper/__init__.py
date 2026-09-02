@@ -137,6 +137,9 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             return False
         pending_messages = messages_dict["messages"]
         prefix = messages_dict["prefix"]
+        history_compressed = messages_dict['history_compressed']
+        if history_compressed > 0:
+            prefix = prefix + f"上下文已压缩，使用 {history_compressed} 字"
         credits_use = tokens_use_dict["credits_use"]
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]

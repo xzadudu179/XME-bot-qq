@@ -135,8 +135,7 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         return f"[图片生成失败: {e}]"
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.resolve_ref(file_ref)
-    path = agent.get_temp_path() / file_name
+    path = agent.resolve_ref(file_ref)
     method = None
     search_methods = {
         # "re_search": regex_search,
@@ -149,8 +148,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
 
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.resolve_ref(file_ref)
-    path = agent.get_temp_path() / file_name
+    path = agent.resolve_ref(file_ref)
     method = None
     search_methods = {
         # "re_search": regex_search,
@@ -247,7 +245,7 @@ async def view_item(url: str, prompt: str, item_type: str, agent=None):
             await asyncio.sleep(0.5)
         # 计费 tokens 到 credits（跟随会话模型倍率折算）
         if agent is not None:
-            agent.other_credits += result.usage.total_tokens
+            agent.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
         content = result.choices[0].message.content
         return content if content else "[没有识别到内容]"
     except Exception as ex:
@@ -299,9 +297,9 @@ async def read_webpage(
 
 def check_file(ref: str, line_start=0, line_end=0, agent=None):
     """获取保存进用户 temp 的文件的内容。"""
-    file_name = agent.resolve_ref(ref)
+    path = agent.resolve_ref(ref)
     lines = []
-    with open(f"{agent.get_temp_path(True)}/{file_name}", "r", encoding="utf-8") as file:
+    with open(path, "r", encoding="utf-8") as file:
         lines = file.readlines()
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
     return {"result": "\n".join(get_lines), "no_compress": True}
@@ -320,7 +318,7 @@ def list_temp_files(folder="temp", agent=None):
             ref = f.stem if f.stem.startswith("history_") else None
             if ref is None:
                 continue
-            agent.ref_map[ref] = f"history/{f.name}"
+            agent.ref_map[ref] = str(hist_path / f.name)
             lines.append(f"{ref}: {f.name}")
         return "\n".join(lines)
     reversed_ref_map = reverse_dict(agent.ref_map)
@@ -336,10 +334,10 @@ def save_to_history(ref="", content="", agent=None):
     因此跨会话也能稳定复用。
     """
     if ref:
-        file_name = agent.ref_map.get(ref, None)
-        if file_name is None:
+        try:
+            src_path = agent.resolve_ref(ref)
+        except KeyError:
             return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
-        src_path = agent.get_temp_path() / file_name
         with open(src_path, "r", encoding="utf-8") as f:
             text = f.read()
     else:
@@ -361,13 +359,13 @@ def save_to_history(ref="", content="", agent=None):
         n += 1
     ref_id = f"history_{n}"
     file_name = f"{ref_id}.tmp"
-    agent.ref_map[ref_id] = f"history/{file_name}"
+    agent.ref_map[ref_id] = str(hist_path / file_name)
     with open(hist_path / file_name, "w", encoding="utf-8") as f:
         f.write(text)
     return {
         "result": f"已转存至 history，引用 {ref_id}，可通过 check_file 传入 \"{ref_id}\" 查看内容。",
         "ref": ref_id,
-        "file_name": f"history/{file_name}",
+        "file_name": str(hist_path / file_name),
         "total_len": len(text),
         "preview": text[:200],
         "no_compress": True,
@@ -385,6 +383,6 @@ def clear_history_files(agent=None):
                 removed += 1
     agent.ref_map = {
         k: v for k, v in agent.ref_map.items()
-        if not str(v).startswith("history/")
+        if not str(v).startswith("data/ai_historys/")
     }
     return {"result": f"已清空 history，共删除 {removed} 个文件", "no_compress": True}

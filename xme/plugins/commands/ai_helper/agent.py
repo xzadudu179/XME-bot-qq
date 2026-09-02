@@ -94,24 +94,6 @@ class AIHelper:
             name: getattr(functions, name)
             for name in functions.__tools__
         }
-        # self.tool_functions = {
-        #     "get_telia_clock_state": get_telia_clock_state,
-        #     "gen_image": gen_image,
-        #     "get_skill_md": get_skill_md,
-        #     "check_file": check_file,
-        #     "list_temp_files": list_temp_files,
-        #     "save_to_history": save_to_history,
-        #     "clear_history_files": clear_history_files,
-        #     "inprocess_report": inprocess_report,
-        #     "ocr_image": ocr_image,
-        #     "view_file": view_file,
-        #     "view_image": view_image,
-        #     "view_video": view_video,
-        #     "read_webpage": read_webpage,
-        #     "web_search": web_search,
-        #     "content_search": content_search,
-        #     "get_webs_partial": get_webs_partial,
-        # }
         self.pending_messages = []
         # 工具 schema 从 tools.json 读取
         tools_path = Path(__file__).parent / "tools.json"

@@ -6,6 +6,7 @@ from nonebot import MessageSegment
 
 from nonebot.log import logger
 from xme.xmetools.filetools import search_json, search_text
+from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import fetch_data_post
 from xme.xmetools.texttools import regex_filter, regex_filter_text
@@ -72,7 +73,7 @@ async def ocr_image(url, agent=None):
         return f"[图片 OCR 失败: {ex}]"
 
 async def inprocess_report(message: str, agent):
-    from . import __plugin_name__
+    from .constants import __plugin_name__
     # 最小间隔s
     MIN_INTERVAL = 30
     try:
@@ -109,7 +110,7 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         return f"[图片生成失败: {e}]"
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.REF_MAP[file_ref]
+    file_name = agent.ref_map[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {
@@ -123,7 +124,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
 
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    file_name = agent.REF_MAP[file_ref]
+    file_name = agent.ref_map[file_ref]
     path = agent.get_temp_path() / file_name
     method = None
     search_methods = {
@@ -277,3 +278,96 @@ async def read_webpage(
     except Exception as ex:
         logger.exception(f"网页阅读失败: {ex}")
         return f"[网页阅读失败: {ex}]"
+
+
+def check_file(ref: str, line_start=0, line_end=0, agent=None):
+    """获取保存进用户 temp 的文件的内容。"""
+    file_name = agent.ref_map[ref]
+    lines = []
+    with open(f"{agent.get_temp_path(True)}/{file_name}", "r", encoding="utf-8") as file:
+        lines = file.readlines()
+    get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
+    return {"result": "\n".join(get_lines), "no_compress": True}
+
+
+def list_temp_files(folder="temp", agent=None):
+    """列出指定文件夹（temp / history）下的文件列表。"""
+    if folder == "history":
+        hist_path = agent.get_history_path()
+        files = sorted(
+            [f for f in hist_path.iterdir() if f.is_file()],
+            key=lambda f: f.name,
+        )
+        lines = []
+        for f in files:
+            ref = f.stem if f.stem.startswith("history_") else None
+            if ref is None:
+                continue
+            agent.ref_map[ref] = f"history/{f.name}"
+            lines.append(f"{ref}: {f.name}")
+        return "\n".join(lines)
+    reversed_ref_map = reverse_dict(agent.ref_map)
+    files = [f"{reversed_ref_map.get(f.name, None)}: {f.name}" for f in agent.get_temp_path().iterdir() if f.is_file()]
+    return "\n".join(files)
+
+
+def save_to_history(ref="", content="", agent=None):
+    """转存内容/文件到 history 文件夹，返回 history 引用信息。
+
+    若传入 ref，则读取 temp 中对应文件的内容转存；否则使用 content 文本。
+    history 文件以 history_N.tmp 命名，其引用 history_N 可由文件名推导，
+    因此跨会话也能稳定复用。
+    """
+    if ref:
+        file_name = agent.ref_map.get(ref, None)
+        if file_name is None:
+            return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
+        src_path = agent.get_temp_path() / file_name
+        with open(src_path, "r", encoding="utf-8") as f:
+            text = f.read()
+    else:
+        text = content or ""
+    if not text:
+        return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
+    hist_path = agent.get_history_path()
+    used = set()
+    for item in hist_path.iterdir():
+        if item.is_file() and item.name.endswith(".tmp"):
+            stem = item.stem
+            if stem.startswith("history_"):
+                try:
+                    used.add(int(stem[len("history_"):]))
+                except ValueError:
+                    pass
+    n = 1
+    while n in used:
+        n += 1
+    ref_id = f"history_{n}"
+    file_name = f"{ref_id}.tmp"
+    agent.ref_map[ref_id] = f"history/{file_name}"
+    with open(hist_path / file_name, "w", encoding="utf-8") as f:
+        f.write(text)
+    return {
+        "result": f"已转存至 history，引用 {ref_id}，可通过 check_file 传入 \"{ref_id}\" 查看内容。",
+        "ref": ref_id,
+        "file_name": f"history/{file_name}",
+        "total_len": len(text),
+        "preview": text[:200],
+        "no_compress": True,
+    }
+
+
+def clear_history_files(agent=None):
+    """清空 history 文件夹里的所有文件，并移除对应引用。"""
+    hist_path = agent.get_history_path()
+    removed = 0
+    if hist_path.is_dir():
+        for item in hist_path.iterdir():
+            if item.is_file() or item.is_symlink():
+                item.unlink()
+                removed += 1
+    agent.ref_map = {
+        k: v for k, v in agent.ref_map.items()
+        if not str(v).startswith("history/")
+    }
+    return {"result": f"已清空 history，共删除 {removed} 个文件", "no_compress": True}

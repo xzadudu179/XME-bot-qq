@@ -3,7 +3,7 @@ from character import get_message
 from xme.xmetools.msgtools import aget_arg
 
 from . import history
-from .constants import __plugin_name__, MAX_SESSIONS
+from .constants import SESSION_NAME_MAX_LEN, __plugin_name__, MAX_SESSIONS
 from .session import AISession
 
 # 注意：命令函数统一签名 (session, user, args=None)；
@@ -30,20 +30,23 @@ def _session_by_index(user_id, num: str) -> tuple[AISession | None, str | None]:
 
 
 def new_session(session, user, args=None):
-    """创建并切换到新会话：new [会话名]（不填名则自动命名：会话1、会话2...）"""
-    ai_session = (args[0].strip() if args and args[0] else "")
-    lock = bool(ai_session)  # 用户指定名字 → AI 不可修改
-    if not ai_session:
-        ai_session = AISession.next_auto_name(user.id)
-    ai_session = ai_session.replace(" ", "_")
+    """创建并切换到新会话：new （自动命名：会话1、会话2...）"""
+    # ai_session = (args[0].strip() if args and args[0] else "")
+    # lock = bool(ai_session)  # 用户指定名字 → AI 不可修改
+
+    # if not ai_session:
+    ai_session = AISession.next_auto_name(user.id)
+    # ai_session = ai_session.replace(" ", "_")
+
     if not AISession.is_valid_name(ai_session):
-        return get_message("plugins", __plugin_name__, "session_name_invalid")
+        raise ValueError(f"会话名无效：{ai_session}")
+        # return get_message("plugins", __plugin_name__, "session_name_invalid")
     if AISession(user.id, ai_session).exists():
         return get_message("plugins", __plugin_name__, "session_exists", ai_session=ai_session)
     if len(AISession.all(user.id)) >= MAX_SESSIONS:
         return get_message("plugins", __plugin_name__, "session_limit", max_sessions=MAX_SESSIONS)
     try:
-        s = AISession.create(user.id, ai_session, lock=lock)
+        s = AISession.create(user.id, ai_session, lock=False)
     except ValueError:
         return get_message("plugins", __plugin_name__, "session_limit", max_sessions=MAX_SESSIONS)
     s.set_current()
@@ -57,15 +60,16 @@ def list_sessions(session, user, args=None):
     lines = [get_message("plugins", __plugin_name__, "session_list_header")]
     for index, s in enumerate(sessions, 1):
         marks = ""
-        if s.is_default:
-            marks += get_message("plugins", __plugin_name__, "session_mark_default")
-        if s.is_locked():
-            marks += get_message("plugins", __plugin_name__, "session_mark_locked")
+        # if s.is_default:
+            # marks += get_message("plugins", __plugin_name__, "session_mark_default")
+        # if s.is_locked():
+            # marks += get_message("plugins", __plugin_name__, "session_mark_locked")
         if s.ai_session == current.ai_session:
             marks += get_message("plugins", __plugin_name__, "session_mark_current")
+        name = s.ai_session if s.ai_session != "default" else "[默认会话]"
         lines.append(get_message(
             "plugins", __plugin_name__, "session_list_item",
-            index=index, name=s.ai_session, marks=marks, count=s.count,
+            index=index, name=name, marks=marks, count=s.count,
         ))
     lines.append(get_message(
         "plugins", __plugin_name__, "session_list_footer",
@@ -80,8 +84,10 @@ def name_session(session, user, args=None):
     用户命名后该会话标记为 AI 不可修改；命名默认会话（序号 1）等同把它提升为新会话。
     """
     args = [a.strip() for a in (args or []) if a.strip()]
+
     if not args or (len(args) == 1 and args[0].isdigit()):
         return get_message("plugins", __plugin_name__, "session_name_need_new")
+
     if len(args) == 1:
         target = AISession.current(user.id)
         new_name = args[0]
@@ -90,18 +96,25 @@ def name_session(session, user, args=None):
         if err:
             return err
         new_name = args[1]
+
     new_name = new_name.replace(" ", "_")
+    if len(new_name) > SESSION_NAME_MAX_LEN:
+        return get_message("plugins", __plugin_name__, "session_name_too_long", max_length=SESSION_NAME_MAX_LEN)
     if not AISession.is_valid_name(new_name):
         return get_message("plugins", __plugin_name__, "session_name_invalid")
     if new_name == target.ai_session:
         return get_message("plugins", __plugin_name__, "session_same_name", ai_session=new_name)
     locked_hint = get_message("plugins", __plugin_name__, "session_mark_locked")
+
+    ######################
+
     if target.is_default:
         promoted = AISession.promote_default(user.id, new_name, lock=True)
         if promoted is None:
             return get_message("plugins", __plugin_name__, "session_exists", ai_session=new_name)
         return get_message("plugins", __plugin_name__, "session_promoted", new_name=new_name, locked_hint=locked_hint)
     old_name = target.ai_session
+
     if not target.rename(new_name, lock=True):
         if AISession(user.id, new_name).exists():
             return get_message("plugins", __plugin_name__, "session_exists", ai_session=new_name)
@@ -165,13 +178,13 @@ async def clear_all_sessions(session, user, args=None):
             "plugins", __plugin_name__, "session_clear_all_confirm",
             count=len(sessions), total=total,
         ),
-        rules=lambda r: r.strip().lower() in ("y", "yes", "是", "确认"),
+        rules=lambda r: r.strip().lower() in ("y", "Y"),
         can_use_cmd=True,
         max_times=3,
     )
     if reply == "CMD_END" or reply is None:
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
-    if reply.strip().lower() not in ("y", "yes", "是", "确认"):
+    if reply.strip().lower() not in ("y", "Y"):
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
     cleared = history.clear_all_history(user.id)
     return get_message("plugins", __plugin_name__, "session_clear_all_done", count=cleared)

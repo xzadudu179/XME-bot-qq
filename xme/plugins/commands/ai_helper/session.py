@@ -3,7 +3,7 @@ from pathlib import Path
 
 from xme.xmetools.filetools import is_safe_custom_name
 from . import history
-from .constants import MAX_SESSIONS
+from .constants import MAX_SESSIONS, SESSION_NAME_MAX_LEN
 
 # 用户目录下的状态文件（clear_all_history 清理目录时会一并移除）
 CURRENT_SESSION_FILE = ".current"   # 当前 AI 会话指针
@@ -185,7 +185,9 @@ class AISession:
 
     @staticmethod
     def is_valid_name(name: str) -> bool:
-        """校验会话名：安全字符（filetools 单点校验）+ 非默认保留名 + 不以 history_ 开头。"""
+        """校验会话名：安全字符（filetools 单点校验）+ 非默认保留名 + 不以 history_ 开头。最多 20 字"""
+        if len(name) > SESSION_NAME_MAX_LEN:
+            return False
         return (isinstance(name, str) and is_safe_custom_name(name)
                 and name != DEFAULT_SESSION and not name.startswith("history_"))
 
@@ -229,7 +231,7 @@ class AISession:
     def create(cls, user_id, ai_session, lock=False) -> "AISession":
         """创建新会话（空历史文件 + 转存文件夹）；已存在/名字非法/会话数达上限抛 ValueError。"""
         if not cls.is_valid_name(ai_session):
-            raise ValueError("会话名不合法")
+            raise ValueError(f"会话名 {ai_session} 不合法")
         s = cls(user_id, ai_session)
         if s.exists():
             raise ValueError("会话已存在")

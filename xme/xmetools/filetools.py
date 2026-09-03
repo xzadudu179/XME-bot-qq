@@ -10,6 +10,7 @@ import json
 from xme.xmetools.typetools import try_parse
 from xme.xmetools import jsontools
 from xme.xmetools.texttools import hash_text, regex_search
+from keys import generate_file_token, DOMAIN
 
 def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
 ) -> tuple[Path, str]:
@@ -36,6 +37,27 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
     agent.ref_map[ref] = file_name
 
     return path, ref
+
+
+def get_local_file_url(path: str):
+    """将本地文件变为一次性 url 链接（TTL 30s）
+
+    Args:
+        path (str): 本地文件路径
+
+    Raises:
+        ValueError: 文件层级低于项目层级
+
+    Returns:
+        str: 链接
+    """
+    log.logger.info(Path("."))
+    if not Path(path).is_relative_to(Path(".").absolute()):
+        raise ValueError("文件层级不能低于项目层级")
+    token = generate_file_token(path)
+    # 有 30秒的过期时间
+    url = f"http://{DOMAIN}/file/{token}"
+    return url
 
 
 def is_safe_ref(ref: str, prefixes: tuple[str, ...] = ("history_", "text_", "json_")) -> bool:

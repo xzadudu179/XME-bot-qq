@@ -349,6 +349,10 @@
                     "ref": {
                         "type": "string",
                         "description": "要转存的 temp 文件引用名"
+                    },
+                    "history_ref": {
+                        "type": "string",
+                        "description": "转存后的文件名（不填则自动生成）"
                     }
                 },
                 "required": ["ref"]
@@ -376,7 +380,7 @@
         "type": "function",
         "function": {
             "name": "write_to_history",
-            "description": "向某个历史文件写入内容。ref 可为 history_N 或自定义安全文件名（仅字母数字、_、-、.，不含路径/特殊符号，如 笔记.md）。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认会自动换行分隔）。",
+            "description": "向某个历史文件写入内容。ref 可为 history_N 或自定义安全文件名（仅字母数字、_、-、.，不含路径/特殊符号，如 笔记.md）。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔）。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -394,6 +398,33 @@
                     }
                 },
                 "required": ["ref", "content"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_to_temp",
+            "description": "向某个临时文件写入内容。ref 选填，不填会创建新文件，填则表示要覆盖/追加写入的文件 ref。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "string",
+                        "description": "要写入的文本内容"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "临时文件引用名，例如 json_1；不存在时会报错。"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "description": "写入模式，w（覆盖，默认）或 a（追加）只在 ref 有内容时有用"
+                    }
+                },
+                "required": [
+                    "content"
+                ]
             }
         }
     },

@@ -6,7 +6,7 @@ import functools
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join, dir_usage
+from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join, dir_usage, text_to_file
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import glm_api_request
@@ -31,6 +31,7 @@ __tools__ = [
     "save_to_history",
     "find_history_file",
     "write_to_history",
+    "write_to_temp",
     "delete_history_file",
     "rename_history_file",
     "clear_history_files",
@@ -75,7 +76,7 @@ async def get_image_msg(url, max_size = 1024):
         logger.exception(traceback.format_exc())
         return MessageSegment.text("[图片加载失败]")
 
-def get_skill_md(name: str):
+def get_skill_md(name: str, agent=None):
     skill = ""
     content = ""
     try:
@@ -86,6 +87,7 @@ def get_skill_md(name: str):
     if skill == "":
         content = "[这个 skill 似乎是空白的。]"
     content = skill
+    agent.activate_skills.append(name)
     return {"result": content, "no_compress": True}
 
 async def ocr_image(url, agent=None):
@@ -383,6 +385,26 @@ def find_history_file(ref: str, agent=None):
         info["preview"] = text[:200]
     return info
 
+def write_to_temp(content: str, ref: str = "", mode: str = "w", agent=None):
+    filename = agent.ref_map.get(ref, None)
+    if filename is None and ref != "":
+        return f"[无效的引用名：{ref}]"
+    if filename is None:
+        res = text_to_file(content, agent.user_id, agent)
+        agent.ref_map[res["ref"]] = res["file_name"]
+    else:
+        path = agent.resolve_ref(ref, False)
+        modes = {
+            "w": "w",
+            "a": "a",
+        }
+        if modes.get(mode) is None:
+            return f"[无效的写入模式：{mode}，仅支持 w（覆盖）或 a（追加）]"
+        with open(path, modes[mode], encoding="utf-8") as file:
+            file.write(content)
+        return f"[成功写入已存在的文件 \"{ref}\"]"
+    return f"[成功写入文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
+
 
 def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     """写入/覆盖/追加某个历史文件。
@@ -410,7 +432,7 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     try:
         if mode == "a" and path.exists():
             with open(path, "a", encoding="utf-8") as f:
-                f.write("\n" + content)
+                f.write(content)
         else:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -495,26 +517,30 @@ def rename_history_file(ref: str, new_ref: str = "", agent=None):
         return {"result": f"[重命名失败：{ex}]", "no_compress": True}
 
 
-def save_to_history(ref, agent=None):
-    """转存文件到 history 文件夹，自动生成新的 history_N 引用。
-
-    若传入 ref，则读取 temp 中对应文件的内容转存；否则使用 content 文本。
-    history 文件以 history_N.tmp 命名，其引用 history_N 可由文件名推导，
-    因此跨会话也能稳定复用。
+def save_to_history(ref, history_ref="", agent=None):
+    """转存文件到 history 文件夹，生成引用。
+    ref: 来源文件引用（temp 的 text_N/json_N 或已有历史引用）
+    history_ref: 可选，保存时自定义名（history_N 或安全自定义名如 笔记.md）；不填自动分配 history_N；已存在会报错。
     """
-    # if ref:
     try:
         src_path = agent.resolve_ref(ref)
     except KeyError:
         return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
     with open(src_path, "r", encoding="utf-8") as f:
         text = f.read()
-    # else:
-        # text = content or ""
     if not text:
         return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
-    # 复用 write_to_history 完成写入（找到文件 + 写入已拆分）
-    ref_id = _next_history_ref(agent)
+    # 自定义名：统一校验 + 防重名
+    if history_ref:
+        res = _history_file(history_ref, agent)
+        if res is None:
+            return {"result": f"[无效的历史文件引用名：{history_ref}]（仅支持 history_N 或安全自定义名）", "no_compress": True}
+        _, target = res
+        if target.exists():
+            return {"result": f"[历史文件 {history_ref} 已存在，请换名或先 delete_history_file]", "no_compress": True}
+        ref_id = history_ref
+    else:
+        ref_id = _next_history_ref(agent)
     result = write_to_history(ref_id, text, mode="w", agent=agent)
     if (result.get("result", "") or "").startswith("["):
         return result

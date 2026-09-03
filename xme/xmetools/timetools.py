@@ -227,6 +227,11 @@ class Timer:
         self.end_time = time.time()
 
     def get_timer_value(self) -> float:
+        """得到计时器秒数
+
+        Returns:
+            float: 秒数
+        """
         if self.start_time is None:
             return 0.
         if self.end_time is None:
@@ -276,11 +281,11 @@ def get_closest_time(times: list, target_time="NOW", format="%Y-%m-%d %H:%M:%S")
         min_index = i
     return min_index
 
-def secs_to_ymdh(secs, format=("年", "个月", "天", "小时", "分钟", "秒")):
+def secs_to_ymdh(secs: int | float, format=("年", "个月", "天", "小时", "分钟", "秒")):
     """将秒数转换为年月天小时分钟秒
 
     Args:
-        secs (int): 秒数
+        secs (int | float): 秒数
 
     Returns:
         str: 转换成的时间格式
@@ -301,8 +306,8 @@ def secs_to_ymdh(secs, format=("年", "个月", "天", "小时", "分钟", "秒"
     formatted_string = "" if years < 1 else str(int(years)) + format[0]
     formatted_string += "" if months < 1 else str(int(months)) + format[1]
     formatted_string += "" if remaining_days < 1 else str(int(remaining_days)) + format[2]
-    formatted_string += str(int(hours)) + format[3]
-    formatted_string += str(int(mins)) + format[4]
+    formatted_string += "" if hours < 1 else str(int(hours)) + format[3]
+    formatted_string += "" if mins < 1 else str(int(mins)) + format[4]
     formatted_string += str(int(remaining_secs)) + format[5]
     return formatted_string
 

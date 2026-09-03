@@ -11,7 +11,7 @@ from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
 from xme.xmetools.msgtools import is_text_can_send, send_session_msg
 from xme.xmetools.jsontools import read_from_path
-from xme.xmetools.timetools import TimeUnit, get_time_now
+from xme.xmetools.timetools import TimeUnit, get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
@@ -130,8 +130,8 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, models=""))
+    if len(history.load_history(session.event.user_id)) <= constants.COMPRESS_TRIGGER:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model))
     try:
         t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model)
         if not t:
@@ -139,6 +139,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         pending_messages = messages_dict["messages"]
         prefix = messages_dict["prefix"]
         history_compressed = messages_dict['history_compressed']
+        secs = messages_dict['talk_secs']
         if history_compressed > 0:
             prefix = prefix + f"上下文已压缩，使用 {history_compressed} 字"
         credits_use = tokens_use_dict["credits_use"]
@@ -160,6 +161,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             tokens_left_now=f"{credits_left_now:,.2f}".rstrip('0').rstrip('.')
             if not superuser_mode
             else "∞",
+            talk_time=secs_to_ymdh(secs),
             tool_call_times=tool_call_times,
             cached=f"{cached:,.2f}".rstrip('0').rstrip('.'),
             tokens=f"{total:,.2f}".rstrip('0').rstrip('.'),

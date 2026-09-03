@@ -24,6 +24,57 @@ import os
 
 # TODO: 图片风控适配
 
+async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
+    if not text:
+        return {"result": True, "reason": ""}
+    if len(text) > 2000:
+        return {"result": False, "reason": "文本过长"}
+    try:
+        logger.info(f"正在分析 \"{text}\"")
+        response = await text_moderations(text)
+        result = response["result_list"][0]
+        risk = result['risk_level']
+        level = {
+            "PASS": "无危害",
+            "REVIEW": "需要审查",
+            "BLOCK": "是违规内容",
+            "REJECT": "是明显违规内容",
+            "HIGH": "是高危内容",
+        }
+        risk_type = "无"
+        if risk != "PASS":
+            risk_type = result.get("risk_type", ['未知'])[0]
+        logger.info(f"分析完成，risk: {risk} {level.get(risk, '风险性未知')} risktype:{risk_type}")
+        warning_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}要发送的消息识别的 \"{text}\" 可能有风险。risktype:{risk_type}"
+        risk_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}调用的指令{level.get(risk, '风险性未知')}。risktype:{risk_type}"
+        match risk:
+            case "PASS":
+                return {"result": True, "reason": f""}
+            case "REVIEW":
+                logger.warning(warning_text)
+                if risk_send_to_superusers:
+                    await send_to_superusers(bot, warning_text)
+                return {"result": True, "reason": f""}
+            case "BLOCK":
+                logger.warning(risk_text)
+                if risk_send_to_superusers:
+                    await send_to_superusers(bot,risk_text)
+                return {"result": False, "reason": "可能有违规内容"}
+            case "REJECT":
+                logger.warning(risk_text)
+                if risk_send_to_superusers:
+                    await send_to_superusers(bot,risk_text)
+                return {"result": False, "reason": "有违规内容"}
+            case "HIGH":
+                logger.warning(risk_text)
+                if risk_send_to_superusers:
+                    await send_to_superusers(bot,risk_text)
+                return {"result": False, "reason": "有高危内容"}
+    except Exception as ex:
+        logger.exception(traceback.format_exc())
+        return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
+
+
 async def is_text_can_send(session: CommandSession, text: str):
     if not text:
         return {"result": True, "reason": ""}
@@ -286,6 +337,7 @@ def change_group_message_content(message_dict, new_content, user_id=None, nickna
 
 async def send_to_superusers(bot: NoneBot, message):
     for u in config.SUPERUSERS:
+        SEND_LOGGER.info(f'Sending message to {u}: {message}')
         await bot.send_private_msg(user_id=u, message=message)
 
 async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSegment]):
@@ -327,6 +379,7 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     event.message_id
     if debug and not debugging():
         return
+    SEND_LOGGER.info(f'Sending message: {message}')
     debug_prefix = "" if not debug else "[DEBUG] "
     msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
@@ -373,7 +426,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
     if debug and not debugging():
         return
     has_tips = random_percent(tips_percent) and tips
-    msg = str(prompt)
+    msg = str(prompt) if prompt is not None else ""
     if msg and msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
     is_nline_start = True if msg and msg[0] == "\n" else False

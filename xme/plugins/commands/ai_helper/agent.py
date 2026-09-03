@@ -5,6 +5,7 @@ import json
 import inspect
 import asyncio
 from traceback import format_exc
+from uuid import uuid4
 
 import config
 from nonebot import CommandSession, MessageSegment
@@ -67,7 +68,7 @@ class AIHelper:
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def resolve_ref(self, ref: str):
+    def resolve_ref(self, ref: str, use_history=True):
         """解析 ref 对应的文件路径。
 
         - temp 文件引用：ref_map 里存的是纯文件名，拼上 temp 目录路径；
@@ -81,6 +82,8 @@ class AIHelper:
                 return Path(file_name)
             # 纯文件名 → 安全拼接到 temp 目录
             return safe_join(self.get_temp_path(), file_name)
+        if not use_history:
+            raise KeyError(f"无法找到引用 {ref}")
         # 跨会话推导：history_N 或自定义安全文件名
         derived = history_file_name(ref)
         if derived is not None:
@@ -94,12 +97,14 @@ class AIHelper:
         self.ref_map = {}
         self.tokens = 0
         self.other_credits = 0
+        self.model_arg = model
         self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
         self.cached_tokens = 0
         self.client = ai_client
         self.session = session
         self.user_id = user_id
         self.user_input_urls = {}
+        self.activate_skills = []
 
         self.spent_secs = Timer()
         # 上次回应时间
@@ -226,7 +231,7 @@ class AIHelper:
             return prefix + result if isinstance(result, str) else result
         except Exception as e:
             ai_logger.exception(f"执行工具 {name} 失败")
-            return f"[{spent_msg}][工具执行失败：{type(e).__name__}: {e}]"
+            return f"[工具执行失败：{type(e).__name__}: {e}]"
 
     async def create_and_wait(self, session, messages, model):
         response = self.client.chat.asyncCompletions.create(
@@ -269,8 +274,8 @@ class AIHelper:
             result = self.client.chat.asyncCompletions.retrieve_completion_result(
                 id=task_id
             )
-            self.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
             if result.task_status == "SUCCESS":
+                self.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
                 return result.choices[0].message.content
             if result.task_status == "FAIL":
                 raise RuntimeError("AI 压缩调用失败")
@@ -288,12 +293,13 @@ class AIHelper:
             f"[待压缩的对话历史]\n{history_text}"
         )
 
-    async def _compress_context(self):
+    async def _compress_context(self, session: CommandSession):
         """历史超过阈值时，把最旧的一部分压缩成摘要，存回 history 文件。
 
         摘要作为第一条特殊 history（携带 summary 键）存放；
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         user_history = history.load_history(self.user_id)
         summary, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
@@ -316,6 +322,7 @@ class AIHelper:
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
                 )
+                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.model_arg))
                 return len(summary)
         except Exception as ex:
             ai_logger.exception(f"上下文压缩失败: {ex}")
@@ -325,7 +332,7 @@ class AIHelper:
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
         self.pending_messages.clear()
-        compressed = await self._compress_context()
+        compressed = await self._compress_context(session)
         history, curr_text = await get_history(user)
 
         # 提取 text 里的图片
@@ -351,6 +358,7 @@ class AIHelper:
             },
         ]
         prefix = ""
+        ai_logger.debug(f"params: {ai_params}")
         real_model = "glm-5.3-flash" if len(url_dicts) > 0 else self.model
         if real_model != self.model:
             prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
@@ -388,7 +396,7 @@ class AIHelper:
                 f"{self.cached_tokens}, "
                 f"减少 {credits_use} 个 tokens"
             )
-            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed}, tool_call_times
+            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
 
@@ -429,17 +437,55 @@ async def get_history(user: u.User):
         if history.is_summary(item):
             summary = item.get("summary")
             continue
-        url_dicts = (item.get('urls', {}))
+        url_dicts = item.get('urls', {})
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
         url_str = f"[附带URLs:{url_str}]" if url_str else ""
+        skills = item.get('activate_skills', [])
         build_dicts = [{
             "role": "user",
             "content": f"[历史记录-{item.get('time', '未知时间')}][{uname}(qq{user.id})]{url_str} {item['ask']}",
-        },
-        {
-            "role": "assistant",
-            "content": f"{item['ans']}"
         }]
+        tool_calls = []
+        tool_messages = []
+        if skills:
+            for s in skills:
+                try:
+                    with open(f"./static/skills/{s}.md", 'r', encoding="utf-8") as file:
+                        skill = file.read()
+                except FileNotFoundError:
+                    logger.warning(f"无法找到 skill 文件: {s}.md")
+                    continue
+                except Exception:
+                    logger.exception(f"读取 skill 文件 {s}.md 出错")
+                    continue
+                tool_id = uuid4().hex
+                tool_calls.append({
+                    "id": tool_id,
+                    "type": "function",
+                    "function": {
+                        "name": "get_skill_md",
+                        "arguments": json.dumps({
+                            "name": s
+                        })
+                    }
+                })
+                tool_messages.append({
+                    "role": "tool",
+                    "content": skill,
+                    "tool_call_id": tool_id
+                })
+        if tool_calls:
+            build_dicts.append({
+                "role": "assistant",
+                "tool_calls": tool_calls,
+            })
+
+            build_dicts.extend(tool_messages)
+
+        build_dicts.append({
+            "role": "assistant",
+            "content": item["ans"],
+        })
         build_list += build_dicts
     if summary:
         # 在上下文最前面注入长期记忆摘要，让 AI 知道这是此前对话的总结
@@ -455,7 +501,8 @@ def build_history(user: u.User, ask, ans, agent):
         "ask": ask,
         "ans": ans,
         "time": get_time_now(),
-        "urls": agent.user_input_urls
+        "urls": agent.user_input_urls,
+        "activate_skills":  agent.activate_skills,
     })
     if len(normals) > MAX_HISTORY_COUNT:
         normals = normals[-MAX_HISTORY_COUNT:]

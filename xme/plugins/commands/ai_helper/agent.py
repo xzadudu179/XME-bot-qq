@@ -299,11 +299,11 @@ class AIHelper:
         摘要作为第一条特殊 history（携带 summary 键）存放；
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         user_history = history.load_history(self.user_id)
         summary, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
             return 0
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         to_compress = normals[:len(normals) - CONTEXT_KEEP_RECENT]
         keep = normals[len(normals) - CONTEXT_KEEP_RECENT:]
         try:

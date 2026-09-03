@@ -47,15 +47,16 @@ async def glm_api_request(path: str, method: str = "POST", **payload) -> dict:
     headers = glm_headers()
     payload = {k.lstrip("_"): v for k, v in payload.items()}
     if method.upper() == "GET":
-        return await fetch_data(url, response_type="json", headers=headers, params=payload)
+        return await fetch_data(url, raise_error=True, response_type="json", headers=headers, params=payload)
     body = dict(payload)
     body["request_id"] = body.get("request_id", str(uuid.uuid4()))
     return await fetch_data_post(url, json=body, headers=headers)
 
-async def fetch_data(url, response_type="json", **args):
+async def fetch_data(url, response_type="json", raise_error=False, **args):
     async with aiohttp.ClientSession() as aiosession:
         async with aiosession.get(url, **args) as response:
-            response.raise_for_status()
+            if raise_error:
+                response.raise_for_status()
             match response_type:
                 case "json":
                     data = await response.json()

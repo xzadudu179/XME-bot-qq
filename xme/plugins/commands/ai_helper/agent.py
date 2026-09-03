@@ -94,11 +94,15 @@ class AIHelper:
         raise KeyError(f"无法找到引用 {ref}")
 
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
+        MODEL_MAP = {
+            "pro": "glm-5.3",
+        }
         self.ref_map = {}
         self.tokens = 0
         self.other_credits = 0
         self.model_arg = model
-        self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
+        m = MODEL_MAP.get(model, None)
+        self.model = m if m is not None else "glm-5.3-flash"
         self.cached_tokens = 0
         self.client = ai_client
         self.session = session
@@ -301,11 +305,11 @@ class AIHelper:
         摘要作为第一条特殊 history（携带 summary 键）存放；
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         user_history = history.load_history(self.user_id)
         summary, summary_skills, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
             return 0
+        await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         to_compress = normals[:len(normals) - CONTEXT_KEEP_RECENT]
         keep = normals[len(normals) - CONTEXT_KEEP_RECENT:]
         # 合并旧摘要携带的skills与被压缩记录里用过的skills，压缩后依旧保留

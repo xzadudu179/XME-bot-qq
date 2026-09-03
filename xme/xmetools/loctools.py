@@ -1,3 +1,5 @@
+from aiohttp import ClientResponseError
+
 from xme.xmetools.reqtools import fetch_data
 from character import get_message
 from keys import WEATHER_API_KEY
@@ -19,8 +21,12 @@ async def search_location(loc: str, headers: dict = {"X-QW-Api-Key": WEATHER_API
         dict | str: 搜索结果
     """
     city = f"https://mb3h2ky7r9.re.qweatherapi.com/geo/v2/city/lookup?location={loc}"
-    city_info = await fetch_data(city, headers=headers)
-    if city_info.get("code", "") != "200":
+    cannot_search = False
+    try:
+        city_info = await fetch_data(city, headers=headers)
+    except ClientResponseError:
+        cannot_search = True
+    if city_info.get("code", "") != "200" or cannot_search:
         debug_msg(city_info)
         debug_msg("无法搜索")
         if dict_output:

@@ -96,7 +96,7 @@ if __name__ == "__main__":
         proc = start_process()
 
         while running and proc.poll() is None:
-            rlist, _, _ = select.select([proc.stdout], [], [], 0.5)
+            rlist, *_ = select.select([proc.stdout], [], [], 0.5)
             if not rlist:
                 continue
 

@@ -10,7 +10,7 @@ import config
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, text_to_file
+from xme.xmetools.filetools import dict_to_file, text_to_file, is_safe_ref, safe_join
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
@@ -76,11 +76,13 @@ class AIHelper:
         """
         file_name = self.ref_map.get(ref, None)
         if file_name is not None:
-            if "/" in file_name or file_name.startswith("."):
+            if "/" in file_name or chr(92) in file_name or file_name.startswith("."):
+                # 内部生成的完整路径（如会话文件夹下的历史文件），可信
                 return Path(file_name)
-            return self.get_temp_path() / file_name
-        if ref.startswith("history_") and ref[len("history_"):].isdigit():
-            candidate = self.get_history_path() / f"{ref}.tmp"
+            # 纯文件名 → 安全拼接到 temp 目录
+            return safe_join(self.get_temp_path(), file_name)
+        if is_safe_ref(ref, ("history_",)):
+            candidate = safe_join(self.get_history_path(), f"{ref}.tmp")
             if candidate.exists():
                 self.ref_map[ref] = str(candidate)
                 return candidate
@@ -137,6 +139,7 @@ class AIHelper:
             # 没有工具调用
             if not message.tool_calls:
                 return result, curr_tool_call_times
+            # 有工具调用
             curr_tool_call_times += 1
             if message.tool_calls:
                 for tool_call in message.tool_calls:

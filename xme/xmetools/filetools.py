@@ -38,6 +38,37 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
     return path, ref
 
 
+def is_safe_ref(ref: str, prefixes: tuple[str, ...] = ("history_", "text_", "json_")) -> bool:
+    """校验引用是否为 <白名单前缀><ASCII数字> 形式（防路径穿越）。
+
+    例如 history_1 / text_3 / json_2 是安全的；"/../../x"、"history_1/../x"、
+    "history_.."、unicode 数字等都不是。
+    """
+    if not isinstance(ref, str):
+        return False
+    for prefix in prefixes:
+        if ref.startswith(prefix):
+            rest = ref[len(prefix):]
+            return rest.isascii() and rest.isdigit()
+    return False
+
+
+def is_safe_file_name(name: str) -> bool:
+    """判断文件名是否安全：非空、非 . / ..、不含路径分隔符。"""
+    if not isinstance(name, str) or not name or name in (".", ".."):
+        return False
+    if "/" in name or chr(92) in name:
+        return False
+    return True
+
+
+def safe_join(base, name: str):
+    """把文件名安全地拼接到目录下；不安全（含分隔符/穿越）抛出 ValueError。"""
+    if not is_safe_file_name(name):
+        raise ValueError(f"不安全的文件引用：{name!r}")
+    return Path(base) / name
+
+
 def text_to_file(text: str, dir_name, agent=None) -> dict:
     HEAD = "text_"
 

@@ -358,6 +358,86 @@
     {
         "type": "function",
         "function": {
+            "name": "find_history_file",
+            "description": "定位一个历史文件（history_1 等），返回其是否存在、路径、大小与内容预览。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "历史文件引用名，例如 history_1"
+                    }
+                },
+                "required": ["ref"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_to_history",
+            "description": "向某个历史文件写入内容。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认会自动换行分隔）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "历史文件引用名，例如 history_1；不存在时 w/a 都会创建"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "要写入的文本内容"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "description": "写入模式，w（覆盖，默认）或 a（追加）"
+                    }
+                },
+                "required": ["ref", "content"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_history_file",
+            "description": "删除某个历史文件（history_1 等）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "历史文件引用名，例如 history_1"
+                    }
+                },
+                "required": ["ref"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "rename_history_file",
+            "description": "重命名一个历史文件（history_1 等）。new_ref 留空会自动分配下一个可用的 history_N。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要重命名的历史文件引用名，例如 history_1"
+                    },
+                    "new_ref": {
+                        "type": "string",
+                        "description": "新的引用名，例如 history_2；留空则自动分配下一个可用编号"
+                    }
+                },
+                "required": ["ref"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "clear_history_files",
             "description": "清空 history 文件夹里的所有文件（跨单会话保留的历史文件）。",
             "parameters": {

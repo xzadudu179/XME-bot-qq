@@ -6,7 +6,7 @@ import functools
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json, search_text
+from xme.xmetools.filetools import search_json, search_text, is_safe_ref, safe_join
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import fetch_data, fetch_data_post, glm_api_request
@@ -28,6 +28,10 @@ __tools__ = [
     "check_file",
     "list_temp_files",
     "save_to_history",
+    "find_history_file",
+    "write_to_history",
+    "delete_history_file",
+    "rename_history_file",
     "clear_history_files",
     "inprocess_report",
     "ocr_image",
@@ -331,8 +335,143 @@ def list_temp_files(folder="temp", agent=None):
     return "\n".join(files)
 
 
+def _history_file(ref: str, agent, register: bool = False):
+    """统一解析历史文件引用：校验 + 得到 (ref, path)。
+
+    所有历史文件操作（定位 / 写入 / 追加 / 删除 / 重命名 / 转存）都应通过
+    本函数获取引用与路径，以保证引用格式校验、会话文件夹与 ref_map 注册行为一致。
+    register=True 时会把引用注册到 agent.ref_map（供 check_file 等后续使用）。
+    非法引用（非 history_<数字>，防路径穿越）返回 None。
+    """
+    if not is_safe_ref(ref, ("history_",)):
+        return None
+    path = safe_join(agent.get_history_path(), f"{ref}.tmp")
+    if register:
+        agent.ref_map[ref] = str(path)
+    return ref, path
+
+
+def find_history_file(ref: str, agent=None):
+    """定位某个历史文件，返回其信息（是否存在、路径、大小、内容预览等）。"""
+    res = _history_file(ref, agent)
+    if res is None:
+        return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
+    _, path = res
+    info = {"ref": ref, "path": str(path), "exists": path.exists()}
+    if path.exists():
+        info["size"] = path.stat().st_size
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            text = ""
+        info["chars"] = len(text)
+        info["preview"] = text[:200]
+    return info
+
+
+def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
+    """写入/覆盖/追加某个历史文件。
+
+    mode 与 with open() 的写入语义一致：
+        "w" 覆盖或新建（默认）；"a" 追加或新建（追加时自动补一个换行分隔）。
+    """
+    res = _history_file(ref, agent, register=True)
+    if res is None:
+        return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
+    _, path = res
+    if mode not in ("w", "a"):
+        return {"result": f"[无效的写入模式：{mode}，仅支持 w（覆盖）或 a（追加）]", "no_compress": True}
+    try:
+        if mode == "a" and path.exists():
+            with open(path, "a", encoding="utf-8") as f:
+                f.write("\n" + content)
+        else:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(content)
+        op = "追加" if mode == "a" else "覆盖写入"
+        return {
+            "result": f"已{op}历史文件 {ref}（共 {len(content)} 字）",
+            "ref": ref,
+            "path": str(path),
+            "no_compress": True,
+        }
+    except Exception as ex:
+        logger.exception(f"写入历史文件失败: {ex}")
+        return {"result": f"[写入失败：{ex}]", "no_compress": True}
+
+
+def delete_history_file(ref: str, agent=None):
+    """删除某个历史文件（history_N）。"""
+    res = _history_file(ref, agent)
+    if res is None:
+        return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
+    _, path = res
+    if not path.exists():
+        return {"result": f"[历史文件 {ref} 不存在]", "no_compress": True}
+    try:
+        path.unlink()
+        agent.ref_map.pop(ref, None)
+        return {"result": f"已删除历史文件 {ref}", "no_compress": True}
+    except Exception as ex:
+        return {"result": f"[删除失败：{ex}]", "no_compress": True}
+
+
+def _next_history_ref(agent) -> str:
+    """扫描会话文件夹，返回下一个可用的 history_N 引用。"""
+    hist_path = agent.get_history_path()
+    used = set()
+    for item in hist_path.iterdir():
+        if item.is_file() and item.name.endswith(".tmp"):
+            stem = item.stem
+            if stem.startswith("history_"):
+                try:
+                    used.add(int(stem[len("history_"):]))
+                except ValueError:
+                    pass
+    n = 1
+    while n in used:
+        n += 1
+    return f"history_{n}"
+
+
+def rename_history_file(ref: str, new_ref: str = "", agent=None):
+    """重命名一个历史文件。new_ref 为空时自动分配下一个可用的 history_N。
+
+    目标引用名需为 history_<数字>（防路径穿越），且不能与现有文件冲突。
+    """
+    res_old = _history_file(ref, agent)
+    if res_old is None:
+        return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
+    _, old_path = res_old
+    if not old_path.exists():
+        return {"result": f"[历史文件 {ref} 不存在]", "no_compress": True}
+    if not new_ref:
+        new_ref = _next_history_ref(agent)
+    res_new = _history_file(new_ref, agent)
+    if res_new is None:
+        return {"result": f"[无效的新引用名：{new_ref}]", "no_compress": True}
+    if new_ref == ref:
+        return {"result": "[新引用与旧引用相同，无需重命名]", "no_compress": True}
+    _, new_path = res_new
+    if new_path.exists():
+        return {"result": f"[目标引用 {new_ref} 已存在，请先删除或改名]", "no_compress": True}
+    try:
+        old_path.rename(new_path)
+        agent.ref_map.pop(ref, None)
+        agent.ref_map[new_ref] = str(new_path)
+        return {
+            "result": f"已重命名历史文件 {ref} -> {new_ref}",
+            "ref": new_ref,
+            "path": str(new_path),
+            "no_compress": True,
+        }
+    except Exception as ex:
+        logger.exception(f"重命名历史文件失败: {ex}")
+        return {"result": f"[重命名失败：{ex}]", "no_compress": True}
+
+
 def save_to_history(ref="", content="", agent=None):
-    """转存内容/文件到 history 文件夹，返回 history 引用信息。
+    """转存内容/文件到 history 文件夹，自动生成新的 history_N 引用。
 
     若传入 ref，则读取 temp 中对应文件的内容转存；否则使用 content 文本。
     history 文件以 history_N.tmp 命名，其引用 history_N 可由文件名推导，
@@ -349,28 +488,15 @@ def save_to_history(ref="", content="", agent=None):
         text = content or ""
     if not text:
         return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
-    hist_path = agent.get_history_path()
-    used = set()
-    for item in hist_path.iterdir():
-        if item.is_file() and item.name.endswith(".tmp"):
-            stem = item.stem
-            if stem.startswith("history_"):
-                try:
-                    used.add(int(stem[len("history_"):]))
-                except ValueError:
-                    pass
-    n = 1
-    while n in used:
-        n += 1
-    ref_id = f"history_{n}"
-    file_name = f"{ref_id}.tmp"
-    agent.ref_map[ref_id] = str(hist_path / file_name)
-    with open(hist_path / file_name, "w", encoding="utf-8") as f:
-        f.write(text)
+    # 复用 write_to_history 完成写入（找到文件 + 写入已拆分）
+    ref_id = _next_history_ref(agent)
+    result = write_to_history(ref_id, text, mode="w", agent=agent)
+    if (result.get("result", "") or "").startswith("["):
+        return result
     return {
         "result": f"已转存至 history，引用 {ref_id}，可通过 check_file 传入 \"{ref_id}\" 查看内容。",
         "ref": ref_id,
-        "file_name": str(hist_path / file_name),
+        "file_name": result.get("path", ""),
         "total_len": len(text),
         "preview": text[:200],
         "no_compress": True,

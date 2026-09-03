@@ -6,7 +6,7 @@ import functools
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join
+from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join, dir_usage
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import glm_api_request
@@ -19,6 +19,7 @@ from tavily import AsyncTavilyClient
 from xme.xmetools.msgtools import create_image_message, send_session_msg
 from character import get_message
 import asyncio
+from .constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE
 
 # AI 用到的函数名列表，需要与实际定义的函数名相符
 __tools__ = [
@@ -321,11 +322,14 @@ def list_files(folder="temp", agent=None):
     """列出指定文件夹（temp / history）下的文件列表。"""
     if folder == "history":
         hist_path: Path = agent.get_history_path()
+        usage = dir_usage(hist_path)
         files = sorted(
             [f for f in hist_path.iterdir() if f.is_file()],
             key=lambda f: f.name,
         )
-        lines = []
+        lines = [
+            f"# history 占用：{usage['count']} 个文件 / {usage['size']:,} B（上限 {HISTORY_MAX_FILES} 个 / {HISTORY_MAX_SIZE:,} B ≈ {HISTORY_MAX_SIZE // 1024 // 1024} MB）"
+        ]
         for f in files:
             # history_<数字>.tmp → ref 取 stem；其他自定义文件 → ref 取文件名
             if f.name == f"{f.stem}.tmp" and f.stem.startswith("history_"):
@@ -388,12 +392,21 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     """
     if len(content) > 100000:
         return "[写入失败：写入内容过长 (>100000 字)]"
-    res = _history_file(ref, agent, register=True)
+    res = _history_file(ref, agent)
     if res is None:
         return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
     _, path = res
     if mode not in ("w", "a"):
         return {"result": f"[无效的写入模式：{mode}，仅支持 w（覆盖）或 a（追加）]", "no_compress": True}
+    # 单会话 history 文件夹资源上限检查
+    usage = dir_usage(agent.get_history_path())
+    cur_size = path.stat().st_size if path.exists() else 0
+    est_size = usage["size"] - cur_size + len(content.encode("utf-8"))
+    if not path.exists() and usage["count"] >= HISTORY_MAX_FILES:
+        return {"result": f"[history 已满（{usage['count']} 个文件 ≥ 上限 {HISTORY_MAX_FILES} 个，共 {usage['size']:,} B）。请先用 delete_history_file / clear_history_files 清理或覆盖已有文件]", "no_compress": True}
+    if est_size > HISTORY_MAX_SIZE:
+        return {"result": f"[history 将超限：当前 {usage['size']:,} B，本次预计 {est_size:,} B，超过上限 {HISTORY_MAX_SIZE:,} B（{HISTORY_MAX_SIZE // 1024 // 1024} MB）。请先清理部分文件]", "no_compress": True}
+    ######
     try:
         if mode == "a" and path.exists():
             with open(path, "a", encoding="utf-8") as f:
@@ -401,6 +414,7 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
         else:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
+        agent.ref_map[ref] = str(path)
         op = "追加" if mode == "a" else "覆盖写入"
         return {
             "result": f"已{op}历史文件 {ref}（共 {len(content)} 字）",

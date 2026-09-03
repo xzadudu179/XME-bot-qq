@@ -90,6 +90,22 @@ def safe_join(base, name: str):
     return Path(base) / name
 
 
+def dir_usage(folder) -> dict:
+    """统计文件夹内的文件数量与总大小（字节）。"""
+    folder = Path(folder)
+    count = 0
+    size = 0
+    if folder.is_dir():
+        for item in folder.iterdir():
+            if item.is_file():
+                count += 1
+                try:
+                    size += item.stat().st_size
+                except OSError:
+                    pass
+    return {"count": count, "size": size}
+
+
 def history_file_name(ref: str) -> str | None:
     """把引用映射为安全的文件名；非法引用返回 None。
 

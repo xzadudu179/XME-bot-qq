@@ -304,7 +304,7 @@ async def read_webpage(
         return f"[网页阅读失败: {ex}]"
 
 
-def check_file(ref: str, line_start=0, line_end=0, agent=None):
+def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
     """获取保存进用户 temp 的文件的内容。"""
     path = agent.resolve_ref(ref)
     lines = []
@@ -312,10 +312,10 @@ def check_file(ref: str, line_start=0, line_end=0, agent=None):
         lines = file.readlines()
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
     out = "\n".join([f'{i}: {l}' for i, l in enumerate(get_lines)])
-    if len(out) > 50000:
-        return f"[无法查看：需要查看的内容过长 (> 50000 字)，请使用其他方法或者查看部分行数]"
+    out = out if length == 0 else out[:length]
+    if len(out) > 20000:
+        return out[:20000] + "\n[输出达到最大 20000 字，剩下请配置参数继续查看。]"
     return {"result": out, "no_compress": True}
-
 
 def list_temp_files(folder="temp", agent=None):
     """列出指定文件夹（temp / history）下的文件列表。"""
@@ -327,7 +327,7 @@ def list_temp_files(folder="temp", agent=None):
         )
         lines = []
         for f in files:
-            # history_<数字>.tmp → ref 取 stem（兼容旧约定）；其他自定义文件 → ref 取文件名
+            # history_<数字>.tmp → ref 取 stem；其他自定义文件 → ref 取文件名
             if f.name == f"{f.stem}.tmp" and f.stem.startswith("history_"):
                 ref = f.stem
             else:

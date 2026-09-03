@@ -57,7 +57,7 @@
         "type": "function",
         "function": {
             "name": "check_file",
-            "description": "获取保存进用户 temp 的文件的内容。",
+            "description": "获取保存进用户 temp 的文件的内容（一次最多查看 20000 字）。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -72,6 +72,10 @@
                     "line_end": {
                         "type": "integer",
                         "description": "要查看的尾行索引，填写 0 会直接当作看到结尾，其他和 python 列表索引差不多。默认 0。"
+                    },
+                    "length": {
+                        "type": "integer",
+                        "description": "最大长度，解析完行后输出如果到最大长度会截断，填写 0 不限，默认 0。"
                     }
                 },
                 "required": [

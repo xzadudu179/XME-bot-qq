@@ -17,19 +17,41 @@ import cn2an
 d = enchant.Dict("en_US")
 
 async def text_moderations(text: str):
+    new_objects = []
     if len(text) > 2000:
-        raise ValueError("文本长度不能大于 2000")
-    response = await glm_api_request("/paas/v4/moderations", _input=text)
+        # raise ValueError("文本长度不能大于 2000")
+        texts = split_text_overlap(text)
+        texts = [{"type": "text", "text": t} for t in texts]
+        new_objects += texts
+    else:
+        new_objects.append({
+            "type": "text",
+            "text": text
+        })
+    response = await glm_api_request("/paas/v4/moderations", _input=new_objects)
     return response
 
 async def object_moderations(objects: list[dict]):
+    new_objects = []
     for o in objects:
         if o["type"] != "text":
+            new_objects.append(o)
             continue
-        if len(o["text"]) > 2000:
-            raise ValueError("文本长度不能大于 2000")
-    response = await glm_api_request("/paas/v4/moderations", _input=objects)
+        if len(o["text"]) <= 2000:
+            new_objects.append(o)
+            continue
+        texts = split_text_overlap(o["text"])
+        texts = [{"type": "text", "text": t} for t in texts]
+        new_objects += texts
+    response = await glm_api_request("/paas/v4/moderations", _input=new_objects)
+    return response
 
+def split_text_overlap(text: str, max_length: int = 2000, overlap: int = 500):
+    step = max_length - overlap
+    return [
+        text[i:i + max_length]
+        for i in range(0, len(text), step)
+    ]
 
 def no_except_cn2an(content: str, *args,**kwargs):
     try:

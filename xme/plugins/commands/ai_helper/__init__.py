@@ -169,13 +169,13 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         )
         ai_logger.info(f"send msg {send_msg}")
         # 输出风控
-        if len(send_msg) <= 2000:
-            moderation_result = await is_text_can_send(session, send_msg)
-            can_send = moderation_result["result"]
-            reason = moderation_result["reason"]
-            if not can_send:
-                await send_session_msg(session, get_message("config", "moderation_danger_send", reason=reason))
-                return False
+        # if len(send_msg) <= 2000:
+        moderation_result = await is_text_can_send(session, send_msg)
+        can_send = moderation_result["result"]
+        reason = moderation_result["reason"]
+        if not can_send:
+            await send_session_msg(session, get_message("config", "moderation_danger_send", reason=reason))
+            return False
         # ---------
 
         await send_session_msg(

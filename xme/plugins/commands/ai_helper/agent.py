@@ -282,14 +282,16 @@ class AIHelper:
             await asyncio.sleep(0.5)
 
     @staticmethod
-    def _build_compress_input(summary, to_compress) -> str:
-        """构造压缩输入：[旧摘要] + [待压缩的对话历史]。"""
+    def _build_compress_input(summary, to_compress, skills=()) -> str:
+        """构造压缩输入：[旧摘要] + [涉及技能] + [待压缩的对话历史]。"""
         history_text = "\n".join([
             f"[{it.get('time', '未知时间')}] 用户: {it.get('ask', '')}\nAI: {it.get('ans', '')}"
             for it in to_compress
         ])
+        skills_text = "、".join(skills) if skills else "（无）"
         return (
             f"[旧摘要]\n{summary or '（无）'}\n\n"
+            f"[涉及技能]\n{skills_text}\n\n"
             f"[待压缩的对话历史]\n{history_text}"
         )
 
@@ -300,24 +302,28 @@ class AIHelper:
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
         user_history = history.load_history(self.user_id)
-        summary, normals = history.split(user_history)
+        summary, summary_skills, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
             return 0
         await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         to_compress = normals[:len(normals) - CONTEXT_KEEP_RECENT]
         keep = normals[len(normals) - CONTEXT_KEEP_RECENT:]
+        # 合并旧摘要携带的skills与被压缩记录里用过的skills，压缩后依旧保留
+        compressed_skills = sorted(set(summary_skills) | {
+            s for it in to_compress for s in (it.get("activate_skills", []) or [])
+        })
         try:
             memory_prompt = read_from_path("./ai_configs.json")[__plugin_name__]["memory"]
             if memory_prompt:
                 memory_prompt = memory_prompt.format(max_length=COMPRESS_MAX_LENGTH)
             content = await self._glm_chat([
                 {"role": "system", "content": memory_prompt},
-                {"role": "user", "content": self._build_compress_input(summary, to_compress)},
+                {"role": "user", "content": self._build_compress_input(summary, to_compress, compressed_skills)},
             ])
             new_summary = (content or "").strip()
             if new_summary:
                 summary = new_summary
-                new_history = history.merge(summary, keep, get_time_now())
+                new_history = history.merge(summary, keep, get_time_now(), skills=compressed_skills)
                 history.save_history(self.user_id, new_history)
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
@@ -432,10 +438,12 @@ async def get_history(user: u.User):
         return "", ""
     build_list = []
     summary = None
+    summary_skills: list[str] = []
     uname = await get_user_name(user.id, default='未知用户')
     for _, item in enumerate(user_history):
         if history.is_summary(item):
             summary = item.get("summary")
+            summary_skills = list(item.get("skills", []) or [])
             continue
         url_dicts = item.get('urls', {})
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
@@ -488,15 +496,16 @@ async def get_history(user: u.User):
         })
         build_list += build_dicts
     if summary:
-        # 在上下文最前面注入长期记忆摘要，让 AI 知道这是此前对话的总结
-        build_list.insert(0, {"role": "user", "content": f"[长期记忆摘要（此前对话总结，供你参考）：\n{summary}\n]"})
+        # 在上下文最前面注入长期记忆摘要，让 AI 知道这是此前对话的总结（含用过的技能）
+        skill_hint = f"；涉及技能：{'、'.join(summary_skills)}" if summary_skills else ""
+        build_list.insert(0, {"role": "user", "content": f"[长期记忆摘要（此前对话总结，供你参考{skill_hint}）：\n{summary}\n]"})
     build_str = f"\n当前对话（现在时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
     return build_list, build_str
 
 
 def build_history(user: u.User, ask, ans, agent):
     user_history = history.load_history(user.id)
-    summary, normals = history.split(user_history)
+    summary, summary_skills, normals = history.split(user_history)
     normals.append({
         "ask": ask,
         "ans": ans,
@@ -506,4 +515,4 @@ def build_history(user: u.User, ask, ans, agent):
     })
     if len(normals) > MAX_HISTORY_COUNT:
         normals = normals[-MAX_HISTORY_COUNT:]
-    history.save_history(user.id, history.merge(summary, normals))
+    history.save_history(user.id, history.merge(summary, normals, skills=summary_skills))

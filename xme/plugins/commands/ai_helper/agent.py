@@ -10,7 +10,7 @@ import config
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, text_to_file, is_safe_ref, safe_join
+from xme.xmetools.filetools import dict_to_file, text_to_file, history_file_name, safe_join
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
@@ -81,8 +81,10 @@ class AIHelper:
                 return Path(file_name)
             # 纯文件名 → 安全拼接到 temp 目录
             return safe_join(self.get_temp_path(), file_name)
-        if is_safe_ref(ref, ("history_",)):
-            candidate = safe_join(self.get_history_path(), f"{ref}.tmp")
+        # 跨会话推导：history_N 或自定义安全文件名
+        derived = history_file_name(ref)
+        if derived is not None:
+            candidate = safe_join(self.get_history_path(), derived)
             if candidate.exists():
                 self.ref_map[ref] = str(candidate)
                 return candidate

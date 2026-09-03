@@ -62,11 +62,44 @@ def is_safe_file_name(name: str) -> bool:
     return True
 
 
+def is_safe_custom_name(name: str) -> bool:
+    """判断自定义文件名是否安全：非空、不以点开头、不含路径分隔符/.. /空格/特殊符号。
+
+    允许 unicode 字母数字、下划线 _、连字符 -、点 .（作为扩展名分隔）。
+    中文等 unicode 文字也允许（例如 "笔记.md"）。
+    """
+    if not isinstance(name, str) or not name:
+        return False
+    if name in (".", "..") or name.startswith("."):
+        return False
+    if "/" in name or chr(92) in name or ".." in name:
+        return False
+    for ch in name:
+        if ch.isalnum() or ch in ("_", "-", "."):
+            continue
+        return False
+    return True
+
+
 def safe_join(base, name: str):
     """把文件名安全地拼接到目录下；不安全（含分隔符/穿越）抛出 ValueError。"""
     if not is_safe_file_name(name):
         raise ValueError(f"不安全的文件引用：{name!r}")
     return Path(base) / name
+
+
+def history_file_name(ref: str) -> str | None:
+    """把引用映射为安全的文件名；非法引用返回 None。
+
+    - history_<数字>（旧约定）→ history_<数字>.tmp；
+    - 自定义安全文件名（如 notes.md / 笔记）→ 原样作为文件名；
+    - 其余（含路径、特殊符号、重复风险字符）→ None。
+    """
+    if is_safe_ref(ref, ("history_",)):
+        return f"{ref}.tmp"
+    if is_safe_custom_name(ref):
+        return ref
+    return None
 
 
 def text_to_file(text: str, dir_name, agent=None) -> dict:

@@ -6,7 +6,7 @@ import functools
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json, search_text, is_safe_ref, safe_join
+from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import fetch_data, fetch_data_post, glm_api_request
@@ -311,7 +311,7 @@ def check_file(ref: str, line_start=0, line_end=0, agent=None):
     with open(path, "r", encoding="utf-8") as file:
         lines = file.readlines()
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
-    out = "\n".join(get_lines)
+    out = "\n".join([f'{i}: {l}' for i, l in enumerate(get_lines)])
     if len(out) > 50000:
         return f"[无法查看：需要查看的内容过长 (> 50000 字)，请使用其他方法或者查看部分行数]"
     return {"result": out, "no_compress": True}
@@ -327,9 +327,11 @@ def list_temp_files(folder="temp", agent=None):
         )
         lines = []
         for f in files:
-            ref = f.stem if f.stem.startswith("history_") else None
-            if ref is None:
-                continue
+            # history_<数字>.tmp → ref 取 stem（兼容旧约定）；其他自定义文件 → ref 取文件名
+            if f.name == f"{f.stem}.tmp" and f.stem.startswith("history_"):
+                ref = f.stem
+            else:
+                ref = f.name
             agent.ref_map[ref] = str(hist_path / f.name)
             lines.append(f"{ref}: {f.name}")
         return "\n".join(lines)
@@ -346,9 +348,10 @@ def _history_file(ref: str, agent, register: bool = False):
     register=True 时会把引用注册到 agent.ref_map（供 check_file 等后续使用）。
     非法引用（非 history_<数字>，防路径穿越）返回 None。
     """
-    if not is_safe_ref(ref, ("history_",)):
+    file_name = history_file_name(ref)
+    if file_name is None:
         return None
-    path = safe_join(agent.get_history_path(), f"{ref}.tmp")
+    path = safe_join(agent.get_history_path(), file_name)
     if register:
         agent.ref_map[ref] = str(path)
     return ref, path

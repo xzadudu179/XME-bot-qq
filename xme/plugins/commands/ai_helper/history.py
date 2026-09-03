@@ -3,12 +3,18 @@ import json
 
 # AI 上下文的独立存储目录：data/ai_historys/<用户id>/<会话>.json
 # 不再存放在用户的个人数据里，方便以后扩展多会话。
+# 会话管理（当前指针/列表/命名锁等）见 session.py 的 AISession 对象。
 HISTORY_ROOT = Path("./data/ai_historys")
 DEFAULT_SESSION = "default"
 
 
+def user_dir(user_id) -> Path:
+    """某用户的 AI 数据根目录：data/ai_historys/<用户id>/"""
+    return HISTORY_ROOT / str(user_id)
+
+
 def _session_path(user_id, ai_session=DEFAULT_SESSION) -> Path:
-    return HISTORY_ROOT / str(user_id) / f"{ai_session}.json"
+    return user_dir(user_id) / f"{ai_session}.json"
 
 
 def session_dir(user_id, ai_session=DEFAULT_SESSION) -> Path:
@@ -47,7 +53,7 @@ def clear_history(user_id, ai_session=DEFAULT_SESSION) -> int:
 
 
 def clear_session_files(user_id, ai_session=DEFAULT_SESSION) -> int:
-    """清空某用户当前会话的 history 文件夹里的所有 AI 转存文件，返回删除的文件数。"""
+    """清空某用户某会话的 history 文件夹里的所有 AI 转存文件，返回删除的文件数。"""
     dir_path = session_dir(user_id, ai_session)
     if not dir_path.is_dir():
         return 0
@@ -64,13 +70,13 @@ def clear_session_files(user_id, ai_session=DEFAULT_SESSION) -> int:
 
 
 def clear_all_history(user_id) -> int:
-    """清空某用户的所有 AI 历史（data/ai_historys/<id> 目录，含各会话子文件夹），返回删除文件数。"""
-    user_dir = HISTORY_ROOT / str(user_id)
-    if not user_dir.is_dir():
+    """清空某用户的所有 AI 历史（data/ai_historys/<id> 目录，含各会话子文件夹与状态文件），返回删除文件数。"""
+    user_dir_path = user_dir(user_id)
+    if not user_dir_path.is_dir():
         return 0
     # 会话名来源：<会话>.json 历史文件、<会话>/ 文件夹，去重后逐个复用单会话清理逻辑
     sessions: set[str] = set()
-    for item in user_dir.iterdir():
+    for item in user_dir_path.iterdir():
         if item.is_file() or item.is_symlink():
             if item.suffix == ".json":
                 sessions.add(item.stem)
@@ -80,13 +86,13 @@ def clear_all_history(user_id) -> int:
     for session in sessions:
         cleared += clear_history(user_id, session)
         cleared += clear_session_files(user_id, session)
-    # 清理目录下可能残留的其它游离文件（防漏删，等价于旧实现删除所有顶层文件）
-    for item in user_dir.iterdir():
+    # 清理目录下可能残留的其它文件（含 .current/.locked 等状态文件，防漏删）
+    for item in user_dir_path.iterdir():
         if item.is_file() or item.is_symlink():
             item.unlink()
             cleared += 1
     try:
-        user_dir.rmdir()  # 所有内容已删，用户目录一并移除
+        user_dir_path.rmdir()  # 所有内容已删，用户目录一并移除
     except OSError:
         pass
     return cleared

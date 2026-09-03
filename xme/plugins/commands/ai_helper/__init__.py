@@ -1,4 +1,5 @@
 import argparse
+import inspect
 import httpx
 
 import config
@@ -18,20 +19,47 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger
+from .session import AISession
+from . import constants
 from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
-from .commands import clear_history
+from .commands import clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
 
 
 # 用户: stats
 curr_sessions = {}
 
-# 用户可用指令
+# 用户可用指令（通过 /ai -c <指令> 使用）
 cmds = {
+    "new": {
+        "content": new_session,
+        "args": "",
+        "desc": "创建并切换到新会话",
+    },
+    "list": {
+        "content": list_sessions,
+        "args": "",
+        "desc": "查看所有 AI 会话列表（含序号）",
+    },
+    "name": {
+        "content": name_session,
+        "args": "<会话序号> (名称)",
+        "desc": "重命名会话，不填写会话序号则命名当前会话",
+    },
     "clear": {
         "content": clear_history,
+        "args": "<会话序号>",
+        "desc": "清空当前会话；指定序号删除指定会话（默认会话不可删除）",
+    },
+    "clear-all": {
+        "content": clear_all_sessions,
         "args": "",
-        "desc": "清除你的所有对话历史"
-    }
+        "desc": "删除所有会话（需回复 y 确认）",
+    },
+    "swi": {
+        "content": switch_session,
+        "args": "(会话序号)",
+        "desc": "切换到指定序号的会话",
+    },
 }
 
 
@@ -42,14 +70,18 @@ def get_command_list():
     return cmd_list_str
 
 
-def parse_control(session: CommandSession, text: str, user: u.User) -> str:
-    text, args = text.split(" ")[0], text.split(" ")[1:]
-    def parse_func(text, **_):
-        return f"没有这个指令 \"{text}\" 哦"
-    cmd = cmds.get(text, None)
+async def parse_control(session: CommandSession, text: str, user: u.User) -> str:
+    cmd_name, args = text.split(" ")[0], text.split(" ")[1:]
+    async def parse_func(*_, **__):
+        return f"没有这个指令 \"{cmd_name}\" 哦"
+    cmd = cmds.get(cmd_name, None)
     if cmd is not None:
         parse_func = cmd["content"]
-    return parse_func(session=session, user=user, text=text, args=args)
+    # 命令函数统一签名 (session, user, args=None)；可能是异步的（如 clear-all 需要 aget_arg 等待用户确认）
+    result = parse_func(session=session, user=user, args=args)
+    if inspect.iscoroutine(result):
+        result = await result
+    return result
 
 
 arg_usage = shell_like_usage("OPTION", [
@@ -117,7 +149,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return False
     # ---------
     if args.ctrl and text and len(text) <= MAX_LENGTH:
-        await send_session_msg(session, parse_control(session, text, user))
+        await send_session_msg(session, await parse_control(session, text, user))
         return 2
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
@@ -130,10 +162,11 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-    if len(history.load_history(session.event.user_id)) <= constants.COMPRESS_TRIGGER:
+    ai_session = AISession.current(session.event.user_id).ai_session
+    if len(history.load_history(session.event.user_id, ai_session)) <= constants.COMPRESS_TRIGGER:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model))
     try:
-        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model)
+        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session)
         if not t:
             return False
         pending_messages = messages_dict["messages"]
@@ -151,7 +184,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
-        user_history = history.load_history(session.event.user_id)
+        user_history = history.load_history(session.event.user_id, ai_session)
         *_, normals = history.split(user_history)
         send_msg = get_message(
             "plugins",
@@ -195,7 +228,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         curr_sessions[user.id] = False
 
 
-async def talk(session, text, user: u.User, model: str):
+async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION):
     httpx_client = httpx.Client(
         proxy=None,
         trust_env=False,
@@ -221,7 +254,7 @@ async def talk(session, text, user: u.User, model: str):
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
-    ai_helper = AIHelper(client, user.id, session=session, model=model)
+    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session)
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)

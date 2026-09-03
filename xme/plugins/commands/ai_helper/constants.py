@@ -15,3 +15,6 @@ COMPRESS_MAX_LENGTH = 2000
 # 单会话 history 文件夹（AI 转存文件）的资源上限
 HISTORY_MAX_FILES = 256                 # 最多 256 个文件
 HISTORY_MAX_SIZE = 10 * 1024 * 1024     # 最多 10 MB
+
+# 每个用户最多可创建的 AI 会话数（含默认会话）
+MAX_SESSIONS = 25

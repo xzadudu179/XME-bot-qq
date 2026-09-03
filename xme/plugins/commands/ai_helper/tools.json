@@ -489,5 +489,22 @@
                 "required": []
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "name_session",
+            "description": "为当前 AI 会话命名/重命名。当对话主题明确时调用，例如用户正在讨论写小说时可用 \"小说写作\" 作为会话名；会话名会显示在用户的会话列表里。注意：用户手动命名过的会话不可修改（会返回错误）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "新的会话名（中文/英文/数字均可，不要加引号或特殊符号，不能名为 default 或者以 history_ 开头，不超过 100 字）"
+                    }
+                },
+                "required": ["name"]
+            }
+        }
     }
 ]

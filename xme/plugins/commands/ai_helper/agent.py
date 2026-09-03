@@ -1,3 +1,4 @@
+# some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
 import re
 import shutil
@@ -34,6 +35,7 @@ from .constants import (
 )
 from . import functions
 from . import history
+from .session import AISession
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 
@@ -62,9 +64,9 @@ class AIHelper:
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
 
     def get_history_path(self):
-        # AI 转存文件默认放到用户 AI 历史文件夹内、以会话命名的子文件夹
-        # data/ai_historys/<用户id>/<会话>/
-        path = history.session_dir(self.user_id)
+        # AI 转存文件默认放到当前 AI 会话的历史文件夹、以会话命名的子文件夹
+        # data/ai_historys/<用户id>/<ai_session>/
+        path = AISession(self.user_id, self.ai_session).dir_path
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -93,7 +95,9 @@ class AIHelper:
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION):
+        # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
+        self.ai_session = ai_session or history.DEFAULT_SESSION
         MODEL_MAP = {
             "pro": "glm-5.3",
         }
@@ -305,7 +309,8 @@ class AIHelper:
         摘要作为第一条特殊 history（携带 summary 键）存放；
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
-        user_history = history.load_history(self.user_id)
+        session_obj = AISession(self.user_id, self.ai_session)
+        user_history = session_obj.load_history()
         summary, summary_skills, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
             return 0
@@ -328,7 +333,7 @@ class AIHelper:
             if new_summary:
                 summary = new_summary
                 new_history = history.merge(summary, keep, get_time_now(), skills=compressed_skills)
-                history.save_history(self.user_id, new_history)
+                session_obj.save_history(new_history)
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
                 )
@@ -343,7 +348,7 @@ class AIHelper:
         self.spent_secs.start()
         self.pending_messages.clear()
         compressed = await self._compress_context(session)
-        history, curr_text = await get_history(user)
+        history, curr_text = await get_history(user, self.ai_session)
 
         # 提取 text 里的图片
         image_objects, matches = await get_images_from_message(session.bot, text)
@@ -436,8 +441,8 @@ class AIHelper:
             return False, {}, {}, 0
 
 
-async def get_history(user: u.User):
-    user_history = history.load_history(user.id)
+async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
+    user_history = AISession(user.id, ai_session).load_history()
     if not user_history:
         return "", ""
     build_list = []
@@ -508,7 +513,8 @@ async def get_history(user: u.User):
 
 
 def build_history(user: u.User, ask, ans, agent):
-    user_history = history.load_history(user.id)
+    session_obj = AISession(user.id, agent.ai_session)
+    user_history = session_obj.load_history()
     summary, summary_skills, normals = history.split(user_history)
     normals.append({
         "ask": ask,
@@ -519,4 +525,4 @@ def build_history(user: u.User, ask, ans, agent):
     })
     if len(normals) > MAX_HISTORY_COUNT:
         normals = normals[-MAX_HISTORY_COUNT:]
-    history.save_history(user.id, history.merge(summary, normals, skills=summary_skills))
+    session_obj.save_history(history.merge(summary, normals, skills=summary_skills))

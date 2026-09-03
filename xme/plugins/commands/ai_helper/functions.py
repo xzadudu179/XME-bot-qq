@@ -1,3 +1,4 @@
+# some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
 import time
 import traceback
@@ -7,6 +8,7 @@ from nonebot import MessageSegment
 
 from nonebot.log import logger
 from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join, dir_usage, text_to_file
+from .session import AISession
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import glm_api_request
@@ -44,7 +46,8 @@ __tools__ = [
     "web_search",
     "content_search",
     "get_webs_partial",
-    "get_user_input_urls"
+    "get_user_input_urls",
+    "name_session"
 ]
 
 # TODO： AI 能够写入自己的 temp 文件（或许也可以包括 history 文件）
@@ -54,6 +57,43 @@ __tools__ = [
 
 def get_user_input_urls(agent):
     return agent.user_input_urls
+
+
+def name_session(name: str, agent=None):
+    """为当前 AI 会话命名/重命名（会话名会显示在用户的会话列表中）。
+
+    适合在对话主题明确时调用，例如讨论写小说的对话可命名为 "小说写作"。
+    当前是默认会话时会把默认会话的内容整体提升为命名会话，默认会话复位为空；
+    当前已有名字时直接重命名（历史与转存文件会一并移动）。
+    用户手动命名过的会话不可修改（会返回错误）。
+    """
+    if agent is None:
+        return "[错误：无法获取当前会话上下文]"
+    old_name = agent.ai_session
+    name = (name or "").strip()
+    name = name.replace(" ", "_")
+    if not AISession.is_valid_name(name):
+        return "[错误：会话名不合法。请使用中英文/数字/_-（不以点开头、不含特殊符号），且不能叫 default 或以 history_ 开头]"
+    session_obj = AISession(agent.user_id, old_name)
+    if session_obj.is_locked():
+        return "[错误：当前会话的名字由用户手动指定，AI 不可修改。请不要再重命名该会话]"
+    # 旧目录要在 rename 之前捕获（rename 会就地改变 session_obj.ai_session）
+    old_dir = session_obj.dir_path
+    if session_obj.is_default:
+        new_session = AISession.promote_default(agent.user_id, name)
+    else:
+        new_session = session_obj if session_obj.rename(name) else None
+    if new_session is None:
+        return f"[重命名失败：目标名 \"{name}\" 可能已被使用，请换一个名字]"
+    # 会话目录可能整体移动，ref_map 里指向旧目录的路径同步更新
+    new_dir = new_session.dir_path
+    for ref, path in list(agent.ref_map.items()):
+        p = Path(path)
+        if old_dir in p.parents:
+            agent.ref_map[ref] = str(new_dir / p.relative_to(old_dir))
+    agent.ai_session = new_session.ai_session
+    return f"[已为当前会话命名 \"{new_session.ai_session}\"（原 \"{old_name}\"）]"
+
 
 def get_telia_clock_state():
     return TELIA_CLOCK.get_current_state()

@@ -15,7 +15,7 @@ from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
 from xme.xmetools.bottools import get_user_name
-from xme.xmetools.timetools import get_time_now
+from xme.xmetools.timetools import get_time_now, Timer
 from xme.xmetools.jsontools import read_from_path
 from character import get_message
 from keys import GLM_API_KEY
@@ -96,6 +96,8 @@ class AIHelper:
         self.session = session
         self.user_id = user_id
         self.user_input_urls = {}
+
+        self.spent_secs = Timer()
         # 上次回应时间
         self.last_response = 0
         # 工具使用依赖注入：所有 tool 都是独立函数，需要 agent 的函数声明 agent 形参，
@@ -111,6 +113,7 @@ class AIHelper:
             self.tools = json.load(f)
 
     async def run_agent(self, session, messages, model):
+        # self.spent_secs.start()
         curr_tool_call_times = 0
         MAX_RETRY_TIMES = 5
         retry_times = 0
@@ -187,8 +190,10 @@ class AIHelper:
                 result = await func(**arguments)
             else:
                 result = func(**arguments)
+            spent = self.spent_secs.get_timer_value()
+            spent_msg = f"本轮对话总计消耗 {spent:,.2f}s"
             ai_logger.info(
-                f"工具调用完毕，名称 {name} 结果类型={type(result)}, str={str(result)[:100]!r}...{str(result)[-100:]!r}"
+                f"[{spent_msg}]工具调用完毕，名称 {name} 结果类型={type(result)}, str={str(result)[:100]!r}...{str(result)[-100:]!r}"
             )
 
             if isinstance(result, dict):
@@ -197,23 +202,23 @@ class AIHelper:
 
             if isinstance(result, MessageSegment) or str(result).startswith("[CQ:"):
                 self.pending_messages.append(result)
-                return prefix + f"[\"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
+                return prefix + f"[[{spent_msg}] \"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
 
             ####### 压缩 #######
 
             if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
                 res = dict_to_file(result, self.user_id, name + "_", agent=self)
-                result = prefix + f'[工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看 数据如下]：{res}'
+                result = prefix + f'[{spent_msg}][工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看 数据如下]：{res}'
 
             if isinstance(result, str) and len(result) > 5000 and not no_compress:
                 res = text_to_file(result, self.user_id, self)
                 self.ref_map[res["ref"]] = res["file_name"]
-                return prefix + f"[工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
+                return prefix + f"[{spent_msg}][工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 
             return prefix + result if isinstance(result, str) else result
         except Exception as e:
             ai_logger.exception(f"执行工具 {name} 失败")
-            return f"[工具执行失败：{type(e).__name__}: {e}]"
+            return f"[{spent_msg}][工具执行失败：{type(e).__name__}: {e}]"
 
     async def create_and_wait(self, session, messages, model):
         response = self.client.chat.asyncCompletions.create(
@@ -310,6 +315,7 @@ class AIHelper:
         return 0
 
     async def user_talk(self, session: CommandSession, role, user, text):
+        self.spent_secs.start()
         self.pending_messages.clear()
         compressed = await self._compress_context()
         history, curr_text = await get_history(user)
@@ -341,6 +347,7 @@ class AIHelper:
         if real_model != self.model:
             prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
         result, tool_call_times =  await self.run_agent(session, ai_params, model=real_model)
+        self.spent_secs.stop()
         if result == False:
             return False, {}, {}, 0
         try:

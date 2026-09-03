@@ -22,6 +22,14 @@ async def text_moderations(text: str):
     response = await glm_api_request("/paas/v4/moderations", _input=text)
     return response
 
+async def object_moderations(objects: list[dict]):
+    for o in objects:
+        if o["type"] != "text":
+            continue
+        if len(o["text"]) > 2000:
+            raise ValueError("文本长度不能大于 2000")
+    response = await glm_api_request("/paas/v4/moderations", _input=objects)
+
 
 def no_except_cn2an(content: str, *args,**kwargs):
     try:

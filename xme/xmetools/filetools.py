@@ -70,6 +70,8 @@ def is_safe_custom_name(name: str) -> bool:
     """
     if not isinstance(name, str) or not name:
         return False
+    if len(name) > 100:
+        return False
     if name in (".", "..") or name.startswith("."):
         return False
     if "/" in name or chr(92) in name or ".." in name:

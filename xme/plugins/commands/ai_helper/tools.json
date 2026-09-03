@@ -87,7 +87,7 @@
     {
         "type": "function",
         "function": {
-            "name": "list_temp_files",
+            "name": "list_files",
             "description": "获取指定文件夹下的文件列表（temp 或 history），会以 \"索引: 名称\" 的形式显示。history 是跨单会话保留的历史文件",
             "parameters": {
                 "type": "object",
@@ -342,20 +342,16 @@
         "type": "function",
         "function": {
             "name": "save_to_history",
-            "description": "将一个文件/内容转存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。",
+            "description": "将一个文件存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ref": {
                         "type": "string",
-                        "description": "要转存的 temp 文件引用名，例如 text_1；与 content 二选一"
-                    },
-                    "content": {
-                        "type": "string",
-                        "description": "要保存到 history 的文本内容；当 ref 为空时备用"
+                        "description": "要转存的 temp 文件引用名"
                     }
                 },
-                "required": []
+                "required": ["ref"]
             }
         }
     },

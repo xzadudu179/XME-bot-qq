@@ -147,7 +147,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
 
         credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - credits_use
         message = "\n".join([str(s) for s in pending_messages])
-        ai_logger.info(f"msg {message}")
+        ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
         user_history = history.load_history(session.event.user_id)
@@ -167,7 +167,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             history_used=f"{len(normals):,} / {MAX_HISTORY_COUNT}",
             prefix=prefix
         )
-        ai_logger.info(f"send msg {send_msg}")
+        # ai_logger.info(f"send msg {send_msg}")
         # 输出风控
         # if len(send_msg) <= 2000:
         moderation_result = await is_text_can_send(session, send_msg)

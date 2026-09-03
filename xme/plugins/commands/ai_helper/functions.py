@@ -9,7 +9,7 @@ from nonebot.log import logger
 from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
-from xme.xmetools.reqtools import fetch_data, fetch_data_post, glm_api_request
+from xme.xmetools.reqtools import glm_api_request
 from xme.xmetools.texttools import regex_filter, regex_filter_text
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
@@ -26,7 +26,7 @@ __tools__ = [
     "gen_image",
     "get_skill_md",
     "check_file",
-    "list_temp_files",
+    "list_files",
     "save_to_history",
     "find_history_file",
     "write_to_history",
@@ -317,10 +317,10 @@ def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
         return out[:20000] + "\n[输出达到最大 20000 字，剩下请配置参数继续查看。]"
     return {"result": out, "no_compress": True}
 
-def list_temp_files(folder="temp", agent=None):
+def list_files(folder="temp", agent=None):
     """列出指定文件夹（temp / history）下的文件列表。"""
     if folder == "history":
-        hist_path = agent.get_history_path()
+        hist_path: Path = agent.get_history_path()
         files = sorted(
             [f for f in hist_path.iterdir() if f.is_file()],
             key=lambda f: f.name,
@@ -333,10 +333,15 @@ def list_temp_files(folder="temp", agent=None):
             else:
                 ref = f.name
             agent.ref_map[ref] = str(hist_path / f.name)
-            lines.append(f"{ref}: {f.name}")
+            # fsize = 0
+            if f.stat().st_size is not None:
+                fsize = f"{(f.stat().st_size / 1024):,.3f} KiB"
+            else:
+                fsize = "unknown"
+            lines.append(f"{ref}: {f.name} | size: {fsize}")
         return "\n".join(lines)
     reversed_ref_map = reverse_dict(agent.ref_map)
-    files = [f"{reversed_ref_map.get(f.name, None)}: {f.name}" for f in agent.get_temp_path().iterdir() if f.is_file()]
+    files = [f"{reversed_ref_map.get(f.name, None)}: {f.name} | size: {(f.stat().st_size / 1024):,.3f} KiB" for f in agent.get_temp_path().iterdir() if f.is_file()]
     return "\n".join(files)
 
 
@@ -381,6 +386,8 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     mode 与 with open() 的写入语义一致：
         "w" 覆盖或新建（默认）；"a" 追加或新建（追加时自动补一个换行分隔）。
     """
+    if len(content) > 100000:
+        return "[写入失败：写入内容过长 (>100000 字)]"
     res = _history_file(ref, agent, register=True)
     if res is None:
         return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
@@ -442,8 +449,6 @@ def _next_history_ref(agent) -> str:
 
 def rename_history_file(ref: str, new_ref: str = "", agent=None):
     """重命名一个历史文件。new_ref 为空时自动分配下一个可用的 history_N。
-
-    目标引用名需为 history_<数字>（防路径穿越），且不能与现有文件冲突。
     """
     res_old = _history_file(ref, agent)
     if res_old is None:
@@ -476,22 +481,22 @@ def rename_history_file(ref: str, new_ref: str = "", agent=None):
         return {"result": f"[重命名失败：{ex}]", "no_compress": True}
 
 
-def save_to_history(ref="", content="", agent=None):
-    """转存内容/文件到 history 文件夹，自动生成新的 history_N 引用。
+def save_to_history(ref, agent=None):
+    """转存文件到 history 文件夹，自动生成新的 history_N 引用。
 
     若传入 ref，则读取 temp 中对应文件的内容转存；否则使用 content 文本。
     history 文件以 history_N.tmp 命名，其引用 history_N 可由文件名推导，
     因此跨会话也能稳定复用。
     """
-    if ref:
-        try:
-            src_path = agent.resolve_ref(ref)
-        except KeyError:
-            return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
-        with open(src_path, "r", encoding="utf-8") as f:
-            text = f.read()
-    else:
-        text = content or ""
+    # if ref:
+    try:
+        src_path = agent.resolve_ref(ref)
+    except KeyError:
+        return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
+    with open(src_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    # else:
+        # text = content or ""
     if not text:
         return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
     # 复用 write_to_history 完成写入（找到文件 + 写入已拆分）

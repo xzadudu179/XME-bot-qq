@@ -209,7 +209,7 @@ class AIHelper:
                 self.pending_messages.append(result)
                 return prefix + f"[[{spent_msg}] \"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
 
-            ####### 压缩 #######
+            ####### 压缩 ########
 
             if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
                 res = dict_to_file(result, self.user_id, name + "_", agent=self)
@@ -219,6 +219,9 @@ class AIHelper:
                 res = text_to_file(result, self.user_id, self)
                 self.ref_map[res["ref"]] = res["file_name"]
                 return prefix + f"[{spent_msg}][工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
+
+            if len(str(result)) > 100000:
+                return f"[{spent_msg}][错误：无法返回过大内容 (>100000)]"
 
             return prefix + result if isinstance(result, str) else result
         except Exception as e:

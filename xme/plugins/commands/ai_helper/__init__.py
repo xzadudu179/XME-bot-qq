@@ -152,7 +152,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
         user_history = history.load_history(session.event.user_id)
-        _, normals = history.split(user_history)
+        *_, normals = history.split(user_history)
         send_msg = get_message(
             "plugins",
             __plugin_name__,

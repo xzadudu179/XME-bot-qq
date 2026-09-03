@@ -94,11 +94,15 @@ class AIHelper:
         raise KeyError(f"无法找到引用 {ref}")
 
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash"):
+        MODEL_MAP = {
+            "pro": "glm-5.3",
+        }
         self.ref_map = {}
         self.tokens = 0
         self.other_credits = 0
         self.model_arg = model
-        self.model = "glm-5.3" if model == "pro" else "glm-5.3-flash"
+        m = MODEL_MAP.get(model, None)
+        self.model = m if m is not None else "glm-5.3-flash"
         self.cached_tokens = 0
         self.client = ai_client
         self.session = session

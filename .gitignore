@@ -180,3 +180,6 @@ static/img/jianmao/*
 guild1.db
 guild1.db-shm
 guild1.db-wal
+
+# 本地 AI 开发规范（仅本机使用，勿提交）
+AGENT_DEV_RULES.md

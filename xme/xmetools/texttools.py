@@ -54,8 +54,19 @@ async def get_image_files_from_message(bot, msg):
     return images
 
 async def get_images_from_message(bot, msg):
-    images = [(await bot.get_image(file=image)) for image in re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*?file=([^,]+),", msg)]
-    return images
+    cqs = re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]", msg)
+    matches = re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*?file=([^,]+),", msg)
+    images = [(await bot.get_image(file=image)) for image in matches]
+    return images, cqs
+
+# async def get_files_from_message(bot, msg):
+#     cqs = re.findall(r"\[CQ:file,[^\]]*\]", msg)
+#     matches = re.findall(r"\[CQ:file,[^\]]*?file=([^,]+),[^\]]*?file_id=([^,]+),", msg)
+#     files = [
+#         await bot.get_file(file=file, file_id=file_id)
+#         for file, file_id in matches
+#     ]
+#     return files, cqs
 
 def only_positional_fields(s: str) -> str:
     return re.sub(r"{(\d+)}", r"{{\1}}", s)

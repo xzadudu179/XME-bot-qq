@@ -52,9 +52,9 @@ async def _(session: CommandSession, user):
         return False
     debug_msg(arg)
     try:
-        pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
-        matches = re.findall(pattern, arg)
-        image_objects = await get_images_from_message(session.bot, arg)
+        # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+        # matches = re.findall(pattern, arg)
+        image_objects, matches = await get_images_from_message(session.bot, arg)
         image_urls = [x["file"] for x in image_objects]
         image_names = [x["file_name"] for x in image_objects]
         logger.info(f"paths {image_urls}")

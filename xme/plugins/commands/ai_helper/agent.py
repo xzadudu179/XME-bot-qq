@@ -315,12 +315,13 @@ class AIHelper:
         history, curr_text = await get_history(user)
 
         # 提取 text 里的图片
-        image_objects = await get_images_from_message(session.bot, text)
-        pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
-        matches = re.findall(pattern, text)
+        image_objects, matches = await get_images_from_message(session.bot, text)
+        # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+        # matches = re.findall(pattern, text)
         for image_cq in matches:
             text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
         image_urls = [x["file"] for x in image_objects]
+
         self.user_input_urls["images"] = image_urls
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
         ai_logger.info(f"用户说：{text}")
@@ -413,7 +414,7 @@ async def get_history(user: u.User):
         if history.is_summary(item):
             summary = item.get("summary")
             continue
-        url_dicts = (item.get('urls', []))
+        url_dicts = (item.get('urls', {}))
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
         url_str = f"[附带URLs:{url_str}]" if url_str else ""
         build_dicts = [{

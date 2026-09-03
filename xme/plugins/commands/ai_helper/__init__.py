@@ -186,7 +186,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             count_tick(credits_use)
         return True
     except Exception:
-        ai_logger.error("错误：", format_exc())
+        ai_logger.error("AI 调用错误：", format_exc())
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     finally:

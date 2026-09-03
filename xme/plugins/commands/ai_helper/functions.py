@@ -311,7 +311,10 @@ def check_file(ref: str, line_start=0, line_end=0, agent=None):
     with open(path, "r", encoding="utf-8") as file:
         lines = file.readlines()
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
-    return {"result": "\n".join(get_lines), "no_compress": True}
+    out = "\n".join(get_lines)
+    if len(out) > 50000:
+        return f"[无法查看：需要查看的内容过长 (> 50000 字)，请使用其他方法或者查看部分行数]"
+    return {"result": out, "no_compress": True}
 
 
 def list_temp_files(folder="temp", agent=None):

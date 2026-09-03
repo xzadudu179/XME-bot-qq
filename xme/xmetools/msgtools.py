@@ -41,7 +41,9 @@ async def is_text_can_send(session: CommandSession, text: str):
             "REJECT": "是明显违规内容",
             "HIGH": "是高危内容",
         }
-        risk_type = result.get["risk_type"][0]
+        risk_type = "无"
+        if risk != "PASS":
+            risk_type = result.get("risk_type", ['未知'])[0]
         logger.info(f"分析完成，risk: {risk} {level.get(risk, '风险性未知')} risktype:{risk_type}")
         warning_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}发送的参数为 \"{session.current_arg_text.strip()}\"\n识别的 \"{text}\" 可能有风险。risktype:{risk_type}"
         risk_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}调用的指令{level.get(risk, '风险性未知')}。risktype:{risk_type}"

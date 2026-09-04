@@ -10,7 +10,7 @@ from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.msgtools import is_text_can_send, send_session_msg
+from xme.xmetools.msgtools import CMD_END, is_text_can_send, send_session_msg
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import TimeUnit, get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
@@ -81,6 +81,8 @@ async def parse_control(session: CommandSession, text: str, user: u.User) -> str
     result = parse_func(session=session, user=user, args=args)
     if inspect.iscoroutine(result):
         result = await result
+    if result is CMD_END:
+        return CMD_END
     return result
 
 
@@ -149,8 +151,11 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return False
     # ---------
     if args.ctrl and text and len(text) <= MAX_LENGTH:
-        await send_session_msg(session, await parse_control(session, text, user))
-        return 2
+        control = await parse_control(session, text, user)
+        if control is CMD_END:
+            return False
+        await send_session_msg(session, control)
+        return False
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False

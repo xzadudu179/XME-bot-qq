@@ -1575,6 +1575,7 @@
         "漂流瓶里不能包含二维码链接呢...",
         "漂流瓶里不应该出现二维码链接哦 {negative}"
       ],
+      "image_has_risk": "你的图片中似乎包含违规内容 {negative}，换一个内容试试吧",
       "throw_error": "{negative} 无法投掷漂流瓶，错误信息：{ex}\n可以试试重试一次哦",
       "pure_no_arg": "请在参数里指定要净化的瓶子 id 哦",
       "cthulhu_no_arg": "请先指定需要混乱的瓶子 id 哦",

@@ -40,7 +40,7 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
 
 
 def get_local_file_url(path: str):
-    """将本地文件变为一次性 url 链接（TTL 30s）
+    """将本地文件变为限时 url 链接（TTL 30s）
 
     Args:
         path (str): 本地文件路径
@@ -51,9 +51,10 @@ def get_local_file_url(path: str):
     Returns:
         str: 链接
     """
-    log.logger.info(Path("."))
-    if not Path(path).is_relative_to(Path(".").absolute()):
-        raise ValueError("文件层级不能低于项目层级")
+    path = Path(path).absolute()
+    root = Path(".").absolute()
+    if not path.is_relative_to(root):
+        ValueError(f"文件 {path} 层级不能低于项目层级 {root}")
     token = generate_file_token(path)
     # 有 30秒的过期时间
     url = f"http://{DOMAIN}/file/{token}"

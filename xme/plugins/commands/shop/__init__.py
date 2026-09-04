@@ -58,7 +58,7 @@ async def _(session: CommandSession , user: User, arg_list: list[str]):
             rules=lambda r: r in ['y', 'Y'],
             can_use_cmd=True
         )
-    if reply == CMD_END:
+    if reply is CMD_END:
         return False
     if reply not in ['y', 'Y']:
         return False

@@ -181,9 +181,11 @@ async def clear_all_sessions(session, user, args=None):
         ),
         rules=lambda r: r.strip().lower() in ("y", "Y"),
         can_use_cmd=True,
-        max_times=3,
+        max_times=1,
     )
-    if reply == CMD_END or reply is None:
+    if reply is CMD_END:
+        return CMD_END
+    if reply is None:
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
     if reply.strip().lower() not in ("y", "Y"):
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")

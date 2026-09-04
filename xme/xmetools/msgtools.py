@@ -24,15 +24,8 @@ import os
 
 # TODO: 图片风控适配
 
-async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
-    # if not text:
-    #     return {"result": True, "reason": ""}
-    # if len(text) > 2000:
-    #     return {"result": False, "reason": "文本过长"}
-    try:
-        logger.info(f"正在分析 \"{text}\"")
-        response = await text_moderations(text)
-        result = response["result_list"][0]
+async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = False, session=None):
+    for result in results:
         risk = result['risk_level']
         level = {
             "PASS": "无危害",
@@ -43,9 +36,15 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
         }
         risk_type = "无"
         if risk != "PASS":
-            risk_type = result.get("risk_type", ['未知'])[0]
+            risk_type = result.get("risk_type", ['未知'])
+            if len(risk_type) < 1:
+                risk_type = "未知"
+            else:
+                risk_type = risk_type[0]
         logger.info(f"分析完成，risk: {risk} {level.get(risk, '风险性未知')} risktype:{risk_type}")
-        warning_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}要发送的消息识别的 \"{text}\" 可能有风险。risktype:{risk_type}"
+        warning_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}要发送的消息识别的内容可能有风险。risktype:{risk_type}"
+        if session is not None:
+            warning_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}发送的参数为 \"{session.current_arg_text.strip()}\"\n 相关消息识别的内容可能有风险。risktype:{risk_type}"
         risk_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}调用的指令{level.get(risk, '风险性未知')}。risktype:{risk_type}"
         match risk:
             case "PASS":
@@ -70,53 +69,23 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, risk_text)
                 return {"result": False, "reason": "有高危内容"}
+
+async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
+    try:
+        logger.info(f"正在分析 \"{text}\"")
+        response = await text_moderations(text)
+        return await analyze_risk(response["result_list"], bot, event, risk_send_to_superusers=risk_send_to_superusers)
+
     except Exception as ex:
         logger.exception(traceback.format_exc())
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
 
 
 async def is_text_can_send(session: CommandSession, text: str):
-    # if not text:
-    #     return {"result": True, "reason": ""}
-    # if len(text) > 2000:
-    #     return {"result": False, "reason": "文本过长"}
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)
-        result = response["result_list"][0]
-        risk = result['risk_level']
-        level = {
-            "PASS": "无危害",
-            "REVIEW": "需要审查",
-            "BLOCK": "是违规内容",
-            "REJECT": "是明显违规内容",
-            "HIGH": "是高危内容",
-        }
-        risk_type = "无"
-        if risk != "PASS":
-            risk_type = result.get("risk_type", ['未知'])[0]
-        logger.info(f"分析完成，risk: {risk} {level.get(risk, '风险性未知')} risktype:{risk_type}")
-        warning_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}发送的参数为 \"{session.current_arg_text.strip()}\"\n识别的 \"{text}\" 可能有风险。risktype:{risk_type}"
-        risk_text = f"{await get_stranger_name(session.event.user_id)} 在群 {await get_group_name(session.event.group_id)}调用的指令{level.get(risk, '风险性未知')}。risktype:{risk_type}"
-        match risk:
-            case "PASS":
-                return {"result": True, "reason": f""}
-            case "REVIEW":
-                logger.warning(warning_text)
-                await send_to_superusers(session.bot, warning_text)
-                return {"result": True, "reason": f""}
-            case "BLOCK":
-                logger.warning(risk_text)
-                await send_to_superusers(session.bot,risk_text)
-                return {"result": False, "reason": "可能有违规内容"}
-            case "REJECT":
-                logger.warning(risk_text)
-                await send_to_superusers(session.bot, risk_text)
-                return {"result": False, "reason": "有违规内容"}
-            case "HIGH":
-                logger.warning(risk_text)
-                await send_to_superusers(session.bot, risk_text)
-                return {"result": False, "reason": "有高危内容"}
+        return await analyze_risk(response["result_list"], session.bot, session.event, True, session)
     except Exception as ex:
         logger.exception(traceback.format_exc())
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
@@ -228,7 +197,7 @@ async def aget_arg(
             if not reply:
                 await send_session_msg(session, get_message("config", "aget_no_content"))
                 continue
-            if reply == CMD_END:
+            if reply is CMD_END:
                 return CMD_END
             if rules(reply):
                 return reply

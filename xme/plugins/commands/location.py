@@ -54,7 +54,7 @@ async def _(session: CommandSession, user: User):
         times = 0
         while not has_target and times < 3:
             target: str = await aget_session_msg(session, can_use_command=True)
-            if target == CMD_END:
+            if target is CMD_END:
                 return False
             target = target.replace(".", "").strip()
             if target.isdecimal():

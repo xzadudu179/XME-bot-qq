@@ -13,10 +13,11 @@ bot = nonebot.get_bot()  # 在此之前必须已经 init
 async def get_file(token: str):
     client_ip = request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', request.remote_addr))
     log.logger.info(f"bot 文件被访问了，访问者 IP: {client_ip}")
-    info = FILE_TOKENS.pop(token, None)
+    info = FILE_TOKENS.get(token, None)
     if info is None:
         abort(404)
     if time.time() > info["expires_at"]:
+        FILE_TOKENS.pop(token, None)
         abort(410)
 
     return await send_file(info["path"])

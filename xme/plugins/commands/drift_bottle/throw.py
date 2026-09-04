@@ -14,7 +14,7 @@ from xme.plugins.commands.drift_bottle import __plugin_name__
 from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
 from xme.xmetools.texttools import get_images_from_message, remove_invisible, is_url
-from xme.xmetools.imgtools import get_url_image, limit_size, detect_qrcode
+from xme.xmetools.imgtools import get_url_image, is_images_can_send, limit_size, detect_qrcode
 from traceback import format_exc
 import config
 import re
@@ -34,9 +34,6 @@ async def is_image_has_qr(image):
             return True
     return False
 
-async def is_image_illegal(image: Image):
-    path = f"./data/images/temp/{uuid4().hex}.jpg"
-    image.save(path)
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'
@@ -51,13 +48,6 @@ async def _(session: CommandSession, user):
 
     arg = remove_invisible(session.current_arg.strip())
     logger.info(f"arg is {arg}")
-    text = arg
-    moderation_result = await is_text_can_send(session, text)
-    can_send = moderation_result["result"]
-    reason = moderation_result["reason"]
-    if not can_send:
-        await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
-        return False
     debug_msg(arg)
     try:
         # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
@@ -67,15 +57,15 @@ async def _(session: CommandSession, user):
         image_names = [x["file_name"] for x in image_objects]
         logger.info(f"urls {image_urls}")
         images = [limit_size((await get_url_image(image)), 700) for image in image_urls]
+        if not (await is_images_can_send(session.bot, session.event, images, session)):
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "image_has_risk"))
+            return False
         for image in images:
-            logger.info("图片: " + image)
+            # logger.info(f"")
             if await is_image_has_qr(image):
                 logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
                 return False
-            if is_image_illegal(image):
-                ...
-
         image_filenames = [os.path.splitext(os.path.basename(name))[0] + ".WEBP" for name in image_names]
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
@@ -90,6 +80,14 @@ async def _(session: CommandSession, user):
     if not arg:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False
+    ## 文本风险控制
+    moderation_result = await is_text_can_send(session, arg)
+    can_send = moderation_result["result"]
+    reason = moderation_result["reason"]
+    if not can_send:
+        await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
+        return False
+
     check = DriftBottle.check_duplicate_bottle(arg)
     debug_msg("查重 " + str(check['content']))
     if not check['status']:

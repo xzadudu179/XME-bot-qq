@@ -3,6 +3,7 @@ import base64
 import os
 from xme.xmetools import filetools
 # import asyncio
+import asyncio
 from config import IMAGE_TEMP_PATH
 # from aiocqhttp import MessageSegment
 from io import BytesIO
@@ -29,16 +30,59 @@ hti = Html2Image(
 )
 hti.output_path = IMAGE_TEMP_PATH
 
-def _is_images_url_can_send(image_urls: list[str]):
-    object_moderations([{"type": "image_url", "image_url": {"url": u}} for u in image_urls])
+async def _is_images_url_can_send(image_urls: list[str]):
+    return await object_moderations([{"type": "image_url", "image_url": {"url": u}} for u in image_urls])
 
-def is_image_can_send(image: Image.Image):
+def compress_moderation_image(image: Image.Image):
     w, h = image.size
     if w > 6000 or h > 6000:
         image = limit_size(image, 5000)
-    image_bytes = compress_image_to_size(image, True, max_bytes=10 * 1024 * 1024 * 1024)
+    buffer = BytesIO()
+    image = convert_no_alpha(image)
+    image.save(
+        buffer,
+        format="JPEG",
+        quality=75
+    )
+    original_bytes = buffer.getvalue()
+    image_bytes = compress_image_to_size(image, True, True, original_bytes, max_bytes=10 * 1024 * 1024 * 1024)
     path = f"./data/images/temp/{uuid4().hex}.jpg"
-    image.save(path)
+    with open(path, "wb") as f:
+        f.write(image_bytes)
+    # url = filetools.get_local_file_url(path)
+    return path
+
+async def get_moderation_image_paths(images: list[Image.Image]):
+    paths = []
+    for i in images:
+        p = await asyncio.to_thread(compress_moderation_image, image=i)
+        # url = filetools.get_local_file_url(p)
+        paths.append(p)
+    return paths
+
+async def is_images_can_send(bot, event, images: list[Image.Image], session=None):
+    """图片内容安全检测
+
+    Args:
+        session (CommandSession): 当前会话
+        images (list[Image.Image]): 图片列表
+    """
+    from xme.xmetools.msgtools import analyze_risk
+    is_url_invalid = True
+    try_times = 0
+    paths = await get_moderation_image_paths(images)
+    while is_url_invalid and try_times < 10:
+        urls = [filetools.get_local_file_url(p) for p in paths]
+        response = await _is_images_url_can_send(urls)
+        for result in response["result_list"]:
+            try_times += 1
+            risk = result['risk_level']
+            risk_type = result.get("risk_type", ['未知'])
+            if risk == "REJECT" and len(risk_type) < 1:
+                logger.info(f"有无效链接, 尝试重新解析 (第 {try_times} 次)")
+                continue
+            is_url_invalid = False
+    return await analyze_risk(response["result_list"], bot, event, True, session)
 
 def make_circle_image(path_or_image: str | Image.Image) -> Image.Image:
 
@@ -428,7 +472,7 @@ def compress_image_to_size(
                 Image.Resampling.LANCZOS,
             )
             quality = 90
-            
+
 # async def gif_msg(input_path, scale=1):
 #     img = Image.open(input_path)
 

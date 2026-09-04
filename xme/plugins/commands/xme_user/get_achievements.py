@@ -101,7 +101,7 @@ async def _(session: CommandSession, user: User):
         if total_pages <= 1:
             return False
         reply = (await aget_session_msg(session, can_use_command=True)).strip()
-        if reply == CMD_END:
+        if reply is CMD_END:
             return False
         reply = replace_chinese_punctuation(reply)
         if reply in ["<", ">"]:

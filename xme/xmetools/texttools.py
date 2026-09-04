@@ -12,6 +12,7 @@ import hashlib
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 import enchant
+from nonebot.log import logger
 from xme.xmetools.reqtools import glm_api_request
 import cn2an
 d = enchant.Dict("en_US")
@@ -43,6 +44,7 @@ async def object_moderations(objects: list[dict]):
         texts = split_text_overlap(o["text"])
         texts = [{"type": "text", "text": t} for t in texts]
         new_objects += texts
+    logger.info(f"检测风险：{new_objects}")
     response = await glm_api_request("/paas/v4/moderations", _input=new_objects)
     return response
 

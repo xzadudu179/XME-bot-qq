@@ -7,12 +7,12 @@ import inspect
 import asyncio
 from traceback import format_exc
 from uuid import uuid4
-
+from xme.xmetools.videotools import extract_video_links, extract_and_download
 import config
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, text_to_file, history_file_name, safe_join
+from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, safe_join
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
@@ -23,6 +23,8 @@ from character import get_message
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
+
+from xme.xmetools.videotools.core import VideoExtractResult
 
 from .constants import (
     __plugin_name__,
@@ -59,6 +61,8 @@ class AIHelper:
                 item.unlink()
             elif item.is_dir():
                 shutil.rmtree(item)
+        for path in self.temp_file_paths:
+            Path(path).unlink(missing_ok=True)
 
     def _check_user_path(self):
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
@@ -111,6 +115,7 @@ class AIHelper:
         self.client = ai_client
         self.session = session
         self.user_id = user_id
+        self.temp_file_paths = []
         self.user_input_urls = {}
         self.activate_skills = []
 
@@ -344,6 +349,28 @@ class AIHelper:
             return 0
         return 0
 
+    async def get_video_url_dicts(self, text):
+        links = extract_video_links(text)
+        pth = f"./data/videos/temp/"
+        pths = []
+        if len(links) < 1:
+            return []
+        result: VideoExtractResult = await extract_and_download(
+            text,
+            output_dir=pth
+        )
+        rs = result.downloads
+        video_dicts = []
+        for r in rs:
+            if not r.ok:
+                raise ValueError(f"下载视频出现错误：{r.error}")
+            files = r.file_paths
+            for f in files:
+                logger.info(f"files: {files}")
+                pths.append(f)
+                video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
+        return video_dicts, pths
+
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
         self.pending_messages.clear()
@@ -358,8 +385,11 @@ class AIHelper:
             text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
         image_urls = [x["file"] for x in image_objects]
 
+        video_dicts, pths = await self.get_video_url_dicts(text)
+        self.temp_file_paths += pths
         self.user_input_urls["images"] = image_urls
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
+        url_dicts += video_dicts
         ai_logger.info(f"用户说：{text}")
         ai_logger.info(f"用户附带了以下图片url {url_dicts}")
 
@@ -445,7 +475,10 @@ async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
     user_history = AISession(user.id, ai_session).load_history()
     if not user_history:
         return "", ""
-    build_list = []
+    build_list = [{
+        "role": "user",
+        "content": f"[历史记录-会话 \"{ai_session}\"]",
+    }]
     summary = None
     summary_skills: list[str] = []
     uname = await get_user_name(user.id, default='未知用户')

@@ -1,6 +1,6 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from character import get_message
-from xme.xmetools.msgtools import aget_arg
+from xme.xmetools.msgtools import CMD_END, aget_arg
 
 from . import history
 from .constants import __plugin_name__, MAX_SESSIONS
@@ -169,7 +169,7 @@ async def clear_all_sessions(session, user, args=None):
         can_use_cmd=True,
         max_times=3,
     )
-    if reply == "CMD_END" or reply is None:
+    if reply == CMD_END or reply is None:
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
     if reply.strip().lower() not in ("y", "yes", "是", "确认"):
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")

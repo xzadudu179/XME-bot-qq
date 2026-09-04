@@ -26,6 +26,7 @@ from .commands import clear_history, clear_all_sessions, list_sessions, name_ses
 from .share_commands import (
     join_session,
     kick_member,
+    leave_shared_session,
     rev_requests,
     session_history,
     session_info,
@@ -71,17 +72,17 @@ cmds = {
     "share": {
         "content": share_session,
         "args": "<普通会话序号>",
-        "desc": "创建共享会话（带序号则复制该会话内容），创建后自动切换",
+        "desc": "创建共享会话（带序号则复制该会话内容，否则新建空白会话），创建后自动切换",
     },
     "join": {
         "content": join_session,
-        "args": "(群号码)",
+        "args": "(共享会话码)",
         "desc": "请求加入共享会话，等待群主审批",
     },
     "rev": {
         "content": rev_requests,
         "args": "<用户序号> <apr/rej/block>",
-        "desc": "查看/处理共享会话的加入请求（群主专用）",
+        "desc": "查看/处理共享会话的加入请求（群主专用，不填任何参数为查看请求列表）",
     },
     "info": {
         "content": session_info,
@@ -92,6 +93,11 @@ cmds = {
         "content": kick_member,
         "args": "(成员序号)",
         "desc": "把成员踢出当前共享会话（群主专用）",
+    },
+    "leave": {
+        "content": leave_shared_session,
+        "args": "",
+        "desc": "退出当前共享会话（群主不可退出）",
     },
     "history": {
         "content": session_history,

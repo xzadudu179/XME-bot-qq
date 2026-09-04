@@ -2,7 +2,7 @@
 import re
 
 from character import get_message
-from xme.xmetools.msgtools import CMD_END, aget_arg
+from xme.xmetools.msgtools import CMD_END, aget_arg, send_to_user
 
 from . import history, share
 from .constants import (
@@ -177,38 +177,78 @@ def name_session(session, user, args=None):
     return get_message("plugins", __plugin_name__, "session_renamed", old_name=old_name, new_name=new_name, locked_hint=locked_hint)
 
 
-def clear_history(session, user, args=None):
-    """无参清空当前会话；带 <序号> 删除指定会话（默认会话不可删除）。"""
-    current = AISession.current(user.id)
+async def clear_history(session, user, args=None):
+    """清空/删除会话：无参清空当前会话；<数字序号> 删除普通会话；
+    <a序号> 删除共享会话（仅群主，其他成员与申请者收到私聊通知）。
+
+    当前处于共享会话时，无参 clear 作用于共享会话（仅群主可清），
+    不再误清各自的普通会话。
+    """
     num = _parse_index(args)
-    if num is not None:
-        target, err = _session_by_index(user.id, num)
-        if err:
-            return err
-        if target.is_default:
-            # 默认会话不可删除：clear <默认序号> = 清空默认会话内容（当前在默认会话时等价于无参 clear）
-            cleared_hist, cleared_files = target.clear()
+    # ---- a 序号：删除整个共享会话（仅群主）----
+    if num is not None and re.fullmatch(r"a\d+", num):
+        shared = share.shared_by_a_index(user.id, int(num[1:]))
+        if shared is None:
+            return get_message("plugins", __plugin_name__, "shared_index_not_found", index=num)
+        if not shared.is_owner(user.id):
+            return get_message("plugins", __plugin_name__, "shared_delete_need_owner")
+        # 名单要在删除前取出（meta 随目录一起消失，requests 一并移除）
+        code, title = shared.code, shared.title
+        targets = [uid for uid in
+                   [*shared.member_ids, *[r.get("user_id") for r in shared.requests]]
+                   if uid is not None]
+        file_count = shared.delete()
+        share.detach_users(code, targets)  # 清各用户的 .joined 与共享指针（含自己）
+        notified = 0
+        for uid in targets:
+            if uid == user.id:
+                continue
+            await send_to_user(session.bot, uid, get_message(
+                "plugins", __plugin_name__, "shared_deleted_notify", code=code, title=title))
+            notified += 1
+        return get_message("plugins", __plugin_name__, "shared_deleted",
+                           code=code, title=title, file_count=file_count, notify_count=notified)
+    # ---- 无参：共享模式下清空共享会话（仅群主），否则清空普通当前会话 ----
+    if num is None:
+        shared = share.current_shared(user.id)
+        if shared is not None:
+            if not shared.is_owner(user.id):
+                return get_message("plugins", __plugin_name__, "shared_clear_need_owner")
+            cleared_hist, cleared_files = shared.clear()
             if cleared_hist == 0 and cleared_files == 0:
                 return get_message("plugins", __plugin_name__, "session_clear_no_content")
             return get_message(
                 "plugins", __plugin_name__, "session_cleared",
                 hist_count=cleared_hist, file_count=cleared_files,
             )
-        cleared = target.delete()
-        if cleared == 0:
-            return get_message("plugins", __plugin_name__, "session_delete_failed", ai_session=target.ai_session)
-        return get_message("plugins", __plugin_name__, "session_deleted", ai_session=target.ai_session, count=cleared)
-    # 无参：清空当前会话（历史文件 + 转存文件夹）
-    cleared_hist, cleared_files = current.clear()
-    if cleared_hist == 0 and cleared_files == 0:
-        return get_message("plugins", __plugin_name__, "session_clear_no_content")
-    # 非默认会话被清空后重新建立一个空会话，避免当前指针指向不存在的会话（命名锁保持）
-    if not current.is_default and not current.exists():
-        AISession.create(user.id, current.ai_session)
-    return get_message(
-        "plugins", __plugin_name__, "session_cleared",
-        hist_count=cleared_hist, file_count=cleared_files,
-    )
+        current = AISession.current(user.id)
+        cleared_hist, cleared_files = current.clear()
+        if cleared_hist == 0 and cleared_files == 0:
+            return get_message("plugins", __plugin_name__, "session_clear_no_content")
+        # 非默认会话被清空后重新建立一个空会话，避免当前指针指向不存在的会话（命名锁保持）
+        if not current.is_default and not current.exists():
+            AISession.create(user.id, current.ai_session)
+        return get_message(
+            "plugins", __plugin_name__, "session_cleared",
+            hist_count=cleared_hist, file_count=cleared_files,
+        )
+    # ---- 数字序号：删除指定普通会话（默认会话不可删除）----
+    target, err = _session_by_index(user.id, num)
+    if err:
+        return err
+    if target.is_default:
+        # 默认会话不可删除：clear <默认序号> = 清空默认会话内容（当前在默认会话时等价于无参 clear）
+        cleared_hist, cleared_files = target.clear()
+        if cleared_hist == 0 and cleared_files == 0:
+            return get_message("plugins", __plugin_name__, "session_clear_no_content")
+        return get_message(
+            "plugins", __plugin_name__, "session_cleared",
+            hist_count=cleared_hist, file_count=cleared_files,
+        )
+    cleared = target.delete()
+    if cleared == 0:
+        return get_message("plugins", __plugin_name__, "session_delete_failed", ai_session=target.ai_session)
+    return get_message("plugins", __plugin_name__, "session_deleted", ai_session=target.ai_session, count=cleared)
 
 
 def switch_session(session, user, args=None):

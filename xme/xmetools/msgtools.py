@@ -478,6 +478,19 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     u.record_call()
 
 
+async def send_to_user(bot: NoneBot, user_id: int, message):
+    """给单个用户发私聊消息；发送失败只记日志不抛出（通知类消息不应打断主流程）。
+
+    Args:
+        bot (NoneBot): bot
+        user_id (int): 用户 qq 号
+        message (Message_T): 消息内容
+    """
+    try:
+        await bot.send_private_msg(user_id=user_id, message=message)
+    except Exception as e:
+        SEND_LOGGER.warning(f'发消息给 {user_id} 失败: {e}')
+
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息
 

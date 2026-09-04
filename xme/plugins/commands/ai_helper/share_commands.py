@@ -1,7 +1,7 @@
-"""/ai -c 的共享会话子命令实现（share / join / rev / info / kick / history）。
+"""/ai -c 的共享会话子命令实现（share / join / rev / info / kick / leave / history）。
 
 统一签名 (session, user, args=None)，薄层：清洗参数 → 调 share.py 的存储/业务 →
-get_message 拼回复文案；涉及他人通知的统一走 _notify（私聊，失败不打断主流程）。
+get_message 拼回复文案；涉及他人通知的统一走 msgtools.send_to_user（私聊，失败不打断主流程）。
 当前会话是否处于共享模式一律由 share.current_shared 判定。
 """
 from character import get_message
@@ -9,7 +9,12 @@ from nonebot import CommandSession
 from nonebot.log import logger
 
 from xme.xmetools.bottools import get_user_name
-from xme.xmetools.msgtools import CMD_END, change_group_message_content, send_forward_msg
+from xme.xmetools.msgtools import (
+    CMD_END,
+    change_group_message_content,
+    send_forward_msg,
+    send_to_user,
+)
 from xme.xmetools.timetools import get_time_difference, get_time_now
 
 from . import history, share
@@ -35,14 +40,6 @@ def _msg(key: str, **kwargs) -> str:
 def _clean_args(args) -> list[str]:
     """统一清洗子命令参数：去首尾空白、丢弃空串。"""
     return [a.strip() for a in (args or []) if a and a.strip()]
-
-
-async def _notify(session: CommandSession, user_id, message: str) -> None:
-    """给指定用户发私聊通知；发送失败只记日志不抛出（通知不应打断主流程）。"""
-    try:
-        await session.bot.send_private_msg(user_id=user_id, message=message)
-    except Exception as e:
-        logger.warning(f"共享会话私聊通知 {user_id} 失败: {e}")
 
 
 async def _sender_dict(session: CommandSession, user_id) -> dict:
@@ -109,7 +106,7 @@ async def join_session(session, user, args=None):
             return _msg("join_cooldown", mins=max(1, mins))
     s.add_request(user.id, get_time_now())
     name = await get_user_name(user.id, group_id=session.event.group_id, default=str(user.id))
-    await _notify(session, s.owner, _msg(
+    await send_to_user(session.bot, s.owner, _msg(
         "join_notify", name=name, user_id=str(user.id), code=s.code, title=s.title))
     return _msg("join_sent", code=code)
 
@@ -156,7 +153,7 @@ async def rev_requests(session, user, args=None):
             s.remove_member(target_id)
             s.add_request(target_id, request.get("time", get_time_now()))
             return _msg("rev_target_limit", name=target_name, user_id=str(target_id))
-        await _notify(session, target_id, _msg("join_apr", code=s.code, title=s.title))
+        await send_to_user(session.bot, target_id, _msg("join_apr", code=s.code, title=s.title))
         return _msg("rev_apr_done", name=target_name, user_id=str(target_id), code=s.code)
     request = s.pop_request(index)
     if request is None:
@@ -164,7 +161,7 @@ async def rev_requests(session, user, args=None):
     target_id = request.get("user_id")
     target_name = await get_user_name(target_id, default=str(target_id))
     if op == "rej":
-        await _notify(session, target_id, _msg("join_rej", code=s.code, title=s.title))
+        await send_to_user(session.bot, target_id, _msg("join_rej", code=s.code, title=s.title))
         return _msg("rev_rej_done", name=target_name, user_id=str(target_id))
     # block：只屏蔽不通知（需求确认）
     s.add_blocked(target_id)
@@ -211,12 +208,21 @@ async def kick_member(session, user, args=None):
     target_id = members[index - 1].get("user_id")
     if target_id == s.owner:
         return _msg("kick_owner_unkickable")
-    s.remove_member(target_id)
-    share.remove_joined(target_id, s.code)
-    share.clear_current_shared_if(target_id, s.code)
+    share.leave_shared(s, target_id)
     name = await get_user_name(target_id, default=str(target_id))
-    await _notify(session, target_id, _msg("kick_notify", code=s.code, title=s.title))
+    await send_to_user(session.bot, target_id, _msg("kick_notify", code=s.code, title=s.title))
     return _msg("kick_done", name=name, user_id=str(target_id), code=s.code)
+
+
+async def leave_shared_session(session, user, args=None):
+    """退出当前共享会话：leave（群主不可退出）。"""
+    s = share.current_shared(user.id)
+    if s is None:
+        return _msg("shared_need_current")
+    if s.is_owner(user.id):
+        return _msg("leave_owner_denied")
+    share.leave_shared(s, user.id)
+    return _msg("leave_done", code=s.code, title=s.title)
 
 
 async def session_history(session, user, args=None):

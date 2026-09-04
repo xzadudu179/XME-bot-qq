@@ -27,6 +27,7 @@ SESSION_NAME_MAX_LEN = 20
 SHARED_DIR_NAME = "shared"              # data/ai_historys/shared/<群号码>/
 SHARED_META_FILE = "meta.json"          # 状态文件（群主/成员/请求/屏蔽等）
 SHARED_HISTORY_FILE = "history.json"    # 共享历史（与普通会话同格式）
+SHARED_GLOBAL_META_FILE = ".global_meta.json"  # 共享全局状态（群号码水位 next_code_n，只增不减，可扩展）
 
 # 用户目录下的状态文件（. 开头，AISession.all 扫描天然跳过）
 JOINED_FILE = ".joined"                 # 已加入的共享会话群号码，每行一个，顺序即 a 序号

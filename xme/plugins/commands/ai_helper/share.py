@@ -1,6 +1,8 @@
 """共享会话：多用户共享同一个 AI 会话（群主/成员/加入审批/对话锁）。
 
 存储布局（data/ai_historys/ 下单开 shared 目录，与各用户目录平级）：
+    shared/.global_meta.json       全局状态（{"next_code_n": N} 群号码水位，只增不减：
+                                   分配过的号码永不复用，防弃用群的旧邀请串到新会话）
     shared/<群号码>/history.json   共享历史（与普通会话完全同格式）
     shared/<群号码>/meta.json      {code, title, owner, admins, created_time,
                                     members:[{user_id, joined_time}], requests:[{user_id, time}], blocked}
@@ -14,6 +16,7 @@ count/dir_path 等同名接口（鸭子类型），agent 层通过 AIHelper.stor
 与普通会话的关键差异：目录以群号码命名，"改名"只更新 meta 里的 title 展示字段，
 不涉及文件移动（普通会话名字即文件名，改名=移动文件）。
 """
+import shutil
 from pathlib import Path
 
 from xme.xmetools import jsontools
@@ -31,6 +34,7 @@ from .constants import (
     SHARED_CODE_PREFIX,
     SHARED_CODE_WIDTH,
     SHARED_DIR_NAME,
+    SHARED_GLOBAL_META_FILE,
     SHARED_HISTORY_FILE,
     SHARED_META_FILE,
 )
@@ -43,6 +47,29 @@ _busy_codes: dict[str, bool] = {}
 def _shared_root() -> Path:
     """共享会话根目录（运行时从 HISTORY_ROOT 派生，便于测试时整体替换）。"""
     return history.HISTORY_ROOT / SHARED_DIR_NAME
+
+
+def _watermark_path() -> Path:
+    """群号码水位文件：shared/.global_meta.json（{"next_code_n": N}，N 只增不减）。"""
+    return _shared_root() / SHARED_GLOBAL_META_FILE
+
+
+def used_code_watermark() -> int:
+    """群号码水位：[0, N) 的号码一律视为已占用（含已删除会话的号，永不复用）。
+
+    文件缺失/损坏/负数时返回 0（退化为纯目录扫描，现存目录仍不会被复用）。
+    """
+    data = jsontools.read_from_path(_watermark_path())
+    n = data.get("next_code_n") if isinstance(data, dict) else None
+    return n if isinstance(n, int) and n >= 0 else 0
+
+
+def _raise_watermark_to(n: int) -> None:
+    """把水位抬到 n（只增不减；低于当前水位时静默）。"""
+    if n <= used_code_watermark():
+        return
+    _watermark_path().parent.mkdir(parents=True, exist_ok=True)
+    jsontools.save_to_path(_watermark_path(), {"next_code_n": n})
 
 
 def _user_state_file(user_id, name: str) -> Path:
@@ -176,21 +203,56 @@ class SharedSession:
         self.dir_path.mkdir(parents=True, exist_ok=True)
         jsontools.save_to_path(self.history_path, items, ensure_ascii=False, indent=2)
 
+    def clear(self) -> tuple[int, int]:
+        """清空共享会话内容：历史置空 + 删除转存文件（保留 meta.json/history.json 骨架）。
+
+        会话本身与成员关系保持不变（区别于 delete 的整体删除）。
+        返回 (是否有历史 1/0, 删除的转存文件数)；转存子目录按 1 个计。
+        """
+        had_history = 1 if self.load_history() else 0
+        removed = 0
+        if self.dir_path.is_dir():
+            for item in self.dir_path.iterdir():
+                if item in (self.meta_path, self.history_path):
+                    continue
+                if item.is_file() or item.is_symlink():
+                    item.unlink()
+                    removed += 1
+                elif item.is_dir():
+                    shutil.rmtree(item)
+                    removed += 1
+        if had_history:
+            self.save_history([])
+        return had_history, removed
+
+    def delete(self) -> int:
+        """删除整个共享会话目录（meta/历史/转存文件，requests 名单随 meta 一并消失），
+        返回删除的文件数。水位抬到自己之上（号码永不复用；兼容水位上线前创建的会话）。
+        调用方负责先取成员/申请者名单并做用户侧清理与通知。"""
+        _raise_watermark_to(int(self.code[len(SHARED_CODE_PREFIX):]) + 1)
+        if not self.dir_path.is_dir():
+            return 0
+        removed = sum(1 for _ in self.dir_path.rglob("*") if _.is_file())
+        shutil.rmtree(self.dir_path)
+        return removed
+
     # ---------- 创建 ----------
 
     @classmethod
     def next_code(cls) -> str | None:
-        """下一个群号码（现有最大数字 +1，AI0000 起）；号码空间耗尽返回 None。"""
-        max_n = -1
+        """下一个群号码：从水位线起找第一个不存在目录的号。
+
+        水位线以下的号码一律视为已占用（删除的号永不复用，防旧邀请串群）；
+        水位线以上的残留目录（如手动建的）会被跳过并在 create 时收入水位。
+        号码空间耗尽返回 None。
+        """
+        n = used_code_watermark()
         root = _shared_root()
-        if root.is_dir():
-            for item in root.iterdir():
-                if item.is_dir() and is_valid_code(item.name):
-                    max_n = max(max_n, int(item.name[len(SHARED_CODE_PREFIX):]))
-        n = max_n + 1
-        if n > SHARED_CODE_MAX_N:
-            return None
-        return f"{SHARED_CODE_PREFIX}{n:0{SHARED_CODE_WIDTH}d}"
+        while n <= SHARED_CODE_MAX_N:
+            if not (root / f"{SHARED_CODE_PREFIX}{n:0{SHARED_CODE_WIDTH}d}").is_dir():
+                return f"{SHARED_CODE_PREFIX}{n:0{SHARED_CODE_WIDTH}d}"
+            n += 1
+        return None
 
     @classmethod
     def create(cls, owner_id, title: str = DEFAULT_SHARED_TITLE,
@@ -198,10 +260,12 @@ class SharedSession:
         """创建共享会话（群主自动成为 1 号成员）；号码空间耗尽返回 None。
 
         history_items 用于"复制普通会话为共享"场景，直接作为初始历史写入。
+        号码分配后把水位抬到其上一位（删除不复用，防旧邀请串群）。
         """
         code = cls.next_code()
         if code is None:
             return None
+        _raise_watermark_to(int(code[len(SHARED_CODE_PREFIX):]) + 1)
         s = cls(code)
         s._save_meta({
             "code": code,
@@ -374,6 +438,30 @@ def clear_current_shared_if(user_id, code: str) -> bool:
         set_current_shared(user_id, None)
         return True
     return False
+
+
+def detach_users(code: str, user_ids) -> None:
+    """把一批用户与共享会话解除关联：清各自的 .joined 记录与指向该会话的指针。
+
+    用于会话被删除后批量清理（成员与待审申请者）；用户不存在/无记录时静默。
+    """
+    for uid in user_ids:
+        if uid is None:
+            continue
+        remove_joined(uid, code)
+        clear_current_shared_if(uid, code)
+
+
+def leave_shared(s: SharedSession, user_id) -> bool:
+    """把用户退出共享会话：移除成员名单并清理其用户侧状态（.joined 与共享指针）。
+
+    群主不可退出（避免产生无群主的孤儿会话），非成员返回 False；kick 与 leave 共用。
+    """
+    if not s.remove_member(user_id):
+        return False
+    remove_joined(user_id, s.code)
+    clear_current_shared_if(user_id, s.code)
+    return True
 
 
 def leave_all(user_id) -> int:

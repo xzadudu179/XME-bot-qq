@@ -50,9 +50,6 @@ __tools__ = [
     "name_session"
 ]
 
-# TODO： AI 能够写入自己的 temp 文件（或许也可以包括 history 文件）
-# TODO: AI 能够删除任意一个 history 文件 还有重命名 history 文件
-
 # 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
 
 def get_user_input_urls(agent):
@@ -73,7 +70,7 @@ def name_session(name: str, agent=None):
     name = (name or "").strip()
     name = name.replace(" ", "_")
     if not AISession.is_valid_name(name):
-        return "[错误：会话名不合法。请使用中英文/数字/_-（不以点开头、不含特殊符号），且不能叫 default 或以 history_ 开头]"
+        return "[错误：会话名不合法。请控制在 20 字符以内，使用中英文/数字/_-（不以点开头、不含特殊符号），且不能叫 default 或以 history_ 开头]"
     session_obj = AISession(agent.user_id, old_name)
     if session_obj.is_locked():
         return "[错误：当前会话的名字由用户手动指定，AI 不可修改。请不要再重命名该会话]"

@@ -18,3 +18,5 @@ HISTORY_MAX_SIZE = 10 * 1024 * 1024     # 最多 10 MB
 
 # 每个用户最多可创建的 AI 会话数（含默认会话）
 MAX_SESSIONS = 25
+# 会话最长名字
+SESSION_NAME_MAX_LEN = 20

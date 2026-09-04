@@ -25,10 +25,10 @@ import os
 # TODO: 图片风控适配
 
 async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
-    if not text:
-        return {"result": True, "reason": ""}
-    if len(text) > 2000:
-        return {"result": False, "reason": "文本过长"}
+    # if not text:
+    #     return {"result": True, "reason": ""}
+    # if len(text) > 2000:
+    #     return {"result": False, "reason": "文本过长"}
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)

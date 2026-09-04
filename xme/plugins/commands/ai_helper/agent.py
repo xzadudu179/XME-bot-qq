@@ -7,7 +7,7 @@ import inspect
 import asyncio
 from traceback import format_exc
 from uuid import uuid4
-from xme.xmetools.videotools import extract_video_links, extract_and_download
+from xme.xmetools.videotools import extract_video_links, extract_and_download, parse_video
 import config
 from nonebot import CommandSession, MessageSegment
 
@@ -24,7 +24,7 @@ from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
-from xme.xmetools.videotools.core import VideoExtractResult
+from xme.xmetools.videotools.core import VideoExtractResult, VideoInfo, replace_video_links
 
 from .constants import (
     __plugin_name__,
@@ -354,22 +354,36 @@ class AIHelper:
         pth = f"./data/videos/temp/"
         pths = []
         if len(links) < 1:
-            return []
+            return text, [], []
+
         result: VideoExtractResult = await extract_and_download(
             text,
             output_dir=pth
         )
-        rs = result.downloads
+        links = result.links
+
         video_dicts = []
-        for r in rs:
-            if not r.ok:
-                raise ValueError(f"下载视频出现错误：{r.error}")
-            files = r.file_paths
-            for f in files:
-                logger.info(f"files: {files}")
-                pths.append(f)
-                video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
-        return video_dicts, pths
+        new_text = text
+        try:
+            for link, r in sorted(zip(result.links, result.downloads),
+                                key=lambda p: p[0].start, reverse=True):
+                if not r.ok:
+                    raise ValueError(f"下载视频出现错误：{r.error}")
+                video_info = await parse_video(r.url)
+                desc = video_info.description if video_info and video_info.description else "无"
+                desc = desc[:200] + "..." if len(desc) > 200 else desc
+                desc = desc.replace("\r\n", "\n").replace("\r", "\n")
+                title = video_info.title if video_info else (r.title or "未知标题")
+                platform = f"{video_info.platform_name}-{video_info.video_id}" if video_info else "未知平台信息"
+                desc = f"``` Text\n{desc}\n```" if desc.count("\n") > 1 else '"' + desc.strip("\n") + '"'
+                info_text = f"[视频:{platform}] 标题：{title} | url:{link.url} | 介绍:{desc} "
+                new_text = new_text[:link.start] + info_text + new_text[link.end:]
+                for f in r.file_paths:
+                    pths.append(f)
+                    video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
+            return new_text, video_dicts, pths
+        except Exception as ex:
+            return f"[解析视频出现异常: {ex}]" + new_text, [], []
 
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
@@ -385,7 +399,7 @@ class AIHelper:
             text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
         image_urls = [x["file"] for x in image_objects]
 
-        video_dicts, pths = await self.get_video_url_dicts(text)
+        text, video_dicts, pths = await self.get_video_url_dicts(text)
         self.temp_file_paths += pths
         self.user_input_urls["images"] = image_urls
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]

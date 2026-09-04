@@ -5,6 +5,7 @@ from xme.xmetools.msgtools import aget_arg
 from . import history
 from .constants import SESSION_NAME_MAX_LEN, __plugin_name__, MAX_SESSIONS
 from .session import AISession
+from xme.xmetools.videotools import extract_video_links, extract_and_download
 
 # 注意：命令函数统一签名 (session, user, args=None)；
 # "ai_session" 一律指 AI 会话名，"session" 一律指 bot 的 CommandSession；

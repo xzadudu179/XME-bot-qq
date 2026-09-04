@@ -36,52 +36,94 @@ _TRAILING_PUNCT = ".,!?;:)]}>'\"`" + "，。！？；：、）】》」』＞”
 
 @dataclass(frozen=True)
 class VideoLink:
-    """文本中提取到的一条视频链接；start/end 是它在原文本中的下标区间 [start, end)。"""
+    """文本中提取到的一条视频链接（extract_video_links 的返回项）。"""
 
+    # 原文中的链接字符串：仅剔除尾部粘连标点（中文标点/引号等），其余未改写，
+    # 可与 VideoDownload.url、VideoInfo.url 直接字符串比对
     url: str
+    # 链接所属平台定义（match_platform 的结果）；提取时已按注册表过滤，不会为 None
     platform: VideoPlatform | None
+    # 链接在原文本中的起止下标（[start, end)，满足 text[start:end] == url），
+    # 用于对原文做原位替换/删除
     start: int
     end: int
 
 
 @dataclass
 class VideoInfo:
-    """yt-dlp 解析出的视频元信息；合集/多 P 链接的子视频在 entries 里。"""
+    """yt-dlp 解析出的单条视频元信息（parse_video 的返回项，不下载）。
 
+    字段取自 yt-dlp 的 info dict；合集/多 P/播放列表解析出的子视频在
+    entries 里，元素也是 VideoInfo、字段含义相同（顶层是合集入口的信息）。
+    默认 noplaylist=True：形如 bilibili ?p=N 的「视频+合集」两可链接只解析
+    指向的那一 P；独立的合集/播放列表链接才会展开出 entries（extra_opts 可覆盖）。
+    """
+
+    # 请求解析时传入的原始链接（yt-dlp original_url，兜底 webpage_url），
+    # 与 VideoLink.url、VideoDownload.url 一致，可作匹配 key。
+    # 注意：entries 子条目的该字段可能继承合集入口链接，子视频自身地址优先看 webpage_url
     url: str
+    # 平台标识（platforms 注册表 name，如 "bilibili"）
     platform_name: str
+    # yt-dlp 的 extractor 标识（如 "BiliBili"）；为 "Generic" 说明 yt-dlp 没有
+    # 专用解析器、只是通用网页解析（多半拿不到可下载的视频）
     extractor: str
+    # 平台侧视频 id（如 BV 号 / av 号）
     video_id: str
+    # 标题；合集链接时是合集标题，子视频标题看 entries[i].title
     title: str
+    # 时长（秒）；直播中或拿不到时为 None
     duration: float | None
+    # UP 主 / 频道名（yt-dlp uploader，兜底 channel）
     uploader: str
+    # 简介全文，可能很长，展示前建议自行截断
     description: str
+    # 封面图链接；拿不到时为空串
     thumbnail: str
+    # yt-dlp 解析重定向后的规范化页面地址（如 b23.tv 短链 → 完整 BV 页）。
+    # 与 url 的区别：url 是「请求时的原始链接」，本字段适合展示或二次解析
     webpage_url: str
+    # 是否正在直播
     is_live: bool
+    # 合集/多 P 的子视频列表，按合集内顺序；普通单视频为空列表
     entries: list["VideoInfo"] = field(default_factory=list)
 
 
 @dataclass
 class VideoDownload:
-    """一次下载的结果；ok=True 时 file_paths 是后处理完成后的成品文件
-    （合集链接含每个子视频），ok=False 时 file_paths 必为空列表、error 说明原因
-    （失败前可能已落盘部分文件，需调用方扫描 output_dir 找回）。"""
+    """单条链接的一次下载结果（download_video 的返回项）。
 
+    不抛异常：成功 ok=True；失败/超时 ok=False，error 说明原因。
+    下载行为与 VideoInfo 的解析一致（默认 noplaylist=True，extra_opts 可覆盖）。
+    """
+
+    # 原样传入的下载链接（未经改写）；extract_and_download 中与 links[i].url 相同
     url: str
+    # 平台标识（platforms 注册表 name）；链接不属于任何已注册平台时为 ""
     platform_name: str
+    # 视频标题；未进入解析（平台不识别）或解析失败/超时时为 ""
     title: str
+    # 下载并后处理（合并音视频等）完成后的成品文件路径，文件名形如
+    # "标题 [视频id].扩展名"；单视频 1 个，合集/多 P 每个子视频 1 个（按下载顺序）；
+    # 不含 .part 临时文件和字幕/封面等附属文件。
+    # ok=False 时必为空列表：超时/异常拿不到线程内的落盘状态，
+    # 已写了一半的文件需调用方扫描 output_dir 找回
     file_paths: list[Path]
+    # 是否下载成功
     ok: bool
+    # 失败原因：ok=False 时为 "不支持的视频链接" / "下载超时(Ns)" / yt-dlp 报错信息；成功为 None
     error: str | None = None
 
 
 @dataclass
 class VideoExtractResult:
-    """extract_and_download 的组合结果。"""
+    """extract_and_download 的组合结果：提取 + 并发下载 + 无链接文本。"""
 
+    # 从文本提取到的全部视频链接（按出现顺序，已去重）
     links: list[VideoLink]
+    # 下载结果，与 links 一一对应且同序（downloads[i] 对应 links[i]）
     downloads: list[VideoDownload]
+    # 移除全部视频链接（含重复出现）后的剩余文本；文本里没有视频链接时与原文相同
     cleaned_text: str
 
 

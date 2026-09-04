@@ -506,5 +506,26 @@
                 "required": ["name"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "dice",
+            "description": "投n个指定面数的骰子。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "faces": {
+                        "type": "integer",
+                        "description": "骰子面数"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "骰子数量，默认 1"
+                    }
+                },
+                "required": ["faces"]
+            }
+        }
     }
 ]

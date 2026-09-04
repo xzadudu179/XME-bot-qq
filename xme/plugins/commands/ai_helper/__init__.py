@@ -20,9 +20,17 @@ from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger
 from .session import AISession
-from . import constants
+from . import constants, share
 from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
 from .commands import clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
+from .share_commands import (
+    join_session,
+    kick_member,
+    rev_requests,
+    session_history,
+    session_info,
+    share_session,
+)
 
 
 # 用户: stats
@@ -58,7 +66,37 @@ cmds = {
     "swi": {
         "content": switch_session,
         "args": "(会话序号)",
-        "desc": "切换到指定序号的会话",
+        "desc": "切换到指定序号的会话（a 开头为共享会话，如 a1）",
+    },
+    "share": {
+        "content": share_session,
+        "args": "<普通会话序号>",
+        "desc": "创建共享会话（带序号则复制该会话内容），创建后自动切换",
+    },
+    "join": {
+        "content": join_session,
+        "args": "(群号码)",
+        "desc": "请求加入共享会话，等待群主审批",
+    },
+    "rev": {
+        "content": rev_requests,
+        "args": "<用户序号> <apr/rej/block>",
+        "desc": "查看/处理共享会话的加入请求（群主专用）",
+    },
+    "info": {
+        "content": session_info,
+        "args": "",
+        "desc": "查看当前会话信息（共享会话含带序号的成员列表）",
+    },
+    "kick": {
+        "content": kick_member,
+        "args": "(成员序号)",
+        "desc": "把成员踢出当前共享会话（群主专用）",
+    },
+    "history": {
+        "content": session_history,
+        "args": "",
+        "desc": "查看当前会话的聊天记录（合并转发，仅最近 30 条）",
     },
 }
 
@@ -66,7 +104,8 @@ cmds = {
 def get_command_list():
     cmd_list_str = "当前指令参数列表：\n"
     for k, v in cmds.items():
-        cmd_list_str += f"{k} {v['args']}: {v['desc']}\n"
+        cmd_list_str += f"\t{k} {v['args']}: {v['desc']}\n"
+    cmd_list_str += "指令示例：\n\"/ai -c join AI0000\" 代表申请加入群号为 AI0000 的共享会话\n\"/ai -c clear\" 代表清除当前会话历史记录"
     return cmd_list_str
 
 
@@ -167,11 +206,17 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-    ai_session = AISession.current(session.event.user_id).ai_session
-    if len(history.load_history(session.event.user_id, ai_session)) <= constants.COMPRESS_TRIGGER:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model))
+    # 共享模式：当前处于共享会话时，历史读写与对话锁都以共享会话为准
+    shared_session = share.current_shared(session.event.user_id)
+    if shared_session is not None and not share.acquire_busy(shared_session.code):
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', code=shared_session.code))
+        return False
     try:
-        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session)
+        storage = shared_session if shared_session is not None else AISession.current(session.event.user_id)
+        ai_session = storage.ai_session
+        if len(storage.load_history()) <= constants.COMPRESS_TRIGGER:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, ai_session=ai_session))
+        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session, shared=shared_session)
         if not t:
             return False
         pending_messages = messages_dict["messages"]
@@ -189,7 +234,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
-        user_history = history.load_history(session.event.user_id, AISession.current(session.event.user_id).ai_session)
+        user_history = (shared_session if shared_session is not None else AISession.current(session.event.user_id)).load_history()
         *_, normals = history.split(user_history)
         send_msg = get_message(
             "plugins",
@@ -232,9 +277,11 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         return False
     finally:
         curr_sessions[user.id] = False
+        if shared_session is not None:
+            share.release_busy(shared_session.code)
 
 
-async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION):
+async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None):
     httpx_client = httpx.Client(
         proxy=None,
         trust_env=False,
@@ -260,7 +307,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
-    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session)
+    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared)
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)

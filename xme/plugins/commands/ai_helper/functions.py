@@ -1,5 +1,6 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
+import random
 import time
 import traceback
 import functools
@@ -47,7 +48,8 @@ __tools__ = [
     "content_search",
     "get_webs_partial",
     "get_user_input_urls",
-    "name_session"
+    "name_session",
+    "dice"
 ]
 
 # 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
@@ -55,19 +57,34 @@ __tools__ = [
 def get_user_input_urls(agent):
     return agent.user_input_urls
 
+def dice(faces: int, count: int = 1):
+    if count > 100:
+        return "[骰子数量不能大于 100 个]"
+    if faces > 1000000:
+        return "[骰子面数不能大于 1000000]"
+    rs = [random.randint(1, faces) for _ in range(count)]
+    rs_str = ', '.join(map(str, rs))
+    return f"{count}d{faces} → (总计{sum(rs)}) {rs_str}"
 
 def name_session(name: str, agent=None):
     """为当前 AI 会话命名/重命名（会话名会显示在用户的会话列表中）。
 
     适合在对话主题明确时调用，例如讨论写小说的对话可命名为 "小说写作"。
+    当前是共享会话时只改显示标题（群号码/目录不变，普通/群主同名规则见 share.py）；
     当前是默认会话时会把默认会话的内容整体提升为命名会话，默认会话复位为空；
     当前已有名字时直接重命名（历史与转存文件会一并移动）。
     用户手动命名过的会话不可修改（会返回错误）。
     """
     if agent is None:
         return "[错误：无法获取当前会话上下文]"
-    old_name = agent.ai_session
     name = (name or "").strip()
+    # 共享会话：目录以群号码命名，改名只更新 meta 的 title 展示字段
+    shared = getattr(agent, "shared", None)
+    if shared is not None:
+        if shared.rename(name):
+            return f"[已将共享会话 {shared.code} 改名为 \"{shared.title}\"（只改显示标题，不影响群号码）]"
+        return "[重命名失败：标题需为 1-20 字符且不含特殊符号，请换一个名字]"
+    old_name = agent.ai_session
     name = name.replace(" ", "_")
     if not AISession.is_valid_name(name):
         return "[错误：会话名不合法。请控制在 20 字符以内，使用中英文/数字/_-（不以点开头、不含特殊符号），且不能叫 default 或以 history_ 开头]"

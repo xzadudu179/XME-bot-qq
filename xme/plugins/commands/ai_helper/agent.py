@@ -67,10 +67,21 @@ class AIHelper:
     def _check_user_path(self):
         Path(f"./data/temp/{self.user_id}").mkdir(parents=True, exist_ok=True)
 
+    @property
+    def storage(self):
+        """当前会话的存储对象：共享会话返回 SharedSession，否则返回 AISession。
+
+        两者提供 ai_session/load_history/save_history/count/dir_path 同名接口
+        （鸭子类型），历史读写、压缩、AI 转存文件路径都经由这里，不感知具体类型。
+        """
+        if self.shared is not None:
+            return self.shared
+        return AISession(self.user_id, self.ai_session)
+
     def get_history_path(self):
         # AI 转存文件默认放到当前 AI 会话的历史文件夹、以会话命名的子文件夹
-        # data/ai_historys/<用户id>/<ai_session>/
-        path = AISession(self.user_id, self.ai_session).dir_path
+        # 普通会话：data/ai_historys/<用户id>/<ai_session>/；共享会话：shared/<群号码>/
+        path = self.storage.dir_path
         path.mkdir(parents=True, exist_ok=True)
         return path
 
@@ -99,9 +110,11 @@ class AIHelper:
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
-        self.ai_session = ai_session or history.DEFAULT_SESSION
+        # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
+        self.shared = shared_session
+        self.ai_session = (shared_session.code if shared_session is not None else ai_session) or history.DEFAULT_SESSION
         MODEL_MAP = {
             "pro": "glm-5.3",
         }
@@ -314,7 +327,7 @@ class AIHelper:
         摘要作为第一条特殊 history（携带 summary 键）存放；
         后续 get_history 会在上下文最前面注入这条摘要，让 AI 知道这是总结。
         """
-        session_obj = AISession(self.user_id, self.ai_session)
+        session_obj = self.storage
         user_history = session_obj.load_history()
         summary, summary_skills, normals = history.split(user_history)
         if len(normals) <= COMPRESS_TRIGGER:
@@ -389,7 +402,7 @@ class AIHelper:
         self.spent_secs.start()
         self.pending_messages.clear()
         compressed = await self._compress_context(session)
-        history, curr_text = await get_history(user, self.ai_session)
+        history, curr_text = await get_history(user, self.storage)
 
         # 提取 text 里的图片
         image_objects, matches = await get_images_from_message(session.bot, text)
@@ -488,8 +501,14 @@ class AIHelper:
             return False, {}, {}, 0
 
 
-async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
-    user_history = AISession(user.id, ai_session).load_history()
+async def get_history(user: u.User, session_obj):
+    """把某会话的历史构建为上下文消息列表。
+
+    session_obj 为 AISession 或 SharedSession（两者历史接口同名，鸭子类型），
+    返回 (messages 列表, 当前对话前缀字符串)。
+    """
+    user_history = session_obj.load_history()
+    ai_session = session_obj.ai_session
     if not user_history:
         return "", ""
     build_list = [{
@@ -498,7 +517,15 @@ async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
     }]
     summary = None
     summary_skills: list[str] = []
-    uname = await get_user_name(user.id, default='未知用户')
+    uname = await get_user_name(user.id, default=str(user.id))
+    # 共享会话的提示：SharedSession 才有 title 属性（普通会话名即文件名，无此字段）
+    shared_title = getattr(session_obj, "title", None)
+    shared_hint = (
+        f"（共享会话「{shared_title}」，多名成员共用此会话，注意区分每位发言者的身份）"
+        if shared_title else ""
+    )
+    # 提问者名字缓存：共享会话中多条记录可能来自同一成员，避免逐条查询
+    name_cache: dict = {}
     for _, item in enumerate(user_history):
         if history.is_summary(item):
             summary = item.get("summary")
@@ -508,9 +535,14 @@ async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
         url_str = f"[附带URLs:{url_str}]" if len(url_str) > 0 else ""
         skills = item.get('activate_skills', [])
+        # 提问者身份：条目记录了 user_id（共享会话）用记录值，旧记录/普通会话回落当前用户
+        asker_id = item.get("user_id", user.id)
+        if asker_id not in name_cache:
+            name_cache[asker_id] = await get_user_name(asker_id, default=str(asker_id))
+        asker_name = name_cache[asker_id]
         build_dicts = [{
             "role": "user",
-            "content": f"[历史记录-{item.get('time', '未知时间')}][{uname}(qq{user.id})]{url_str} {item['ask']}",
+            "content": f"[历史记录-{item.get('time', '未知时间')}][{asker_name}(qq{asker_id})]{url_str} {item['ask']}",
         }]
         tool_calls = []
         tool_messages = []
@@ -558,18 +590,19 @@ async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
         # 在上下文最前面注入长期记忆摘要，让 AI 知道这是此前对话的总结（含用过的技能）
         skill_hint = f"；涉及技能：{'、'.join(summary_skills)}" if summary_skills else ""
         build_list.insert(0, {"role": "user", "content": f"[长期记忆摘要（此前对话总结，供你参考{skill_hint}）：\n{summary}\n]"})
-    build_str = f"\n当前对话（现在时间为 {get_time_now()}）发送者为{uname}(qq{user.id})："
+    build_str = f"\n当前对话（现在时间为 {get_time_now()}）发送者为{uname} (qq{user.id}){shared_hint}："
     return build_list, build_str
 
 
 def build_history(user: u.User, ask, ans, agent):
-    session_obj = AISession(user.id, agent.ai_session)
+    session_obj = agent.storage
     user_history = session_obj.load_history()
     summary, summary_skills, normals = history.split(user_history)
     normals.append({
         "ask": ask,
         "ans": ans,
         "time": get_time_now(),
+        "user_id": agent.user_id,  # 提问者（共享会话按此区分成员，历史回放/伪造记录用）
         "urls": agent.user_input_urls,
         "activate_skills":  agent.activate_skills,
     })

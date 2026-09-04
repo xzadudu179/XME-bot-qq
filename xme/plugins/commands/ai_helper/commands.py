@@ -1,10 +1,19 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
+import re
+
 from character import get_message
 from xme.xmetools.msgtools import CMD_END, aget_arg
 
-from . import history
-from .constants import SESSION_NAME_MAX_LEN, __plugin_name__, MAX_SESSIONS
+from . import history, share
+from .constants import (
+    MAX_JOINED_SHARED,
+    MAX_SESSIONS,
+    MAX_SHARED_MEMBERS,
+    SESSION_NAME_MAX_LEN,
+    __plugin_name__,
+)
 from .session import AISession
+from .share import SharedSession
 from xme.xmetools.videotools import extract_video_links, extract_and_download
 
 # 注意：命令函数统一签名 (session, user, args=None)；
@@ -58,7 +67,7 @@ def list_sessions(session, user, args=None):
     """显示所有 AI 会话列表（含序号、记录条数、默认/当前/AI 不可修改标记）。"""
     sessions = AISession.all(user.id)
     current = AISession.current(user.id)
-    lines = [get_message("plugins", __plugin_name__, "session_list_header")]
+    lines = [get_message("plugins", __plugin_name__, "session_list_header", count=len(sessions), max_sessions=MAX_SESSIONS,)]
     for index, s in enumerate(sessions, 1):
         marks = ""
         # if s.is_default:
@@ -72,26 +81,71 @@ def list_sessions(session, user, args=None):
             "plugins", __plugin_name__, "session_list_item",
             index=index, name=name, marks=marks, count=s.count,
         ))
-    lines.append(get_message(
-        "plugins", __plugin_name__, "session_list_footer",
-        count=len(sessions), max_sessions=MAX_SESSIONS,
-    ))
+    # lines.append(get_message(
+        # "plugins", __plugin_name__, "session_list_footer",
+    # ))
+    # 共享会话列表与普通会话分开（a 序号，a1=最早加入的）
+    codes = share.joined_codes(user.id)
+    if codes:
+        current_shared = share.current_shared(user.id)
+        lines.append(get_message("plugins", __plugin_name__, "shared_list_header",
+                                 count=len(codes), joined_max=MAX_JOINED_SHARED))
+        for index, code in enumerate(codes, 1):
+            s = SharedSession(code)
+            if not s.exists():
+                marks = get_message("plugins", __plugin_name__, "shared_mark_dead")
+            else:
+                marks = ""
+                if current_shared is not None and s.code == current_shared.code:
+                    marks += get_message("plugins", __plugin_name__, "session_mark_current")
+                if s.is_owner(user.id):
+                    marks += get_message("plugins", __plugin_name__, "shared_mark_owner")
+            lines.append(get_message(
+                "plugins", __plugin_name__, "shared_list_item",
+                index=f"a{index}", code=code, title=s.title if s.exists() else "-",
+                marks=marks, member_count=len(s.members) if s.exists() else 0,
+                member_max=MAX_SHARED_MEMBERS,
+            ))
+    lines.append(get_message("plugins", __plugin_name__, "list_footer"))
     return "\n".join(lines)
+
+
+def _rename_shared(user, shared: SharedSession, new_name: str) -> str:
+    """重命名共享会话（仅群主可改）：只更新 meta 的 title 展示字段。
+
+    与普通会话不同：共享会话目录以群号码命名，改名不涉及文件移动。
+    """
+    if not shared.is_owner(user.id):
+        return get_message("plugins", __plugin_name__, "shared_rename_need_owner")
+    if not shared.rename(new_name):
+        return get_message("plugins", __plugin_name__, "session_name_invalid")
+    return get_message("plugins", __plugin_name__, "shared_renamed",
+                       code=shared.code, new_name=shared.title)
 
 
 def name_session(session, user, args=None):
     """命名/重命名会话：name <新名字>（当前会话）或 name <会话序号> <新名字>。
 
     用户命名后该会话标记为 AI 不可修改；命名默认会话（序号 1）等同把它提升为新会话。
+    共享会话：当前处于共享模式时 name <新名字> 改共享标题，或 name <a 序号> <新名字>
+    （如 name a2 名字）；仅群主可改，只改展示标题不改目录名。
     """
     args = [a.strip() for a in (args or []) if a.strip()]
 
-    if not args or (len(args) == 1 and args[0].isdigit()):
+    if not args or (len(args) == 1 and (args[0].isdigit() or re.fullmatch(r"a\d+", args[0]))):
         return get_message("plugins", __plugin_name__, "session_name_need_new")
 
     if len(args) == 1:
+        shared = share.current_shared(user.id)
+        if shared is not None:
+            return _rename_shared(user, shared, args[0])
         target = AISession.current(user.id)
         new_name = args[0]
+    elif re.fullmatch(r"a\d+", args[0]):
+        shared = share.shared_by_a_index(user.id, int(args[0][1:]))
+        if shared is None:
+            return get_message("plugins", __plugin_name__, "shared_index_not_found", index=args[0])
+        return _rename_shared(user, shared, args[1])
     else:
         target, err = _session_by_index(user.id, args[0])
         if err:
@@ -158,14 +212,22 @@ def clear_history(session, user, args=None):
 
 
 def switch_session(session, user, args=None):
-    """切换到指定序号的会话：swi <序号>"""
+    """切换到指定序号的会话：swi <序号>（数字=普通会话，a 开头=共享会话，如 a1）。"""
     num = _parse_index(args)
     if num is None:
         return get_message("plugins", __plugin_name__, "session_switch_need_arg")
+    if re.fullmatch(r"a\d+", num):
+        shared = share.shared_by_a_index(user.id, int(num[1:]))
+        if shared is None:
+            return get_message("plugins", __plugin_name__, "shared_index_not_found", index=num)
+        share.set_current_shared(user.id, shared.code)
+        return get_message("plugins", __plugin_name__, "shared_switched",
+                           code=shared.code, title=shared.title)
     target, err = _session_by_index(user.id, num)
     if err:
         return err
     target.set_current()
+    share.set_current_shared(user.id, None)  # 切回普通会话时退出共享模式
     return get_message("plugins", __plugin_name__, "session_switched", ai_session=target.ai_session)
 
 
@@ -189,5 +251,7 @@ async def clear_all_sessions(session, user, args=None):
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
     if reply.strip().lower() not in ("y", "Y"):
         return get_message("plugins", __plugin_name__, "session_clear_all_canceled")
+    # 先把用户从所有共享会话移除（读 .joined 后再清空用户目录，共享侧名单同步清理）
+    share.leave_all(user.id)
     cleared = history.clear_all_history(user.id)
     return get_message("plugins", __plugin_name__, "session_clear_all_done", count=cleared)

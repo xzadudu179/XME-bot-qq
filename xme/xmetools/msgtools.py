@@ -193,6 +193,11 @@ async def aget_arg_with_timeout(session, timeout_secs) -> str | None:
     except asyncio.TimeoutError:
         return None
 
+class _CMD_END:
+    def __repr__(self):
+        return "CMD_END"
+CMD_END = _CMD_END()
+
 async def aget_arg(
         session: CommandSession,
         prompt: Message | str,
@@ -223,8 +228,8 @@ async def aget_arg(
             if not reply:
                 await send_session_msg(session, get_message("config", "aget_no_content"))
                 continue
-            if reply == "CMD_END":
-                return "CMD_END"
+            if reply == CMD_END:
+                return CMD_END
             if rules(reply):
                 return reply
         except Exception:
@@ -453,7 +458,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
         if command_func:
             return await command_func(reply, **func_kwargs)
         await send_cmd(reply, session)
-        return "CMD_END"
+        return CMD_END
     return reply
 
 async def send_session_msg(session: BaseSession, message: Message, at=True, linebreak=True, tips=False, tips_percent: float | int = 50, debug=False, check_prohibited_words=False, merge_long_msg=True, **kwargs):

@@ -1,7 +1,7 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.msgtools import send_session_msg, aget_session_msg
+from xme.xmetools.msgtools import CMD_END, send_session_msg, aget_session_msg
 from xme.xmetools.typetools import try_parse
 from xme.xmetools.bottools import get_group_name
 from xme.xmetools.texttools import replace_chinese_punctuation, fuzzy_search
@@ -101,7 +101,7 @@ async def _(session: CommandSession, user: User):
         if total_pages <= 1:
             return False
         reply = (await aget_session_msg(session, can_use_command=True)).strip()
-        if reply == "CMD_END":
+        if reply == CMD_END:
             return False
         reply = replace_chinese_punctuation(reply)
         if reply in ["<", ">"]:

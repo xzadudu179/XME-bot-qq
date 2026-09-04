@@ -1,7 +1,7 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.msgtools import send_session_msg, aget_session_msg
+from xme.xmetools.msgtools import CMD_END, send_session_msg, aget_session_msg
 from character import get_message
 # import config
 from xme.xmetools.loctools import search_location
@@ -54,7 +54,7 @@ async def _(session: CommandSession, user: User):
         times = 0
         while not has_target and times < 3:
             target: str = await aget_session_msg(session, can_use_command=True)
-            if target == "CMD_END":
+            if target == CMD_END:
                 return False
             target = target.replace(".", "").strip()
             if target.isdecimal():

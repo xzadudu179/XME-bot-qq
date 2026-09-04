@@ -5,7 +5,7 @@ from .classes.good import Good
 # from .classes.coin_shop import CoinShop
 from .static.shop import SHOP
 
-from xme.xmetools.msgtools import send_session_msg, aget_arg
+from xme.xmetools.msgtools import CMD_END, send_session_msg, aget_arg
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.cmdtools import use_args
 from nonebot import CommandSession
@@ -58,7 +58,7 @@ async def _(session: CommandSession , user: User, arg_list: list[str]):
             rules=lambda r: r in ['y', 'Y'],
             can_use_cmd=True
         )
-    if reply == "CMD_END":
+    if reply == CMD_END:
         return False
     if reply not in ['y', 'Y']:
         return False

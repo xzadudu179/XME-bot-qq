@@ -8,7 +8,7 @@ from xme.xmetools.cmdtools import use_args
 from xme.xmetools.imgtools import get_html_image
 from xme.xmetools.typetools import try_parse
 import random
-from xme.xmetools.msgtools import send_session_msg, aget_session_msg
+from xme.xmetools.msgtools import CMD_END, send_session_msg, aget_session_msg
 from xme.xmetools.msgtools import image_msg
 from character import get_message
 random.seed()
@@ -67,8 +67,8 @@ async def search_by_name(session: CommandSession, content, mode):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "search_mutiple", datas=titles))
         while not valid and fors < 3:
             index = await aget_session_msg(session, can_use_command=True)
-            if index == "CMD_END":
-                return "CMD_END"
+            if index == CMD_END:
+                return CMD_END
             index_num = try_parse(index, int)
             if index_num is None:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "index_not_num"))
@@ -103,7 +103,7 @@ async def _(session: CommandSession, u: User, arg_list):
         case "search":
             #                                              ↓TODO 更多种类搜索
             msg = await search_by_name(session, search, "name")
-    if msg == "CMD_END":
+    if msg == CMD_END:
         return
     await send_session_msg(session, msg, tips=True, tips_percent=30)
     return

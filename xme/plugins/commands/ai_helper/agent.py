@@ -15,7 +15,7 @@ from nonebot.log import logger
 from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, safe_join
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
-from xme.xmetools.msgtools import send_session_msg, aget_arg_with_timeout, setup_logger
+from xme.xmetools.msgtools import is_text_can_send, send_session_msg, aget_arg_with_timeout, setup_logger
 from xme.xmetools.bottools import get_user_name
 from xme.xmetools.timetools import get_time_now, Timer
 from xme.xmetools.jsontools import read_from_path
@@ -154,7 +154,7 @@ class AIHelper:
             self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
             if message.reasoning_content:
                 ai_logger.info(
-                    f"\n===== GLM Reasoning =====\n"
+                    f"\n===== GLM Reasoning {session.event.user_id} =====\n"
                     f"{message.reasoning_content}\n"
                     f"========================="
                 )
@@ -404,7 +404,7 @@ class AIHelper:
         self.user_input_urls["images"] = image_urls
         url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
         url_dicts += video_dicts
-        ai_logger.info(f"用户说：{text}")
+        ai_logger.info(f"用户 {user.id} 说：{text}")
         ai_logger.info(f"用户附带了以下图片url {url_dicts}")
 
         ai_params = [
@@ -427,12 +427,7 @@ class AIHelper:
             return False, {}, {}, 0
         try:
             ans = result.choices[0].message.content
-            build_history(
-                user=user,
-                ask=text,
-                ans=ans,
-                agent=self,
-            )
+
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"
             )
@@ -454,6 +449,14 @@ class AIHelper:
                 f"缓存tokens "
                 f"{self.cached_tokens}, "
                 f"减少 {credits_use} 个 tokens"
+            )
+            if not (await is_text_can_send(session, ans)):
+                return "[漠月文本风控：AI 将会输出违规文本，已被屏蔽，本次对话不会记录]", {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
+            build_history(
+                user=user,
+                ask=text,
+                ans=ans,
+                agent=self,
             )
             return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
         except AttributeError as ex:
@@ -503,7 +506,7 @@ async def get_history(user: u.User, ai_session=history.DEFAULT_SESSION):
             continue
         url_dicts = item.get('urls', {})
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
-        url_str = f"[附带URLs:{url_str}]" if url_str else ""
+        url_str = f"[附带URLs:{url_str}]" if len(url_str) > 0 else ""
         skills = item.get('activate_skills', [])
         build_dicts = [{
             "role": "user",

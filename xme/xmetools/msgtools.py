@@ -58,17 +58,17 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
             case "BLOCK":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
-                    await send_to_superusers(bot,risk_text)
+                    await send_to_superusers(bot, risk_text)
                 return {"result": False, "reason": "可能有违规内容"}
             case "REJECT":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
-                    await send_to_superusers(bot,risk_text)
+                    await send_to_superusers(bot, risk_text)
                 return {"result": False, "reason": "有违规内容"}
             case "HIGH":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
-                    await send_to_superusers(bot,risk_text)
+                    await send_to_superusers(bot, risk_text)
                 return {"result": False, "reason": "有高危内容"}
     except Exception as ex:
         logger.exception(traceback.format_exc())
@@ -76,10 +76,10 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
 
 
 async def is_text_can_send(session: CommandSession, text: str):
-    if not text:
-        return {"result": True, "reason": ""}
-    if len(text) > 2000:
-        return {"result": False, "reason": "文本过长"}
+    # if not text:
+    #     return {"result": True, "reason": ""}
+    # if len(text) > 2000:
+    #     return {"result": False, "reason": "文本过长"}
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)
@@ -111,11 +111,11 @@ async def is_text_can_send(session: CommandSession, text: str):
                 return {"result": False, "reason": "可能有违规内容"}
             case "REJECT":
                 logger.warning(risk_text)
-                await send_to_superusers(session.bot,risk_text)
+                await send_to_superusers(session.bot, risk_text)
                 return {"result": False, "reason": "有违规内容"}
             case "HIGH":
                 logger.warning(risk_text)
-                await send_to_superusers(session.bot,risk_text)
+                await send_to_superusers(session.bot, risk_text)
                 return {"result": False, "reason": "有高危内容"}
     except Exception as ex:
         logger.exception(traceback.format_exc())

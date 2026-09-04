@@ -18,7 +18,7 @@ try:
 except Exception:
     pyautogui = None
 # from character import get_message
-from xme.xmetools.texttools import hash_byte, is_url
+from xme.xmetools.texttools import hash_byte, is_url, object_moderations
 import mss
 from html2image import Html2Image
 from uuid import uuid4
@@ -28,6 +28,17 @@ from pyzbar.pyzbar import decode
 hti = Html2Image(
 )
 hti.output_path = IMAGE_TEMP_PATH
+
+def _is_images_url_can_send(image_urls: list[str]):
+    object_moderations([{"type": "image_url", "image_url": {"url": u}} for u in image_urls])
+
+def is_image_can_send(image: Image.Image):
+    w, h = image.size
+    if w > 6000 or h > 6000:
+        image = limit_size(image, 5000)
+    image_bytes = compress_image_to_size(image, True, max_bytes=10 * 1024 * 1024 * 1024)
+    path = f"./data/images/temp/{uuid4().hex}.jpg"
+    image.save(path)
 
 def make_circle_image(path_or_image: str | Image.Image) -> Image.Image:
 
@@ -337,6 +348,7 @@ def limit_size(image: Image.Image, max_value) -> Image.Image:
     new_height = int(height * ratio)
     image_resized = image.resize((new_width, new_height))
     return image_resized
+
 def compress_image_to_size(
     image: Image.Image,
     to_jpeg: bool,
@@ -416,6 +428,7 @@ def compress_image_to_size(
                 Image.Resampling.LANCZOS,
             )
             quality = 90
+            
 # async def gif_msg(input_path, scale=1):
 #     img = Image.open(input_path)
 

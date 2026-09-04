@@ -1,3 +1,7 @@
+from uuid import uuid4
+
+from PIL.Image import Image
+
 from xme.xmetools.timetools import TimeUnit
 from datetime import datetime
 from .pickup import report
@@ -20,8 +24,8 @@ import os
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 
-async def is_illegal_image(image_url):
-    image = await get_url_image(image_url)
+async def is_image_has_qr(image):
+    # image = await get_url_image(image_url)
     result, links = detect_qrcode(image)
     logger.info(f"{result}, {links}")
     for link in links:
@@ -29,6 +33,10 @@ async def is_illegal_image(image_url):
             logger.warning(f"检测到二维码链接：{link}")
             return True
     return False
+
+async def is_image_illegal(image: Image):
+    path = f"./data/images/temp/{uuid4().hex}.jpg"
+    image.save(path)
 
 throw_alias = ["扔瓶子", "扔漂流瓶", "扔瓶"]
 command_name = 'throw'
@@ -57,16 +65,17 @@ async def _(session: CommandSession, user):
         image_objects, matches = await get_images_from_message(session.bot, arg)
         image_urls = [x["file"] for x in image_objects]
         image_names = [x["file_name"] for x in image_objects]
-        logger.info(f"paths {image_urls}")
+        logger.info(f"urls {image_urls}")
         images = [limit_size((await get_url_image(image)), 700) for image in image_urls]
-        for image in image_urls:
+        for image in images:
             logger.info("图片: " + image)
-            if await is_illegal_image(image):
+            if await is_image_has_qr(image):
                 logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
                 return False
-        # image_filenames = [os.path.splitext(os.path.basename(i))[0] + "." + get_image_format(images[j]) for j, i in enumerate(image_paths)]
-        # image_filenames = [os.path.splitext(os.path.basename(i))[0] + ".WEBP" for j, i in enumerate(image_urls)]
+            if is_image_illegal(image):
+                ...
+
         image_filenames = [os.path.splitext(os.path.basename(name))[0] + ".WEBP" for name in image_names]
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))

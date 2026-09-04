@@ -38,15 +38,23 @@ def compress_moderation_image(image: Image.Image):
     if w > 6000 or h > 6000:
         image = limit_size(image, 5000)
     buffer = BytesIO()
+    image_format = "JPEG"
     image = convert_no_alpha(image)
-    image.save(
-        buffer,
-        format="JPEG",
-        quality=75
-    )
+    if image.mode == "P":
+        image_format = "GIF"
+        image.save(
+            buffer,
+            format=image_format,
+        )
+    else:
+        image.save(
+            buffer,
+            format=image_format,
+            quality=75
+        )
     original_bytes = buffer.getvalue()
     image_bytes = compress_image_to_size(image, True, True, original_bytes, max_bytes=10 * 1024 * 1024 * 1024)
-    path = f"./data/images/temp/{uuid4().hex}.jpg"
+    path = f"./data/images/temp/{uuid4().hex}.{image_format}"
     with open(path, "wb") as f:
         f.write(image_bytes)
     # url = filetools.get_local_file_url(path)
@@ -68,6 +76,8 @@ async def is_images_can_send(bot, event, images: list[Image.Image], session=None
         images (list[Image.Image]): 图片列表
     """
     from xme.xmetools.msgtools import analyze_risk
+    if len(images) < 1:
+        return {"result": True, "reason": ""}
     is_url_invalid = True
     try_times = 0
     paths = await get_moderation_image_paths(images)

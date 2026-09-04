@@ -451,7 +451,7 @@ class AIHelper:
                 f"减少 {credits_use} 个 tokens"
             )
             if not (await is_text_can_send(session, ans)):
-                return "[漠月文本风控：AI 将会输出违规文本，已被屏蔽，本次对话不会记录]", {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
+                return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
             build_history(
                 user=user,
                 ask=text,

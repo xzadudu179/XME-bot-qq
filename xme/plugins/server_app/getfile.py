@@ -19,8 +19,10 @@ async def get_file(token: str):
     if time.time() > info["expires_at"]:
         FILE_TOKENS.pop(token, None)
         abort(410)
-
-    return await send_file(info["path"])
+    try:
+        return await send_file(info["path"])
+    except FileNotFoundError:
+        abort(404)
 
 
 @bot.server_app.after_request

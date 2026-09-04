@@ -7,6 +7,24 @@ import json
 HISTORY_ROOT = Path("./data/ai_historys")
 DEFAULT_SESSION = "default"
 
+# 当前会话指针文件：值为普通会话名或共享会话群号码（统一指针，
+# 解析规则见 session.current_storage——AI+数字 视为群号码，其余视为普通会话名）
+CURRENT_SESSION_FILE = ".current"
+
+
+def read_current(user_id) -> str:
+    """读当前会话指针的原始值（不解析、不兜底）；缺失/损坏返回空串。"""
+    try:
+        return (user_dir(user_id) / CURRENT_SESSION_FILE).read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
+
+def write_current(user_id, value: str) -> None:
+    """写当前会话指针原始值。"""
+    user_dir(user_id).mkdir(parents=True, exist_ok=True)
+    (user_dir(user_id) / CURRENT_SESSION_FILE).write_text(value, encoding="utf-8")
+
 
 def user_dir(user_id) -> Path:
     """某用户的 AI 数据根目录：data/ai_historys/<用户id>/"""

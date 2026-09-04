@@ -3,10 +3,10 @@ from pathlib import Path
 
 from xme.xmetools.filetools import is_safe_custom_name
 from . import history
-from .constants import MAX_SESSIONS, SESSION_NAME_MAX_LEN
+from .constants import CURRENT_SHARED_FILE, MAX_SESSIONS, SESSION_NAME_MAX_LEN
+from .share import SharedSession, is_valid_code
 
 # 用户目录下的状态文件（clear_all_history 清理目录时会一并移除）
-CURRENT_SESSION_FILE = ".current"   # 当前 AI 会话指针
 LOCKED_FILE = ".locked"             # 用户命名过的会话名（每行一个，AI 不可修改）
 
 DEFAULT_SESSION = history.DEFAULT_SESSION
@@ -46,17 +46,52 @@ def _remove_locked(user_id, ai_session) -> None:
 
 
 def _read_current(user_id) -> str:
-    """读取用户当前 AI 会话名；未设置/损坏时返回默认会话。"""
-    try:
-        return (_user_dir(user_id) / CURRENT_SESSION_FILE).read_text(encoding="utf-8").strip() or DEFAULT_SESSION
-    except Exception:
-        return DEFAULT_SESSION
+    """读取用户当前会话指针（原始值：普通会话名或共享群号码）；未设置/损坏时返回默认会话。"""
+    return history.read_current(user_id) or DEFAULT_SESSION
 
 
 def _write_current(user_id, ai_session) -> None:
-    user_dir = _user_dir(user_id)
-    user_dir.mkdir(parents=True, exist_ok=True)
-    (user_dir / CURRENT_SESSION_FILE).write_text(ai_session, encoding="utf-8")
+    history.write_current(user_id, ai_session)
+
+
+def set_current_session(user_id, value: str) -> None:
+    """把当前会话指针指向 value（普通会话名或共享群号码，二者共用统一指针）。"""
+    history.write_current(user_id, value)
+
+
+def _legacy_shared_path(user_id) -> Path:
+    """旧版双指针时代的共享模式指针文件（.current_shared，迁移后删除）。"""
+    return _user_dir(user_id) / CURRENT_SHARED_FILE
+
+
+def current_storage(user_id):
+    """当前会话对象（普通/共享统一解析的唯一入口）。
+
+    指针值以 AI+数字 形式（群号码）且用户是成员 → 返回 SharedSession；
+    否则返回 AISession（指针失效时回落默认会话）。
+    兼容迁移：旧版 .current_shared 仍存在时优先采用并并入统一指针，随后删除旧文件。
+    """
+    name = _read_current(user_id)
+    legacy = ""
+    try:
+        legacy = _legacy_shared_path(user_id).read_text(encoding="utf-8").strip()
+    except Exception:
+        pass
+    if legacy and is_valid_code(legacy):
+        # 旧版用户正处于共享模式：共享指针并入统一指针并持久化（原普通指针被覆盖）
+        name = legacy
+        history.write_current(user_id, legacy)
+    if _legacy_shared_path(user_id).exists():
+        _legacy_shared_path(user_id).unlink()  # 统一指针时代废弃旧文件
+    if is_valid_code(name):
+        shared = SharedSession(name)
+        if shared.exists() and shared.is_member(user_id):
+            return shared
+        return AISession(user_id, DEFAULT_SESSION)  # 指向的共享会话失效 → 默认
+    normal = AISession(user_id, name)
+    if not normal.is_default and not normal.exists():
+        return AISession(user_id, DEFAULT_SESSION)
+    return normal
 
 
 class AISession:
@@ -178,18 +213,20 @@ class AISession:
         return True
 
     def set_current(self) -> None:
-        """把当前会话指针指向本会话。"""
-        _write_current(self.user_id, self.ai_session)
+        """把当前会话指针指向本会话（统一指针，普通/共享共用）。"""
+        set_current_session(self.user_id, self.ai_session)
 
     # ---------- 类级操作 ----------
 
     @staticmethod
     def is_valid_name(name: str) -> bool:
-        """校验会话名：安全字符（filetools 单点校验）+ 非默认保留名 + 不以 history_ 开头。最多 20 字"""
+        """校验会话名：安全字符（filetools 单点校验）+ 非默认保留名 + 不以 history_ 开头
+        + 不占用共享群号码格式（AI+数字，统一指针靠前缀区分会话类型）。最多 20 字"""
         if len(name) > SESSION_NAME_MAX_LEN:
             return False
         return (isinstance(name, str) and is_safe_custom_name(name)
-                and name != DEFAULT_SESSION and not name.startswith("history_"))
+                and name != DEFAULT_SESSION and not name.startswith("history_")
+                and not is_valid_code(name))
 
     @staticmethod
     def next_auto_name(user_id) -> str:

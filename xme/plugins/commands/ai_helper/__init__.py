@@ -19,7 +19,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger
-from .session import AISession
+from .session import AISession, current_storage
 from . import constants, share
 from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
 from .commands import clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
@@ -212,13 +212,13 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-    # 共享模式：当前处于共享会话时，历史读写与对话锁都以共享会话为准
-    shared_session = share.current_shared(session.event.user_id)
+    # 统一指针解析当前会话（普通/共享同等对待，isinstance 区分类型）
+    storage = current_storage(session.event.user_id)
+    shared_session = storage if isinstance(storage, share.SharedSession) else None
     if shared_session is not None and not share.acquire_busy(shared_session.code):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', code=shared_session.code))
         return False
     try:
-        storage = shared_session if shared_session is not None else AISession.current(session.event.user_id)
         ai_session = storage.ai_session
         if len(storage.load_history()) <= constants.COMPRESS_TRIGGER:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, ai_session=ai_session))
@@ -240,7 +240,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
-        user_history = (shared_session if shared_session is not None else AISession.current(session.event.user_id)).load_history()
+        user_history = storage.load_history()
         *_, normals = history.split(user_history)
         send_msg = get_message(
             "plugins",

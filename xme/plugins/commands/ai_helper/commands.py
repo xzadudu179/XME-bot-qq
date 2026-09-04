@@ -12,7 +12,7 @@ from .constants import (
     SESSION_NAME_MAX_LEN,
     __plugin_name__,
 )
-from .session import AISession
+from .session import AISession, current_storage, set_current_session
 from .share import SharedSession
 from xme.xmetools.videotools import extract_video_links, extract_and_download
 
@@ -64,17 +64,23 @@ def new_session(session, user, args=None):
 
 
 def list_sessions(session, user, args=None):
-    """显示所有 AI 会话列表（含序号、记录条数、默认/当前/AI 不可修改标记）。"""
+    """显示所有 AI 会话列表（含序号、记录条数、默认/当前/AI 不可修改标记）。
+
+    普通会话与共享会话分开列出，但"当前"标记全局只有一个（统一指针）：
+    指针指向共享会话时普通列表无当前标记，反之亦然。
+    """
     sessions = AISession.all(user.id)
-    current = AISession.current(user.id)
-    lines = [get_message("plugins", __plugin_name__, "session_list_header", count=len(sessions), max_sessions=MAX_SESSIONS,)]
+    current = current_storage(user.id)
+    current_is_normal = isinstance(current, AISession)
+    lines = [get_message("plugins", __plugin_name__, "session_list_header",
+                         count=len(sessions), max_sessions=MAX_SESSIONS)]
     for index, s in enumerate(sessions, 1):
         marks = ""
         # if s.is_default:
             # marks += get_message("plugins", __plugin_name__, "session_mark_default")
         # if s.is_locked():
             # marks += get_message("plugins", __plugin_name__, "session_mark_locked")
-        if s.ai_session == current.ai_session:
+        if current_is_normal and s.ai_session == current.ai_session:
             marks += get_message("plugins", __plugin_name__, "session_mark_current")
         name = s.ai_session if s.ai_session != "default" else "[默认会话]"
         lines.append(get_message(
@@ -84,10 +90,10 @@ def list_sessions(session, user, args=None):
     # lines.append(get_message(
         # "plugins", __plugin_name__, "session_list_footer",
     # ))
-    # 共享会话列表与普通会话分开（a 序号，a1=最早加入的）
+    # 共享会话列表与普通会话分开（a 序号，a1=最早加入的）；当前标记全局唯一
     codes = share.joined_codes(user.id)
     if codes:
-        current_shared = share.current_shared(user.id)
+        current_is_shared = isinstance(current, SharedSession)
         lines.append(get_message("plugins", __plugin_name__, "shared_list_header",
                                  count=len(codes), joined_max=MAX_JOINED_SHARED))
         for index, code in enumerate(codes, 1):
@@ -96,7 +102,7 @@ def list_sessions(session, user, args=None):
                 marks = get_message("plugins", __plugin_name__, "shared_mark_dead")
             else:
                 marks = ""
-                if current_shared is not None and s.code == current_shared.code:
+                if current_is_shared and s.code == current.code:
                     marks += get_message("plugins", __plugin_name__, "session_mark_current")
                 if s.is_owner(user.id):
                     marks += get_message("plugins", __plugin_name__, "shared_mark_owner")
@@ -136,10 +142,10 @@ def name_session(session, user, args=None):
         return get_message("plugins", __plugin_name__, "session_name_need_new")
 
     if len(args) == 1:
-        shared = share.current_shared(user.id)
-        if shared is not None:
-            return _rename_shared(user, shared, args[0])
-        target = AISession.current(user.id)
+        current = current_storage(user.id)
+        if isinstance(current, SharedSession):
+            return _rename_shared(user, current, args[0])
+        target = current
         new_name = args[0]
     elif re.fullmatch(r"a\d+", args[0]):
         shared = share.shared_by_a_index(user.id, int(args[0][1:]))
@@ -208,20 +214,19 @@ async def clear_history(session, user, args=None):
             notified += 1
         return get_message("plugins", __plugin_name__, "shared_deleted",
                            code=code, title=title, file_count=file_count, notify_count=notified)
-    # ---- 无参：共享模式下清空共享会话（仅群主），否则清空普通当前会话 ----
+    # ---- 无参：清空当前会话（统一指针解析：共享会话仅群主可清，普通会话照旧）----
     if num is None:
-        shared = share.current_shared(user.id)
-        if shared is not None:
-            if not shared.is_owner(user.id):
+        current = current_storage(user.id)
+        if isinstance(current, SharedSession):
+            if not current.is_owner(user.id):
                 return get_message("plugins", __plugin_name__, "shared_clear_need_owner")
-            cleared_hist, cleared_files = shared.clear()
+            cleared_hist, cleared_files = current.clear()
             if cleared_hist == 0 and cleared_files == 0:
                 return get_message("plugins", __plugin_name__, "session_clear_no_content")
             return get_message(
                 "plugins", __plugin_name__, "session_cleared",
                 hist_count=cleared_hist, file_count=cleared_files,
             )
-        current = AISession.current(user.id)
         cleared_hist, cleared_files = current.clear()
         if cleared_hist == 0 and cleared_files == 0:
             return get_message("plugins", __plugin_name__, "session_clear_no_content")
@@ -252,7 +257,10 @@ async def clear_history(session, user, args=None):
 
 
 def switch_session(session, user, args=None):
-    """切换到指定序号的会话：swi <序号>（数字=普通会话，a 开头=共享会话，如 a1）。"""
+    """切换到指定序号的会话：swi <序号>（数字=普通会话，a 开头=共享会话，如 a1）。
+
+    统一指针：切换即覆盖当前指针，普通/共享同一时间只处于其一。
+    """
     num = _parse_index(args)
     if num is None:
         return get_message("plugins", __plugin_name__, "session_switch_need_arg")
@@ -260,14 +268,13 @@ def switch_session(session, user, args=None):
         shared = share.shared_by_a_index(user.id, int(num[1:]))
         if shared is None:
             return get_message("plugins", __plugin_name__, "shared_index_not_found", index=num)
-        share.set_current_shared(user.id, shared.code)
+        set_current_session(user.id, shared.code)
         return get_message("plugins", __plugin_name__, "shared_switched",
                            code=shared.code, title=shared.title)
     target, err = _session_by_index(user.id, num)
     if err:
         return err
     target.set_current()
-    share.set_current_shared(user.id, None)  # 切回普通会话时退出共享模式
     return get_message("plugins", __plugin_name__, "session_switched", ai_session=target.ai_session)
 
 

@@ -31,7 +31,7 @@ SHARED_GLOBAL_META_FILE = ".global_meta.json"  # 共享全局状态（群号码�
 
 # 用户目录下的状态文件（. 开头，AISession.all 扫描天然跳过）
 JOINED_FILE = ".joined"                 # 已加入的共享会话群号码，每行一个，顺序即 a 序号
-CURRENT_SHARED_FILE = ".current_shared" # 共享模式指针（存在且有效 ⇒ 当前处于共享会话）
+CURRENT_SHARED_FILE = ".current_shared" # 旧版双指针遗留（仅用于迁移到统一指针，迁移后即删）
 
 # 群号码：AI0000 起递增，数字最少 4 位（≥10000 自然变 5 位），最多 8 位
 SHARED_CODE_PREFIX = "AI"

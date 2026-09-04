@@ -2,7 +2,7 @@
 
 统一签名 (session, user, args=None)，薄层：清洗参数 → 调 share.py 的存储/业务 →
 get_message 拼回复文案；涉及他人通知的统一走 msgtools.send_to_user（私聊，失败不打断主流程）。
-当前会话是否处于共享模式一律由 share.current_shared 判定。
+当前会话由 session.current_storage 统一解析（统一指针，isinstance 区分普通/共享）。
 """
 from character import get_message
 from nonebot import CommandSession
@@ -28,7 +28,7 @@ from .constants import (
     SHARED_REQUEST_OPS,
     __plugin_name__,
 )
-from .session import AISession
+from .session import current_storage, set_current_session
 from .share import SharedSession
 
 
@@ -73,7 +73,7 @@ def share_session(session, user, args=None):
     if s is None:
         return _msg("shared_code_exhausted")
     share.add_joined(user.id, s.code)
-    share.set_current_shared(user.id, s.code)
+    set_current_session(user.id, s.code)
     return _msg("shared_created", code=s.code, title=s.title,
                 member_max=MAX_SHARED_MEMBERS, joined=len(share.joined_codes(user.id)),
                 joined_max=MAX_JOINED_SHARED)
@@ -117,9 +117,10 @@ async def rev_requests(session, user, args=None):
     rev 查看请求列表；rev <用户序号> apr|rej|block 处理指定请求。
     """
     args = _clean_args(args)
-    s = share.current_shared(user.id)
-    if s is None:
+    current = current_storage(user.id)
+    if not isinstance(current, SharedSession):
         return _msg("shared_need_current")
+    s = current
     if not s.is_owner(user.id):
         return _msg("shared_need_owner")
     if not args:
@@ -170,11 +171,10 @@ async def rev_requests(session, user, args=None):
 
 async def session_info(session, user, args=None):
     """查看当前会话信息：info（普通=名称+条数；共享=群号码/标题/成员列表等）。"""
-    s = share.current_shared(user.id)
-    if s is None:
-        current = AISession.current(user.id)
-        name = "[默认会话]" if current.is_default else current.ai_session
-        return _msg("info_normal", name=name, count=current.count)
+    s = current_storage(user.id)
+    if not isinstance(s, SharedSession):
+        name = "[默认会话]" if s.is_default else s.ai_session
+        return _msg("info_normal", name=name, count=s.count)
     owner_name = await get_user_name(s.owner, default=str(s.owner))
     lines = [_msg("info_shared_header", code=s.code, title=s.title,
                   owner_name=owner_name, owner_id=str(s.owner),
@@ -192,9 +192,10 @@ async def session_info(session, user, args=None):
 async def kick_member(session, user, args=None):
     """把成员踢出当前共享会话：kick <成员序号>（序号见 info 的成员列表，群主专用）。"""
     args = _clean_args(args)
-    s = share.current_shared(user.id)
-    if s is None:
+    current = current_storage(user.id)
+    if not isinstance(current, SharedSession):
         return _msg("shared_need_current")
+    s = current
     if not s.is_owner(user.id):
         return _msg("shared_need_owner")
     if not args:
@@ -216,9 +217,10 @@ async def kick_member(session, user, args=None):
 
 async def leave_shared_session(session, user, args=None):
     """退出当前共享会话：leave（群主不可退出）。"""
-    s = share.current_shared(user.id)
-    if s is None:
+    current = current_storage(user.id)
+    if not isinstance(current, SharedSession):
         return _msg("shared_need_current")
+    s = current
     if s.is_owner(user.id):
         return _msg("leave_owner_denied")
     share.leave_shared(s, user.id)
@@ -230,8 +232,7 @@ async def session_history(session, user, args=None):
 
     群内用合并转发；私聊或转发失败时降级为纯文本；只展示最近 MAX_HISTORY_VIEW 条。
     """
-    shared = share.current_shared(user.id)
-    storage = shared if shared is not None else AISession.current(user.id)
+    storage = current_storage(user.id)
     entries = [it for it in storage.load_history() if not history.is_summary(it)][-MAX_HISTORY_VIEW:]
     if not entries:
         return _msg("history_empty")

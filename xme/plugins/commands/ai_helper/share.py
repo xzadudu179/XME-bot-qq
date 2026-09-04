@@ -6,8 +6,9 @@
     shared/<群号码>/history.json   共享历史（与普通会话完全同格式）
     shared/<群号码>/meta.json      {code, title, owner, admins, created_time,
                                     members:[{user_id, joined_time}], requests:[{user_id, time}], blocked}
-    <用户id>/.joined               已加入的群号码（每行一个，顺序即 a 序号 a1、a2...）
-    <用户id>/.current_shared       共享模式指针（存在且指向有效会话 ⇒ 当前处于共享模式）
+    <用户id>/.joined               已加入的共享会话群号码（每行一个，顺序即 a 序号 a1、a2...）
+
+当前会话指针与普通会话共用同一个 .current（统一指针，解析见 session.current_storage）。
 
 与 AISession 的关系：SharedSession 提供 ai_session/load_history/save_history/
 count/dir_path 等同名接口（鸭子类型），agent 层通过 AIHelper.storage 统一读写，
@@ -24,7 +25,6 @@ from xme.xmetools.timetools import get_time_now
 
 from . import history
 from .constants import (
-    CURRENT_SHARED_FILE,
     DEFAULT_SHARED_TITLE,
     JOINED_FILE,
     MAX_JOINED_SHARED,
@@ -362,7 +362,7 @@ class SharedSession:
         return True
 
 
-# ---------- 用户侧状态（.joined / .current_shared） ----------
+# ---------- 用户侧状态（.joined；当前会话走统一指针，见 session.current_storage） ----------
 
 def joined_codes(user_id) -> list[str]:
     """用户已加入的共享会话群号码列表（文件行序即 a 序号）。"""
@@ -404,38 +404,13 @@ def shared_by_a_index(user_id, index: int) -> SharedSession | None:
     return s if s.exists() else None
 
 
-def current_shared(user_id) -> SharedSession | None:
-    """用户当前所处的共享会话；未处于共享模式、会话已删除或已不是成员时返回 None。"""
-    try:
-        code = _user_state_file(user_id, CURRENT_SHARED_FILE).read_text(encoding="utf-8").strip()
-    except Exception:
-        return None
-    if not code:
-        return None
-    s = SharedSession(code)
-    if not s.exists() or not s.is_member(user_id):
-        return None
-    return s
+def reset_current_if(user_id, code: str) -> bool:
+    """用户当前指针（统一指针）正指向该共享会话时复位为默认会话。
 
-
-def set_current_shared(user_id, code: str | None) -> None:
-    """设置共享模式指针；code=None 表示退出共享模式（删除指针文件）。"""
-    path = _user_state_file(user_id, CURRENT_SHARED_FILE)
-    if code is None:
-        path.unlink(missing_ok=True)
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(code, encoding="utf-8")
-
-
-def clear_current_shared_if(user_id, code: str) -> bool:
-    """共享指针正指向 code 时清除它（被踢/退出场景），返回是否清除。"""
-    try:
-        current = _user_state_file(user_id, CURRENT_SHARED_FILE).read_text(encoding="utf-8").strip()
-    except Exception:
-        return False
-    if current == code:
-        set_current_shared(user_id, None)
+    用于被踢/退出/会话删除后，避免指针悬在失效的群号码上；返回是否复位。
+    """
+    if history.read_current(user_id) == code:
+        history.write_current(user_id, history.DEFAULT_SESSION)
         return True
     return False
 
@@ -449,7 +424,7 @@ def detach_users(code: str, user_ids) -> None:
         if uid is None:
             continue
         remove_joined(uid, code)
-        clear_current_shared_if(uid, code)
+        reset_current_if(uid, code)
 
 
 def leave_shared(s: SharedSession, user_id) -> bool:
@@ -460,13 +435,14 @@ def leave_shared(s: SharedSession, user_id) -> bool:
     if not s.remove_member(user_id):
         return False
     remove_joined(user_id, s.code)
-    clear_current_shared_if(user_id, s.code)
+    reset_current_if(user_id, s.code)
     return True
 
 
 def leave_all(user_id) -> int:
     """把用户从所有共享会话中移除并清空本侧状态（清空数据时联动清理）。
 
+    群主身份的会话不移除（避免孤儿会话），仅清普通成员身份。
     返回处理过的共享会话数；注意要在外部删除 .joined 之前调用。
     """
     count = 0
@@ -475,6 +451,7 @@ def leave_all(user_id) -> int:
         if s.exists():
             s.remove_member(user_id)
             count += 1
-    set_current_shared(user_id, None)
+    # 统一指针复位为默认会话（可能正指向某个共享会话）
+    history.write_current(user_id, history.DEFAULT_SESSION)
     _write_joined(user_id, [])
     return count

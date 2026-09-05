@@ -3,7 +3,7 @@
         "type": "function",
         "function": {
             "name": "get_telia_clock_state",
-            "description": "获取漠月世界观里的忒利亚当前的季节（雨季/旱季）和时期（凌空期/白日期/血日期）",
+            "description": "获取漠月世界观里的忒利亚当前的季节（雨季/旱季）和时期（凌空期/白日期/血日期）还有时间相关信息（忒利亚是30小时制）",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -154,14 +154,18 @@
     {
         "type": "function",
         "function": {
-            "name": "view_file",
-            "description": "使用 glm-5.3-flash 查看指定 url 里的文件，并按你给的 prompt 解析回答。",
+            "name": "view_document_file",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的文档文件（例如 pdf pptx docx xlsx），并按你给的 prompt 解析回答。",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要查看的内容 ref"
+                    },
                     "url": {
                         "type": "string",
-                        "description": "要查看的内容 url"
+                        "description": "要查看的内容 url，填写 ref 后本参数不会被解析"
                     },
                     "prompt": {
                         "type": "string",
@@ -169,7 +173,6 @@
                     }
                 },
                 "required": [
-                    "url",
                     "prompt"
                 ]
             }
@@ -179,13 +182,17 @@
         "type": "function",
         "function": {
             "name": "view_image",
-            "description": "使用 glm-5.3-flash 查看指定 url 里的图片，并按你给的 prompt 解析回答。",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要查看的内容 ref"
+                    },
                     "url": {
                         "type": "string",
-                        "description": "要查看的内容 url"
+                        "description": "要查看的内容 url，填写 ref 后本参数不会被解析"
                     },
                     "prompt": {
                         "type": "string",
@@ -193,7 +200,6 @@
                     }
                 },
                 "required": [
-                    "url",
                     "prompt"
                 ]
             }
@@ -203,13 +209,17 @@
         "type": "function",
         "function": {
             "name": "view_video",
-            "description": "使用 glm-5.3-flash 查看指定 url 里的视频，并按你给的 prompt 解析回答。",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的视频，并按你给的 prompt 解析回答。",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要查看的内容 ref"
+                    },
                     "url": {
                         "type": "string",
-                        "description": "要查看的内容 url"
+                        "description": "要查看的内容 url，填写 ref 后本参数不会被解析"
                     },
                     "prompt": {
                         "type": "string",
@@ -217,7 +227,6 @@
                     }
                 },
                 "required": [
-                    "url",
                     "prompt"
                 ]
             }
@@ -355,7 +364,9 @@
                         "description": "转存后的文件名（不填则自动生成）"
                     }
                 },
-                "required": ["ref"]
+                "required": [
+                    "ref"
+                ]
             }
         }
     },
@@ -372,7 +383,9 @@
                         "description": "历史文件引用名，例如 history_1"
                     }
                 },
-                "required": ["ref"]
+                "required": [
+                    "ref"
+                ]
             }
         }
     },
@@ -397,7 +410,10 @@
                         "description": "写入模式，w（覆盖，默认）或 a（追加）"
                     }
                 },
-                "required": ["ref", "content"]
+                "required": [
+                    "ref",
+                    "content"
+                ]
             }
         }
     },
@@ -441,7 +457,9 @@
                         "description": "历史文件引用名，例如 history_1"
                     }
                 },
-                "required": ["ref"]
+                "required": [
+                    "ref"
+                ]
             }
         }
     },
@@ -462,7 +480,9 @@
                         "description": "新的引用名，例如 history_2；留空则自动分配下一个可用编号"
                     }
                 },
-                "required": ["ref"]
+                "required": [
+                    "ref"
+                ]
             }
         }
     },
@@ -503,7 +523,9 @@
                         "description": "新的会话名（中文/英文/数字均可，不要加引号或特殊符号，不能名为 default 或者以 history_ 开头，不超过 100 字）"
                     }
                 },
-                "required": ["name"]
+                "required": [
+                    "name"
+                ]
             }
         }
     },
@@ -524,7 +546,28 @@
                         "description": "骰子数量，默认 1"
                     }
                 },
-                "required": ["faces"]
+                "required": [
+                    "faces"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "download",
+            "description": "下载一个 url 指向的文件到 temp 文件夹（最大 20MiB，超出会失败）。\n文本文件自动转为 utf-8。\n返回文件引用 ref：文本文件用 check_file 查看内容，图片/PDF/视频等用 view_document_file / view_image / view_video 查看，需要长期保留时用 save_to_history 转存。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要下载的文件直链地址（需要以 http:// 或 https:// 开头）"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
             }
         }
     }

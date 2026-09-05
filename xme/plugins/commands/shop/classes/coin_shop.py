@@ -3,7 +3,7 @@ from ..tools.good import get_good_from_id
 from .....xmetools.templates import HIUN_COLORS, FONTS_STYLE
 from xme.plugins.commands.xme_user.classes.user import User
 import string
-from xme.xmetools.numtools import to_nums_base
+from numtools import to_nums_base
 
 class CoinShop:
     def __init__(self, goods: dict[str, list[Good]]):

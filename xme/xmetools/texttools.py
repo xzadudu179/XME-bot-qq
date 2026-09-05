@@ -13,11 +13,11 @@ from urllib.parse import urlparse
 from difflib import SequenceMatcher
 import enchant
 from nonebot.log import logger
-from xme.xmetools.reqtools import glm_api_request
 import cn2an
 d = enchant.Dict("en_US")
 
 async def text_moderations(text: str):
+    from xme.xmetools.reqtools import glm_api_request
     new_objects = []
     if len(text) > 2000:
         # raise ValueError("文本长度不能大于 2000")
@@ -33,6 +33,7 @@ async def text_moderations(text: str):
     return response
 
 async def object_moderations(objects: list[dict]):
+    from xme.xmetools.reqtools import glm_api_request
     new_objects = []
     for o in objects:
         if o["type"] != "text":

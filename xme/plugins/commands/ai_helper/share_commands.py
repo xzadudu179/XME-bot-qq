@@ -230,28 +230,28 @@ async def leave_shared_session(session, user, args=None):
 async def session_history(session, user, args=None):
     """查看当前会话历史：history（伪造聊天记录转发，提问=调用者、回答=bot 自己）。
 
-    群内用合并转发；私聊或转发失败时降级为纯文本；只展示最近 MAX_HISTORY_VIEW 条。
+    合并转发展示（群聊/私聊均可，每条记录拆 提问+回答 两个节点）；转发失败时
+    降级为纯文本；只展示最近 MAX_HISTORY_VIEW 条。
     """
     storage = current_storage(user.id)
     entries = [it for it in storage.load_history() if not history.is_summary(it)][-MAX_HISTORY_VIEW:]
     if not entries:
         return _msg("history_empty")
     event = session.event
-    if event.group_id:
-        try:
-            nodes = []
-            for it in entries:
-                asker_id = it.get("user_id", user.id)  # 提问者身份（旧记录无 user_id 时回落调用者）
-                ask_text = f"[{it.get('time', '未知时间')}]\n{it.get('ask', '')}"
-                nodes.append(change_group_message_content(
-                    await _sender_dict(session, asker_id), ask_text, user_id=asker_id))
-                nodes.append(change_group_message_content(
-                    await _sender_dict(session, session.self_id), it.get("ans", ""),
-                    user_id=session.self_id))
-            await send_forward_msg(session.bot, event, nodes)
-            return CMD_END
-        except Exception as e:
-            logger.warning(f"共享会话历史转发发送失败，降级为文本: {e}")
+    try:
+        nodes = []
+        for it in entries:
+            asker_id = it.get("user_id", user.id)  # 提问者身份（旧记录无 user_id 时回落调用者）
+            ask_text = f"[{it.get('time', '未知时间')}]\n{it.get('ask', '')}"
+            nodes.append(change_group_message_content(
+                await _sender_dict(session, asker_id), ask_text, user_id=asker_id))
+            nodes.append(change_group_message_content(
+                await _sender_dict(session, session.self_id), it.get("ans", ""),
+                user_id=session.self_id))
+        await send_forward_msg(session.bot, event, nodes)
+        return CMD_END
+    except Exception as e:
+        logger.warning(f"历史记录转发发送失败，降级为文本: {e}")
     return "\n\n".join(
         _msg("history_private_item", time=it.get("time", "未知时间"),
              ask=it.get("ask", ""), ans=it.get("ans", ""))

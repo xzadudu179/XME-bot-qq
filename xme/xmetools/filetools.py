@@ -3,6 +3,7 @@ import re
 from nonebot import log
 import os
 import base64
+import hashlib
 from pathlib import Path
 from datetime import datetime
 import shutil
@@ -10,6 +11,7 @@ import json
 from xme.xmetools.typetools import try_parse
 from xme.xmetools import jsontools
 from xme.xmetools.texttools import hash_text, regex_search
+from enum import Enum
 from keys import generate_file_token, DOMAIN
 
 def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
@@ -38,6 +40,61 @@ def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
 
     return path, ref
 
+def get_file_size(path: str | Path):
+    """得到文件路径下文件的大小（字节数）
+
+    Args:
+        path (str | Path): path
+
+    Returns:
+        int: 字节数
+    """
+    path = Path(path)
+    return path.stat().st_size
+
+class FileType(Enum):
+    EMPTY = "空文件"
+    IMAGE = "图片文件"
+    PDF = "PDF文件"
+    ARCHIVE = "压缩文件"
+    BINARY = "二进制文件"
+    TEXT = "文本文件"
+
+def detect_file_type(path: str | Path) -> FileType:
+    path = Path(path)
+    with path.open("rb") as f:
+        data = f.read(8192)
+
+    if not data:
+        return FileType.EMPTY
+
+    # 常见文件 Magic Number
+    signatures = {
+        b"\x89PNG\r\n\x1a\n": FileType.IMAGE,
+        b"\xff\xd8\xff": FileType.IMAGE,
+        b"GIF87a": FileType.IMAGE,
+        b"GIF89a": FileType.IMAGE,
+        b"%PDF": FileType.PDF,
+        b"PK\x03\x04": FileType.ARCHIVE,  # zip/docx/xlsx/pptx 等
+        b"\x1f\x8b": FileType.ARCHIVE,    # gzip
+        b"7z\xbc\xaf\x27\x1c": FileType.ARCHIVE,
+    }
+
+    for signature, file_type in signatures.items():
+        if data.startswith(signature):
+            return file_type
+
+    # NUL 字节基本可以认为是二进制
+    if b"\x00" in data:
+        return FileType.BINARY
+    # 控制字符比例
+    control_count = sum(
+        byte < 32 and byte not in (9, 10, 13)
+        for byte in data
+    )
+    if control_count / len(data) > 0.01:
+        return FileType.BINARY
+    return FileType.TEXT
 
 def get_local_file_url(path: str):
     """将本地文件变为限时 url 链接（TTL 30s）
@@ -143,12 +200,48 @@ def history_file_name(ref: str) -> str | None:
     return None
 
 
+def decode_text(data: bytes) -> str:
+    """把字节解码为文本：utf-8 优先，其次 gb18030（中文常见），最后 latin-1 兜底（永不失败）。"""
+    for encoding in ("utf-8", "gb18030"):
+        try:
+            return data.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return data.decode("latin-1")
+
+
+def bytes_to_file(data: bytes, dir_name, suffix: str = ".bin", agent=None) -> dict:
+    """把字节内容写入用户 temp 文件夹并分配引用；按内容哈希命名。
+
+    文件名 = 内容 sha256 前 16 位 + suffix；引用前缀为 file_。
+    相同内容的文件已存在时抛 FileExistsError（异常值为已存在文件的文件名），
+    与 text_to_file 的查重语义一致——是否复用由调用方决定，本函数不做复用。
+    返回 {file_name, ref, size, path}。
+    """
+    file_id = hashlib.sha256(data).hexdigest()[:16]
+    file_name = file_id + (suffix or ".bin")
+    path = Path(f"./data/temp/{dir_name}/{file_name}")
+    if path.is_file():
+        raise FileExistsError(file_name)
+    path, ref = _create_file_ref(dir_name, "file_", file_name, agent)
+    with open(path / file_name, "wb") as file:
+        file.write(data)
+    return {
+        "file_name": file_name,
+        "ref": ref,
+        "size": len(data),
+        "path": str(path / file_name),
+    }
+
+
 def text_to_file(text: str, dir_name, agent=None) -> dict:
     HEAD = "text_"
 
     file_id = hash_text(text)
-    file_name = file_id + ".tmp"
-
+    file_name = file_id + ".txt"
+    path = Path(f"./data/temp/{dir_name}/{file_name}")
+    if path.is_file():
+        raise FileExistsError(f"该文本所能够转换的文件({file_name})已经存在")
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
 
     with open(path / file_name, "w", encoding="utf-8") as file:
@@ -174,7 +267,9 @@ def dict_to_file(d: dict, dir_name, prefix="", agent=None,
 
     file_id = hash_text(str(d))
     file_name = prefix + file_id + ".json"
-
+    path = Path(f"./data/temp/{dir_name}/{file_name}")
+    if path.is_file():
+        raise FileExistsError(f"该字典所能够转换的文件({file_name})已经存在")
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
     text = json.dumps(d, ensure_ascii=False)
     with open(path / file_name, "w", encoding="utf-8") as file:

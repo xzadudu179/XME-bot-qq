@@ -104,6 +104,56 @@ class TeliaClock:
         }
         return transitions[current]
 
+    def get_local_time_period(self, hour: int | None = None) -> str:
+        """返回 30 小时制下的时间段名称。
+
+        使用 7 段式分割：日出 / 上午 / 中午 / 下午 / 黄昏 / 晚上 / 凌晨。
+        """
+        if hour is None:
+            hour = self.get_local_time()["hour"]
+        if 7 <= hour < 9:
+            return "日出"
+        if 9 <= hour < 13:
+            return "上午"
+        if 13 <= hour < 17:
+            return "中午"
+        if 17 <= hour < 23:
+            return "下午"
+        if 24 <= hour < 26:
+            return "黄昏"
+        if 27 <= hour < 30:
+            return "晚上"
+        return "凌晨"
+
+    def get_local_time(self, now: int | None = None) -> Dict[str, Any]:
+        """返回当前星球本地时间，单位为 30 小时制。
+
+        Returns:
+            {
+                "hour": 0-29,
+                "minute": 0-59,
+                "second": 0-59,
+                "time": "HH:MM:SS",
+                "period": "上午|中午|下午|晚上|黄昏|日出",
+                "day_hours": 30,
+            }
+        """
+        if now is None:
+            now = int(time.time())
+        total_seconds = now % (30 * 60 * 60)
+        hour = total_seconds // 3600
+        minute = (total_seconds % 3600) // 60
+        second = total_seconds % 60
+        period = self.get_local_time_period(hour)
+        return {
+            "hour": hour,
+            "minute": minute,
+            "second": second,
+            "time": f"{hour:02d}:{minute:02d}:{second:02d}",
+            "period": period,
+            "day_hours": 30,
+        }
+
     def _update_clocks(self, now: int):
         """
         仅在被查询时执行的天象更新。
@@ -147,16 +197,18 @@ class TeliaClock:
             }
             jsontools.save_to_path(self.local_path, save_dict)
 
-    def get_current_state(self) -> Tuple[MacroSeason, MicroSeason]:
+    def get_current_state(self) -> Tuple[MacroSeason, MicroSeason, Dict[str, Any]]:
         """ 获取当前星球综合状态。
             调用此方法会自动触发时间线推进。
 
         Returns:
-            Tuple[MacroSeason, MicroSeason]: 大季节，小季节
+            Tuple[MacroSeason, MicroSeason, Dict[str, Any]]:
+                大季节，小季节，本地时间信息（30 小时制）
         """
         now = int(time.time())
         self._update_clocks(now)
-        return self.macro_current, MICRO_DISPLAY_MAP[self.micro_current]
+        local_time = self.get_local_time(now)
+        return self.macro_current, MICRO_DISPLAY_MAP[self.micro_current], local_time
 
 
 class Countdown:
@@ -436,6 +488,7 @@ def get_time_period():
         return "晚上"
     elif 23 <= hour < 24:
         return "凌晨"
+    raise ValueError("小时数大于 24")
 
 TELIA_CONFIG = {
         "macro": {

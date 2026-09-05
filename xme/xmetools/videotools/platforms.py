@@ -15,6 +15,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from xme.xmetools.reqtools import DEFAULT_UA
+
 
 @dataclass(frozen=True)
 class VideoPlatform:
@@ -96,6 +98,8 @@ register_platform(_make_platform(
         # App 分享短链
         r"(?:https?://)?b23\.tv/[\w-]+",
     ),
+    # 浏览器 UA：裸 yt-dlp UA 会被 B 站风控拦下（HTTP 412）
+    http_headers={"User-Agent": DEFAULT_UA},
 ))
 
 register_platform(_make_platform(

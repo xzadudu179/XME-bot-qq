@@ -15,6 +15,9 @@
     result = await extract_and_download(text, "./data/videos")
     for d in result.downloads: ...          # 逐条下载结果（含文件路径）
     reply(result.cleaned_text)              # 回复去掉链接后的剩余文本
+
+下载限制（大小/时长/清晰度）：DEFAULT_MAX_FILESIZE_MB / DEFAULT_MAX_DURATION_SECS /
+DEFAULT_MAX_HEIGHT 常量全局默认，download_video / extract_and_download 的同名参数可按次覆盖。
 """
 import asyncio
 import re
@@ -23,9 +26,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yt_dlp
+from yt_dlp.utils import match_filter_func
 from nonebot.log import logger
 
 from .platforms import VideoPlatform, match_platform
+
+# ---- 下载限制（可调：直接改这里的默认值，或调用方用同名参数按次覆盖）----
+DEFAULT_MAX_FILESIZE_MB = 200    # 单次下载产物总大小上限（MB），超出即删除并报错
+DEFAULT_MAX_DURATION_SECS = 600  # 视频时长上限（秒），超时长的链接在下载前被过滤（直播等无时长的放行）
+DEFAULT_MAX_HEIGHT = 720         # 默认最高清晰度（画面高度像素），如需 480p 改为 480
 
 # URL 正文排除：空白、HTML/markdown 包裹符、CJK 字符及其中文标点
 # （中文语境里链接后常紧跟 ，。等标点且无空格）
@@ -205,14 +214,30 @@ def build_ydl_opts(
     cookies: str | Path | None = None,
     progress_hook: Callable[[dict], None] | None = None,
     extra: dict | None = None,
+    max_filesize_mb: float | None = None,
+    max_duration_secs: float | None = None,
+    max_height: int | None = None,
 ) -> dict:
-    """拼接一份 yt-dlp 参数：公共默认 < 平台专属 < extra（调用方覆盖，优先级最高）。"""
+    """拼接一份 yt-dlp 参数：公共默认 < 平台专属 < extra（调用方覆盖，优先级最高）。
+
+    下载限制（大小/时长/清晰度）缺省取 DEFAULT_MAX_* 常量，可用同名参数按次覆盖；
+    extra 里传 format/match_filter/max_filesize 仍可整体压过这里的限制设置。
+    """
+    max_filesize_mb = DEFAULT_MAX_FILESIZE_MB if max_filesize_mb is None else max_filesize_mb
+    max_duration_secs = DEFAULT_MAX_DURATION_SECS if max_duration_secs is None else max_duration_secs
+    max_height = DEFAULT_MAX_HEIGHT if max_height is None else max_height
     opts = {
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
         "socket_timeout": 20,
         "retries": 3,
+        # 清晰度上限：优先 ≤上限的最优视频+音频，退化到 ≤上限的单文件，再退化到最优单文件
+        "format": f"bv*[height<={max_height}]+ba/b[height<={max_height}]/b",
+        # 大小上限（按字节）：yt-dlp 在下载前按服务器提供的估计大小跳过超限格式
+        "max_filesize": int(max_filesize_mb * 1024 * 1024),
+        # 时长上限：超时长的条目在下载前被过滤；"?=" 表示无时长字段（如直播）时放行
+        "match_filter": match_filter_func(f"duration<=?{int(max_duration_secs)}"),
     }
     if platform is not None:
         opts.update(platform.ydl_opts)
@@ -308,6 +333,45 @@ async def parse_video(
     return _to_video_info(info, platform.name)
 
 
+def _enforce_size_limit(file_paths: list[Path], max_filesize_mb: float) -> str | None:
+    """下载后的硬校验：产物总大小超过上限时全部删除并返回错误文案；合规返回 None。
+
+    yt-dlp 的 max_filesize 依赖服务器提供的文件大小，部分格式拿不到估计值会漏网，
+    所以落盘后再按实际大小兜底（上限作用于本次下载的全部产物之和）。
+    """
+    total = 0
+    for p in file_paths:
+        try:
+            total += p.stat().st_size
+        except OSError:
+            return None  # 文件已不在（异常状态），宁可不校验也不误删
+    if total <= max_filesize_mb * 1024 * 1024:
+        return None
+    for p in file_paths:
+        p.unlink(missing_ok=True)
+    return f"视频超出 {max_filesize_mb:g}MiB 大小限制（实际 {total / 1048576:.1f}MiB），已删除下载内容"
+
+
+def _empty_download_reason(info: dict | None, max_filesize_mb: float, max_duration_secs: float) -> str:
+    """下载完成但没有产物时，根据 info 推断被限制过滤的原因，给出可读文案。
+
+    yt-dlp 被 match_filter/max_filesize 过滤时不报错、只返回零产物（info dict
+    仍带 duration/filesize 估计），据此区分"时长超限/大小超限/未知"。
+    """
+    if not isinstance(info, dict):
+        return "下载完成但未找到落盘文件"
+    duration = info.get("duration")
+    if duration and duration > max_duration_secs:
+        mins, secs = int(duration) // 60, int(duration) % 60
+        return (f"视频时长 {mins}分{secs:02d}秒 超出 "
+                f"{int(max_duration_secs) // 60} 分钟限制，已跳过下载")
+    size = info.get("filesize") or info.get("filesize_approx")
+    if size and size > max_filesize_mb * 1024 * 1024:
+        return (f"视频大小约 {size / 1048576:.1f}MiB 超出 "
+                f"{max_filesize_mb:g}MiB 限制，已跳过下载")
+    return "下载完成但未找到落盘文件（可能被下载限制过滤）"
+
+
 async def download_video(
     url: str,
     output_dir: str | Path,
@@ -317,19 +381,27 @@ async def download_video(
     extra_opts: dict | None = None,
     progress_hook: Callable[[dict], None] | None = None,
     timeout: float = 900,
+    max_filesize_mb: float | None = None,
+    max_duration_secs: float | None = None,
+    max_height: int | None = None,
 ) -> VideoDownload:
     """异步下载单个视频（或合集）到指定文件夹，目录不存在会自动创建。
 
     不抛异常：失败/超时返回 ok=False 且 error 说明原因。
     超时只是放弃等待，底层线程可能仍在下载，已落盘的部分文件可通过扫描
     output_dir 找回。文件名由 yt-dlp 按「标题 [视频id].扩展名」生成。
+    下载限制：大小/时长/清晰度缺省用 DEFAULT_MAX_* 常量，同名参数可按次覆盖；
+    超出大小上限的产物会被删除并返回 ok=False。
     """
     platform = match_platform(url, names=platforms)
     if platform is None:
         return VideoDownload(url=url, platform_name="", title="", file_paths=[],
                              ok=False, error="不支持的视频链接")
+    max_mb = DEFAULT_MAX_FILESIZE_MB if max_filesize_mb is None else max_filesize_mb
     opts = build_ydl_opts(output_dir=output_dir, platform=platform, cookies=cookies,
-                          progress_hook=progress_hook, extra=extra_opts)
+                          progress_hook=progress_hook, extra=extra_opts,
+                          max_filesize_mb=max_mb, max_duration_secs=max_duration_secs,
+                          max_height=max_height)
     try:
         info, files = await asyncio.wait_for(
             asyncio.to_thread(_download_sync, url, opts, Path(output_dir)), timeout
@@ -343,8 +415,16 @@ async def download_video(
         return VideoDownload(url=url, platform_name=platform.name, title="",
                              file_paths=[], ok=False, error=str(e))
     if not files:
+        reason = _empty_download_reason(info, max_mb,
+                                        DEFAULT_MAX_DURATION_SECS if max_duration_secs is None else max_duration_secs)
+        logger.info(f"下载无产物 {url}: {reason}")
         return VideoDownload(url=url, platform_name=platform.name, title="",
-                             file_paths=[], ok=False, error="下载完成但未找到落盘文件")
+                             file_paths=[], ok=False, error=reason)
+    oversize_error = _enforce_size_limit(files, max_mb)
+    if oversize_error:
+        logger.warning(f"下载产物超限已删除 {url}: {oversize_error}")
+        return VideoDownload(url=url, platform_name=platform.name, title="",
+                             file_paths=[], ok=False, error=oversize_error)
     return VideoDownload(url=url, platform_name=platform.name,
                          title=(info or {}).get("title") or "",
                          file_paths=files, ok=True)
@@ -360,12 +440,15 @@ async def extract_and_download(
     extra_opts: dict | None = None,
     progress_hook: Callable[[dict], None] | None = None,
     download_timeout: float = 900,
+    max_filesize_mb: float | None = None,
+    max_duration_secs: float | None = None,
+    max_height: int | None = None,
 ) -> VideoExtractResult:
     """组合入口：提取文本中全部视频链接 → 并发下载到 output_dir → 返回组合结果。
 
     downloads 与 links 一一对应（同序）；cleaned_text 是移除全部视频链接
     （含重复出现的）后的文本。文本里没有可解析链接时，downloads 为空、
-    cleaned_text 与原文相同。
+    cleaned_text 与原文相同。下载限制参数原样透传 download_video。
     """
     links = extract_video_links(text, platforms=platforms)
     semaphore = asyncio.Semaphore(max(1, concurrency))
@@ -376,6 +459,8 @@ async def extract_and_download(
                 link.url, output_dir,
                 platforms=platforms, cookies=cookies, extra_opts=extra_opts,
                 progress_hook=progress_hook, timeout=download_timeout,
+                max_filesize_mb=max_filesize_mb, max_duration_secs=max_duration_secs,
+                max_height=max_height,
             )
 
     downloads = list(await asyncio.gather(*(download_one(l) for l in links)))

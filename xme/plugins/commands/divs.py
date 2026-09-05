@@ -5,7 +5,7 @@ from xme.xmetools.doctools import CommandDoc
 from character import get_message
 from xme.xmetools import typetools
 from xme.xmetools.msgtools import send_session_msg
-from xme.xmetools.numtools import divs
+from numtools import divs
 
 alias = ['divides']
 __plugin_name__ = 'divs'

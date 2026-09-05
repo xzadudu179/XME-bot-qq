@@ -315,22 +315,31 @@ async def send_to_superusers(bot: NoneBot, message):
         await bot.send_private_msg(user_id=u, message=message)
 
 async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSegment]):
-    """发送合并转发消息
+    """发送合并转发消息（群聊/私聊均可）。
 
+    群聊走 send_forward_msg(group_id=...)；私聊先尝试 send_forward_msg(user_id=...)，
+    失败再退回 send_private_forward_msg（不同 OneBot 实现端支持的接口名不同）。
     Args:
         bot (NoneBot): bot
         event (Event): 消息事件
         messages (list[MessageSegment]): 消息列表
     """
-    msg_id = None
-    try:
-        from xme.xmetools.bottools import bot_call_action
-        msg_id = (await bot_call_action(bot, "send_forward_msg", messages=Message(messages), group_id=event.group_id, user_id=event.user_id))["message_id"]
-        debug_msg(f"{msg_id=}")
-        if msg_id:
-            add_to_open_cmd_msgs(event.message_id, msg_id)
-    except ApiError:
-        raise
+    from xme.xmetools.bottools import bot_call_action
+    nodes = Message(messages)
+    if event.group_id is not None:
+        result = await bot_call_action(bot, "send_forward_msg", messages=nodes,
+                                       group_id=event.group_id, user_id=event.user_id)
+    else:
+        try:
+            result = await bot_call_action(bot, "send_forward_msg", messages=nodes,
+                                           user_id=event.user_id)
+        except ApiError:
+            result = await bot_call_action(bot, "send_private_forward_msg",
+                                           messages=nodes, user_id=event.user_id)
+    msg_id = (result or {}).get("message_id")
+    debug_msg(f"{msg_id=}")
+    if msg_id:
+        add_to_open_cmd_msgs(event.message_id, msg_id)
 
 def get_pure_text_message(message: dict) -> str:
     """获取纯文本消息

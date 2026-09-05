@@ -148,6 +148,7 @@ def on_command(
                 }
             result = None
             try:
+                arg = session.current_arg
                 result = await func(session, *args, **kwargs)
                 success = True
                 return result
@@ -176,7 +177,7 @@ def on_command(
                         call_group=session.event.group_id,
                         success=success,
                         time_cost=cost,
-                        args=session.current_arg.strip() if session.current_arg is not None else "",
+                        args=arg.strip() if arg is not None else "",
                     )
                 logger.info(f"存储指令调用数据：{data.to_dict()}")
                 data.save()

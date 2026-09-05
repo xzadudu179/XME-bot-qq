@@ -48,8 +48,8 @@ async def _(session: CommandSession, user: User):
     user.add_coins(append_coins + consecutive_award)
     users: list[dict] = User.get_users()
     signed_users_count = 0
-    macro_season, micro_season = TELIA_CLOCK.get_current_state()
-    status_message = get_message("character", "time_period_reactions",timetools.get_time_period(), f"{macro_season.value}{micro_season.value}", default=None)
+    macro_season, micro_season, _ = TELIA_CLOCK.get_current_state()
+    status_message = get_message("character", "time_period_reactions", timetools.get_time_period(), f"{macro_season.value}{micro_season.value}", default=None)
     if status_message is None:
         status_message = get_message("character", "time_period_reactions",timetools.get_time_period(), f"normal")
     reaction = "\n" + status_message if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""

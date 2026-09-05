@@ -40,6 +40,27 @@ from . import history
 from .session import AISession
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
+is_external_stop = False
+
+def _validate_tools(tools: list) -> None:
+    """校验工具 schema 的基本合法性。
+    """
+    for tool in tools:
+        fn = tool.get("function", {})
+        name = fn.get("name", "?")
+        if not isinstance(fn.get("description"), str):
+            raise ValueError(f"tools.json 工具 {name} 的 description 必须是字符串，"
+                             f"实际为 {type(fn.get('description')).__name__}（list/tuple 会导致 API 1210）")
+        params = fn.get("parameters") or {}
+        if params.get("type") != "object":
+            raise ValueError(f"tools.json 工具 {name} 的 parameters.type 必须是 object")
+        properties = params.get("properties") or {}
+        for pname, prop in properties.items():
+            if not isinstance(prop.get("description"), str):
+                raise ValueError(f"tools.json 工具 {name} 的参数 {pname} 缺少字符串 description")
+        for req in params.get("required") or []:
+            if req not in properties:
+                raise ValueError(f"tools.json 工具 {name} 的 required 引用了不存在的参数 {req}")
 
 
 class AIHelper:
@@ -113,6 +134,8 @@ class AIHelper:
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
+        global is_external_stop
+        is_external_stop = False
         self.shared = shared_session
         self.ai_session = (shared_session.code if shared_session is not None else ai_session) or history.DEFAULT_SESSION
         MODEL_MAP = {
@@ -142,10 +165,10 @@ class AIHelper:
             for name in functions.__tools__
         }
         self.pending_messages = []
-        # 工具 schema 从 tools.json 读取
         tools_path = Path(__file__).parent / "tools.json"
         with open(tools_path, "r", encoding="utf-8") as f:
             self.tools = json.load(f)
+        _validate_tools(self.tools)
 
     async def run_agent(self, session, messages, model):
         # self.spent_secs.start()
@@ -265,10 +288,11 @@ class AIHelper:
             messages=messages,
             tools=self.tools,
             thinking={
-                "type": "enabled"
+                "type": "enabled",
+                "clear_thinking": False
             },
             tool_choice="auto",
-            temperature=0.5
+            temperature=0.5,
         )
         task_id = response.id
         check_times = 0
@@ -284,7 +308,8 @@ class AIHelper:
                 raise RuntimeError(result)
             check_times += 1
             reply = await aget_arg_with_timeout(session, 1)
-            if reply is not None and reply.strip() == "aistop":
+            logger.info("询问AI中，并正在等待用户指令")
+            if (reply is not None and reply.strip() == "aistop") or is_external_stop:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
         raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")

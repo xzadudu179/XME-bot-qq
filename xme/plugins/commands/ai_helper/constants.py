@@ -49,3 +49,9 @@ SHARED_REQUEST_OPS = ("apr", "rej", "block")
 DEFAULT_SHARED_TITLE = "共享会话"
 # /ai -c history 最多展示的普通记录条数（每条拆 提问+回答 两个转发节点）
 MAX_HISTORY_VIEW = 30
+
+# 生成图片 credits 用量
+IMAGE_GEN_CREDITS = 80000
+
+# url 下载文件最大大小
+MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024

@@ -1,18 +1,36 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
+import html
+import mimetypes
 import random
+import re
 import time
 import traceback
 import functools
+from urllib.parse import urlparse
+from uuid import uuid4
 
 from nonebot import MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import search_json, search_text, history_file_name, safe_join, dir_usage, text_to_file
+from xme.xmetools.filetools import (
+    bytes_to_file,
+    decode_text,
+    detect_file_type,
+    get_local_file_url,
+    search_json,
+    search_text,
+    history_file_name,
+    safe_join,
+    dir_usage,
+    text_to_file,
+    FileType,
+)
+from xme.xmetools.videotools.probe import get_video_duration
 from .session import AISession
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
-from xme.xmetools.reqtools import glm_api_request
+from xme.xmetools.reqtools import fetch_file_stream, glm_api_request
 from xme.xmetools.texttools import regex_filter, regex_filter_text
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
@@ -22,7 +40,7 @@ from tavily import AsyncTavilyClient
 from xme.xmetools.msgtools import create_image_message, send_session_msg
 from character import get_message
 import asyncio
-from .constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE
+from .constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE, IMAGE_GEN_CREDITS, MAX_DOWNLOAD_FILE_SIZE
 
 # AI 用到的函数名列表，需要与实际定义的函数名相符
 __tools__ = [
@@ -40,7 +58,7 @@ __tools__ = [
     "clear_history_files",
     "inprocess_report",
     "ocr_image",
-    "view_file",
+    "view_document_file",
     "view_image",
     "view_video",
     "read_webpage",
@@ -48,11 +66,92 @@ __tools__ = [
     "content_search",
     "get_webs_partial",
     "get_user_input_urls",
+    "download",
     "name_session",
     "dice"
 ]
 
 # 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
+
+
+# detect_file_type 的文件类别 → 默认扩展名（URL 与 Content-Type 都无法识别时兜底）
+_TYPE_EXTENSIONS = {
+    FileType.IMAGE: ".png",
+    FileType.PDF: ".pdf",
+    FileType.ARCHIVE: ".zip",
+    FileType.TEXT: ".txt",
+    FileType.BINARY: ".bin",
+    FileType.EMPTY: ".bin",
+}
+
+
+def _url_suffix(url: str) -> str:
+    """从 URL 路径取扩展名（2~6 位字母数字的 .xxx）；没有则返回空串。"""
+    suffix = Path(urlparse(url).path).suffix.lower()
+    if 2 <= len(suffix) <= 6 and re.fullmatch(r"\.[a-z0-9]+", suffix):
+        return suffix
+    return ""
+
+
+def _exception_detail(ex: BaseException) -> str:
+    """异常的可读描述：始终带类型名；str() 失败或为空（如 TimeoutError）时退化为类型名/repr。"""
+    try:
+        msg = str(ex).strip()
+    except Exception:
+        msg = ""
+    return f"{type(ex).__name__}: {msg}" if msg else type(ex).__name__
+
+
+async def download(url: str, agent):
+    """异步下载 url 指向的文件到 temp 文件夹（上限 MAX_DOWNLOAD_FILE_SIZE）。
+    """
+    # 网页里抄来的链接常带 HTML 实体（&amp; 等），还原成原始字符
+    url = html.unescape((url or "").strip())
+    if urlparse(url).scheme not in ("http", "https"):
+        return "[下载失败：url 需要以 http:// 或 https:// 开头]"
+    try:
+        data, content_type = await fetch_file_stream(url, max_size=MAX_DOWNLOAD_FILE_SIZE)
+    except ValueError as ex:
+        return f"[下载失败：{ex}]"
+    except TimeoutError:
+        logger.warning(f"下载超时: {url}")
+        return "[下载失败：连接/下载超时（60s），目标站点可能不可达（被墙）或响应过慢]"
+    except Exception as ex:
+        logger.exception(f"下载 {url} 失败")
+        return f"[下载失败：{_exception_detail(ex)}]"
+    if not data:
+        return "[下载失败：文件为空]"
+
+    # 先落盘探测类型：扩展名（URL → Content-Type → detect_file_type）+ 文本转 utf-8
+    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
+    probe.write_bytes(data)
+    suffix = _url_suffix(url)
+    if not suffix:
+        main_type = content_type.split(";")[0].strip().lower()
+        guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
+        suffix = guessed if guessed and main_type != "application/octet-stream" else ""
+    if not suffix:
+        suffix = _TYPE_EXTENSIONS.get(detect_file_type(probe), ".bin")
+    if detect_file_type(probe) == FileType.TEXT:
+        data = decode_text(data).encode("utf-8")
+    probe.unlink(missing_ok=True)
+
+    try:
+        res = bytes_to_file(data, agent.user_id, suffix, agent)
+    except FileExistsError as ex:
+        # 查重命中：报错中止，不分配新 ref；反查已有引用供 AI 直接使用（不产生第二个引用）
+        dup_name = str(ex)
+        existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
+        hint = f"，直接使用已有引用 {existing_ref} 即可" if existing_ref else "（无本会话引用，可能是之前会话遗留）"
+        return {"result": f"[下载中止：相同内容的文件已存在于 temp（{dup_name}）{hint}]",
+                "ref": existing_ref, "file_name": dup_name, "size": len(data), "no_compress": True}
+    result_text = (
+        f"已下载到 temp：{res['file_name']}（{res['size'] / 1048576:.2f} MiB），"
+        f"引用 {res['ref']}。文本文件可用 check_file 查看内容，"
+        f"其他类型可用 view_document_file / view_image / view_video 查看，或用 save_to_history 转存。"
+    )
+    return {"result": result_text, "ref": res["ref"], "file_name": res["file_name"],
+            "size": res["size"], "no_compress": True}
 
 def get_user_input_urls(agent):
     return agent.user_input_urls
@@ -193,7 +292,7 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         )
         if agent is not None:
             # 图片生成按 80000 tokens 算
-            agent.other_credits += 80000
+            agent.other_credits += IMAGE_GEN_CREDITS
         image_msg = await get_image_msg(response.data[0].url)
         return image_msg
     except Exception as e:
@@ -248,22 +347,34 @@ async def web_search(query: str, max_results: int = 10, depth: Literal["basic", 
         ]
     }
 
-async def view_file(url: str, prompt: str, agent):
-    return await view_item(url, prompt, item_type="file", agent=agent)
+async def view_document_file(ref: str, url: str, prompt: str, agent):
+    return await view_item(ref, url, prompt, item_type="file", agent=agent)
 
-async def view_video(url: str, prompt: str, agent):
-    return await view_item(url, prompt, item_type="video_url", agent=agent)
+async def view_video(ref: str, url: str, prompt: str, agent):
+    path_or_url = url
+    if ref:
+        path_or_url = agent.resolve_ref(ref)
+    dur = await get_video_duration(path_or_url)
+    if not dur:
+        return "[查看视频错误：无法解析视频文件时长]"
+    if dur > 600:
+        return "[查看视频错误：视频时长过长 (>10分钟)]"
+    return await view_item(ref, url, prompt, item_type="video_url", agent=agent)
 
-async def view_image(url: str, prompt: str, agent):
-    return await view_item(url, prompt, item_type="image_url", agent=agent)
+async def view_image(ref: str, url: str, prompt: str, agent):
+    return await view_item(ref, url, prompt, item_type="image_url", agent=agent)
 
-async def view_item(url: str, prompt: str, item_type: str, agent=None):
+async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", agent=None):
     """调用 glm-5.3-flash 查看 url 里的内容，并按用户 prompt 回答。
 
     作为 AI 可调用 tool 使用：AI 传入 url 和 prompt，本函数使用 glm-5.3-flash
     查看该 url 的内容（图片/视频/文件等），并将模型解读结果返回给 AI。
     模型消耗的 tokens 会通过 agent 计入用户 credits。
     """
+    if ref:
+        url = get_local_file_url(agent.resolve_ref(ref))
+    if not url:
+        return "[分析 url 内容错误：ref 与 url 均无内容]"
     client = ZhipuAiClient(api_key=GLM_API_KEY)
     system_prompt = (
         "你是一个用于查看并解析指定 url 内容的模型。"
@@ -362,11 +473,16 @@ async def read_webpage(
 
 
 def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
-    """获取保存进用户 temp 的文件的内容。"""
+    """获取保存进用户 temp 的文本文件的内容。"""
     path = agent.resolve_ref(ref)
+    if detect_file_type(path) != FileType.TEXT:
+        return f"[该文件不是文本文件]"
     lines = []
-    with open(path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+    except UnicodeDecodeError:
+        return f"[文件无法以 utf-8 编码打开]"
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
     out = "\n".join([f'{i}: {l}' for i, l in enumerate(get_lines)])
     out = out if length == 0 else out[:length]
@@ -384,7 +500,7 @@ def list_files(folder="temp", agent=None):
             key=lambda f: f.name,
         )
         lines = [
-            f"# history 占用：{usage['count']} 个文件 / {usage['size']:,} B（上限 {HISTORY_MAX_FILES} 个 / {HISTORY_MAX_SIZE:,} B ≈ {HISTORY_MAX_SIZE // 1024 // 1024} MB）"
+            f"# history 占用：{usage['count']} 个文件 / {usage['size']:,} B（上限 {HISTORY_MAX_FILES} 个 / {HISTORY_MAX_SIZE:,} B ≈ {HISTORY_MAX_SIZE // 1024 // 1024} MiB）"
         ]
         for f in files:
             # history_<数字>.tmp → ref 取 stem；其他自定义文件 → ref 取文件名
@@ -460,6 +576,18 @@ def write_to_temp(content: str, ref: str = "", mode: str = "w", agent=None):
     return f"[成功写入文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 
 
+def _check_history_quota(path: Path, incoming_size: int, agent) -> str | None:
+    """检查写入 path（大小 incoming_size 字节）是否超出 history 资源上限；超限返回错误文案，否则 None。"""
+    usage = dir_usage(agent.get_history_path())
+    cur_size = path.stat().st_size if path.exists() else 0
+    est_size = usage["size"] - cur_size + incoming_size
+    if not path.exists() and usage["count"] >= HISTORY_MAX_FILES:
+        return f"[history 已满（{usage['count']} 个文件 ≥ 上限 {HISTORY_MAX_FILES} 个，共 {usage['size']:,} B）。请先用 delete_history_file / clear_history_files 清理或覆盖已有文件]"
+    if est_size > HISTORY_MAX_SIZE:
+        return f"[history 将超限：当前 {usage['size']:,} B，本次预计 {est_size:,} B，超过上限 {HISTORY_MAX_SIZE:,} B（{HISTORY_MAX_SIZE // 1024 // 1024} MiB）。请先清理部分文件]"
+    return None
+
+
 def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     """写入/覆盖/追加某个历史文件。
 
@@ -475,13 +603,9 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
     if mode not in ("w", "a"):
         return {"result": f"[无效的写入模式：{mode}，仅支持 w（覆盖）或 a（追加）]", "no_compress": True}
     # 单会话 history 文件夹资源上限检查
-    usage = dir_usage(agent.get_history_path())
-    cur_size = path.stat().st_size if path.exists() else 0
-    est_size = usage["size"] - cur_size + len(content.encode("utf-8"))
-    if not path.exists() and usage["count"] >= HISTORY_MAX_FILES:
-        return {"result": f"[history 已满（{usage['count']} 个文件 ≥ 上限 {HISTORY_MAX_FILES} 个，共 {usage['size']:,} B）。请先用 delete_history_file / clear_history_files 清理或覆盖已有文件]", "no_compress": True}
-    if est_size > HISTORY_MAX_SIZE:
-        return {"result": f"[history 将超限：当前 {usage['size']:,} B，本次预计 {est_size:,} B，超过上限 {HISTORY_MAX_SIZE:,} B（{HISTORY_MAX_SIZE // 1024 // 1024} MB）。请先清理部分文件]", "no_compress": True}
+    quota_error = _check_history_quota(path, len(content.encode("utf-8")), agent)
+    if quota_error:
+        return {"result": quota_error, "no_compress": True}
     ######
     try:
         if mode == "a" and path.exists():
@@ -573,16 +697,20 @@ def rename_history_file(ref: str, new_ref: str = "", agent=None):
 
 def save_to_history(ref, history_ref="", agent=None):
     """转存文件到 history 文件夹，生成引用。
-    ref: 来源文件引用（temp 的 text_N/json_N 或已有历史引用）
+    ref: 来源文件引用（temp 的 file_N/text_N/json_N 或已有历史引用）。
+    文本文件按文本转存（走 write_to_history）；图片/PDF/压缩包等二进制按
+    原始字节转存并保留原扩展名。
     history_ref: 可选，保存时自定义名（history_N 或安全自定义名如 笔记.md）；不填自动分配 history_N；已存在会报错。
     """
     try:
         src_path = agent.resolve_ref(ref)
     except KeyError:
         return {"result": f"[转存失败：没有找到引用 {ref}]", "no_compress": True}
-    with open(src_path, "r", encoding="utf-8") as f:
-        text = f.read()
-    if not text:
+    src_path = Path(src_path)
+    if not src_path.exists():
+        return {"result": f"[转存失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+    data = src_path.read_bytes()
+    if not data:
         return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
     # 自定义名：统一校验 + 防重名
     if history_ref:
@@ -595,6 +723,33 @@ def save_to_history(ref, history_ref="", agent=None):
         ref_id = history_ref
     else:
         ref_id = _next_history_ref(agent)
+    # 二进制文件：按原始字节转存，保留来源扩展名（文本文件仍走 write_to_history）
+    if detect_file_type(src_path) != FileType.TEXT:
+        if not history_ref:
+            ref_id = ref_id + src_path.suffix.lower()  # 自动分配的 history_N 补上来源扩展名
+        res = _history_file(ref_id, agent)
+        if res is None:
+            return {"result": f"[无效的历史文件引用名：{ref_id}]", "no_compress": True}
+        _, target = res
+        if target.exists():
+            return {"result": f"[历史文件 {ref_id} 已存在，请换名或先 delete_history_file]", "no_compress": True}
+        quota_error = _check_history_quota(target, len(data), agent)
+        if quota_error:
+            return {"result": quota_error, "no_compress": True}
+        try:
+            target.write_bytes(data)
+        except Exception as ex:
+            logger.exception(f"转存二进制文件失败: {ex}")
+            return {"result": f"[转存失败：{ex}]", "no_compress": True}
+        agent.ref_map[ref_id] = str(target)
+        return {
+            "result": f"已转存{detect_file_type(src_path).value}至 history，引用 {ref_id}（{len(data)} 字节）。可用 view_file / view_image / view_video 查看。",
+            "ref": ref_id,
+            "file_name": str(target),
+            "size": len(data),
+            "no_compress": True,
+        }
+    text = decode_text(data)
     result = write_to_history(ref_id, text, mode="w", agent=agent)
     if (result.get("result", "") or "").startswith("["):
         return result

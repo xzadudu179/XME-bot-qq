@@ -171,11 +171,16 @@ __plugin_usage__ = CommandDoc(
 async def _(session: CommandSession, user: u.User, validate, count_tick):
     global curr_sessions
     superuser_mode = False
+
     if validate() and user.id not in config.SUPERUSERS:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
     # 如果有 session 在运行
     if curr_sessions.get(user.id):
+        if session.current_arg_text.strip() == "stop":
+            from . import agent
+            agent.is_external_stop = True
+            return False
         await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
         return False
     MAX_LENGTH = 3000

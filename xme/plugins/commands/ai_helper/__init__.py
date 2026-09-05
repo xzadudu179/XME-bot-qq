@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import re
 import httpx
 
 import config
@@ -164,6 +165,15 @@ __plugin_usage__ = CommandDoc(
     alias=alias
 )
 
+def extract_text(raw: str) -> str:
+    # -r 后面的全部内容直接作为原始文本
+    match = re.search(r"(?:^|\s)-r(?:\s|$)", raw)
+    if match:
+        return raw[match.end():].strip()
+    # 没有 -r，剥离开头的普通选项
+    raw = re.sub(r"^(?:-c|--ctrl)\s*", "", raw)
+    raw = re.sub(r"^(?:-m|--model)\s+\S+\s*", "", raw)
+    return raw.strip()
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=True)
@@ -184,6 +194,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
         return False
     MAX_LENGTH = 3000
+    raw = session.current_arg_text
     parser = XmeArgumentParser(session=session, usage=arg_usage)
     parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)
@@ -191,9 +202,10 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     parser.add_argument("-r", nargs=argparse.REMAINDER)
     parser.add_argument('text', nargs='*')
     args = parser.parse_args(session.argv)
-    text = ' '.join(args.r or args.text).strip()
+    # text = ' '.join(args.r or args.text).strip()
+    text = extract_text(raw)
     # 输入风控
-    moderation_result = await is_text_can_send(session, text)
+    moderation_result = await is_text_can_send(session, text, 4)
     can_send = moderation_result["result"]
     reason = moderation_result["reason"]
     if not can_send:
@@ -235,7 +247,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         history_compressed = messages_dict['history_compressed']
         secs = messages_dict['talk_secs']
         if history_compressed > 0:
-            prefix = prefix + f"上下文已压缩，使用 {history_compressed} 字"
+            prefix = prefix + f"上下文已压缩，使用 {history_compressed} 字\n"
         credits_use = tokens_use_dict["credits_use"]
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
@@ -268,7 +280,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         if not superuser_mode:
             count_tick(credits_use)
         # if len(send_msg) <= 2000:
-        moderation_result = await is_text_can_send(session, send_msg)
+        moderation_result = await is_text_can_send(session, send_msg, 4)
         can_send = moderation_result["result"]
         reason = moderation_result["reason"]
         # if not can_send:

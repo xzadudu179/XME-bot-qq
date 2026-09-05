@@ -10,6 +10,7 @@ import functools
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from config import CONTAINER_BOT_PATH
 from nonebot import MessageSegment
 
 from nonebot.log import logger
@@ -19,25 +20,26 @@ from xme.xmetools.filetools import (
     detect_file_type,
     get_local_file_url,
     search_json,
-    search_text,
     history_file_name,
     safe_join,
     dir_usage,
     text_to_file,
     FileType,
+    to_container_path,
 )
 from xme.xmetools.videotools.probe import get_video_duration
+from xme.xmetools.bottools import bot_call_action
 from .session import AISession
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
 from xme.xmetools.reqtools import fetch_file_stream, glm_api_request
-from xme.xmetools.texttools import regex_filter, regex_filter_text
+from xme.xmetools.texttools import regex_filter
 from xme.xmetools.timetools import TELIA_CLOCK
 from zai import ZhipuAiClient
 from keys import GLM_API_KEY, TAVILY_API_KEY
 from typing import Literal
 from tavily import AsyncTavilyClient
-from xme.xmetools.msgtools import create_image_message, send_session_msg
+from xme.xmetools.msgtools import aget_arg_with_timeout, create_image_message, send_session_msg, is_text_can_send
 from character import get_message
 import asyncio
 from .constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE, IMAGE_GEN_CREDITS, MAX_DOWNLOAD_FILE_SIZE
@@ -67,8 +69,11 @@ __tools__ = [
     "get_webs_partial",
     "get_user_input_urls",
     "download",
+    "send_file",
+    "edit_file",
     "name_session",
-    "dice"
+    "dice",
+    "ask_user"
 ]
 
 # 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
@@ -101,6 +106,31 @@ def _exception_detail(ex: BaseException) -> str:
         msg = ""
     return f"{type(ex).__name__}: {msg}" if msg else type(ex).__name__
 
+async def ask_user(prompt: str, session, timeout: int = 120):
+    from .agent import AISTOP
+    from . import __plugin_name__
+    send_time = time.time()
+    if timeout > 400:
+        timeout = 400
+    interval = 0
+    islegal = False
+    while interval < 3 and not islegal:
+        reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
+        reply_time = time.time()
+        interval = reply_time - send_time
+        if interval < 3:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_too_fast"))
+            continue
+        islegal = await is_text_can_send(session, reply, 4)
+        if not islegal:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
+            continue
+    if not reply:
+        return "[用户未在时限内回复任何内容]"
+    if reply == "aistop":
+        return AISTOP
+    await send_session_msg(session, get_message("plugins", __plugin_name__, "user_content_reply"))
+    return f"[用户回复] {reply}"
 
 async def download(url: str, agent):
     """异步下载 url 指向的文件到 temp 文件夹（上限 MAX_DOWNLOAD_FILE_SIZE）。
@@ -152,6 +182,94 @@ async def download(url: str, agent):
     )
     return {"result": result_text, "ref": res["ref"], "file_name": res["file_name"],
             "size": res["size"], "no_compress": True}
+
+
+async def send_file(ref: str, agent):
+    """把 ref 指向的文件（temp/history 均可）以私聊文件消息发送给当前用户。"""
+    try:
+        path = Path(agent.resolve_ref(ref))
+    except KeyError:
+        return {"result": f"[发送失败：没有找到引用 {ref}]", "no_compress": True}
+    path = path.resolve()
+    if not path.is_file():
+        return {"result": f"[发送失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+    if path.stat().st_size == 0:
+        return {"result": "[发送失败：文件为空]", "no_compress": True}
+    session = agent.session
+    if session is None or getattr(session, "bot", None) is None:
+        return {"result": "[发送失败：无法获取会话上下文]", "no_compress": True}
+    try:
+        await bot_call_action(
+            session.bot, "upload_private_file",
+            user_id=session.event.user_id,
+            file=str(to_container_path(path)),
+            name=path.name
+        )
+    except Exception as ex:
+        logger.exception(f"私聊发送文件失败: {path}")
+        return {"result": f"[发送失败：{_exception_detail(ex)}]",
+                "no_compress": True}
+    return {"result": f"已把文件 {path.name}（{path.stat().st_size} 字节）通过私聊发送给用户。",
+            "file_name": path.name, "no_compress": True}
+
+
+def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 0, agent=None):
+    """按行改写文本文件（temp/history 通用）。
+
+    把第 line_start ~ line_end 行（1 起算、含端点）替换为 content：
+    - line_end 为 0 或缺省 = 只改 line_start 一行；
+    - content 为空串 = 删除这些行；
+    - line_start 大于总行数 = 在文件末尾追加（忽略 line_end）。
+    仅支持文本文件；行号可来自 content_search 的结果。
+    """
+    content = content or ""
+    if len(content) > 100000:
+        return {"result": "[改写失败：新内容过长 (>100000 字)]", "no_compress": True}
+    try:
+        path = Path(agent.resolve_ref(ref))
+    except KeyError:
+        return {"result": f"[改写失败：没有找到引用 {ref}]", "no_compress": True}
+    if not path.is_file():
+        return {"result": f"[改写失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+    if detect_file_type(path) != FileType.TEXT:
+        return {"result": "[改写失败：该文件不是文本文件]", "no_compress": True}
+    line_start = int(line_start)
+    line_end = int(line_end)
+    if line_start < 1:
+        return {"result": "[改写失败：line_start 从 1 开始]", "no_compress": True}
+    raw = decode_text(path.read_bytes())
+    lines = raw.splitlines()
+    trailing_newline = raw.endswith("\n") or not lines
+    if line_start > len(lines):
+        # 追加模式：追加到文件末尾
+        new_lines = lines + content.splitlines()
+        changed_at = len(lines) + 1
+    else:
+        end = line_start if line_end in (0, None) else line_end
+        if end < line_start:
+            return {"result": f"[改写失败：line_end({end}) 不能小于 line_start({line_start})]", "no_compress": True}
+        end = min(end, len(lines))
+        new_part = content.splitlines() if content else []
+        new_lines = lines[:line_start - 1] + new_part + lines[end:]
+        changed_at = line_start
+    new_text = "\n".join(new_lines) + ("\n" if new_lines and (trailing_newline or content) else "")
+    # 若目标是 history 文件，写入前检查其资源上限
+    try:
+        if Path(path).is_relative_to(agent.get_history_path().resolve()):
+            quota_error = _check_history_quota(path, len(new_text.encode("utf-8")), agent)
+            if quota_error:
+                return {"result": quota_error, "no_compress": True}
+    except (AttributeError, ValueError):
+        pass
+    path.write_text(new_text, encoding="utf-8")
+    preview = "\n".join(
+        f"{i}: {line}" for i, line in
+        enumerate(new_lines[max(0, changed_at - 2): changed_at + 3], max(1, changed_at - 1))
+    )
+    return {"result": (f"已改写 {ref} 第 {changed_at} 行附近（现共 {len(new_lines)} 行），"
+                       f"可再次用 content_search / check_file 确认。改后局部：\n{preview}"),
+            "no_compress": True}
+
 
 def get_user_input_urls(agent):
     return agent.user_input_urls
@@ -299,17 +417,74 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         logger.exception(f"图片生成失败: {e}")
         return f"[图片生成失败: {e}]"
 
-def content_search(param, file_ref, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
+def content_search(param, file_ref, search_method: Literal["re_search", "re_filter", "by_line"] = "re_search", agent=None):
+    """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，可配合 edit_file 精确改写）。
+
+    - re_search（默认）：param 作为正则在全文查找，返回每个匹配片段及其所在行号；
+    - re_filter：param 作为正则分隔全文（re.split 语义），返回各匹配之间的间隙内容；
+    - by_line：param 作为普通子串逐行匹配，返回包含该子串的整行。
+    超过 100 条截断。
+    """
     path = agent.resolve_ref(file_ref)
-    method = None
-    search_methods = {
-        # "re_search": regex_search,
-        "re_search": None,
-        "re_filter": regex_filter_text,
-        # "fuzzy_match": None,
-    }
-    method = search_methods.get(search_method, None)
-    return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_text(param, path, search_func=method))]), "no_compress": True}
+    text = decode_text(Path(path).read_bytes())
+    cap = 100
+    hits: list[str] = []
+
+    if search_method == "by_line":
+        hits = [f"{line_no}: {line[:8000] + '...' if len(line) > 8000 else line}"
+                for line_no, line in enumerate(text.splitlines(), 1)
+                if param in line]
+    elif search_method in ("re_search", "re_filter"):
+        try:
+            pattern = re.compile(param)
+        except re.error as ex:
+            return {"result": f"[搜索失败：正则不合法（{ex}）；子串匹配请改用 by_line 模式]", "no_compress": True}
+
+        def line_at(pos: int) -> int:
+            return text.count("\n", 0, pos) + 1
+
+        def flatten(base: int, segment: str) -> None:
+            """把一段内容按行拆开，逐行带上各自的行号。
+
+            segment 若从某行中间开始（上一个匹配吃掉了行首），其首个空尾巴行
+            （匹配后剩余为空）是噪音，跳过；真实存在的空行照常返回。
+            """
+            at_line_start = base == 0 or text[base - 1] == "\n"
+            for line in segment.splitlines():
+                if not at_line_start and line == "":
+                    base += 1  # 剩余为空的行尾巴，跳过
+                    at_line_start = True
+                    continue
+                shown = line[:8000] + "..." if len(line) > 8000 else line
+                hits.append(f"{line_at(base)}: {shown}")
+                base += len(line) + 1  # +1 为换行符
+                at_line_start = True
+
+        if search_method == "re_search":
+            for m in pattern.finditer(text):
+                if m.group(0):
+                    hits.append(f"{line_at(m.start())}: {m.group(0)}")
+                if len(hits) >= cap:
+                    break
+        else:  # re_filter：与 re.split 语义一致，取匹配之间的间隙，逐行带行号
+            last_end = 0
+            for m in pattern.finditer(text):
+                if m.end() > m.start():
+                    flatten(last_end, text[last_end:m.start()])
+                    last_end = m.end()
+                if len(hits) >= cap:
+                    break
+            if len(hits) < cap:
+                flatten(last_end, text[last_end:])
+    else:
+        return {"result": f"[无效的 search_method：{search_method}（可选 re_search / re_filter / by_line）]",
+                "no_compress": True}
+
+    if len(hits) >= cap:
+        hits.append("…（命中过多，仅显示前 100 条，请缩小搜索范围）")
+    if not hits:
+        return {"result": f"[未找到匹配 \"{param}\" 的内容]", "no_compress": True}
+    return {"result": "\n".join(hits), "no_compress": True}
 
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
@@ -558,7 +733,7 @@ def find_history_file(ref: str, agent=None):
 def write_to_temp(content: str, ref: str = "", mode: str = "w", agent=None):
     filename = agent.ref_map.get(ref, None)
     if filename is None and ref != "":
-        return f"[无效的引用名：{ref}]"
+        return f"[无效的引用名：{ref}（创建新文件请不要输入 ref）]"
     if filename is None:
         res = text_to_file(content, agent.user_id, agent)
         agent.ref_map[res["ref"]] = res["file_name"]

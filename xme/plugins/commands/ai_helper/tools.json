@@ -304,7 +304,8 @@
         "type": "function",
         "function": {
             "name": "content_search",
-            "description": "使用正则表达式搜索文件内容。",
+            "description":
+                "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号可用于 edit_file 精确改写）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -318,7 +319,7 @@
                     },
                     "search_method": {
                         "type": "string",
-                        "description": "要使用的搜索方法，默认 \"re_search\" 会匹配所有正则匹配到的内容。还有 \"re_filter\" 只保留正则没搜索到的内容，输入其他内容会回退至 \"re_search\""
+                        "description": "搜索模式：re_search（默认，正则匹配内容片段）/ re_filter（正则分隔取间隙内容）/ by_line（子串逐行匹配整行）；非法正则只影响前两者，by_line 不受影响"
                     }
                 },
                 "required": [
@@ -421,7 +422,7 @@
         "type": "function",
         "function": {
             "name": "write_to_temp",
-            "description": "向某个临时文件写入内容。ref 选填，不填会创建新文件，填则表示要覆盖/追加写入的文件 ref。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔）。",
+            "description": "向某个临时文件写入内容。ref 选填，不填会创建新文件，填则表示要覆盖/追加写入的文件 ref（要创建新文件不要填这个）。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔）。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -431,7 +432,7 @@
                     },
                     "ref": {
                         "type": "string",
-                        "description": "临时文件引用名，例如 json_1；不存在时会报错。"
+                        "description": "临时文件引用名，例如 json_1；只有修改文件时需要用到该参数。"
                     },
                     "mode": {
                         "type": "string",
@@ -567,6 +568,81 @@
                 },
                 "required": [
                     "url"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "ask_user",
+            "description": "主动向用户询问内容",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "你告诉用户的内容"
+                    },
+                    "timeout": {
+                        "type": "integer",
+                        "description": "超时时间，建议 60~400，默认 120"
+                    }
+                },
+                "required": [
+                    "prompt"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_file",
+            "description": "把一个 temp/history 文件以私聊文件消息发送给当前用户。ref 为文件引用（如 file_1、text_1、history_N）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "文件引用，例如 file_1、text_1 或 history_N"
+                    }
+                },
+                "required": [
+                    "ref"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "edit_file",
+            "description": "按行改写文本文件：把第 line_start ~ line_end 行（1 起算、含端点）替换为 content；line_end 不填则只会替换一行内容；content 为空串即删除这些行；line_start 大于总行数时在末尾追加（无论大于多少都是在末尾追加）。行号可来自 content_search 的结果。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "文件引用（temp 或 history）"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "替换后的新内容（多行用 \\n 分隔）；为空串表示删除所选行"
+                    },
+                    "line_start": {
+                        "type": "integer",
+                        "description": "起始行号（1 起算）"
+                    },
+                    "line_end": {
+                        "type": "integer",
+                        "description": "结束行号（含端点）；不填或 0 表示只改 line_start 一行"
+                    }
+                },
+                "required": [
+                    "ref",
+                    "content",
+                    "line_start"
                 ]
             }
         }

@@ -42,6 +42,11 @@ from .session import AISession
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 is_external_stop = False
 
+class _AISTOP:
+    def __repr__(self):
+        return "AISTOP"
+AISTOP = _AISTOP()
+
 def _validate_tools(tools: list) -> None:
     """校验工具 schema 的基本合法性。
     """
@@ -215,7 +220,11 @@ class AIHelper:
 
             # 执行所有工具
             for tool_call in message.tool_calls:
-                result_text = str(await self.execute_tool(session, tool_call, curr_tool_call_times))
+                result_content = await self.execute_tool(session, tool_call, curr_tool_call_times)
+                if result_content is AISTOP:
+                    await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+                    return False, 0
+                result_text = str(result_content)
                 ai_logger.info(
                     f"加入 tool message: {str(result_text)[:500]!r}..."
                 )
@@ -245,10 +254,15 @@ class AIHelper:
             # 依赖注入：工具声明了 agent 形参则注入当前 agent
             if "agent" in inspect.signature(func).parameters:
                 arguments["agent"] = self
+            if "session" in inspect.signature(func).parameters:
+                arguments["session"] = session
+
             if inspect.iscoroutinefunction(func):
                 result = await func(**arguments)
             else:
                 result = func(**arguments)
+            if result is AISTOP:
+                return AISTOP
             spent = self.spent_secs.get_timer_value()
             spent_msg = f"本轮对话总计消耗 {spent:,.2f}s"
             ai_logger.info(
@@ -289,7 +303,7 @@ class AIHelper:
             tools=self.tools,
             thinking={
                 "type": "enabled",
-                "clear_thinking": False
+                # "clear_thinking": False # 太费钱了
             },
             tool_choice="auto",
             temperature=0.5,
@@ -380,7 +394,7 @@ class AIHelper:
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
                 )
-                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.model_arg))
+                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.model_arg, ai_session=self.ai_session))
                 return len(summary)
         except Exception as ex:
             ai_logger.exception(f"上下文压缩失败: {ex}")
@@ -488,7 +502,7 @@ class AIHelper:
                 f"{self.cached_tokens}, "
                 f"减少 {credits_use} 个 tokens"
             )
-            if not (await is_text_can_send(session, ans)):
+            if not (await is_text_can_send(session, ans, 4)):
                 return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
             build_history(
                 user=user,

@@ -13,6 +13,11 @@ from xme.xmetools import jsontools
 from xme.xmetools.texttools import hash_text, regex_search
 from enum import Enum
 from keys import generate_file_token, DOMAIN
+from config import CONTAINER_BOT_PATH
+
+def to_container_path(path):
+    path = Path(path).resolve()
+    return Path(CONTAINER_BOT_PATH) / path.relative_to(Path(".").resolve())
 
 def _create_file_ref(dir_name, head: str, file_name: str, agent=None,
 ) -> tuple[Path, str]:

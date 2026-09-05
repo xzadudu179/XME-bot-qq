@@ -24,7 +24,7 @@ import os
 
 # TODO: 图片风控适配
 
-async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = False, session=None):
+async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = False, session=None, strictness = 3):
     for result in results:
         risk = result['risk_level']
         level = {
@@ -48,27 +48,27 @@ async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = Fal
         risk_text = f"{await get_stranger_name(event.user_id)} 在群 {await get_group_name(event.group_id)}调用的指令{level.get(risk, '风险性未知')}。risktype:{risk_type}"
         match risk:
             case "PASS":
-                return {"result": True, "reason": f""}
+                return {"result": strictness > 1, "reason": f""}
             case "REVIEW":
                 logger.warning(warning_text)
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, warning_text)
-                return {"result": True, "reason": f""}
+                return {"result": strictness > 2, "reason": f""}
             case "BLOCK":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, risk_text)
-                return {"result": False, "reason": "可能有违规内容"}
+                return {"result": strictness > 3, "reason": "可能有违规内容"}
             case "REJECT":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, risk_text)
-                return {"result": False, "reason": "有违规内容"}
+                return {"result": strictness > 4, "reason": "有违规内容"}
             case "HIGH":
                 logger.warning(risk_text)
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, risk_text)
-                return {"result": False, "reason": "有高危内容"}
+                return {"result": strictness > 5, "reason": "有高危内容"}
 
 async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
     try:
@@ -81,11 +81,11 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
 
 
-async def is_text_can_send(session: CommandSession, text: str):
+async def is_text_can_send(session: CommandSession, text: str, strictness=3):
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)
-        return await analyze_risk(response["result_list"], session.bot, session.event, True, session)
+        return await analyze_risk(response["result_list"], session.bot, session.event, True, session, strictness)
     except Exception as ex:
         logger.exception(traceback.format_exc())
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
@@ -155,9 +155,9 @@ def setup_send_logger():
 
 SEND_LOGGER = setup_send_logger()
 
-async def aget_arg_with_timeout(session, timeout_secs) -> str | None:
+async def aget_arg_with_timeout(session, timeout_secs, prompt=None) -> str | None:
     try:
-        reply: str = await asyncio.wait_for(aget_session_msg(session), timeout=timeout_secs)
+        reply: str = await asyncio.wait_for(aget_session_msg(session, prompt), timeout=timeout_secs)
         return reply
     except asyncio.TimeoutError:
         return None

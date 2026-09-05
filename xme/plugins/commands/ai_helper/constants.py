@@ -10,7 +10,7 @@ COMPRESS_TRIGGER = 79
 # 压缩时保留的最新的记录条数（其余压缩进摘要）
 CONTEXT_KEEP_RECENT = 20
 # 摘要最大长度（传给 ai_configs 里 memory 提示词的 {max_length}）
-COMPRESS_MAX_LENGTH = 2000
+COMPRESS_MAX_LENGTH = 4000
 
 # 单会话 history 文件夹（AI 转存文件）的资源上限
 HISTORY_MAX_FILES = 256                 # 最多 256 个文件

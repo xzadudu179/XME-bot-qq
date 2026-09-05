@@ -81,7 +81,7 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "nothing_to_throw", command_name=f"{config.COMMAND_START[0]}{command_name}"))
         return False
     ## 文本风险控制
-    moderation_result = await is_text_can_send(session, arg)
+    moderation_result = await is_text_can_send(session, arg, 4)
     can_send = moderation_result["result"]
     reason = moderation_result["reason"]
     if not can_send:

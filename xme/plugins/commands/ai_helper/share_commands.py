@@ -28,7 +28,7 @@ from .constants import (
     SHARED_REQUEST_OPS,
     __plugin_name__,
 )
-from .session import current_storage, set_current_session
+from .session import current_storage, normal_insert_enabled, set_current_session, toggle_normal_insert
 from .share import SharedSession
 
 
@@ -174,12 +174,20 @@ async def session_info(session, user, args=None):
     s = current_storage(user.id)
     if not isinstance(s, SharedSession):
         name = "[默认会话]" if s.is_default else s.ai_session
-        return _msg("info_normal", name=name, count=s.count)
+        return _msg("info_normal", name=name, count=s.count, insert_info="已启用插入" if normal_insert_enabled(s.user_id, s.ai_session) else "未启用插入")
     owner_name = await get_user_name(s.owner, default=str(s.owner))
-    lines = [_msg("info_shared_header", code=s.code, title=s.title,
-                  owner_name=owner_name, owner_id=str(s.owner),
-                  member_count=len(s.members), member_max=MAX_SHARED_MEMBERS,
-                  request_count=len(s.requests), count=s.count)]
+    lines = [_msg(
+        "info_shared_header",
+        code=s.code,
+        title=s.title,
+        owner_name=owner_name,
+        owner_id=str(s.owner),
+        member_count=len(s.members),
+        member_max=MAX_SHARED_MEMBERS,
+        request_count=len(s.requests),
+        count=s.count,
+        insert_info=" (已启用插入)" if s.insert_enabled else " (未启用插入)"
+    )]
     for index, m in enumerate(s.members, 1):
         user_id = m.get("user_id")
         mark = _msg("shared_mark_owner") if user_id == s.owner else ""
@@ -228,9 +236,9 @@ async def leave_shared_session(session, user, args=None):
 
 
 async def session_history(session, user, args=None):
-    """查看当前会话历史：history（伪造聊天记录转发，提问=调用者、回答=bot 自己）。
+    """查看当前会话历史：history（伪造聊天记录转发，提问=各提问者、回答=bot 自己）。
 
-    合并转发展示（群聊/私聊均可，每条记录拆 提问+回答 两个节点）；转发失败时
+    合并转发展示（群聊/私聊均可；插入模式的条目带多个提问节点）；转发失败时
     降级为纯文本；只展示最近 MAX_HISTORY_VIEW 条。
     """
     storage = current_storage(user.id)
@@ -241,10 +249,13 @@ async def session_history(session, user, args=None):
     try:
         nodes = []
         for it in entries:
-            asker_id = it.get("user_id", user.id)  # 提问者身份（旧记录无 user_id 时回落调用者）
-            ask_text = f"[{it.get('time', '未知时间')}]\n{it.get('ask', '')}"
-            nodes.append(change_group_message_content(
-                await _sender_dict(session, asker_id), ask_text, user_id=asker_id))
+            # 插入模式的条目带 asks（多个提问者各一个节点），旧条目回落单提问者
+            askers = it.get("asks") or [{"user_id": it.get("user_id", user.id), "text": it.get("ask", "")}]
+            for asker in askers:
+                asker_id = asker.get("user_id", user.id)
+                ask_text = f"[{it.get('time', '未知时间')}]\n{asker.get('text', '')}"
+                nodes.append(change_group_message_content(
+                    await _sender_dict(session, asker_id), ask_text, user_id=asker_id))
             nodes.append(change_group_message_content(
                 await _sender_dict(session, session.self_id), it.get("ans", ""),
                 user_id=session.self_id))
@@ -257,3 +268,17 @@ async def session_history(session, user, args=None):
              ask=it.get("ask", ""), ans=it.get("ans", ""))
         for it in entries
     )
+
+
+def toggle_insert(session, user, args=None):
+    """开关当前会话的插入模式（ins）：共享会话仅群主可操作，普通会话本人操作。"""
+    s = current_storage(user.id)
+    if isinstance(s, SharedSession):
+        if not s.is_owner(user.id):
+            return _msg("shared_insert_need_owner")
+        enabled = not s.insert_enabled
+        s.set_insert_enabled(enabled)
+        return _msg("shared_insert_on" if enabled else "shared_insert_off", code=s.code)
+    enabled = toggle_normal_insert(user.id, s.ai_session)
+    return _msg("insert_mode_on" if enabled else "insert_mode_off", name=s.ai_session)
+

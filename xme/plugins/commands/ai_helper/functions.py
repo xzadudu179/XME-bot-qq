@@ -4,6 +4,7 @@ import html
 import mimetypes
 import random
 import re
+import shutil
 import time
 import traceback
 import functools
@@ -21,6 +22,7 @@ from xme.xmetools.filetools import (
     get_local_file_url,
     search_json,
     history_file_name,
+    is_safe_custom_name,
     safe_join,
     dir_usage,
     text_to_file,
@@ -184,7 +186,7 @@ async def download(url: str, agent):
             "size": res["size"], "no_compress": True}
 
 
-async def send_file(ref: str, agent):
+async def send_file(ref: str, new_name="", agent=None):
     """把 ref 指向的文件（temp/history 均可）以私聊文件消息发送给当前用户。"""
     try:
         path = Path(agent.resolve_ref(ref))
@@ -198,19 +200,37 @@ async def send_file(ref: str, agent):
     session = agent.session
     if session is None or getattr(session, "bot", None) is None:
         return {"result": "[发送失败：无法获取会话上下文]", "no_compress": True}
+    send_path = path
+    if new_name:
+        # new_name 仅作为展示文件名：校验安全后复制到通用临时目录再上传，
+        # 防止路径穿越/绝对路径借 copy2 写到任意位置（is_safe_custom_name 拒绝 / 与 ..）
+        if not is_safe_custom_name(new_name):
+            return {"result": f"[发送失败：文件名 {new_name} 不合法（仅允许中英文/数字/_-.，不含路径）]",
+                    "no_compress": True}
+        temp_dir = Path("./data/temp")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        send_path = safe_join(temp_dir, new_name)
+        try:
+            shutil.copy2(path, send_path)
+        except Exception as ex:
+            logger.exception(f"准备发送文件失败: {path} -> {send_path}")
+            return {"result": f"[发送失败：{_exception_detail(ex)}]", "no_compress": True}
     try:
         await bot_call_action(
             session.bot, "upload_private_file",
             user_id=session.event.user_id,
-            file=str(to_container_path(path)),
-            name=path.name
+            file=str(to_container_path(send_path)),
+            name=send_path.name
         )
     except Exception as ex:
-        logger.exception(f"私聊发送文件失败: {path}")
+        logger.exception(f"私聊发送文件失败: {send_path}")
         return {"result": f"[发送失败：{_exception_detail(ex)}]",
                 "no_compress": True}
-    return {"result": f"已把文件 {path.name}（{path.stat().st_size} 字节）通过私聊发送给用户。",
-            "file_name": path.name, "no_compress": True}
+    finally:
+        if send_path is not path:
+            send_path.unlink(missing_ok=True)  # 副本用完即删，不残留通用临时目录
+    return {"result": f"已把文件 {send_path.name}（{path.stat().st_size} 字节）通过私聊发送给用户。",
+            "file_name": send_path.name, "no_compress": True}
 
 
 def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 0, agent=None):
@@ -522,10 +542,10 @@ async def web_search(query: str, max_results: int = 10, depth: Literal["basic", 
         ]
     }
 
-async def view_document_file(ref: str, url: str, prompt: str, agent):
+async def view_document_file(ref: str = "", url: str = "", prompt: str = "", agent=None):
     return await view_item(ref, url, prompt, item_type="file", agent=agent)
 
-async def view_video(ref: str, url: str, prompt: str, agent):
+async def view_video(ref: str = "", url: str = "", prompt: str = "", agent=None):
     path_or_url = url
     if ref:
         path_or_url = agent.resolve_ref(ref)
@@ -536,7 +556,7 @@ async def view_video(ref: str, url: str, prompt: str, agent):
         return "[查看视频错误：视频时长过长 (>10分钟)]"
     return await view_item(ref, url, prompt, item_type="video_url", agent=agent)
 
-async def view_image(ref: str, url: str, prompt: str, agent):
+async def view_image(ref: str = "", url: str = "", prompt: str = "", agent=None):
     return await view_item(ref, url, prompt, item_type="image_url", agent=agent)
 
 async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", agent=None):

@@ -18,6 +18,7 @@ count/dir_path 等同名接口（鸭子类型），agent 层通过 AIHelper.stor
 不涉及文件移动（普通会话名字即文件名，改名=移动文件）。
 """
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 from xme.xmetools import jsontools
@@ -28,6 +29,7 @@ from .constants import (
     DEFAULT_SHARED_TITLE,
     JOINED_FILE,
     MAX_JOINED_SHARED,
+    MAX_PENDING_INSERTS,
     MAX_SHARED_MEMBERS,
     SESSION_NAME_MAX_LEN,
     SHARED_CODE_MAX_N,
@@ -39,9 +41,10 @@ from .constants import (
     SHARED_META_FILE,
 )
 
-# 对话忙表：{群号码: True}。有人在某共享会话调用 AI 期间其他成员被拒。
-# 与 __init__.py 的 curr_sessions 同模式：检查与置位之间无 await，asyncio 单线程下原子。
-_busy_codes: dict[str, bool] = {}
+# 对话忙表：{群号码: {"group_id": 群号或 None, "user_id": 发起者}}。
+# 记录首次调用者的上下文，用于校验插入消息是否与首次调用同源（同群/同人私聊）；
+# 检查与置位之间无 await，asyncio 单线程下原子。
+_busy_codes: dict[str, dict] = {}
 
 
 def _shared_root() -> Path:
@@ -87,17 +90,87 @@ def normalize_code(code: str) -> str:
     return (code or "").strip().upper()
 
 
-def acquire_busy(code: str) -> bool:
-    """尝试占用某共享会话的对话锁；已被占用返回 False。"""
-    if _busy_codes.get(code):
+@dataclass(frozen=True)
+class Insert:
+    """一条待插入对话进行中的成员消息（图片在入队前已解析为 url）。"""
+
+    user_id: int
+    text: str
+    image_urls: tuple[str, ...] = ()
+    time: str = ""
+
+
+# 待插入消息队列：{插入键: [Insert, ...]}，由运行中的 agent 循环消费；
+# 插入键区分会话类型（shared:群号码 / user:用户id:会话名），与 _busy_codes 同为内存态
+_pending_inserts: dict[str, list[Insert]] = {}
+
+
+def shared_insert_key(code: str) -> str:
+    """共享会话的插入队列键（成员插入）。"""
+    return f"shared:{code}"
+
+
+def user_insert_key(user_id, ai_session: str) -> str:
+    """普通会话的插入队列键（仅本人消息自插入）。"""
+    return f"user:{user_id}:{ai_session}"
+
+
+def enqueue_insert(key: str, insert: Insert) -> bool:
+    """把插入消息排入指定插入键的队列；队列已满返回 False。"""
+    queue = _pending_inserts.setdefault(key, [])
+    if len(queue) >= MAX_PENDING_INSERTS:
         return False
-    _busy_codes[code] = True
+    queue.append(insert)
     return True
 
 
-def release_busy(code: str) -> None:
-    """释放共享会话的对话锁（未占用时静默）。"""
+def consume_inserts(key: str) -> list[Insert]:
+    """取出并清空指定插入键的全部待插入消息（无则返回空列表）。"""
+    return _pending_inserts.pop(key, [])
+
+
+def has_pending_inserts(key: str) -> bool:
+    """指定插入键是否有待插入消息。"""
+    return bool(_pending_inserts.get(key))
+
+
+def remove_insert(key: str, insert: Insert) -> bool:
+    """移除指定插入键队列中第一条与 insert 相同的条目，返回是否移除。"""
+    queue = _pending_inserts.get(key) or []
+    for index, item in enumerate(queue):
+        if item == insert:
+            queue.pop(index)
+            return True
+    return False
+
+
+def acquire_busy(code: str, group_id=None, user_id=None) -> bool:
+    """尝试占用某共享会话的对话锁并记录调用上下文；已被占用返回 False。"""
+    if _busy_codes.get(code):
+        return False
+    _busy_codes[code] = {"group_id": group_id, "user_id": user_id}
+    return True
+
+
+def insert_context_allowed(code: str, group_id, user_id) -> bool:
+    """插入消息与首次调用者是否同源：同群，或同一人的私聊。
+
+    首次调用发生在群聊 → 插入必须来自同一个群；发生在私聊 → 仅同一人的
+    私聊消息可插入（私聊本就只有一个人，跨私聊的插入看不到 AI 的回答）。
+    """
+    info = _busy_codes.get(code)
+    if not info:
+        return False
+    if info.get("group_id") is not None:
+        return group_id == info.get("group_id")
+    return user_id == info.get("user_id")
+
+
+def release_busy(code: str) -> list[Insert]:
+    """释放共享会话的对话锁，返回残留的未消费插入消息（调用方需向这些用户致歉）。"""
+    leftover = consume_inserts(shared_insert_key(code))
     _busy_codes.pop(code, None)
+    return leftover
 
 
 class SharedSession:
@@ -346,6 +419,17 @@ class SharedSession:
         meta["members"] = remaining
         self._save_meta(meta)
         return True
+
+    @property
+    def insert_enabled(self) -> bool:
+        """是否允许成员在对话进行中插入消息（meta.insert_enabled，默认关闭）。"""
+        return bool(self.meta.get("insert_enabled"))
+
+    def set_insert_enabled(self, enabled: bool) -> None:
+        """设置插入模式开关（/ai -c ins，群主操作），持久化到 meta。"""
+        meta = self.meta
+        meta["insert_enabled"] = bool(enabled)
+        self._save_meta(meta)
 
     def rename(self, new_title: str) -> bool:
         """重命名共享会话：只更新 meta 的 title 展示字段，不动目录文件名。

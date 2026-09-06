@@ -422,7 +422,7 @@
         "type": "function",
         "function": {
             "name": "write_to_temp",
-            "description": "向某个临时文件写入内容。ref 选填，不填会创建新文件，填则表示要覆盖/追加写入的文件 ref（要创建新文件不要填这个）。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔）。",
+            "description": "向某个临时文件写入内容。ref 选填，不填会创建新文件，填则表示要覆盖/追加写入的文件 ref（要创建新文件不要填这个）。mode 为 w 表示覆盖（默认）/新建，a 表示追加（默认不会自动换行分隔），注意：temp文件没有名字，名字均为hash，所以创建新文件请不要填写 ref 参数。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -599,13 +599,17 @@
         "type": "function",
         "function": {
             "name": "send_file",
-            "description": "把一个 temp/history 文件以私聊文件消息发送给当前用户。ref 为文件引用（如 file_1、text_1、history_N）。",
+            "description": "把一个 temp/history 文件以私聊文件消息发送给当前用户。ref 为文件引用（如 file_1、text_1、history_N）**建议填写 new_name，否则用户只能看到一堆 hash+默认后缀。**",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ref": {
                         "type": "string",
                         "description": "文件引用，例如 file_1、text_1 或 history_N"
+                    },
+                    "new_name": {
+                        "type": "string",
+                        "description": "文件新名称，比如 a.py，会使用 shutil.copy2 将文件复制到 bot 的通用临时文件夹，不会变动原文件。"
                     }
                 },
                 "required": [

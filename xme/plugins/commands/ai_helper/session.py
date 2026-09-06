@@ -8,6 +8,7 @@ from .share import SharedSession, is_valid_code
 
 # 用户目录下的状态文件（clear_all_history 清理目录时会一并移除）
 LOCKED_FILE = ".locked"             # 用户命名过的会话名（每行一个，AI 不可修改）
+INSERT_SESSIONS_FILE = ".insert_sessions"   # 开启了插入模式的普通会话名（每行一个）
 
 DEFAULT_SESSION = history.DEFAULT_SESSION
 
@@ -57,6 +58,43 @@ def _write_current(user_id, ai_session) -> None:
 def set_current_session(user_id, value: str) -> None:
     """把当前会话指针指向 value（普通会话名或共享群号码，二者共用统一指针）。"""
     history.write_current(user_id, value)
+
+
+def _insert_sessions_path(user_id) -> Path:
+    return _user_dir(user_id) / INSERT_SESSIONS_FILE
+
+
+def _read_insert_sessions(user_id) -> set[str]:
+    """读取开启了插入模式的普通会话名集合。"""
+    try:
+        return {line.strip() for line in
+                _insert_sessions_path(user_id).read_text(encoding="utf-8").splitlines()
+                if line.strip()}
+    except Exception:
+        return set()
+
+
+def _write_insert_sessions(user_id, names: set[str]) -> None:
+    _user_dir(user_id).mkdir(parents=True, exist_ok=True)
+    _insert_sessions_path(user_id).write_text("\n".join(sorted(names)), encoding="utf-8")
+
+
+def normal_insert_enabled(user_id, ai_session) -> bool:
+    """普通会话是否开启了插入模式（对话进行中自己的新消息并入上下文）。"""
+    return ai_session in _read_insert_sessions(user_id)
+
+
+def toggle_normal_insert(user_id, ai_session) -> bool:
+    """切换普通会话的插入模式，返回切换后的状态。"""
+    names = _read_insert_sessions(user_id)
+    if ai_session in names:
+        names.discard(ai_session)
+        enabled = False
+    else:
+        names.add(ai_session)
+        enabled = True
+    _write_insert_sessions(user_id, names)
+    return enabled
 
 
 def _legacy_shared_path(user_id) -> Path:
@@ -177,6 +215,11 @@ class AISession:
         is_current = AISession.current(self.user_id).ai_session == self.ai_session
         cleared = history.clear_history(self.user_id, self.ai_session) + history.clear_session_files(self.user_id, self.ai_session)
         _remove_locked(self.user_id, self.ai_session)
+        # 插入模式名单同步移除
+        names = _read_insert_sessions(self.user_id)
+        if self.ai_session in names:
+            names.discard(self.ai_session)
+            _write_insert_sessions(self.user_id, names)
         if is_current:
             _write_current(self.user_id, DEFAULT_SESSION)
         return cleared
@@ -207,6 +250,12 @@ class AISession:
         if was_locked or lock:
             locked.add(new_name)
         _write_locked(self.user_id, locked)
+        # 插入模式名单随会话改名迁移
+        inserts = _read_insert_sessions(self.user_id)
+        if old_name in inserts:
+            inserts.discard(old_name)
+            inserts.add(new_name)
+            _write_insert_sessions(self.user_id, inserts)
         if is_current:
             _write_current(self.user_id, new_name)
         self.ai_session = new_name

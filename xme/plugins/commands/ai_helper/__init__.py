@@ -11,7 +11,8 @@ from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.msgtools import CMD_END, is_text_can_send, send_session_msg
+from xme.xmetools.msgtools import CMD_END, is_text_can_send, send_session_msg, send_to_user
+from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import TimeUnit, get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
@@ -32,6 +33,7 @@ from .share_commands import (
     session_history,
     session_info,
     share_session,
+    toggle_insert,
 )
 
 
@@ -100,6 +102,11 @@ cmds = {
         "args": "",
         "desc": "退出当前共享会话（群主不可退出）",
     },
+    "ins": {
+        "content": toggle_insert,
+        "args": "",
+        "desc": "开关共享会话的插入模式（群主专用，开启后成员可在对话进行中插入消息）",
+    },
     "history": {
         "content": session_history,
         "args": "",
@@ -155,7 +162,7 @@ arg_usage = shell_like_usage("OPTION", [
     }
 ])
 
-alias = ['ai']
+alias = constants.COMMAND_ALIAS
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
@@ -186,13 +193,20 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
     # 如果有 session 在运行
-    if curr_sessions.get(user.id):
+    running_turn = curr_sessions.get(user.id)
+    if running_turn:
         if session.current_arg_text.strip() == "stop":
             from . import agent
             agent.is_external_stop = True
             return False
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
-        return False
+        if not isinstance(running_turn, dict):
+            # 该对话未开启插入模式：维持原有拒绝
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
+            return False
+        # 进行中的对话开启了插入模式：本条消息将并入其上下文（moderation 之后入队）
+        pending_insert = running_turn
+    else:
+        pending_insert = None
     MAX_LENGTH = 3000
     raw = session.current_arg_text
     parser = XmeArgumentParser(session=session, usage=arg_usage)
@@ -225,6 +239,25 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=MAX_LENGTH))
         return False
 
+    # 自己进行中的对话开启了插入模式：本条消息入队，打断并并入其上下文
+    if pending_insert is not None:
+        if session.event.group_id == pending_insert.get("group_id"):
+            # 与首次调用同源：nonebot1 会把该消息经会话 arg 通道交给运行中的 agent 插入，
+            # 指令路径不再入队，避免同一句话被插入两次（nonebot1 双投递规避）
+            return False
+        image_objects, cq_matches = await get_images_from_message(session.bot, text)
+        image_urls = [x["file"] for x in image_objects]
+        ins_text = text
+        for image_cq in cq_matches:
+            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+        if not share.enqueue_insert(pending_insert["key"], share.Insert(
+                user_id=session.event.user_id, text=ins_text,
+                image_urls=tuple(image_urls), time=get_time_now())):
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_queue_full', max_pending=constants.MAX_PENDING_INSERTS))
+            return False
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted', code=pending_insert["display"]))
+        return False
+
     available_models = ["flash", "pro"]
     model = args.model if args.model else "flash"
     if model not in available_models:
@@ -232,9 +265,35 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     # 统一指针解析当前会话（普通/共享同等对待，isinstance 区分类型）
     storage = current_storage(session.event.user_id)
     shared_session = storage if isinstance(storage, share.SharedSession) else None
-    if shared_session is not None and not share.acquire_busy(shared_session.code):
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', code=shared_session.code))
-        return False
+    if shared_session is not None and not share.acquire_busy(
+            shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
+        # 对话进行中：开启插入模式时成员消息入队（打断并插入），否则提示开启方式
+        if not shared_session.insert_enabled:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})") + get_message("plugins", __plugin_name__, 'shared_insert_hint'))
+            return False
+        # 插入消息必须与首次调用者同源（同群，或同一人的私聊），否则看不到 AI 的回答
+        if not share.insert_context_allowed(shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})"))
+            return False
+        image_objects, cq_matches = await get_images_from_message(session.bot, text)
+        image_urls = [x["file"] for x in image_objects]
+        ins_text = text
+        for image_cq in cq_matches:
+            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+        ins = share.Insert(user_id=session.event.user_id, text=ins_text,
+                           image_urls=tuple(image_urls), time=get_time_now())
+        if not share.enqueue_insert(share.shared_insert_key(shared_session.code), ins):
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_queue_full',
+            max_pending=constants.MAX_PENDING_INSERTS))
+            return False
+        if share.acquire_busy(shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
+            # 对话恰好在入队后结束：撤回自己的插入，按普通对话继续（锁已由本请求持有）
+            share.remove_insert(share.shared_insert_key(shared_session.code), ins)
+        else:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted',
+            code=shared_session.code,
+            max_pending=constants.MAX_PENDING_INSERTS))
+            return False
     try:
         ai_session = storage.ai_session
         if len(storage.load_history()) <= constants.COMPRESS_TRIGGER:
@@ -276,9 +335,19 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             prefix=prefix
         )
         # ai_logger.info(f"send msg {send_msg}")
-        # 输出风控
-        if not superuser_mode:
-            count_tick(credits_use)
+        # 输出风控；插入模式下全部用量在参与者间均摊，逐人计入每日额度（超管跳过）
+        credits_split = tokens_use_dict.get("credits_split") or {str(user.id): credits_use}
+        for split_id, split_amount in credits_split.items():
+            split_uid = int(split_id)
+            if split_uid in config.SUPERUSERS:
+                continue
+            if split_uid == user.id:
+                count_tick(split_amount)
+                continue
+            split_user = u.try_load(split_uid)
+            if split_user is not None:
+                u.limit_count_tick(split_user, __plugin_name__, split_amount)
+                split_user.save()
         # if len(send_msg) <= 2000:
         moderation_result = await is_text_can_send(session, send_msg, 4)
         can_send = moderation_result["result"]
@@ -299,9 +368,14 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     finally:
+        turn = curr_sessions[user.id]
         curr_sessions[user.id] = False
-        if shared_session is not None:
-            share.release_busy(shared_session.code)
+        # 对话结束时残留的插入消息已无法并入，向插入者致歉（共享/普通通用）
+        if isinstance(turn, dict) and turn.get("key"):
+            for lost in share.consume_inserts(turn["key"]):
+                await send_to_user(session.bot, lost.user_id,
+                                   get_message("plugins", __plugin_name__, 'shared_insert_lost',
+                                               code=turn["display"]))
 
 
 async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None):
@@ -331,6 +405,11 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
     ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared)
+    # 进行中的对话登记：开启插入模式时记录插入队列键与展示名（供入口并入与结束清理）
+    if ai_helper.insert_enabled:
+        display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session
+        curr_sessions[user.id] = {"key": ai_helper.insert_key, "display": display,
+                                  "group_id": session.event.group_id}
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)

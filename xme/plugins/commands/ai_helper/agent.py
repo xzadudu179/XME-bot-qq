@@ -7,6 +7,7 @@ import inspect
 import asyncio
 from traceback import format_exc
 from uuid import uuid4
+from xme.xmetools.cmdtools import is_command
 from xme.xmetools.videotools import extract_video_links, extract_and_download, parse_video
 import config
 from nonebot import CommandSession, MessageSegment
@@ -20,12 +21,10 @@ from xme.xmetools.bottools import get_user_name
 from xme.xmetools.timetools import get_time_now, Timer
 from xme.xmetools.jsontools import read_from_path
 from character import get_message
-from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
-from xme.xmetools.videotools.core import VideoExtractResult, VideoInfo, replace_video_links
-
+from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
     __plugin_name__,
     MAX_CHECK_TIMES,
@@ -37,9 +36,26 @@ from .constants import (
 )
 from . import functions
 from . import history
-from .session import AISession
+from . import share
+from .session import AISession, current_storage, normal_insert_enabled
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
+
+
+class InsertInterrupted(Exception):
+    """共享会话有成员插入消息：当前生成被主动打断，已积累的上下文保留待重启。"""
+
+
+def build_user_content(text: str, image_urls: list[str] | None = None,
+                       extra_parts: list | None = None) -> list:
+    """组装 GLM 多模态 user content：文本段 + 图片段 + 额外段（如视频文件）。
+
+    发起者的原始输入与共享会话的插入消息共用此封装，保证两种输入形态一致。
+    """
+    parts: list = [{"type": "text", "text": text}]
+    parts += [{"type": "image_url", "image_url": {"url": url}} for url in (image_urls or [])]
+    parts += list(extra_parts or [])
+    return parts
 is_external_stop = False
 
 class _AISTOP:
@@ -170,6 +186,18 @@ class AIHelper:
             for name in functions.__tools__
         }
         self.pending_messages = []
+        # 插入模式：跨重启轮次的工具调用预算 + 本次对话的参与者（额度均摊）
+        self.tool_call_times = 0
+        self.participants = [user_id]
+        # 本次对话实际调用过的工具名（去重保序），随历史条目存入 used_tools 字段
+        self.used_tools: list[str] = []
+        # 插入队列键与开关：共享会话按群号码，普通会话按 用户+会话名（所有会话均可开启）
+        if self.shared is not None:
+            self.insert_key = share.shared_insert_key(self.shared.code)
+            self.insert_enabled = self.shared.insert_enabled
+        else:
+            self.insert_key = share.user_insert_key(user_id, self.ai_session)
+            self.insert_enabled = normal_insert_enabled(user_id, self.ai_session)
         tools_path = Path(__file__).parent / "tools.json"
         with open(tools_path, "r", encoding="utf-8") as f:
             self.tools = json.load(f)
@@ -177,7 +205,6 @@ class AIHelper:
 
     async def run_agent(self, session, messages, model):
         # self.spent_secs.start()
-        curr_tool_call_times = 0
         MAX_RETRY_TIMES = 5
         retry_times = 0
         while True:
@@ -202,9 +229,9 @@ class AIHelper:
 
             # 没有工具调用
             if not message.tool_calls:
-                return result, curr_tool_call_times
+                return result, self.tool_call_times
             # 有工具调用
-            curr_tool_call_times += 1
+            self.tool_call_times += 1
             if message.tool_calls:
                 for tool_call in message.tool_calls:
                     ai_logger.info(
@@ -220,7 +247,7 @@ class AIHelper:
 
             # 执行所有工具
             for tool_call in message.tool_calls:
-                result_content = await self.execute_tool(session, tool_call, curr_tool_call_times)
+                result_content = await self.execute_tool(session, tool_call, self.tool_call_times)
                 if result_content is AISTOP:
                     await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                     return False, 0
@@ -234,6 +261,10 @@ class AIHelper:
                     "tool_call_id": tool_call.id
                 })
 
+            # 插入模式：工具执行完毕后先打断以并入插入消息，再发起下一次模型调用
+            if self.insert_enabled and share.has_pending_inserts(self.insert_key):
+                raise InsertInterrupted()
+
     # session 留着以后有用
     async def execute_tool(self, session, tool_call, curr_tool_call_times):
         prefix = ""
@@ -242,6 +273,8 @@ class AIHelper:
         if curr_tool_call_times >= MAX_TOOL_CALL_TIMES - 7:
             prefix = f"[警告：剩余 {MAX_TOOL_CALL_TIMES - curr_tool_call_times} 次 tools 调用次数]\n"
         name = tool_call.function.name
+        if name not in self.used_tools:
+            self.used_tools.append(name)
         try:
             arguments = json.loads(tool_call.function.arguments)
             ai_logger.info(get_message("plugins", __plugin_name__, "call_tool", tool_name=name, arguments=tool_call.function.arguments))
@@ -297,6 +330,7 @@ class AIHelper:
             return f"[工具执行失败：{type(e).__name__}: {e}]"
 
     async def create_and_wait(self, session, messages, model):
+        from . import alias
         response = self.client.chat.asyncCompletions.create(
             model=model,
             messages=messages,
@@ -322,10 +356,26 @@ class AIHelper:
                 raise RuntimeError(result)
             check_times += 1
             reply = await aget_arg_with_timeout(session, 1)
-            logger.info("询问AI中，并正在等待用户指令")
+            logger.info(f"{self.user_id} 询问AI中，并正在等待用户指令 (x{check_times})")
             if (reply is not None and reply.strip() == "aistop") or is_external_stop:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                 return False
+            # 发起者本人的追加发言：并入插入队列（开启插入模式的会话，普通/共享通用）
+            if reply is not None and reply.strip() and self.insert_enabled and reply[0] in config.COMMAND_START and reply.split(" ")[0][1:] in (__plugin_name__, *alias):
+                ins_text = " ".join(reply.split(" ")[1:]).strip()
+                image_objects, cq_matches = await get_images_from_message(session.bot, ins_text)
+                for image_cq in cq_matches:
+                    ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+                share.enqueue_insert(self.insert_key, share.Insert(
+                    user_id=self.user_id, text=ins_text,
+                    image_urls=tuple(x["file"] for x in image_objects),
+                    time=get_time_now()))
+                await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted'))
+            elif reply is not None and is_command(reply):
+                await send_session_msg(session, get_message("plugins", __plugin_name__, 'ai_sending'))
+            # 成员插入（或上面的发起者追加）：打断当前生成，交由 user_talk 并入上下文后重启
+            if self.insert_enabled and share.has_pending_inserts(self.insert_key):
+                raise InsertInterrupted()
         raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
     async def _glm_chat(self, messages, model="glm-5.3-flash"):
@@ -462,20 +512,46 @@ class AIHelper:
         ai_params = [
             {"role": "system","content": role},
             *history,
-            {"role": "user","content": [
-                    {"type": "text", "text": f"{curr_text}\n{text}"},
-                    *url_dicts
-                ]
-            },
+            {"role": "user","content": build_user_content(f"{curr_text}\n{text}", image_urls, url_dicts)},
         ]
         prefix = ""
         ai_logger.debug(f"params: {ai_params}")
         real_model = "glm-5.3-flash" if len(url_dicts) > 0 else self.model
         if real_model != self.model:
             prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
-        result, tool_call_times =  await self.run_agent(session, ai_params, model=real_model)
+        # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
+        asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
+        # 插入队列键：共享会话按群号码，普通会话按 用户+会话名（与 AIHelper.insert_key 一致）
+        while True:
+            try:
+                result, tool_call_times = await self.run_agent(session, ai_params, model=real_model)
+                break
+            except InsertInterrupted:
+                # 打断点：把全部待插入消息并入上下文后重入 agent 循环（messages 数组原样延续）
+                inserts = share.consume_inserts(self.insert_key)
+                has_image_insert = False
+                for ins in inserts:
+                    if self.shared is not None:
+                        ins_name = await get_user_name(ins.user_id, default=str(ins.user_id))
+                        ins_label = f"[共享会话成员 {ins_name}(qq{ins.user_id}) 插入] "
+                    else:
+                        ins_label = "[用户插入] "  # 普通会话：插入者即用户本人
+                    ai_params.append({"role": "user", "content": build_user_content(
+                        f"{ins_label}{ins.text}",
+                        list(ins.image_urls))})
+                    asks.append({"user_id": ins.user_id, "text": ins.text,
+                                 "image_urls": list(ins.image_urls)})
+                    has_image_insert = has_image_insert or bool(ins.image_urls)
+                    if ins.user_id not in self.participants:
+                        self.participants.append(ins.user_id)
+                    ai_logger.info(f"插入消息已并入上下文: {ins.user_id} {ins.text[:50]!r}")
+                if has_image_insert and real_model != "glm-5.3-flash":
+                    # 插入消息带图片：切换到视觉模型
+                    real_model = "glm-5.3-flash"
+                    prefix += get_message("plugins", __plugin_name__, "model_change_prefix",
+                                          model=self.model, vision_model=real_model)
         self.spent_secs.stop()
-        if result == False:
+        if result == False or result is AISTOP:
             return False, {}, {}, 0
         try:
             ans = result.choices[0].message.content
@@ -496,6 +572,9 @@ class AIHelper:
                     multis = 0.5
             credits_use *= multis
             credits_use += self.other_credits
+            # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）
+            per_share = credits_use / len(self.participants) if self.participants else credits_use
+            credits_split = {str(uid): round(per_share, 2) for uid in self.participants}
             debug_msg("处理结果")
             logger.info(
                 f"缓存tokens "
@@ -503,14 +582,15 @@ class AIHelper:
                 f"减少 {credits_use} 个 tokens"
             )
             if not (await is_text_can_send(session, ans, 4)):
-                return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
+                return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "credits_split": credits_split, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
             build_history(
                 user=user,
                 ask=text,
                 ans=ans,
                 agent=self,
+                asks=asks,
             )
-            return ans, {"credits_use": credits_use, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
+            return ans, {"credits_use": credits_use, "credits_split": credits_split, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
 
@@ -574,15 +654,27 @@ async def get_history(user: u.User, session_obj):
         url_str = "|".join([f"{k}: " + "、".join(v) for k, v in url_dicts.items()])
         url_str = f"[附带URLs:{url_str}]" if len(url_str) > 0 else ""
         skills = item.get('activate_skills', [])
-        # 提问者身份：条目记录了 user_id（共享会话）用记录值，旧记录/普通会话回落当前用户
-        asker_id = item.get("user_id", user.id)
-        if asker_id not in name_cache:
-            name_cache[asker_id] = await get_user_name(asker_id, default=str(asker_id))
-        asker_name = name_cache[asker_id]
-        build_dicts = [{
-            "role": "user",
-            "content": f"[历史记录-{item.get('time', '未知时间')}][{asker_name}(qq{asker_id})]{url_str} {item['ask']}",
-        }]
+        # 提问者列表：共享会话插入模式的条目带 asks（多个提问者），旧条目回落单提问者
+        askers = item.get("asks") or [{"user_id": item.get("user_id", user.id), "text": item.get("ask", "")}]
+        # 该轮实际用过的工具：以 [使用工具:…] 标记置于条目注入内容的开头
+        used_tools = item.get("used_tools") or []
+        tools_marker = f"[使用工具:{'、'.join(used_tools)}]" if used_tools else ""
+        build_dicts = []
+        for ask_index, asker in enumerate(askers):
+            asker_id = asker.get("user_id", user.id)
+            if asker_id not in name_cache:
+                name_cache[asker_id] = await get_user_name(asker_id, default=str(asker_id))
+            asker_name = name_cache[asker_id]
+            # 条目级附带URLs 只标在第一个提问上，避免重复；ask 自身的图片标在各自行
+            asker_url_str = url_str if ask_index == 0 else ""
+            ask_images = "、".join(asker.get("image_urls") or [])
+            if ask_images:
+                asker_url_str += f"[附带图片:{ask_images}]"
+            marker = tools_marker if ask_index == 0 else ""
+            build_dicts.append({
+                "role": "user",
+                "content": f"{marker}[历史记录-{item.get('time', '未知时间')}][{asker_name}(qq{asker_id})]{asker_url_str} {asker.get('text', '')}",
+            })
         tool_calls = []
         tool_messages = []
         if skills:
@@ -633,18 +725,25 @@ async def get_history(user: u.User, session_obj):
     return build_list, build_str
 
 
-def build_history(user: u.User, ask, ans, agent):
+def build_history(user: u.User, ask, ans, agent, asks: list | None = None):
     session_obj = agent.storage
     user_history = session_obj.load_history()
     summary, summary_skills, normals = history.split(user_history)
-    normals.append({
+    entry = {
         "ask": ask,
         "ans": ans,
         "time": get_time_now(),
         "user_id": agent.user_id,  # 提问者（共享会话按此区分成员，历史回放/伪造记录用）
         "urls": agent.user_input_urls,
         "activate_skills":  agent.activate_skills,
-    })
+    }
+    # 共享会话插入模式：一次回答对应多个提问者时，额外记录结构化的 asks 列表
+    if asks and len(asks) > 1:
+        entry["asks"] = asks
+    # 本次对话实际用过的工具（注入上下文时以 [使用工具:…] 标记置于该条目开头）
+    if agent.used_tools:
+        entry["used_tools"] = list(dict.fromkeys(agent.used_tools))
+    normals.append(entry)
     if len(normals) > MAX_HISTORY_COUNT:
         normals = normals[-MAX_HISTORY_COUNT:]
     session_obj.save_history(history.merge(summary, normals, skills=summary_skills))

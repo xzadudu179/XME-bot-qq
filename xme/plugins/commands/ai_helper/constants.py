@@ -1,5 +1,8 @@
 __plugin_name__ = "ai_helper"
 
+# /ai 指令的别名（agent 内识别同聊天追加消息是否为 ai 指令时复用）
+COMMAND_ALIAS = ["ai"]
+
 MAX_CHECK_TIMES = 1000
 MAX_HISTORY_COUNT = 80
 MAX_TOOL_CALL_TIMES = 50
@@ -55,3 +58,6 @@ IMAGE_GEN_CREDITS = 80000
 
 # url 下载文件最大大小
 MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
+
+# 共享会话插入模式：待插入消息队列上限（对话进行中其他成员的消息）
+MAX_PENDING_INSERTS = 5

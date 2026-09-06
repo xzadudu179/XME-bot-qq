@@ -304,8 +304,7 @@
         "type": "function",
         "function": {
             "name": "content_search",
-            "description":
-                "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号可用于 edit_file 精确改写）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
+            "description": "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号可用于 edit_file 精确改写）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -352,7 +351,7 @@
         "type": "function",
         "function": {
             "name": "save_to_history",
-            "description": "将一个文件存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。",
+            "description": "将一个文件存到跨会话保留的 history 文件夹，并返回该文件的 history 引用。可用 path 参数指定嵌套文件夹（必须已存在），返回路径形引用如 \"项目/资料/笔记\"。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -363,6 +362,10 @@
                     "history_ref": {
                         "type": "string",
                         "description": "转存后的文件名（不填则自动生成）"
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "可选；history 下的嵌套文件夹路径（如 \"项目/资料\"，必须已存在，先用 create_history_folder 创建），留空存根目录"
                     }
                 },
                 "required": [
@@ -432,7 +435,7 @@
                     },
                     "ref": {
                         "type": "string",
-                        "description": "临时文件引用名，例如 json_1；只有修改文件时需要用到该参数。"
+                        "description": "临时文件引用名，例如 text_1；创建新文件不要填写，否则无法创建。"
                     },
                     "mode": {
                         "type": "string",
@@ -647,6 +650,117 @@
                     "ref",
                     "content",
                     "line_start"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "zip_files",
+            "description": "把多个引用文件打包为一个 zip 并直接转存到 history（自定义文件名，自动补 .zip 后缀）。压缩包最大 50MiB，超出会中止并报错；引用中存在重复文件名也会报错。打包后可用 send_file 发送给用户。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "refs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "要打包的文件引用列表，例如 [\"file_1\", \"text_1\", \"history_N\"]"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "打包后的 zip 文件名（可省略 .zip 后缀），例如 \"会议资料\""
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "可选；把 zip 放入 history 下指定文件夹（支持嵌套路径，必须已存在），留空放根目录"
+                    }
+                },
+                "required": [
+                    "refs",
+                    "name"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "screenshot_page",
+            "description": "对网页或 SVG/HTML 文件做内部预览截图，返回一张限时有效的截图 url。\nprompt 非空时会直接把截图交给视觉模型按 prompt 分析并返回分析文本（等价于截图后再调 view_image）；\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要截图的网页地址（公网 http/https，拒绝内网）"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "要截图的 svg/html 文件引用，例如 file_1"
+                    },
+                    "width": {
+                        "type": "integer",
+                        "description": "视口宽度像素，100-3840，默认 1280"
+                    },
+                    "height": {
+                        "type": "integer",
+                        "description": "视口高度像素，100-3840，默认 800"
+                    },
+                    "wait_ms": {
+                        "type": "integer",
+                        "description": "等待页面加载/动态渲染的毫秒数，0-15000，默认 1000"
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "分析要求；填写后截图直接交给视觉模型分析并返回文本结果"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_history_folder",
+            "description": "在 history 下创建新文件夹（支持 a/b 嵌套路径，但父目录必须已存在，逐级创建；history 即根目录）。创建后可用 move_history_file 移入文件，或用 zip_files 的 folder 参数放入。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "文件夹名称，支持嵌套路径如 \"项目/资料\"（各段仅中英文/数字/_-.）"
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "move_history_file",
+            "description": "把 history 里的文件移动到指定文件夹（支持嵌套路径；目标文件夹必须已存在，先用 create_history_folder 创建；folder 留空移回根目录）。移动后原引用失效，返回含文件夹路径的新引用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要移动的历史文件引用"
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "目标文件夹名称；留空移回 history 根目录"
+                    }
+                },
+                "required": [
+                    "ref",
+                    "folder"
                 ]
             }
         }

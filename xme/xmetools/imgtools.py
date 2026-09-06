@@ -560,3 +560,40 @@ def compress_image_to_size(
 if __name__ == "__main__":
     os.makedirs("./data/images/screenshots", exist_ok=True)
     take_screenshot(2)
+
+
+async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800,
+                                  wait_ms: int = 1000, timeout_secs: float = 45.0) -> bytes:
+    """用系统 Chrome 无头模式对 url 截图，返回 PNG 字节。
+
+    wait_ms 经 --virtual-time-budget 控制页面加载/动态渲染的等待时间；
+    width/height 为视口大小。调用方需自行完成 URL 的安全校验（SSRF 等）。
+    """
+    import asyncio
+    import tempfile
+    fd, out_path = tempfile.mkstemp(suffix=".png")
+    os.close(fd)
+    cmd = [
+        "google-chrome", "--headless=new", "--disable-gpu",
+        "--hide-scrollbars", "--mute-audio", "--no-first-run", "--disable-extensions",
+        f"--screenshot={out_path}",
+        f"--window-size={int(width)},{int(height)}",
+        f"--virtual-time-budget={int(max(0, wait_ms))}",
+        f"--timeout={int(timeout_secs * 1000)}",
+        url,
+    ]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=timeout_secs + 15)
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise RuntimeError(f"Chrome 截图超时（>{timeout_secs + 15:.0f}s）")
+        if proc.returncode != 0 or not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
+            raise RuntimeError(f"Chrome 截图失败（exit={proc.returncode}）")
+        with open(out_path, "rb") as f:
+            return f.read()
+    finally:
+        if os.path.exists(out_path):
+            os.unlink(out_path)

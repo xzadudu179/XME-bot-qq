@@ -13,7 +13,7 @@ import config
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, safe_join
+from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import is_text_can_send, send_session_msg, aget_arg_with_timeout, setup_logger
@@ -33,8 +33,8 @@ from .constants import (
     COMPRESS_TRIGGER,
     CONTEXT_KEEP_RECENT,
     COMPRESS_MAX_LENGTH,
+    THINKING_PARAMS,
 )
-from . import functions
 from . import history
 from . import share
 from .session import AISession, current_storage, normal_insert_enabled
@@ -143,10 +143,12 @@ class AIHelper:
             return safe_join(self.get_temp_path(), file_name)
         if not use_history:
             raise KeyError(f"无法找到引用 {ref}")
-        # 跨会话推导：history_N 或自定义安全文件名
-        derived = history_file_name(ref)
-        if derived is not None:
-            candidate = safe_join(self.get_history_path(), derived)
+        # history 嵌套文件夹内的文件："文件夹/.../文件名"（各段过 is_safe_custom_name 防穿越）
+        parts = ref.split("/")
+        if 1 < len(parts) and all(is_safe_custom_name(p) for p in parts):
+            candidate = self.get_history_path()
+            for part in parts:
+                candidate = safe_join(candidate, part)
             if candidate.exists():
                 self.ref_map[ref] = str(candidate)
                 return candidate
@@ -179,6 +181,7 @@ class AIHelper:
         self.spent_secs = Timer()
         # 上次回应时间
         self.last_response = 0
+        from . import functions
         # 工具使用依赖注入：所有 tool 都是独立函数，需要 agent 的函数声明 agent 形参，
         # 由 execute_tool 在执行时注入，避免工具内部再实例化 agent 造成连环调用。
         self.tool_functions = {
@@ -240,7 +243,9 @@ class AIHelper:
                         f"({tool_call.function.arguments})"
                     )
 
-            # 把 assistant 的原始消息加入历史
+            # 把 assistant 的原始消息加入上下文（含 reasoning_content）。
+            # 交错式思考的硬性要求（GLM 文档）：工具结果必须与未修改的
+            # reasoning_content 一并回传，model_dump 原样保留该字段
             assistant_message = message.model_dump(exclude_none=True)
 
             messages.append(assistant_message)
@@ -335,10 +340,7 @@ class AIHelper:
             model=model,
             messages=messages,
             tools=self.tools,
-            thinking={
-                "type": "enabled",
-                # "clear_thinking": False # 太费钱了
-            },
+            thinking=dict(THINKING_PARAMS),
             tool_choice="auto",
             temperature=0.5,
         )

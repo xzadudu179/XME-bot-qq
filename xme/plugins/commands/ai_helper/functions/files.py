@@ -1,190 +1,21 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
+"""文件类工具：temp/history 的读写、搜索、改写、转存、发送与清理。"""
 from pathlib import Path
-import html
-import mimetypes
-import random
-import re
 import shutil
-import time
-import traceback
-import functools
-from urllib.parse import urlparse
-from uuid import uuid4
-
-from config import CONTAINER_BOT_PATH
-from nonebot import MessageSegment
+import re
+import zipfile
+from typing import Literal
 
 from nonebot.log import logger
-from xme.xmetools.filetools import (
-    bytes_to_file,
-    decode_text,
-    detect_file_type,
-    get_local_file_url,
-    search_json,
-    history_file_name,
-    is_safe_custom_name,
-    safe_join,
-    dir_usage,
-    text_to_file,
-    FileType,
-    to_container_path,
-)
-from xme.xmetools.videotools.probe import get_video_duration
-from xme.xmetools.bottools import bot_call_action
-from .session import AISession
 from xme.xmetools.dicttools import reverse_dict
-from xme.xmetools.imgtools import get_url_image, image_to_base64, limit_size
-from xme.xmetools.reqtools import fetch_file_stream, glm_api_request
+from xme.xmetools.filetools import (
+    decode_text, detect_file_type, search_json, history_file_name,
+    is_safe_custom_name, safe_join, dir_usage, FileType, text_to_file, to_container_path,
+)
 from xme.xmetools.texttools import regex_filter
-from xme.xmetools.timetools import TELIA_CLOCK
-from zai import ZhipuAiClient
-from keys import GLM_API_KEY, TAVILY_API_KEY
-from typing import Literal
-from tavily import AsyncTavilyClient
-from xme.xmetools.msgtools import aget_arg_with_timeout, create_image_message, send_session_msg, is_text_can_send
-from character import get_message
-import asyncio
-from .constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE, IMAGE_GEN_CREDITS, MAX_DOWNLOAD_FILE_SIZE
-
-# AI 用到的函数名列表，需要与实际定义的函数名相符
-__tools__ = [
-    "get_telia_clock_state",
-    "gen_image",
-    "get_skill_md",
-    "check_file",
-    "list_files",
-    "save_to_history",
-    "find_history_file",
-    "write_to_history",
-    "write_to_temp",
-    "delete_history_file",
-    "rename_history_file",
-    "clear_history_files",
-    "inprocess_report",
-    "ocr_image",
-    "view_document_file",
-    "view_image",
-    "view_video",
-    "read_webpage",
-    "web_search",
-    "content_search",
-    "get_webs_partial",
-    "get_user_input_urls",
-    "download",
-    "send_file",
-    "edit_file",
-    "name_session",
-    "dice",
-    "ask_user"
-]
-
-# 低优先级 TODO: 给 AI 一个受限 python 沙箱（需要能防住卡死、rm -rf /*、等等攻击内容的完全受控制 python 沙箱，沙箱可以单独封装至 xmetools，并给 AI 提供一个工具，若能保证完全安全，以后还能给用户使用（但是要加很多限制，比如性能方面的各种还有防注入和突破限制。
-
-
-# detect_file_type 的文件类别 → 默认扩展名（URL 与 Content-Type 都无法识别时兜底）
-_TYPE_EXTENSIONS = {
-    FileType.IMAGE: ".png",
-    FileType.PDF: ".pdf",
-    FileType.ARCHIVE: ".zip",
-    FileType.TEXT: ".txt",
-    FileType.BINARY: ".bin",
-    FileType.EMPTY: ".bin",
-}
-
-
-def _url_suffix(url: str) -> str:
-    """从 URL 路径取扩展名（2~6 位字母数字的 .xxx）；没有则返回空串。"""
-    suffix = Path(urlparse(url).path).suffix.lower()
-    if 2 <= len(suffix) <= 6 and re.fullmatch(r"\.[a-z0-9]+", suffix):
-        return suffix
-    return ""
-
-
-def _exception_detail(ex: BaseException) -> str:
-    """异常的可读描述：始终带类型名；str() 失败或为空（如 TimeoutError）时退化为类型名/repr。"""
-    try:
-        msg = str(ex).strip()
-    except Exception:
-        msg = ""
-    return f"{type(ex).__name__}: {msg}" if msg else type(ex).__name__
-
-async def ask_user(prompt: str, session, timeout: int = 120):
-    from .agent import AISTOP
-    from . import __plugin_name__
-    send_time = time.time()
-    if timeout > 400:
-        timeout = 400
-    interval = 0
-    islegal = False
-    while interval < 3 and not islegal:
-        reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
-        reply_time = time.time()
-        interval = reply_time - send_time
-        if interval < 3:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_too_fast"))
-            continue
-        islegal = await is_text_can_send(session, reply, 4)
-        if not islegal:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
-            continue
-    if not reply:
-        return "[用户未在时限内回复任何内容]"
-    if reply == "aistop":
-        return AISTOP
-    await send_session_msg(session, get_message("plugins", __plugin_name__, "user_content_reply"))
-    return f"[用户回复] {reply}"
-
-async def download(url: str, agent):
-    """异步下载 url 指向的文件到 temp 文件夹（上限 MAX_DOWNLOAD_FILE_SIZE）。
-    """
-    # 网页里抄来的链接常带 HTML 实体（&amp; 等），还原成原始字符
-    url = html.unescape((url or "").strip())
-    if urlparse(url).scheme not in ("http", "https"):
-        return "[下载失败：url 需要以 http:// 或 https:// 开头]"
-    try:
-        data, content_type = await fetch_file_stream(url, max_size=MAX_DOWNLOAD_FILE_SIZE)
-    except ValueError as ex:
-        return f"[下载失败：{ex}]"
-    except TimeoutError:
-        logger.warning(f"下载超时: {url}")
-        return "[下载失败：连接/下载超时（60s），目标站点可能不可达（被墙）或响应过慢]"
-    except Exception as ex:
-        logger.exception(f"下载 {url} 失败")
-        return f"[下载失败：{_exception_detail(ex)}]"
-    if not data:
-        return "[下载失败：文件为空]"
-
-    # 先落盘探测类型：扩展名（URL → Content-Type → detect_file_type）+ 文本转 utf-8
-    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
-    probe.write_bytes(data)
-    suffix = _url_suffix(url)
-    if not suffix:
-        main_type = content_type.split(";")[0].strip().lower()
-        guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
-        suffix = guessed if guessed and main_type != "application/octet-stream" else ""
-    if not suffix:
-        suffix = _TYPE_EXTENSIONS.get(detect_file_type(probe), ".bin")
-    if detect_file_type(probe) == FileType.TEXT:
-        data = decode_text(data).encode("utf-8")
-    probe.unlink(missing_ok=True)
-
-    try:
-        res = bytes_to_file(data, agent.user_id, suffix, agent)
-    except FileExistsError as ex:
-        # 查重命中：报错中止，不分配新 ref；反查已有引用供 AI 直接使用（不产生第二个引用）
-        dup_name = str(ex)
-        existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
-        hint = f"，直接使用已有引用 {existing_ref} 即可" if existing_ref else "（无本会话引用，可能是之前会话遗留）"
-        return {"result": f"[下载中止：相同内容的文件已存在于 temp（{dup_name}）{hint}]",
-                "ref": existing_ref, "file_name": dup_name, "size": len(data), "no_compress": True}
-    result_text = (
-        f"已下载到 temp：{res['file_name']}（{res['size'] / 1048576:.2f} MiB），"
-        f"引用 {res['ref']}。文本文件可用 check_file 查看内容，"
-        f"其他类型可用 view_document_file / view_image / view_video 查看，或用 save_to_history 转存。"
-    )
-    return {"result": result_text, "ref": res["ref"], "file_name": res["file_name"],
-            "size": res["size"], "no_compress": True}
-
+from xme.xmetools.bottools import bot_call_action
+from ..constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE
+from ._common import exception_detail
 
 async def send_file(ref: str, new_name="", agent=None):
     """把 ref 指向的文件（temp/history 均可）以私聊文件消息发送给当前用户。"""
@@ -201,7 +32,7 @@ async def send_file(ref: str, new_name="", agent=None):
     if session is None or getattr(session, "bot", None) is None:
         return {"result": "[发送失败：无法获取会话上下文]", "no_compress": True}
     send_path = path
-    if new_name:
+    if new_name and new_name != path.name:
         # new_name 仅作为展示文件名：校验安全后复制到通用临时目录再上传，
         # 防止路径穿越/绝对路径借 copy2 写到任意位置（is_safe_custom_name 拒绝 / 与 ..）
         if not is_safe_custom_name(new_name):
@@ -214,7 +45,7 @@ async def send_file(ref: str, new_name="", agent=None):
             shutil.copy2(path, send_path)
         except Exception as ex:
             logger.exception(f"准备发送文件失败: {path} -> {send_path}")
-            return {"result": f"[发送失败：{_exception_detail(ex)}]", "no_compress": True}
+            return {"result": f"[发送失败：{exception_detail(ex)}]", "no_compress": True}
     try:
         await bot_call_action(
             session.bot, "upload_private_file",
@@ -224,7 +55,7 @@ async def send_file(ref: str, new_name="", agent=None):
         )
     except Exception as ex:
         logger.exception(f"私聊发送文件失败: {send_path}")
-        return {"result": f"[发送失败：{_exception_detail(ex)}]",
+        return {"result": f"[发送失败：{exception_detail(ex)}]",
                 "no_compress": True}
     finally:
         if send_path is not path:
@@ -272,7 +103,8 @@ def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 
         new_part = content.splitlines() if content else []
         new_lines = lines[:line_start - 1] + new_part + lines[end:]
         changed_at = line_start
-    new_text = "\n".join(new_lines) + ("\n" if new_lines and (trailing_newline or content) else "")
+    # 保持原文件的尾换行语义：原来有尾换行（或结果为空）才补 \n，改写本身不引入新换行
+    new_text = "\n".join(new_lines) + ("\n" if new_lines and trailing_newline else "")
     # 若目标是 history 文件，写入前检查其资源上限
     try:
         if Path(path).is_relative_to(agent.get_history_path().resolve()):
@@ -289,153 +121,6 @@ def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 
     return {"result": (f"已改写 {ref} 第 {changed_at} 行附近（现共 {len(new_lines)} 行），"
                        f"可再次用 content_search / check_file 确认。改后局部：\n{preview}"),
             "no_compress": True}
-
-
-def get_user_input_urls(agent):
-    return agent.user_input_urls
-
-def dice(faces: int, count: int = 1):
-    if count > 100:
-        return "[骰子数量不能大于 100 个]"
-    if faces > 1000000:
-        return "[骰子面数不能大于 1000000]"
-    rs = [random.randint(1, faces) for _ in range(count)]
-    rs_str = ', '.join(map(str, rs))
-    return f"{count}d{faces} → (总计{sum(rs)}) {rs_str}"
-
-def name_session(name: str, agent=None):
-    """为当前 AI 会话命名/重命名（会话名会显示在用户的会话列表中）。
-
-    适合在对话主题明确时调用，例如讨论写小说的对话可命名为 "小说写作"。
-    当前是共享会话时只改显示标题（群号码/目录不变，普通/群主同名规则见 share.py）；
-    当前是默认会话时会把默认会话的内容整体提升为命名会话，默认会话复位为空；
-    当前已有名字时直接重命名（历史与转存文件会一并移动）。
-    用户手动命名过的会话不可修改（会返回错误）。
-    """
-    if agent is None:
-        return "[错误：无法获取当前会话上下文]"
-    name = (name or "").strip()
-    # 共享会话：目录以群号码命名，改名只更新 meta 的 title 展示字段
-    shared = getattr(agent, "shared", None)
-    if shared is not None:
-        if shared.rename(name):
-            return f"[已将共享会话 {shared.code} 改名为 \"{shared.title}\"（只改显示标题，不影响群号码）]"
-        return "[重命名失败：标题需为 1-20 字符且不含特殊符号，请换一个名字]"
-    old_name = agent.ai_session
-    name = name.replace(" ", "_")
-    if not AISession.is_valid_name(name):
-        return "[错误：会话名不合法。请控制在 20 字符以内，使用中英文/数字/_-（不以点开头、不含特殊符号），且不能叫 default 或以 history_ 开头]"
-    session_obj = AISession(agent.user_id, old_name)
-    if session_obj.is_locked():
-        return "[错误：当前会话的名字由用户手动指定，AI 不可修改。请不要再重命名该会话]"
-    # 旧目录要在 rename 之前捕获（rename 会就地改变 session_obj.ai_session）
-    old_dir = session_obj.dir_path
-    if session_obj.is_default:
-        new_session = AISession.promote_default(agent.user_id, name)
-    else:
-        new_session = session_obj if session_obj.rename(name) else None
-    if new_session is None:
-        return f"[重命名失败：目标名 \"{name}\" 可能已被使用，请换一个名字]"
-    # 会话目录可能整体移动，ref_map 里指向旧目录的路径同步更新
-    new_dir = new_session.dir_path
-    for ref, path in list(agent.ref_map.items()):
-        p = Path(path)
-        if old_dir in p.parents:
-            agent.ref_map[ref] = str(new_dir / p.relative_to(old_dir))
-    agent.ai_session = new_session.ai_session
-    return f"[已为当前会话命名 \"{new_session.ai_session}\"（原 \"{old_name}\"）]"
-
-
-def get_telia_clock_state():
-    return TELIA_CLOCK.get_current_state()
-
-# 将其作为内部函数
-async def get_image_msg(url, max_size = 1024):
-    image = await get_url_image(url, headers={
-        "Authorization": f"Bearer {GLM_API_KEY}"
-    })
-    # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
-    if max_size > 0:
-        image = limit_size(image, max_size)
-    b64 = image_to_base64(image)
-    # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
-    try:
-        result = await asyncio.to_thread(create_image_message, b64, summary="[AI_helper的图片]")
-        return result
-    except Exception as e:
-        logger.error(f"发生错误: {e}")
-        logger.exception(traceback.format_exc())
-        return MessageSegment.text("[图片加载失败]")
-
-def get_skill_md(name: str, agent=None):
-    skill = ""
-    content = ""
-    try:
-        with open(f"./static/skills/{name}.md", 'r', encoding="utf-8") as file:
-            skill = file.read()
-    except Exception as ex:
-        content = f"[寻找 skill 文件发生错误：{ex}]"
-    if skill == "":
-        content = "[这个 skill 似乎是空白的。]"
-    content = skill
-    agent.activate_skills.append(name)
-    return {"result": content, "no_compress": True}
-
-async def ocr_image(url, agent=None):
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
-    try:
-        response = await asyncio.to_thread(
-            client.layout_parsing.create,
-            model="glm-ocr",
-            file=url
-        )
-        result = response.md_results
-        if agent is not None:
-            agent.tokens += response.usage.total_tokens * 0.125
-        # response.usage.prompt_tokens_details.
-        if result is None:
-            return "[没有识别到内容]"
-        return result
-    except Exception as ex:
-        logger.exception(f"图片 OCR 失败: {ex}")
-        return f"[图片 OCR 失败: {ex}]"
-
-async def inprocess_report(message: str, agent):
-    from .constants import __plugin_name__
-    # 最小间隔s
-    MIN_INTERVAL = 30
-    try:
-        last_response_time = agent.last_response
-        curr_response_time = time.time()
-        interval = curr_response_time - last_response_time
-        if interval < 30:
-            return f"[调用回复失败：最小间隔为 {MIN_INTERVAL}s，当前距离上次调用间隔为 {interval}s。]"
-        # 中途汇报内容给用户
-        await send_session_msg(agent.session, get_message("plugins", __plugin_name__, "inprocess_report", msg=message))
-        agent.last_response = time.time()
-        return f"成功向用户发送消息"
-    except Exception as ex:
-        return f"[发送消息失败：{ex}]"
-
-async def gen_image(prompt, size="1024x1024", agent=None):
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
-    try:
-        response = await asyncio.to_thread(
-            client.images.generations,
-            model="glm-image",
-            prompt=prompt,
-            size=size,
-            # quality=quality,
-            quality="hd",
-        )
-        if agent is not None:
-            # 图片生成按 80000 tokens 算
-            agent.other_credits += IMAGE_GEN_CREDITS
-        image_msg = await get_image_msg(response.data[0].url)
-        return image_msg
-    except Exception as e:
-        logger.exception(f"图片生成失败: {e}")
-        return f"[图片生成失败: {e}]"
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter", "by_line"] = "re_search", agent=None):
     """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，可配合 edit_file 精确改写）。
@@ -520,153 +205,6 @@ def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_searc
 
     return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_json(search_str, path, key, search_func=method))]), "no_compress": True}
 
-async def web_search(query: str, max_results: int = 10, depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "basic", time_range: str = "year"):
-    tavily = AsyncTavilyClient(
-        api_key=TAVILY_API_KEY
-    )
-    result = await tavily.search(
-        query=query,
-        max_results=max_results,
-        search_depth=depth,
-        time_range=time_range
-    )
-    return {
-        "query": query,
-        "results": [
-            {
-                "title": item["title"],
-                "url": item["url"],
-                "content": item["content"],
-            }
-            for item in result["results"]
-        ]
-    }
-
-async def view_document_file(ref: str = "", url: str = "", prompt: str = "", agent=None):
-    return await view_item(ref, url, prompt, item_type="file", agent=agent)
-
-async def view_video(ref: str = "", url: str = "", prompt: str = "", agent=None):
-    path_or_url = url
-    if ref:
-        path_or_url = agent.resolve_ref(ref)
-    dur = await get_video_duration(path_or_url)
-    if not dur:
-        return "[查看视频错误：无法解析视频文件时长]"
-    if dur > 600:
-        return "[查看视频错误：视频时长过长 (>10分钟)]"
-    return await view_item(ref, url, prompt, item_type="video_url", agent=agent)
-
-async def view_image(ref: str = "", url: str = "", prompt: str = "", agent=None):
-    return await view_item(ref, url, prompt, item_type="image_url", agent=agent)
-
-async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", agent=None):
-    """调用 glm-5.3-flash 查看 url 里的内容，并按用户 prompt 回答。
-
-    作为 AI 可调用 tool 使用：AI 传入 url 和 prompt，本函数使用 glm-5.3-flash
-    查看该 url 的内容（图片/视频/文件等），并将模型解读结果返回给 AI。
-    模型消耗的 tokens 会通过 agent 计入用户 credits。
-    """
-    if ref:
-        url = get_local_file_url(agent.resolve_ref(ref))
-    if not url:
-        return "[分析 url 内容错误：ref 与 url 均无内容]"
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
-    system_prompt = (
-        "你是一个用于查看并解析指定 url 内容的模型。"
-        "请根据用户给出的 prompt，仔细查看 url 里的内容并回答。"
-        "如果内容是一张图片或视频，描述/分析其内容；如果是文件，提取并总结关键信息。"
-        "输出应当准确、简洁、直接，不要编造图片或文本里不存在的内容。"
-    )
-    name = ""
-    match item_type:
-        case "file":
-            name = "file_url"
-        case "image_url":
-            name = "url"
-        case "video_url":
-            name = "url"
-        case _:
-            raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            {"type": item_type, item_type: {name: url}},
-        ]},
-    ]
-    try:
-        response = await asyncio.to_thread(
-            client.chat.asyncCompletions.create,
-            model="glm-5.3-flash",
-            messages=messages,
-            temperature=0.3,
-        )
-        task_id = response.id
-        MAX_TRY_TIMES = 500
-        try_times = 0
-        while try_times < MAX_TRY_TIMES:
-            try_times += 1
-            result = await asyncio.to_thread(
-                client.chat.asyncCompletions.retrieve_completion_result,
-                id=task_id,
-            )
-            if result.task_status == "SUCCESS":
-                break
-            if result.task_status == "FAIL":
-                raise RuntimeError("view_file 模型任务失败")
-            await asyncio.sleep(0.5)
-        # 计费 tokens 到 credits（跟随会话模型倍率折算）
-        if agent is not None:
-            agent.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
-        content = result.choices[0].message.content
-        return content if content else "[没有识别到内容]"
-    except Exception as ex:
-        logger.exception(f"查看 url 内容失败: {ex}")
-        return f"[查看文件失败: {ex}]"
-
-GLM_API_BASE = "https://open.bigmodel.cn/api"
-
-async def read_webpage(
-    url: str,
-    timeout: int = 20,
-    return_format: str = "markdown",
-    no_cache: bool = False,
-    retain_images: bool = True,
-):
-    """读取并解析指定 url 的网页内容，返回网页正文（默认 markdown）。
-
-    作为 AI 可调用 tool 使用：AI 传入 url 与可选参数，调用智谱「网页阅读」工具 API
-    （POST /paas/v4/reader），返回网页解析后的主要内容。
-    """
-    if timeout > 100:
-        return f"[网页阅读：timeout 值不能大于 100 秒]"
-    try:
-        result = await glm_api_request(
-            "/paas/v4/reader",
-            url=url,
-            timeout=timeout,
-            return_format=return_format,
-            no_cache=no_cache,
-            retain_images=retain_images,
-        )
-        if not isinstance(result, dict) or "reader_result" not in result:
-            return f"[网页阅读失败: {result}]"
-        reader_result = result.get("reader_result", {}) or {}
-        content = reader_result.get("content", "")
-        description = reader_result.get("description", "")
-        if not reader_result:
-            return "[网页内容为空或无法解析]"
-        # 计费 tokens 到 credits（接口不返回用量，按内容长度估算）
-        # if agent is not None:
-            # agent.other_credits += len(content) / CHARS_PER_TOKEN
-        title = reader_result.get("title", "")
-        return f"{('【' + title + '】') if title else ''}{description}\n{content}" if title else content
-        # return reader_result
-    except Exception as ex:
-        logger.exception(f"网页阅读失败: {ex}")
-        return f"[网页阅读失败: {ex}]"
-
-
 def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
     """获取保存进用户 temp 的文本文件的内容。"""
     path = agent.resolve_ref(ref)
@@ -710,6 +248,12 @@ def list_files(folder="temp", agent=None):
             else:
                 fsize = "unknown"
             lines.append(f"{ref}: {f.name} | size: {fsize}")
+        folders = sorted([d for d in hist_path.iterdir() if d.is_dir()])
+        if folders:
+            lines.append("# 文件夹（move_history_file / zip_files 的 folder 参数可用这些名称）")
+            for d in folders:
+                d_usage = dir_usage(d)
+                lines.append(f"{d.name}/ - {d_usage['count']} 个文件 / {d_usage['size']:,} B")
         return "\n".join(lines)
     reversed_ref_map = reverse_dict(agent.ref_map)
     files = [f"{reversed_ref_map.get(f.name, None)}: {f.name} | size: {(f.stat().st_size / 1024):,.3f} KiB" for f in agent.get_temp_path().iterdir() if f.is_file()]
@@ -722,12 +266,22 @@ def _history_file(ref: str, agent, register: bool = False):
     所有历史文件操作（定位 / 写入 / 追加 / 删除 / 重命名 / 转存）都应通过
     本函数获取引用与路径，以保证引用格式校验、会话文件夹与 ref_map 注册行为一致。
     register=True 时会把引用注册到 agent.ref_map（供 check_file 等后续使用）。
-    非法引用（非 history_<数字>，防路径穿越）返回 None。
+    ref 支持（history 为根目录，各段均过 is_safe_custom_name 防路径穿越，可嵌套多层文件夹）：
+    - history_N → history_N.tmp；
+    - 安全自定义文件名 → 根目录下同名文件；
+    - "文件夹/.../文件名" → history 下嵌套文件夹内的文件。
+    非法引用返回 None。
     """
-    file_name = history_file_name(ref)
+    parts = ref.split("/")
+    if any(not p or not is_safe_custom_name(p) for p in parts):
+        return None
+    path = agent.get_history_path()
+    for folder in parts[:-1]:
+        path = safe_join(path, folder)
+    file_name = history_file_name(parts[-1])
     if file_name is None:
         return None
-    path = safe_join(agent.get_history_path(), file_name)
+    path = safe_join(path, file_name)
     if register:
         agent.ref_map[ref] = str(path)
     return ref, path
@@ -890,12 +444,14 @@ def rename_history_file(ref: str, new_ref: str = "", agent=None):
         return {"result": f"[重命名失败：{ex}]", "no_compress": True}
 
 
-def save_to_history(ref, history_ref="", agent=None):
-    """转存文件到 history 文件夹，生成引用。
+def save_to_history(ref, history_ref="", path="", agent=None):
+    """转存文件到 history（可选嵌套文件夹），生成路径形引用。
     ref: 来源文件引用（temp 的 file_N/text_N/json_N 或已有历史引用）。
     文本文件按文本转存（走 write_to_history）；图片/PDF/压缩包等二进制按
     原始字节转存并保留原扩展名。
     history_ref: 可选，保存时自定义名（history_N 或安全自定义名如 笔记.md）；不填自动分配 history_N；已存在会报错。
+    path: 可选，history 下的嵌套文件夹路径（如 "项目/资料"，必须已存在，
+    先用 create_history_folder 创建）；填写后返回的引用为 "路径/名称" 形式。
     """
     try:
         src_path = agent.resolve_ref(ref)
@@ -907,17 +463,29 @@ def save_to_history(ref, history_ref="", agent=None):
     data = src_path.read_bytes()
     if not data:
         return {"result": "[转存失败：没有内容可保存]", "no_compress": True}
-    # 自定义名：统一校验 + 防重名
+    # 目标文件夹：嵌套路径各段校验 + 必须已存在（不自动创建）
+    parts = [p for p in (path or "").strip().split("/") if p]
+    if any(not is_safe_custom_name(p) for p in parts):
+        return {"result": f"[转存失败：文件夹路径 {path} 不合法（仅允许中英文/数字/_-. 的段）]", "no_compress": True}
+    folder_dir = agent.get_history_path()
+    for part in parts:
+        folder_dir = safe_join(folder_dir, part)
+    if parts and not folder_dir.is_dir():
+        return {"result": f"[转存失败：文件夹 {'/'.join(parts)} 不存在（请先用 create_history_folder 创建）]", "no_compress": True}
+    # 自定义名：统一校验 + 防重名（引用为 路径/名称 形式，便于直接被其他工具解析）
     if history_ref:
-        res = _history_file(history_ref, agent)
+        if "/" in history_ref:
+            return {"result": f"[无效的历史文件引用名：{history_ref}]（名称不含 /，路径请用 path 参数）", "no_compress": True}
+        ref_id = "/".join([*parts, history_ref]) if parts else history_ref
+        res = _history_file(ref_id, agent)
         if res is None:
             return {"result": f"[无效的历史文件引用名：{history_ref}]（仅支持 history_N 或安全自定义名）", "no_compress": True}
         _, target = res
         if target.exists():
-            return {"result": f"[历史文件 {history_ref} 已存在，请换名或先 delete_history_file]", "no_compress": True}
-        ref_id = history_ref
+            return {"result": f"[历史文件 {ref_id} 已存在，请换名或先 delete_history_file]", "no_compress": True}
     else:
-        ref_id = _next_history_ref(agent)
+        base = _next_history_ref(agent)
+        ref_id = "/".join([*parts, base]) if parts else base
     # 二进制文件：按原始字节转存，保留来源扩展名（文本文件仍走 write_to_history）
     if detect_file_type(src_path) != FileType.TEXT:
         if not history_ref:
@@ -972,3 +540,146 @@ def clear_history_files(agent=None):
         if not str(v).startswith("data/ai_historys/")
     }
     return {"result": f"已清空 history，共删除 {removed} 个文件", "no_compress": True}
+
+
+def zip_files(refs: list[str], name: str, folder: str = "", agent=None):
+    """把多个引用文件打包为一个 zip 并转存到 history（自定义名，自动补 .zip 后缀）。
+
+    - 压缩过程中压缩包超过 MAX_ZIP_SIZE 立即中止并删除半成品；
+    - 引用之间存在重复文件名（zip 内路径冲突）时报错；
+    - 目标名已存在/不安全时报错。成功返回 zip 的引用与详情。
+    """
+    if agent is None:
+        return {"result": "[打包失败：无法获取会话上下文]", "no_compress": True}
+    refs = [str(r).strip() for r in (refs or []) if str(r).strip()]
+    if not refs:
+        return {"result": "[打包失败：refs 不能为空]", "no_compress": True}
+    # 解析全部引用
+    items = []
+    for ref in refs:
+        try:
+            p = Path(agent.resolve_ref(ref))
+        except KeyError:
+            return {"result": f"[打包失败：没有找到引用 {ref}]", "no_compress": True}
+        if not p.is_file():
+            return {"result": f"[打包失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+        items.append((p.name, p, ref))
+    # zip 内重名检查（同一文件传两次、或不同目录同名文件都算冲突）
+    seen: dict[str, str] = {}
+    for arcname, _, ref in items:
+        if arcname in seen:
+            return {"result": f"[打包失败：存在重复的文件名 \"{arcname}\"（引用 {seen[arcname]} 与 {ref}），", "no_compress": True}
+        seen[arcname] = ref
+    # 目标名：安全校验 + 自动补 .zip
+    name = (name or "").strip()
+    if not name:
+        return {"result": "[打包失败：需要填写 zip 文件名]", "no_compress": True}
+    if not name.lower().endswith(".zip"):
+        name += ".zip"
+    parts = [p for p in (folder or "").strip().split("/") if p]
+    if any(not is_safe_custom_name(p) for p in parts):
+        return {"result": f"[打包失败：文件夹名 {folder} 不合法（仅允许中英文/数字/_-. 的段）]", "no_compress": True}
+    folder_dir = agent.get_history_path()
+    for part in parts:
+        folder_dir = safe_join(folder_dir, part)
+    if parts and not folder_dir.is_dir():
+        return {"result": f"[打包失败：文件夹 {'/'.join(parts)} 不存在（请先用 create_history_folder 创建）]", "no_compress": True}
+    target = safe_join(folder_dir, name)
+    if target.exists():
+        return {"result": f"[打包失败：历史文件 {name} 已存在，请换名]", "no_compress": True}
+    # 流式压缩：每写入一个文件检查一次压缩包体积，超限立即中止
+    part = target.with_name(target.name + ".part")
+    part.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with zipfile.ZipFile(part, "w", zipfile.ZIP_DEFLATED) as zf:
+            for arcname, p, ref in items:
+                zf.write(p, arcname=arcname)
+                if part.stat().st_size > MAX_ZIP_SIZE:
+                    raise ValueError(
+                        f"压缩包超过 {MAX_ZIP_SIZE // 1048576}MiB 上限（添加 {arcname} 后已达 "
+                        f"{part.stat().st_size / 1048576:.1f}MiB）")
+    except ValueError as ex:
+        part.unlink(missing_ok=True)
+        return {"result": f"[打包失败：{ex}]", "no_compress": True}
+    except Exception as ex:
+        part.unlink(missing_ok=True)
+        logger.exception(f"打包 zip 失败: {ex}")
+        return {"result": f"[打包失败：{ex}]", "no_compress": True}
+    # history 资源配额检查后落位
+    zip_size = part.stat().st_size
+    quota_error = _check_history_quota(target, zip_size, agent)
+    if quota_error:
+        part.unlink(missing_ok=True)
+        return {"result": quota_error, "no_compress": True}
+    target.parent.mkdir(parents=True, exist_ok=True)
+    part.rename(target)
+    ref = "/".join([*parts, name]) if parts else name
+    agent.ref_map[ref] = str(target)
+    file_list = "、".join(arcname for arcname, _, _ in items)
+    location = f"history 的 {'/'.join(parts)}/ 文件夹" if parts else "history 根目录"
+    return {
+        "result": (f"已打包 {len(items)} 个文件为 {name}（{zip_size / 1048576:.2f} MiB）并转存至 {location}，"
+                   f"引用 {ref}。包含：{file_list}。可用 send_file 发送或 view_document_file 查看。"),
+        "ref": ref,
+        "file_name": name,
+        "size": zip_size,
+        "files": list(seen.keys()),
+        "no_compress": True,
+    }
+
+
+def create_history_folder(name: str, agent=None):
+    """在 history 下创建一个新文件夹（history 即根目录；支持 a/b 嵌套路径）。
+
+    各段均过 is_safe_custom_name 防路径穿越；嵌套路径只创建最后一级，
+    父目录必须已存在（不自动创建中间层，请逐级创建）。
+    """
+    parts = [p for p in (name or "").strip().split("/") if p]
+    if not parts or any(not is_safe_custom_name(p) for p in parts):
+        return {"result": f"[创建失败：文件夹名 {name} 不合法（仅允许中英文/数字/_-. 的段，不含路径穿越）]", "no_compress": True}
+    path = agent.get_history_path()
+    for folder in parts[:-1]:
+        path = safe_join(path, folder)
+        if not path.is_dir():
+            return {"result": f"[创建失败：父文件夹 {folder} 不存在（嵌套路径请逐级创建）]", "no_compress": True}
+    path = safe_join(path, parts[-1])
+    if path.exists():
+        return {"result": f"[创建失败：文件夹 {'/'.join(parts)} 已存在]", "no_compress": True}
+    path.mkdir(parents=True)
+    return {"result": f"已在 history 创建文件夹 {'/'.join(parts)}/。可用 move_history_file 移入文件，"
+                      f"或 zip_files 打包时用 folder 参数放入该文件夹。",
+            "no_compress": True}
+
+
+def move_history_file(ref: str, folder: str = "", agent=None):
+    """把 history 里的文件移动到指定文件夹（支持嵌套路径；folder 为空移回根目录）。
+
+    目标文件夹必须已存在（不自动创建，请先用 create_history_folder 逐级创建）。
+    移动后旧引用失效，新引用为 "文件夹/.../原引用名"。
+    """
+    res = _history_file(ref, agent)
+    if res is None:
+        return {"result": f"[移动失败：无效的历史文件引用 {ref}]", "no_compress": True}
+    _, src = res
+    if not src.exists():
+        return {"result": f"[移动失败：历史文件 {ref} 不存在]", "no_compress": True}
+    parts = [p for p in (folder or "").strip().split("/") if p]
+    if any(not is_safe_custom_name(p) for p in parts):
+        return {"result": f"[移动失败：文件夹名 {folder} 不合法（仅允许中英文/数字/_-. 的段）]", "no_compress": True}
+    folder_dir = agent.get_history_path()
+    for part in parts:
+        folder_dir = safe_join(folder_dir, part)
+    if parts and not folder_dir.is_dir():
+        return {"result": f"[移动失败：文件夹 {'/'.join(parts)} 不存在（请先用 create_history_folder 创建）]", "no_compress": True}
+    target = safe_join(folder_dir, src.name)
+    if target.exists():
+        return {"result": f"[移动失败：目标位置已存在同名文件 {src.name}]", "no_compress": True}
+    src.rename(target)
+    # 旧引用随文件移动失效，登记含文件夹的新引用（后续工具按新引用定位）
+    agent.ref_map.pop(ref, None)
+    base_ref = ref.split("/")[-1]
+    new_ref = "/".join([*parts, base_ref]) if parts else base_ref
+    agent.ref_map[new_ref] = str(target)
+    return {"result": (f"已把 {ref} 移动到 {'/'.join(parts) + '/' if parts else 'history 根目录'}，"
+                       f"新引用为 {new_ref}（旧引用已失效）"),
+            "ref": new_ref, "no_compress": True}

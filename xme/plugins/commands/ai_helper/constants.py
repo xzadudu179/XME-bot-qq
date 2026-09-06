@@ -59,5 +59,17 @@ IMAGE_GEN_CREDITS = 80000
 # url 下载文件最大大小
 MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
 
+# zip_files 打包的压缩包大小上限
+MAX_ZIP_SIZE = 50 * 1024 * 1024
+
 # 共享会话插入模式：待插入消息队列上限（对话进行中其他成员的消息）
 MAX_PENDING_INSERTS = 5
+
+# GLM thinking 参数（交错式思考）：
+# 交错式思考自 GLM-4.5 起默认支持（工具调用之间/收到工具结果后继续思考），
+# 硬性要求是把 assistant 消息的 reasoning_content 原样随工具结果回传（run_agent 已实现）。
+# "clear_thinking": False 会额外开启保留式思考（跨轮保留思考内容，token 消耗显著更高）
+THINKING_PARAMS = {
+    "type": "enabled",
+    # "clear_thinking": False,
+}

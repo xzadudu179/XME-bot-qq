@@ -400,7 +400,8 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
         tips = [tips]
     tips_str = [f"- {t}\n" for t in tips]
     skills = {
-        "worldview_settings": "漠月、漠星和九九/九镹所在世界观相关的设定合集，在有世界观相关的问题可以调用。"
+        "worldview_settings": "漠月、漠星和九九/九镹所在世界观相关的设定合集，在有世界观相关的问题可以调用。",
+        "visual_design_artifact": "Generate art & visual-design artifacts as self-contained deliverables — SVG illustrations, icons, logos, cartoon scenes, SMIL loop animations, HTML/CSS visual pages, generative patterns — each verified by rendering. Use whenever the user asks to 画/设计/生成 anything visual, e.g. \"画一个……的 SVG 小动画\", \"设计一个 logo/图标/头像/海报/封面/banner\", \"来个循环动画/生成艺术/粒子效果\", or asks to fix or beautify an existing visual artifact (形状断开、云朵颠倒、配色乱、构图歪、比例怪 etc.). Even a bare \"帮我画个…\" counts. Document deliverables (docx/pptx/pdf) have their own skills, but the visual principles here still apply to their embedded graphics."
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)

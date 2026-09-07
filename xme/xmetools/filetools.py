@@ -231,6 +231,8 @@ def bytes_to_file(data: bytes, dir_name, suffix: str = ".bin", agent=None) -> di
     path, ref = _create_file_ref(dir_name, "file_", file_name, agent)
     with open(path / file_name, "wb") as file:
         file.write(data)
+    if agent is not None:
+        agent.note_file_state(path / file_name)  # AI 产出的文件登记内容指纹（edit_file 防过期错改）
     return {
         "file_name": file_name,
         "ref": ref,
@@ -251,6 +253,8 @@ def text_to_file(text: str, dir_name, agent=None) -> dict:
 
     with open(path / file_name, "w", encoding="utf-8") as file:
         file.write(text)
+    if agent is not None:
+        agent.note_file_state(path / file_name)  # AI 产出的文件登记内容指纹（edit_file 防过期错改）
 
     return {
         "file_name": file_name,
@@ -261,7 +265,7 @@ def text_to_file(text: str, dir_name, agent=None) -> dict:
                 .replace("\r", "\n")
                 .count("\n")
         ),
-        "path": path,
+        "path": str(path / file_name),
         "preview": text[:200],
     }
 
@@ -279,12 +283,14 @@ def dict_to_file(d: dict, dir_name, prefix="", agent=None,
     text = json.dumps(d, ensure_ascii=False)
     with open(path / file_name, "w", encoding="utf-8") as file:
         file.write(text)
+    if agent is not None:
+        agent.note_file_state(path / file_name)  # AI 产出的文件登记内容指纹（edit_file 防过期错改）
 
     return {
         "file_name": file_name,
         "ref": ref,
         "total_len": len(text),
-        "path": path,
+        "path": str(path / file_name),
         "preview": text[:200],
     }
 

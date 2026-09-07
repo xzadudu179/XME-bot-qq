@@ -1,5 +1,6 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
+import hashlib
 import re
 import shutil
 import json
@@ -194,6 +195,61 @@ class AIHelper:
             return f"./data/temp/{self.user_id}"
         return Path(f"./data/temp/{self.user_id}")
 
+    def note_file_state(self, path) -> None:
+        """记录文件当前内容指纹：AI 经工具读到/写出该文件时调用，供 edit_file 校验过期。"""
+        try:
+            resolved = Path(path).resolve()
+            data = resolved.read_bytes()
+        except OSError:
+            return
+        self.file_hashes[str(resolved)] = hashlib.sha256(data).hexdigest()
+
+    def file_changed_since_read(self, path) -> bool:
+        """该文件在 AI 最近一次读取后是否被外部改动。
+
+        无指纹记录（从未读过/--continue 后）视为未改动（fail-open）；有记录但内容
+        不符或文件已消失视为已改动。
+        """
+        resolved = Path(path).resolve()
+        recorded = self.file_hashes.get(str(resolved))
+        if recorded is None:
+            return False
+        try:
+            data = resolved.read_bytes()
+        except OSError:
+            return True
+        return hashlib.sha256(data).hexdigest() != recorded
+
+    def forget_file_state(self, path) -> None:
+        """清除文件指纹（文件被删除/改名后调用，防脏键）。"""
+        self.file_hashes.pop(str(Path(path).resolve()), None)
+
+    def save_file(self, path, data: str | bytes = "", mode: str = "w", binary: bool = False) -> None:
+        """写入文件并登记指纹（AI 产出文件的统一写入口，写完自动同步指纹）。
+
+        binary=True 按字节覆盖写；文本模式 mode 与 open() 一致（"w" 覆盖 / "a" 追加）。
+        新工具写文件一律走这里，不要手写 write 后再补 note_file_state。
+        """
+        p = Path(path)
+        if binary:
+            with open(p, "wb") as f:
+                f.write(data)
+        else:
+            with open(p, mode, encoding="utf-8") as f:
+                f.write(data)
+        self.note_file_state(p)
+
+    def rename_file(self, old, new) -> None:
+        """改名/移动文件并同步指纹（旧路径清除、新路径登记）。"""
+        Path(old).rename(new)
+        self.forget_file_state(old)
+        self.note_file_state(new)
+
+    def delete_file(self, path) -> None:
+        """删除文件并清除指纹；文件不存在时抛 FileNotFoundError（与 unlink 一致）。"""
+        Path(path).unlink()
+        self.forget_file_state(path)
+
     def delete_temp(self):
         # 清空临时目录，但保留 history 目录（history 仅在 /ai -c clear 时清空）
         for item in self.get_temp_path().iterdir():
@@ -272,6 +328,9 @@ class AIHelper:
             "pro": "glm-5.3",
         }
         self.ref_map = {}
+        # 文件内容指纹（路径 → sha256）：AI 经工具读到/写出文件时更新，
+        # edit_file 写入前比对，拦截"读取后文件被外部改动"的静默错改
+        self.file_hashes: dict[str, str] = {}
         self.tokens = 0
         self.other_credits = 0
         self.model_arg = model

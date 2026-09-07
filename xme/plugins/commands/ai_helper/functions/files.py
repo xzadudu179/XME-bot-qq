@@ -98,6 +98,11 @@ def edit_file(ref: str, old_string: str, new_string: str, replace_all: bool = Fa
         return {"result": f"[改写失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
     if detect_file_type(path) != FileType.TEXT:
         return {"result": "[改写失败：该文件不是文本文件]", "no_compress": True}
+    # 指纹校验：精确匹配只保证内容唯一，保证不了还是 AI 读到的那份——
+    # 读取后文件被外部改动（哪怕 old_string 仍能唯一匹配）一律拒绝，防静默错改
+    if agent.file_changed_since_read(path):
+        return {"result": "[改写失败：文件在读取后已经发生变化，请用 content_search 重新读取后再改写]",
+                "no_compress": True}
     raw = decode_text(path.read_bytes())
     match_count = raw.count(old_string)
     if match_count == 0:
@@ -130,7 +135,7 @@ def edit_file(ref: str, old_string: str, new_string: str, replace_all: bool = Fa
                 return {"result": quota_error, "no_compress": True}
     except (AttributeError, ValueError):
         pass
-    path.write_text(new_text, encoding="utf-8")
+    agent.save_file(path, new_text)  # 统一写入口：写后自动刷新指纹，连续编辑不被误拦
     new_lines = new_text.splitlines()
     preview_center = min(changed_at, max(1, len(new_lines)))
     preview = "\n".join(
@@ -152,6 +157,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
     """
     path = agent.resolve_ref(file_ref)
     text = decode_text(Path(path).read_bytes())
+    agent.note_file_state(path)
     cap = 100
     hits: list[str] = []
 
@@ -214,6 +220,7 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
 
 def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
     path = agent.resolve_ref(file_ref)
+    agent.note_file_state(path)
     method = None
     search_methods = {
         # "re_search": regex_search,
@@ -236,6 +243,7 @@ def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
             lines = file.readlines()
     except UnicodeDecodeError:
         return f"[文件无法以 utf-8 编码打开]"
+    agent.note_file_state(path)
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
     out = "\n".join([f'{i}: {l}' for i, l in enumerate(get_lines)])
     out = out if length == 0 else out[:length]
@@ -346,8 +354,7 @@ def write_to_temp(content: str, ref: str = "", mode: str = "w", agent=None):
         }
         if modes.get(mode) is None:
             return f"[无效的写入模式：{mode}，仅支持 w（覆盖）或 a（追加）]"
-        with open(path, modes[mode], encoding="utf-8") as file:
-            file.write(content)
+        agent.save_file(path, content, mode=mode)
         return f"[成功写入已存在的文件 \"{ref}\"]"
     return f"[成功写入文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 
@@ -384,12 +391,7 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
         return {"result": quota_error, "no_compress": True}
     ######
     try:
-        if mode == "a" and path.exists():
-            with open(path, "a", encoding="utf-8") as f:
-                f.write(content)
-        else:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(content)
+        agent.save_file(path, content, mode=mode)
         agent.ref_map[ref] = str(path)
         op = "追加" if mode == "a" else "覆盖写入"
         return {
@@ -412,7 +414,7 @@ def delete_history_file(ref: str, agent=None):
     if not path.exists():
         return {"result": f"[历史文件 {ref} 不存在]", "no_compress": True}
     try:
-        path.unlink()
+        agent.delete_file(path)
         agent.ref_map.pop(ref, None)
         return {"result": f"已删除历史文件 {ref}", "no_compress": True}
     except Exception as ex:
@@ -457,7 +459,7 @@ def rename_history_file(ref: str, new_ref: str = "", agent=None):
     if new_path.exists():
         return {"result": f"[目标引用 {new_ref} 已存在，请先删除或改名]", "no_compress": True}
     try:
-        old_path.rename(new_path)
+        agent.rename_file(old_path, new_path)
         agent.ref_map.pop(ref, None)
         agent.ref_map[new_ref] = str(new_path)
         return {
@@ -527,7 +529,7 @@ def save_to_history(ref, history_ref="", path="", agent=None):
         if quota_error:
             return {"result": quota_error, "no_compress": True}
         try:
-            target.write_bytes(data)
+            agent.save_file(target, data, binary=True)
         except Exception as ex:
             logger.exception(f"转存二进制文件失败: {ex}")
             return {"result": f"[转存失败：{ex}]", "no_compress": True}
@@ -649,7 +651,7 @@ def zip_files(refs_or_folders: list[str], name: str, folder: str = "", agent=Non
         part.unlink(missing_ok=True)
         return {"result": quota_error, "no_compress": True}
     target.parent.mkdir(parents=True, exist_ok=True)
-    part.rename(target)
+    agent.rename_file(part, target)  # 统一入口：改名并同步指纹（产出的 zip 也是 AI 的文件）
     ref = "/".join([*parts, name]) if parts else name
     agent.ref_map[ref] = str(target)
     file_list = "、".join(arcname for arcname, _, _ in items)
@@ -711,7 +713,7 @@ def move_history_file(ref: str, folder: str = "", agent=None):
     target = safe_join(folder_dir, src.name)
     if target.exists():
         return {"result": f"[移动失败：目标位置已存在同名文件 {src.name}]", "no_compress": True}
-    src.rename(target)
+    agent.rename_file(src, target)  # 统一入口：移动并同步指纹
     # 旧引用随文件移动失效，登记含文件夹的新引用（后续工具按新引用定位）
     agent.ref_map.pop(ref, None)
     base_ref = ref.split("/")[-1]

@@ -307,7 +307,7 @@ def cleanup_old_backups(
 def backup_data_dir(
         data_dir: Path = Path("data"),
         backup_root: Path = Path(".backup"),
-        max_backups: int = 500
+        max_backups: int = 300
     ) -> Path:
     """
     将 data 目录备份到 .backup/datas-YYYY-MM-DD_HH-MM-SS

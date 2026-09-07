@@ -17,6 +17,10 @@ random.seed()
 alias = ['抽奖', 'lot']
 TIMES_LIMIT = 5
 MAX_COIN_COUNT = 100
+# 设计回报率：单次期望 ≈ BASE_RETURN_RATE·arg − 0.25（0.25 为 int() 截断的固定损耗），
+# 净回报率 ≈ 0.5% − 0.25/arg，使 arg≥20 的平均净回报 ≈0%（arg<50 微亏、>50 微赚），
+# 峰值 +0.25%（arg=100），上限系数 4·BASE_RETURN_RATE=4.02 保持"最高约 4 倍"的暴击手感
+BASE_RETURN_RATE = 1.007
 cmd_name = 'lottery'
 usage = {
     "name": cmd_name,
@@ -109,7 +113,7 @@ async def _(session: CommandSession, user: User):
     result = 0
     for _ in range(count):
         random.seed()
-        result += random.randint(0, int(arg * (random.random() * 1.0325 * 4)))
+        result += random.randint(0, int(arg * (random.random() * BASE_RETURN_RATE * 4)))
     vars["lottery_lose_coins"] += result
     save_to_path("data/bot_vars.json", vars)
     user.add_coins(result)

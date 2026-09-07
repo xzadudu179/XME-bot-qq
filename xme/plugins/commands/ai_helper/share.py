@@ -349,6 +349,7 @@ class SharedSession:
             "members": [{"user_id": owner_id, "joined_time": get_time_now()}],
             "requests": [],
             "blocked": [],
+            "insert_enabled": True,  # 新共享会话默认开启插入模式
         })
         s.save_history(list(history_items or []))
         return s

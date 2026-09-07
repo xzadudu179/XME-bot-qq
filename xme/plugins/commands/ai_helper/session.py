@@ -97,6 +97,14 @@ def toggle_normal_insert(user_id, ai_session) -> bool:
     return enabled
 
 
+def enable_normal_insert(user_id, ai_session) -> None:
+    """把会话加入插入模式名单（新会话默认开启用；已在名单则无操作）。"""
+    names = _read_insert_sessions(user_id)
+    if ai_session not in names:
+        names.add(ai_session)
+        _write_insert_sessions(user_id, names)
+
+
 def _legacy_shared_path(user_id) -> Path:
     """旧版双指针时代的共享模式指针文件（.current_shared，迁移后删除）。"""
     return _user_dir(user_id) / CURRENT_SHARED_FILE
@@ -327,6 +335,7 @@ class AISession:
         s.dir_path.mkdir(parents=True, exist_ok=True)
         if lock:
             s.lock()
+        enable_normal_insert(user_id, ai_session)  # 新会话默认开启插入模式
         return s
 
     @classmethod

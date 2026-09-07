@@ -2362,7 +2362,7 @@
       "insert_mode_off": "已关闭会话「{name}」的插入模式",
       "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），继续执行 {positive}",
       "no_resume": "没有可恢复的中断会话哦 {neutral}",
-      "resume_ask": "检测到你上次有异常中断的对话（{count} 条上下文，中断于 {time}）{negative}\n要继续该对话吗？回复 Y 继续（当前消息会一并带入），回复其他内容则开始新对话"
+      "resume_ask": "检测到你上次有异常中断的对话（{count} 条上下文，中断于 {time}）{negative}\n回复数字选择：1 = 继续该对话（当前消息不带入）；2 = 继续并把当前消息带入上下文；3 = 取消，丢弃旧对话并开始新对话"
     },
     "essence": {
       "desc": "随机精华消息",

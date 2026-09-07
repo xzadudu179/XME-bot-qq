@@ -21,7 +21,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
-from .session import AISession, current_storage
+from .session import AISession, current_storage, enable_normal_insert
 from . import constants, share
 from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
 from .commands import clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
@@ -269,7 +269,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-    # 检测上次异常中断的会话快照：询问用户是否继续（Y/N）
+    # 检测上次异常中断的会话快照：三选项（1 原样继续 / 2 继续并带入当前消息 / 3 取消）
     resume_data = None
     if not args.resume and text:
         snap = load_snapshot(session.event.user_id)
@@ -283,8 +283,9 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             )
             if confirm is CMD_END:
                 return CMD_END
-            if confirm is not None and confirm.strip().lower().startswith("y"):
-                # 继续：本条新消息并入恢复的上下文
+            choice = (confirm or "").strip().translate(str.maketrans("１２３", "123"))
+            if choice.startswith("2"):
+                # 继续并把本条新消息（含图片）并入恢复的上下文
                 image_objects, cq_matches = await get_images_from_message(session.bot, text)
                 image_urls = [x["file"] for x in image_objects]
                 new_text = text
@@ -294,8 +295,10 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
                 snap["asks"] = (snap.get("asks") or []) + [
                     {"user_id": user.id, "text": new_text, "image_urls": image_urls}]
                 resume_data = snap
+            elif choice.startswith("1"):
+                resume_data = snap  # 原样恢复，当前消息不带入
             else:
-                clear_snapshot(user.id)  # 用户放弃旧对话，之后不再询问
+                clear_snapshot(user.id)  # 3 或无效输入：丢弃快照，按新对话处理
     # /ai --continue：显式恢复上次异常中断的会话（快照含全部用户输入/思考/工具结果/插入）
     if args.resume:
         resume_data = load_snapshot(session.event.user_id)
@@ -343,7 +346,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         ai_session = storage.ai_session
         if len(storage.load_history()) <= constants.COMPRESS_TRIGGER:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, ai_session=ai_session))
-        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session, shared=shared_session)
+        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session, shared=shared_session, resume_data=resume_data)
         if not t:
             return False
         pending_messages = messages_dict["messages"]
@@ -452,6 +455,12 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
     ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data)
+    # 新会话默认开启插入模式：只在会话尚未存在（= 此刻创建）时登记，
+    # 用户事后 -c ins 关闭的不会被这里加回
+    if shared is None:
+        new_st = AISession(user.id, ai_session)
+        if not new_st.exists():
+            enable_normal_insert(user.id, ai_session)
     # 进行中的对话登记：开启插入模式时记录插入队列键与展示名（供入口并入与结束清理）
     if ai_helper.insert_enabled:
         display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session

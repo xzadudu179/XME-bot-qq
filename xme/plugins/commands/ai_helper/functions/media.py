@@ -61,7 +61,7 @@ async def ocr_image(url, agent=None):
         logger.exception(f"图片 OCR 失败: {ex}")
         return f"[图片 OCR 失败: {ex}]"
 
-async def gen_image(prompt, size="1024x1024", agent=None):
+async def gen_image(prompt, action: str = "send", size="1024x1024", agent=None):
     client = ZhipuAiClient(api_key=GLM_API_KEY)
     try:
         response = await asyncio.to_thread(
@@ -75,8 +75,13 @@ async def gen_image(prompt, size="1024x1024", agent=None):
         if agent is not None:
             # 图片生成按 80000 tokens 算
             agent.other_credits += IMAGE_GEN_CREDITS
-        image_msg = await get_image_msg(response.data[0].url)
-        return image_msg
+        action = action or "send"
+        if action == "send":
+            image_msg = await get_image_msg(response.data[0].url)
+            return image_msg
+        elif action == "url":
+            return response.data[0].url
+        raise ValueError(f"[未知的图片生成操作: {action}]")
     except Exception as e:
         logger.exception(f"图片生成失败: {e}")
         return f"[图片生成失败: {e}]"

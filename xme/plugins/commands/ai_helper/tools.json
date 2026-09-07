@@ -15,13 +15,17 @@
         "type": "function",
         "function": {
             "name": "gen_image",
-            "description": "通过提示词和指定大小和质量调用 ai 生成图片，图片生成成功会返回 url，失败会返回 \"图片生成失败：原因\"",
+            "description": "通过提示词和指定大小和质量调用 ai 生成图片，图片生成成功会直接在本轮会话结束后发给用户或返回 url，失败会返回 \"图片生成失败：原因\"",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "prompt": {
                         "type": "string",
                         "description": "你要生成的图片的提示词"
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "图片生成后的操作，可以是 \"send\" 或者 \"url\"，send 为在本轮会话末尾发给用户，url 则是返回图片 url。"
                     },
                     "size": {
                         "type": "string",
@@ -88,13 +92,13 @@
         "type": "function",
         "function": {
             "name": "list_files",
-            "description": "获取指定文件夹下的文件列表（temp 或 history），会以 \"索引: 名称\" 的形式显示。history 是跨单会话保留的历史文件",
+            "description": "列出指定文件夹下的文件列表。folder 可填 \"temp\"、\"history\"，或 history 下的嵌套文件夹路径（如 \"history/项目/资料\"）；列表内文件的引用已注册，可直接用于 check_file / edit_file / send_file 等工具；子文件夹会一并列出（把名称加进 folder 可进入）。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "folder": {
                         "type": "string",
-                        "description": "要列出的文件夹，\"temp\"（默认，临时文件）或 \"history\"（跨单会话保留的历史文件）不填或者其他都会自动变为 temp。"
+                        "description": "文件夹：\"temp\"（默认）/ \"history\" / history 下嵌套路径如 \"history/项目/资料\""
                     }
                 },
                 "required": []
@@ -170,6 +174,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
+                    },
+                    "force_use_agent": {
+                        "type": "boolean",
+                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
                     }
                 },
                 "required": [
@@ -197,6 +205,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
+                    },
+                    "force_use_agent": {
+                        "type": "boolean",
+                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
                     }
                 },
                 "required": [
@@ -224,6 +236,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
+                    },
+                    "force_use_agent": {
+                        "type": "boolean",
+                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
                     }
                 },
                 "required": [
@@ -304,7 +320,7 @@
         "type": "function",
         "function": {
             "name": "content_search",
-            "description": "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号可用于 edit_file 精确改写）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
+            "description": "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号用于定位；改写用 edit_file 引用原文，不依赖行号）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -625,7 +641,7 @@
         "type": "function",
         "function": {
             "name": "edit_file",
-            "description": "按行改写文本文件：把第 line_start ~ line_end 行（1 起算、含端点）替换为 content；line_end 不填则只会替换一行内容；content 为空串即删除这些行；line_start 大于总行数时在末尾追加（无论大于多少都是在末尾追加）。行号可来自 content_search 的结果。",
+            "description": "用精确文本匹配改写文件：把文件中的 old_string 原样替换为 new_string。old_string 必须与文件内容逐字符一致（含缩进与换行），取自最近一次读取的内容；找不到匹配会提示文件可能已变化需重新读取；匹配到多处时要求加长 old_string 使其唯一，或置 replace_all=true 全部替换。new_string 为空串即删除该段；追加内容请以文件结尾的唯一文本作 old_string 锚点（new_string=锚点+新内容）。单次只描述一处修改，多处不同修改请分多次调用。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -633,23 +649,23 @@
                         "type": "string",
                         "description": "文件引用（temp 或 history）"
                     },
-                    "content": {
+                    "old_string": {
                         "type": "string",
-                        "description": "替换后的新内容（多行用 \\n 分隔）；为空串表示删除所选行"
+                        "description": "要被替换的原文，必须与文件内容完全一致（逐字符，含空白）"
                     },
-                    "line_start": {
-                        "type": "integer",
-                        "description": "起始行号（1 起算）"
+                    "new_string": {
+                        "type": "string",
+                        "description": "替换后的新文本（多行用 \\n 分隔）；为空串表示删除 old_string 所在段落"
                     },
-                    "line_end": {
-                        "type": "integer",
-                        "description": "结束行号（含端点）；不填或 0 表示只改 line_start 一行"
+                    "replace_all": {
+                        "type": "boolean",
+                        "description": "是否替换所有匹配处（默认 false，只替换第一处且要求唯一）"
                     }
                 },
                 "required": [
                     "ref",
-                    "content",
-                    "line_start"
+                    "old_string",
+                    "new_string"
                 ]
             }
         }
@@ -657,17 +673,42 @@
     {
         "type": "function",
         "function": {
-            "name": "zip_files",
-            "description": "把多个引用文件打包为一个 zip 并直接转存到 history（自定义文件名，自动补 .zip 后缀）。压缩包最大 50MiB，超出会中止并报错；引用中存在重复文件名也会报错。打包后可用 send_file 发送给用户。",
+            "name": "syntax_check",
+            "description": "对代码做纯语法检测（绝不执行代码，检测在隔离子进程中进行）：返回首个语法错误的行号/列号与出错行标注，可配合 edit_file 修正。支持 python / json / javascript（javascript 需服务器装有 node：node ≥ 12 自动识别 ESM/CommonJS，旧版 node 仅支持 CommonJS）。语法无误只代表能被解析，不代表运行逻辑正确。写完或改完代码文件后建议先检查再交付。",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "refs": {
+                    "ref": {
+                        "type": "string",
+                        "description": "要检查的文件引用（temp 或 history），与 code 二选一"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "内联代码文本（与 ref 二选一，不落盘检测）；内联且不传 language 时默认按 python 处理"
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "语言：python / json / javascript；不填时按文件扩展名推断（.py/.json/.js/.mjs/.cjs）"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "zip_files",
+            "description": "把多个引用文件打包为一个 zip 并直接转存到 history（自定义文件名，自动补 .zip 后缀）。压缩包最大 50MiB，超出会中止并报错；引用中存在重复文件名也会报错。打包后可用 send_file 发送给用户。注：若你需要打包的 zip 里带有文件夹，则必须传递文件夹名",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "refs_or_folders": {
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "description": "要打包的文件引用列表，例如 [\"file_1\", \"text_1\", \"history_N\"]"
+                        "description": "要打包的 文件引用/文件夹 列表，例如 [\"file_1\", \"history_1\", \"folder\", \"folder1/folder2\"]"
                     },
                     "name": {
                         "type": "string",
@@ -679,7 +720,7 @@
                     }
                 },
                 "required": [
-                    "refs",
+                    "refs_or_folders",
                     "name"
                 ]
             }

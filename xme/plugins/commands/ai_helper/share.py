@@ -280,9 +280,9 @@ class SharedSession:
         """清空共享会话内容：历史置空 + 删除转存文件（保留 meta.json/history.json 骨架）。
 
         会话本身与成员关系保持不变（区别于 delete 的整体删除）。
-        返回 (是否有历史 1/0, 删除的转存文件数)；转存子目录按 1 个计。
+        返回 (清空的历史记录条数, 删除的转存文件数)；转存子目录按 1 个计。
         """
-        had_history = 1 if self.load_history() else 0
+        entries = self.load_history()
         removed = 0
         if self.dir_path.is_dir():
             for item in self.dir_path.iterdir():
@@ -294,9 +294,9 @@ class SharedSession:
                 elif item.is_dir():
                     shutil.rmtree(item)
                     removed += 1
-        if had_history:
+        if entries:
             self.save_history([])
-        return had_history, removed
+        return len(entries), removed
 
     def delete(self) -> int:
         """删除整个共享会话目录（meta/历史/转存文件，requests 名单随 meta 一并消失），

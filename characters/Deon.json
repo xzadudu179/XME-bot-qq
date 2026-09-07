@@ -1267,7 +1267,9 @@
         "状态码 {search} 的意思是{stat}\n{image}",
         "{neutral}，状态码 {search} 的意思是{stat}\n{image}",
         "{positive} 我找到状态码 {search} 的意思是{stat}\n{image}"
-      ]
+      ],
+      "content_not_decimal": "{negative} 你输入的状态码好像不是数字诶",
+      "content_too_long": "{negative} 输入的状态码太长了"
     },
     "game": {
       "desc": "各种小游戏",
@@ -2251,9 +2253,9 @@
     },
     "ai_helper": {
       "desc": "AI 助手",
-      "introduction": "使用 ChatGLM 大模型的 AI 助手，主要用于解答 bot 使用方面的问题，长上下文可以自动压缩。\n每天可使用 6,000,000 credits（按 flash 消耗 tokens为基准计算，缓存消耗量 0.25x，使用 pro 模型消耗量 x10，flash 限时消耗量 *0.5，图片生成一张算 80000 credits，OCR 消耗量 0.125x。）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
+      "introduction": "使用 ChatGLM 大模型的 AI 助手，一般用于解答 bot 使用方面的问题，你也可以让他执行任务，搜索，代码（推荐html/css/js），或者一些复杂任务。长上下文可以自动压缩。\n每天可使用 6,000,000 credits（按 flash 消耗 tokens为基准计算，缓存消耗量 0.25x，使用 pro 模型消耗量 x10，flash 限时消耗量 *0.5，图片生成一张算 80000 credits，OCR 消耗量 0.125x。）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
       "no_arg": "你好像没有写内容哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
-      "talking_to_ai": "[{ai_session}] 正在使用 \"{model}\" 模型询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦\n你也可以继续调用 /ai xxx 追加消息（会重置单次思考状态）。",
+      "talking_to_ai": "[{ai_session}] 正在使用 \"{model}\" 模型询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦。",
       "model_change_prefix": "[BOT] 注意：{model} 模型没有多模态，自动转为 {vision_model}\n",
       "error_model": "没有称为 \"{model}\" 的模型哦，只能指定为 {models} 中的任意一个呢",
       "talk_result": "{prefix}{positive}， AI 说：\"{talk}\"\n=======================\n对话消耗 {talk_time}\nAI 使用了 {tool_call_times} 次 tools，tokens 消耗 {tokens} ({cached} 已缓存)\n减少 {credits} credits。\n你今天还剩下 {tokens_left_now} 个 credits 哦 {neutral}\n上下文已使用 {history_used}。使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
@@ -2267,7 +2269,7 @@
       "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}，AI 最多等待 {timeout} 秒",
       "reply_too_fast": "AI 正在问你问题哦 {neutral}，你发太快或者误发了，发送消息来回复 AI 吧！",
       "reply_is_illegal": "你的回复似乎违规 {negative}",
-      "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
+      "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦\n本会话没有开启插入对话功能，开启需要使用 \"/ai -c ins\"",
       "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
       "ai_send_timeout": "{negative} AI 发送消息秒数超过上限（{secs}s）",
       "limited": "{negative}，你和 AI 对话的 credits 数已经用完啦，下一天再来吧...",
@@ -2357,7 +2359,10 @@
       "shared_insert_need_owner": "只有群主才能开关插入功能哦 {neutral}",
       "shared_insert_lost": "{negative} 插入消息失败：对话已经结束了。",
       "insert_mode_on": "已开启会话「{name}」的插入模式 {positive}（对话进行中再发消息会并入当前对话的上下文）",
-      "insert_mode_off": "已关闭会话「{name}」的插入模式"
+      "insert_mode_off": "已关闭会话「{name}」的插入模式",
+      "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），继续执行 {positive}",
+      "no_resume": "没有可恢复的中断会话哦 {neutral}",
+      "resume_ask": "检测到你上次有异常中断的对话（{count} 条上下文，中断于 {time}）{negative}\n要继续该对话吗？回复 Y 继续（当前消息会一并带入），回复其他内容则开始新对话"
     },
     "essence": {
       "desc": "随机精华消息",

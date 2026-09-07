@@ -3,9 +3,9 @@ __plugin_name__ = "ai_helper"
 # /ai 指令的别名（agent 内识别同聊天追加消息是否为 ai 指令时复用）
 COMMAND_ALIAS = ["ai"]
 
-MAX_CHECK_TIMES = 1000
+MAX_CHECK_TIMES = 1400
 MAX_HISTORY_COUNT = 80
-MAX_TOOL_CALL_TIMES = 50
+MAX_TOOL_CALL_TIMES = 1000
 TOKENS_LIMIT = 6000000
 
 # 长上下文：普通历史记录超过 COMPRESS_TRIGGER 条时，触发压缩最旧部分为摘要
@@ -62,6 +62,20 @@ MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
 # zip_files 打包的压缩包大小上限
 MAX_ZIP_SIZE = 50 * 1024 * 1024
 
+# 语法检测的文件/内联代码大小上限（防超大输入拖垮解析进程）
+MAX_SYNTAX_CHECK_SIZE = 1 * 1024 * 1024
+
+# 语法检测子进程超时（秒），超时 kill
+SYNTAX_CHECK_TIMEOUT = 15
+
+# 语法检测子进程的地址空间上限（字节）：python/json 解析器用默认档；
+# node（V8 启动即预留 ~1GiB 虚拟内存，512MiB 下 node 20 直接 OOM）必须单独放宽
+SYNTAX_CHECK_AS_LIMIT = 512 * 1024 * 1024
+SYNTAX_CHECK_AS_LIMIT_NODE = 2 * 1024 * 1024 * 1024
+
+# 视觉模型名（图片直注入的判据 + 全插件单点引用，禁止再硬编码）
+FLASH_MODEL = "glm-5.3-flash"
+
 # 共享会话插入模式：待插入消息队列上限（对话进行中其他成员的消息）
 MAX_PENDING_INSERTS = 5
 
@@ -73,3 +87,16 @@ THINKING_PARAMS = {
     "type": "enabled",
     # "clear_thinking": False,
 }
+
+# ---- 轮内上下文折叠（长时运行 agent：单轮持续调工具导致 messages 膨胀时主动瘦身）----
+
+# 模型 → 输入上下文上限（tokens），按当次调用的模型动态查找
+MODEL_CONTEXT_LIMITS = {
+    "glm-5.3": 1_000_000,
+    "glm-5.3-flash": 1_000_000,
+}
+CONTEXT_LIMIT_DEFAULT = 1_000_000        # 未知模型的兜底上限
+FOLD_TRIGGER_RATIO = 0.75                # 真实输入达上限 75% → 一级折叠（删最早 reasoning）
+FOLD_HARD_RATIO = 0.90                   # 达 90% → 二级折叠（早期工具结果替换为占位符）
+FOLD_KEEP_RECENT_ASSISTANTS = 10         # 最近 N 条 assistant 保持原样（含完整思考）
+FOLD_KEEP_RECENT_TOOLS = 10              # 最近 N 条 tool 消息保持原样

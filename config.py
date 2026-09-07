@@ -12,7 +12,7 @@ PORT = 18980
 DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default_validation_failure_expression')
 # DEFAULT_VALIDATION_FAILURE_EXPRESSION = '发送内容格式出错啦 xwx，可以检查一下输入或问问 179 哦'
 SESSION_EXPIRE_TIMEOUT = timedelta(minutes=30)
-SESSION_RUN_TIMEOUT = timedelta(minutes=60)
+SESSION_RUN_TIMEOUT = timedelta(minutes=500)
 SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 # SESSION_RUNNING_EXPRESSION = None
 # SESSION_RUNNING_EXPRESSION = ""
@@ -45,7 +45,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.9.3-preview'
+VERSION = '1.9.8-preview'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

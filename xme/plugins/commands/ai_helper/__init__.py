@@ -11,7 +11,7 @@ from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.msgtools import CMD_END, is_text_can_send, send_session_msg, send_to_user
+from xme.xmetools.msgtools import CMD_END, aget_arg, is_text_can_send, send_session_msg, send_to_user
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import TimeUnit, get_time_now, secs_to_ymdh
@@ -20,7 +20,7 @@ from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
-from .agent import AIHelper, ai_logger
+from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
 from .session import AISession, current_storage
 from . import constants, share
 from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
@@ -146,6 +146,11 @@ arg_usage = shell_like_usage("OPTION", [
         "desc": "查看帮助"
     },
     {
+        "name": "continue",
+        "abbr": "C",
+        "desc": "恢复上次异常中断的会话，保留之前的全部用户输入/思考/工具结果并继续未完成的对话"
+    },
+    {
         "name": "raw",
         "abbr": "r",
         "desc": "会把之后的文本全都解析为单纯的文本，如果你在发东西给 ai 的时候出现了 \"指令执行的参数有问题哦\" 的问题，可以试试在发送的内容前加上 -r 哦"
@@ -208,10 +213,12 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     else:
         pending_insert = None
     MAX_LENGTH = 3000
-    raw = session.current_arg_text
+    # current_arg 带 CQ 码（图片等）；current_arg_text 会把 CQ 整个剥掉导致图片丢失
+    raw = str(session.current_arg)
     parser = XmeArgumentParser(session=session, usage=arg_usage)
     parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)
+    parser.add_argument('-C','--continue', dest='resume', action='store_true', default=False)
     parser.add_argument('-m', '--model', type=str)
     parser.add_argument("-r", nargs=argparse.REMAINDER)
     parser.add_argument('text', nargs='*')
@@ -262,9 +269,47 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     model = args.model if args.model else "flash"
     if model not in available_models:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
-    # 统一指针解析当前会话（普通/共享同等对待，isinstance 区分类型）
-    storage = current_storage(session.event.user_id)
-    shared_session = storage if isinstance(storage, share.SharedSession) else None
+    # 检测上次异常中断的会话快照：询问用户是否继续（Y/N）
+    resume_data = None
+    if not args.resume and text:
+        snap = load_snapshot(session.event.user_id)
+        if snap:
+            confirm = await aget_arg(
+                session,
+                prompt=get_message("plugins", __plugin_name__, "resume_ask",
+                                   count=len(snap.get("messages") or []), time=snap.get("time", "")),
+                rules=lambda r: True,
+                max_times=1,
+            )
+            if confirm is CMD_END:
+                return CMD_END
+            if confirm is not None and confirm.strip().lower().startswith("y"):
+                # 继续：本条新消息并入恢复的上下文
+                image_objects, cq_matches = await get_images_from_message(session.bot, text)
+                image_urls = [x["file"] for x in image_objects]
+                new_text = text
+                for image_cq in cq_matches:
+                    new_text = new_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+                snap["messages"].append({"role": "user", "content": build_user_content(new_text, image_urls)})
+                snap["asks"] = (snap.get("asks") or []) + [
+                    {"user_id": user.id, "text": new_text, "image_urls": image_urls}]
+                resume_data = snap
+            else:
+                clear_snapshot(user.id)  # 用户放弃旧对话，之后不再询问
+    # /ai --continue：显式恢复上次异常中断的会话（快照含全部用户输入/思考/工具结果/插入）
+    if args.resume:
+        resume_data = load_snapshot(session.event.user_id)
+        if not resume_data:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_resume'))
+            return False
+    if resume_data:
+        shared_session = share.SharedSession(resume_data["shared_code"]) if resume_data.get("shared_code") else None
+        ai_session = resume_data.get("ai_session") or history.DEFAULT_SESSION
+        storage = shared_session if shared_session is not None else AISession(session.event.user_id, ai_session)
+    else:
+        # 统一指针解析当前会话（普通/共享同等对待，isinstance 区分类型）
+        storage = current_storage(session.event.user_id)
+        shared_session = storage if isinstance(storage, share.SharedSession) else None
     if shared_session is not None and not share.acquire_busy(
             shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
         # 对话进行中：开启插入模式时成员消息入队（打断并插入），否则提示开启方式
@@ -364,8 +409,9 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
 
         return True
     except Exception:
-        ai_logger.error("AI 调用错误：", format_exc())
-        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
+        # 注意：logging 的格式串必须带 %s 占位符，否则整条记录会被丢弃（静默无日志）
+        ai_logger.error(f"AI 调用错误：{format_exc()}")
+        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()[:500]))
         return False
     finally:
         turn = curr_sessions[user.id]
@@ -378,7 +424,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
                                                code=turn["display"]))
 
 
-async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None):
+async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None):
     httpx_client = httpx.Client(
         proxy=None,
         trust_env=False,
@@ -405,7 +451,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
-    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared)
+    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data)
     # 进行中的对话登记：开启插入模式时记录插入队列键与展示名（供入口并入与结束清理）
     if ai_helper.insert_enabled:
         display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session
@@ -414,5 +460,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     result = await ai_helper.user_talk(session, role, user, text)
+    # 对话正常结束（含主动中断）→ 快照已完成使命；异常死亡时快照残留供 --continue 恢复
+    clear_snapshot(user.id)
     ai_helper.delete_temp()
     return result

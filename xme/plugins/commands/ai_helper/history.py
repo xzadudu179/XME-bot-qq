@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import shutil
 
 # AI 上下文的独立存储目录：data/ai_historys/<用户id>/<会话>.json
 # 不再存放在用户的个人数据里，方便以后扩展多会话。
@@ -77,7 +78,10 @@ def clear_session_files(user_id, ai_session=DEFAULT_SESSION) -> int:
         return 0
     removed = 0
     for item in dir_path.iterdir():
-        if item.is_file() or item.is_symlink():
+        if item.is_dir():
+            removed += sum(1 for f in item.rglob("*") if f.is_file())
+            shutil.rmtree(item)
+        elif item.is_file() or item.is_symlink():
             item.unlink()
             removed += 1
     try:

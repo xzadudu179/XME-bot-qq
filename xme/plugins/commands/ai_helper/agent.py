@@ -19,10 +19,12 @@ from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import is_text_can_send, send_session_msg, aget_arg_with_timeout, setup_logger
 from xme.xmetools.bottools import get_user_name
 from xme.xmetools.timetools import get_time_now, Timer
+from xme.xmetools import jsontools
 from xme.xmetools.jsontools import read_from_path
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
+from zai.core._errors import APIRequestFailedError
 
 from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
@@ -34,16 +36,77 @@ from .constants import (
     CONTEXT_KEEP_RECENT,
     COMPRESS_MAX_LENGTH,
     THINKING_PARAMS,
+    CONTEXT_LIMIT_DEFAULT,
+    FOLD_HARD_RATIO,
+    FOLD_KEEP_RECENT_ASSISTANTS,
+    FOLD_KEEP_RECENT_TOOLS,
+    FOLD_HARD_RATIO,
+    FOLD_KEEP_RECENT_ASSISTANTS,
+    FOLD_KEEP_RECENT_TOOLS,
+    FOLD_TRIGGER_RATIO,
+    CONTEXT_LIMIT_DEFAULT,
+    MODEL_CONTEXT_LIMITS,
+    FLASH_MODEL,
 )
 from . import history
 from . import share
 from .session import AISession, current_storage, normal_insert_enabled
+from .functions._common import ImageToolResult
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 
 
 class InsertInterrupted(Exception):
     """共享会话有成员插入消息：当前生成被主动打断，已积累的上下文保留待重启。"""
+
+
+def _context_limit(model: str) -> int:
+    """按模型名查输入上下文上限（tokens）；未知模型用兜底值。"""
+    return MODEL_CONTEXT_LIMITS.get(model, CONTEXT_LIMIT_DEFAULT)
+
+
+def _snapshot_path(user_id) -> Path:
+    """进行中会话的快照文件：data/ai_historys/<用户id>/.unfinished.json。"""
+    return history.HISTORY_ROOT / str(user_id) / ".unfinished.json"
+
+
+def load_snapshot(user_id) -> dict | None:
+    """读取会话快照（异常中断的对话）；不存在/损坏返回 None。"""
+    data = jsontools.read_from_path(_snapshot_path(user_id))
+    return data if isinstance(data, dict) and data.get("messages") else None
+
+
+def clear_snapshot(user_id) -> None:
+    """删除会话快照（对话正常结束后调用）。"""
+    _snapshot_path(user_id).unlink(missing_ok=True)
+
+
+def _fold_early_context(messages: list, *, fold_tools: bool = False) -> int:
+    """轮内上下文折叠：删除最早若干轮 assistant 的 reasoning_content（保留 content/tool_calls，
+    协议结构不变；等价于 GLM-4.5 之前的标准消息形态，API 仍接受，代价仅是那几轮的推理连贯性
+    与缓存命中）；fold_tools=True 时再把早期 tool 消息的 content 替换为可重取的占位符
+    （tool_call_id 必须保留——协议要求 tool 消息与 tool_call 一一对应）。
+
+    就地修改传入的 messages，返回折叠释放的估算字符量。幂等：无可折叠内容时返回 0。
+    """
+    freed = 0
+    assistant_idx = [i for i, m in enumerate(messages)
+                     if isinstance(m, dict) and m.get("role") == "assistant"]
+    for i in assistant_idx[:-FOLD_KEEP_RECENT_ASSISTANTS] if FOLD_KEEP_RECENT_ASSISTANTS else assistant_idx:
+        reasoning = messages[i].get("reasoning_content")
+        if reasoning:
+            messages[i].pop("reasoning_content", None)
+            freed += len(str(reasoning))
+    if fold_tools:
+        tool_idx = [i for i, m in enumerate(messages)
+                    if isinstance(m, dict) and m.get("role") == "tool"]
+        for i in tool_idx[:-FOLD_KEEP_RECENT_TOOLS] if FOLD_KEEP_RECENT_TOOLS else tool_idx:
+            content = messages[i].get("content")
+            if isinstance(content, str) and len(content) > 200 and not content.startswith("[早期工具结果已折叠"):
+                messages[i]["content"] = (f"[早期工具结果已折叠（原 {len(content)} 字）；"
+                                          f"如需数据请重新调用该工具]")
+                freed += len(content)
+    return freed
 
 
 def build_user_content(text: str, image_urls: list[str] | None = None,
@@ -56,6 +119,43 @@ def build_user_content(text: str, image_urls: list[str] | None = None,
     parts += [{"type": "image_url", "image_url": {"url": url}} for url in (image_urls or [])]
     parts += list(extra_parts or [])
     return parts
+
+
+_UNLOADABLE_PART_LABELS = {
+    "image_url": "[图片（原链接已失效，无法加载）]",
+    "video_url": "[视频（原链接已失效，无法加载）]",
+    "file": "[文件（原链接已失效，无法加载）]",
+}
+
+
+def _strip_unloadable_images(messages: list) -> int:
+    """把上下文里所有图片/视频/文件段替换为占位文本（就地修改），返回替换数量。
+
+    用于 GLM 1210（图片输入解析失败）兜底：历史多模态段引用的是短期本地链接，
+    过期后每次调用都会失败；全部去掉后重试可保住会话，占位文本让模型得知原处有图。
+    非 text 段一并替换（含未知类型），避免漏网段导致重试再次 1210。
+    """
+    removed = 0
+    for m in messages:
+        if not isinstance(m, dict):
+            continue
+        content = m.get("content")
+        if not isinstance(content, list):
+            continue
+        new_parts = []
+        changed = False
+        for part in content:
+            ptype = part.get("type") if isinstance(part, dict) else None
+            if ptype is not None and ptype != "text":
+                label = _UNLOADABLE_PART_LABELS.get(ptype, "[图片/文件（原链接已失效，无法加载）]")
+                new_parts.append({"type": "text", "text": label})
+                removed += 1
+                changed = True
+            else:
+                new_parts.append(part)
+        if changed:
+            m["content"] = new_parts
+    return removed
 is_external_stop = False
 
 class _AISTOP:
@@ -143,7 +243,14 @@ class AIHelper:
             return safe_join(self.get_temp_path(), file_name)
         if not use_history:
             raise KeyError(f"无法找到引用 {ref}")
-        # history 嵌套文件夹内的文件："文件夹/.../文件名"（各段过 is_safe_custom_name 防穿越）
+        # 单段引用：history_N 或安全自定义名 → 根目录下推导（文件或文件夹均可）
+        derived = history_file_name(ref)
+        if derived is not None:
+            candidate = safe_join(self.get_history_path(), derived)
+            if candidate.exists():
+                self.ref_map[ref] = str(candidate)
+                return candidate
+        # history 嵌套文件夹内的文件/文件夹："文件夹/.../名称"（各段过 is_safe_custom_name 防穿越）
         parts = ref.split("/")
         if 1 < len(parts) and all(is_safe_custom_name(p) for p in parts):
             candidate = self.get_history_path()
@@ -154,7 +261,7 @@ class AIHelper:
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
         global is_external_stop
@@ -169,7 +276,10 @@ class AIHelper:
         self.other_credits = 0
         self.model_arg = model
         m = MODEL_MAP.get(model, None)
-        self.model = m if m is not None else "glm-5.3-flash"
+        self.model = m if m is not None else FLASH_MODEL
+        # 当前轮真实使用的模型（带图轮会强制切视觉模型）：工具执行时据此决定
+        # 是否走图片直注入（ImageToolResult）；每轮由 run_agent 刷新
+        self.current_model = self.model
         self.cached_tokens = 0
         self.client = ai_client
         self.session = session
@@ -194,6 +304,24 @@ class AIHelper:
         self.participants = [user_id]
         # 本次对话实际调用过的工具名（去重保序），随历史条目存入 used_tools 字段
         self.used_tools: list[str] = []
+        # 最近一次请求的真实输入 token 数（上下文折叠的触发判据）
+        self.last_prompt_tokens = 0
+        # 会话快照恢复：/ai --continue 时由快照还原全部进行中状态
+        self.resume_messages: list | None = None
+        self.resume_model: str | None = None
+        self.asks: list[dict] = []
+        if resume_data:
+            self.resume_messages = resume_data.get("messages") or []
+            self.resume_model = resume_data.get("model")
+            self.asks = list(resume_data.get("asks") or [])
+            self.used_tools = list(resume_data.get("used_tools") or [])
+            self.participants = list(resume_data.get("participants") or [user_id])
+            self.tool_call_times = int(resume_data.get("tool_call_times") or 0)
+            # 计费累加器：断点前的消耗一并恢复，最终结算不漏记
+            self.tokens = float(resume_data.get("tokens") or 0)
+            self.cached_tokens = float(resume_data.get("cached_tokens") or 0)
+            self.other_credits = float(resume_data.get("other_credits") or 0)
+            self.activate_skills = list(resume_data.get("activate_skills") or [])
         # 插入队列键与开关：共享会话按群号码，普通会话按 用户+会话名（所有会话均可开启）
         if self.shared is not None:
             self.insert_key = share.shared_insert_key(self.shared.code)
@@ -207,22 +335,51 @@ class AIHelper:
         _validate_tools(self.tools)
 
     async def run_agent(self, session, messages, model):
-        # self.spent_secs.start()
+        # 本轮真实模型：工具（view_item/screenshot_page 等）据此决定图片直注入与否
+        self.current_model = model
         MAX_RETRY_TIMES = 5
         retry_times = 0
+        image_retry_used = False
         while True:
             try:
                 result = await self.create_and_wait(session, messages, model)
+            except APIRequestFailedError as ex:
+                # 1210=图片输入解析失败：历史多模态段引用的短期本地链接过期所致。
+                # 去掉全部图片/附件段后重建任务重试一次，保住会话而非整体报错
+                if image_retry_used or "1210" not in str(ex):
+                    raise
+                image_retry_used = True
+                removed = _strip_unloadable_images(messages)
+                if not removed:
+                    raise
+                ai_logger.warning(
+                    f"图片链接失效（1210），已去除 {removed} 个图片/附件后重建任务重试")
+                continue
             except RuntimeError:
                 if retry_times >= MAX_RETRY_TIMES:
                     raise
                 retry_times += 1
+                # 紧急折叠后再重试：若失败源于输入超长，重试才有机会成功
+                freed = _fold_early_context(messages, fold_tools=True)
+                if freed:
+                    ai_logger.warning(
+                        f"模型调用失败，紧急折叠上下文后重试（第 {retry_times} 次，释放约 {freed:,} 字符）")
                 continue
             if result == False:
                 return False, 0
             message = result.choices[0].message
             self.tokens += result.usage.total_tokens
             self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
+            # 轮内上下文折叠：用本次请求的真实输入量判断，在下一轮请求前瘦身
+            self.last_prompt_tokens = result.usage.prompt_tokens
+            limit = _context_limit(model)
+            if self.last_prompt_tokens > limit * FOLD_TRIGGER_RATIO:
+                fold_tools = self.last_prompt_tokens > limit * FOLD_HARD_RATIO
+                freed = _fold_early_context(messages, fold_tools=fold_tools)
+                if freed:
+                    ai_logger.info(
+                        f"上下文折叠：输入 {self.last_prompt_tokens:,}/{limit:,} tokens，"
+                        f"{'含工具结果' if fold_tools else '仅思考'}，释放约 {freed:,} 字符")
             if message.reasoning_content:
                 ai_logger.info(
                     f"\n===== GLM Reasoning {session.event.user_id} =====\n"
@@ -251,12 +408,15 @@ class AIHelper:
             messages.append(assistant_message)
 
             # 执行所有工具
+            injected_parts: list = []
             for tool_call in message.tool_calls:
                 result_content = await self.execute_tool(session, tool_call, self.tool_call_times)
                 if result_content is AISTOP:
                     await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
                     return False, 0
                 result_text = str(result_content)
+                if isinstance(result_content, ImageToolResult):
+                    injected_parts.extend(result_content.image_parts)
                 ai_logger.info(
                     f"加入 tool message: {str(result_text)[:500]!r}..."
                 )
@@ -265,6 +425,12 @@ class AIHelper:
                     "content": result_text,
                     "tool_call_id": tool_call.id
                 })
+            # 图片直注入（ImageToolResult）：工具拿到的图片/视频/文件不再经独立视觉
+            # 调用转述，而是合并为一条 user 消息附给本轮模型，让模型亲自查看
+            if injected_parts and self.current_model == FLASH_MODEL:
+                messages.append({"role": "user", "content": build_user_content(
+                    "[以上工具返回的图片/附件已附在本消息中，请结合上方工具结果处理]",
+                    [], injected_parts)})
 
             # 插入模式：工具执行完毕后先打断以并入插入消息，再发起下一次模型调用
             if self.insert_enabled and share.has_pending_inserts(self.insert_key):
@@ -316,12 +482,12 @@ class AIHelper:
                 return prefix + f"[[{spent_msg}] \"{name}\" 工具调用完毕，Segment 消息已经准备好，会在本轮最终回复时发送给用户。]"
 
             ####### 压缩 ########
-
-            if (isinstance(result, list) and len(str(result)) > 5000) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > 5000:
+            RESULT_MAX_LEN = 10000
+            if (isinstance(result, list) and len(str(result)) > RESULT_MAX_LEN) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > RESULT_MAX_LEN:
                 res = dict_to_file(result, self.user_id, name + "_", agent=self)
                 result = prefix + f'[{spent_msg}][工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看 数据如下]：{res}'
 
-            if isinstance(result, str) and len(result) > 5000 and not no_compress:
+            if isinstance(result, str) and len(result) > RESULT_MAX_LEN and not no_compress:
                 res = text_to_file(result, self.user_id, self)
                 self.ref_map[res["ref"]] = res["file_name"]
                 return prefix + f"[{spent_msg}][工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
@@ -329,13 +495,47 @@ class AIHelper:
             if len(str(result)) > 100000:
                 return f"[{spent_msg}][错误：无法返回过大内容 (>100000)]"
 
+            if isinstance(result, ImageToolResult):
+                # str 拼接会把子类退化成普通 str、丢失 image_parts（注入就此失效），
+                # 必须先于通用拼接分支保住身份，前缀并入文本部分
+                return ImageToolResult(prefix + str(result), result.image_parts)
             return prefix + result if isinstance(result, str) else result
         except Exception as e:
             ai_logger.exception(f"执行工具 {name} 失败")
             return f"[工具执行失败：{type(e).__name__}: {e}]"
 
+    def _save_snapshot(self, messages: list, model: str) -> None:
+        """把进行中的完整上下文落盘为快照（best-effort）。
+
+        每次模型调用前覆盖写；进程异常死亡时文件残留，
+        供 /ai --continue 恢复（用户输入/思考/工具结果/插入消息全在 messages 里）。
+        """
+        try:
+            data = {
+                "user_id": self.user_id,
+                "ai_session": None if self.shared is not None else self.ai_session,
+                "shared_code": self.shared.code if self.shared is not None else None,
+                "model": model,
+                "messages": messages,
+                "asks": self.asks,
+                "used_tools": self.used_tools,
+                "participants": self.participants,
+                "tool_call_times": self.tool_call_times,
+                "tokens": self.tokens,
+                "cached_tokens": self.cached_tokens,
+                "other_credits": self.other_credits,
+                "activate_skills": self.activate_skills,
+                "time": get_time_now(),
+            }
+            path = _snapshot_path(self.user_id)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        except Exception as ex:
+            ai_logger.warning(f"保存会话快照失败（不影响对话）: {ex}")
+
     async def create_and_wait(self, session, messages, model):
         from . import alias
+        self._save_snapshot(messages, model)
         response = self.client.chat.asyncCompletions.create(
             model=model,
             messages=messages,
@@ -373,14 +573,14 @@ class AIHelper:
                     image_urls=tuple(x["file"] for x in image_objects),
                     time=get_time_now()))
                 await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted'))
-            elif reply is not None and is_command(reply):
+            if reply is not None and is_command(reply) and reply.split(" ")[0][1:] not in (__plugin_name__, *alias):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, 'ai_sending'))
             # 成员插入（或上面的发起者追加）：打断当前生成，交由 user_talk 并入上下文后重启
             if self.insert_enabled and share.has_pending_inserts(self.insert_key):
                 raise InsertInterrupted()
         raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
-    async def _glm_chat(self, messages, model="glm-5.3-flash"):
+    async def _glm_chat(self, messages, model=FLASH_MODEL):
         """通用的一次性 chat 完成调用（用于历史压缩等），返回模型文本。"""
         response = self.client.chat.asyncCompletions.create(
             model=model,
@@ -492,37 +692,46 @@ class AIHelper:
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
         self.pending_messages.clear()
-        compressed = await self._compress_context(session)
-        history, curr_text = await get_history(user, self.storage)
-
-        # 提取 text 里的图片
-        image_objects, matches = await get_images_from_message(session.bot, text)
-        # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
-        # matches = re.findall(pattern, text)
-        for image_cq in matches:
-            text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-        image_urls = [x["file"] for x in image_objects]
-
-        text, video_dicts, pths = await self.get_video_url_dicts(text)
-        self.temp_file_paths += pths
-        self.user_input_urls["images"] = image_urls
-        url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
-        url_dicts += video_dicts
-        ai_logger.info(f"用户 {user.id} 说：{text}")
-        ai_logger.info(f"用户附带了以下图片url {url_dicts}")
-
-        ai_params = [
-            {"role": "system","content": role},
-            *history,
-            {"role": "user","content": build_user_content(f"{curr_text}\n{text}", image_urls, url_dicts)},
-        ]
         prefix = ""
-        ai_logger.debug(f"params: {ai_params}")
-        real_model = "glm-5.3-flash" if len(url_dicts) > 0 else self.model
-        if real_model != self.model:
-            prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
-        # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
-        asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
+        if self.resume_messages is not None:
+            # /ai --continue：以上次快照的完整上下文（用户输入/思考/工具结果/插入）重入循环
+            compressed = 0
+            ai_params = self.resume_messages
+            asks = self.asks
+            real_model = self.resume_model or self.model
+            text = asks[-1].get("text", "") if asks else text
+            prefix = get_message("plugins", __plugin_name__, "resume_prefix", count=len(ai_params))
+        else:
+            compressed = await self._compress_context(session)
+            history, curr_text = await get_history(user, self.storage)
+
+            # 提取 text 里的图片
+            image_objects, matches = await get_images_from_message(session.bot, text)
+            # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
+            # matches = re.findall(pattern, text)
+            for image_cq in matches:
+                text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+            image_urls = [x["file"] for x in image_objects]
+
+            text, video_dicts, pths = await self.get_video_url_dicts(text)
+            self.temp_file_paths += pths
+            self.user_input_urls["images"] = image_urls
+            url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
+            url_dicts += video_dicts
+            ai_logger.info(f"用户 {user.id} 说：{text}")
+            ai_logger.info(f"用户附带了以下图片url {url_dicts}")
+
+            ai_params = [
+                {"role": "system","content": role},
+                *history,
+                {"role": "user","content": build_user_content(f"{curr_text}\n{text}", image_urls, url_dicts)},
+            ]
+            real_model = FLASH_MODEL if len(url_dicts) > 0 else self.model
+            if real_model != self.model:
+                prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
+            # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
+            asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
+            self.asks = asks
         # 插入队列键：共享会话按群号码，普通会话按 用户+会话名（与 AIHelper.insert_key 一致）
         while True:
             try:
@@ -546,10 +755,10 @@ class AIHelper:
                     has_image_insert = has_image_insert or bool(ins.image_urls)
                     if ins.user_id not in self.participants:
                         self.participants.append(ins.user_id)
-                    ai_logger.info(f"插入消息已并入上下文: {ins.user_id} {ins.text[:50]!r}")
-                if has_image_insert and real_model != "glm-5.3-flash":
+                    ai_logger.info(f"插入消息已并入上下文: {ins.user_id} {ins.text[:150]!r}" + "..." if len(ins.text) > 150 else "")
+                if has_image_insert and real_model != FLASH_MODEL:
                     # 插入消息带图片：切换到视觉模型
-                    real_model = "glm-5.3-flash"
+                    real_model = FLASH_MODEL
                     prefix += get_message("plugins", __plugin_name__, "model_change_prefix",
                                           model=self.model, vision_model=real_model)
         self.spent_secs.stop()
@@ -570,7 +779,7 @@ class AIHelper:
             match real_model:
                 case "glm-5.3":
                     multis = 10
-                case "glm-5.3-flash":
+                case m if m == FLASH_MODEL:  # 裸名是捕获模式，必须用 guard 做值比较
                     multis = 0.5
             credits_use *= multis
             credits_use += self.other_credits
@@ -587,7 +796,7 @@ class AIHelper:
                 return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "credits_split": credits_split, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
             build_history(
                 user=user,
-                ask=text,
+                ask=asks[-1].get("text", text) if asks else text,
                 ans=ans,
                 agent=self,
                 asks=asks,

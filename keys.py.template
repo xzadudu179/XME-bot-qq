@@ -5,7 +5,6 @@ from hashlib import md5
 
 GLM_API_KEY = ""
 TAVILY_API_KEY = ""
-# ACCESS_TOKEN = ""
 WEATHER_API_KEY = ""
 JIANMAO_TOKEN = ""
 JIANMAO_QQ = ""
@@ -14,6 +13,12 @@ AFDIAN_USER_ID = ''
 AFDIAN_TOKEN = ''
 AFDIAN_OAUTH_SECRET = ""
 AFDIAN_OAUTH_CLIENT_ID = ""
+TOKEN_TTL = 0
+FILE_TOKENS = {}
+DOMAIN = "example.com"
+
+def generate_file_token(path: str) -> str:
+    ...
 
 def generate_jwt(qq: str, secret_key: str) -> str:
     ...

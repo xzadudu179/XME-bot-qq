@@ -1,10 +1,15 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 """文件类工具：temp/history 的读写、搜索、改写、转存、发送与清理。"""
 from pathlib import Path
-import shutil
+import asyncio
+import contextlib
+import json
 import re
+import shutil
+import sys
 import zipfile
 from typing import Literal
+from uuid import uuid4
 
 from nonebot.log import logger
 from xme.xmetools.dicttools import reverse_dict
@@ -14,7 +19,11 @@ from xme.xmetools.filetools import (
 )
 from xme.xmetools.texttools import regex_filter
 from xme.xmetools.bottools import bot_call_action
-from ..constants import HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE
+from ..constants import (
+    HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE,
+    MAX_SYNTAX_CHECK_SIZE, SYNTAX_CHECK_TIMEOUT,
+    SYNTAX_CHECK_AS_LIMIT, SYNTAX_CHECK_AS_LIMIT_NODE,
+)
 from ._common import exception_detail
 
 async def send_file(ref: str, new_name="", agent=None):
@@ -64,17 +73,22 @@ async def send_file(ref: str, new_name="", agent=None):
             "file_name": send_path.name, "no_compress": True}
 
 
-def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 0, agent=None):
-    """按行改写文本文件（temp/history 通用）。
+def edit_file(ref: str, old_string: str, new_string: str, replace_all: bool = False, agent=None):
+    """按精确文本匹配改写文件（temp/history 通用）。
 
-    把第 line_start ~ line_end 行（1 起算、含端点）替换为 content：
-    - line_end 为 0 或缺省 = 只改 line_start 一行；
-    - content 为空串 = 删除这些行；
-    - line_start 大于总行数 = 在文件末尾追加（忽略 line_end）。
-    仅支持文本文件；行号可来自 content_search 的结果。
+    old_string 必须与文件内容逐字符一致（含缩进与换行），取自最近一次读取：
+    - 找不到匹配 = 文件可能在读取后已变化，提示重新读取；
+    - 匹配到多处且未 replace_all = 拒绝，要求加长上下文或全量替换。
+    new_string 为空串即删除该段；追加内容以文件结尾的唯一文本作锚点。
     """
-    content = content or ""
-    if len(content) > 100000:
+    old_string = old_string or ""
+    new_string = new_string or ""
+    if not old_string:
+        return {"result": "[改写失败：old_string 不能为空；追加内容请以文件结尾的唯一文本作锚点]",
+                "no_compress": True}
+    if old_string == new_string:
+        return {"result": "[改写失败：old_string 与 new_string 相同，没有可改的内容]", "no_compress": True}
+    if len(new_string) > 100000:
         return {"result": "[改写失败：新内容过长 (>100000 字)]", "no_compress": True}
     try:
         path = Path(agent.resolve_ref(ref))
@@ -84,27 +98,30 @@ def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 
         return {"result": f"[改写失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
     if detect_file_type(path) != FileType.TEXT:
         return {"result": "[改写失败：该文件不是文本文件]", "no_compress": True}
-    line_start = int(line_start)
-    line_end = int(line_end)
-    if line_start < 1:
-        return {"result": "[改写失败：line_start 从 1 开始]", "no_compress": True}
     raw = decode_text(path.read_bytes())
-    lines = raw.splitlines()
-    trailing_newline = raw.endswith("\n") or not lines
-    if line_start > len(lines):
-        # 追加模式：追加到文件末尾
-        new_lines = lines + content.splitlines()
-        changed_at = len(lines) + 1
-    else:
-        end = line_start if line_end in (0, None) else line_end
-        if end < line_start:
-            return {"result": f"[改写失败：line_end({end}) 不能小于 line_start({line_start})]", "no_compress": True}
-        end = min(end, len(lines))
-        new_part = content.splitlines() if content else []
-        new_lines = lines[:line_start - 1] + new_part + lines[end:]
-        changed_at = line_start
-    # 保持原文件的尾换行语义：原来有尾换行（或结果为空）才补 \n，改写本身不引入新换行
-    new_text = "\n".join(new_lines) + ("\n" if new_lines and trailing_newline else "")
+    match_count = raw.count(old_string)
+    if match_count == 0:
+        return {"result": "[改写失败：没有找到待替换内容——文件可能在你读取后已发生变化，"
+                          "请用 content_search 重新读取后再改写]", "no_compress": True}
+    if match_count > 1 and not replace_all:
+        # 列出每处所在行号，AI 可直接据此选取有区分度的上下文，省一轮重查
+        positions = []
+        start = 0
+        while True:
+            idx = raw.find(old_string, start)
+            if idx < 0:
+                break
+            positions.append(raw.count("\n", 0, idx) + 1)
+            start = idx + len(old_string)
+        shown = "、".join(f"第 {n} 行" for n in positions[:5])
+        if len(positions) > 5:
+            shown += f" 等 {len(positions)} 处"
+        return {"result": f"[改写失败：old_string 匹配到 {match_count} 处（{shown}），"
+                          f"请加长上下文使其唯一，或设置 replace_all=true 全部替换]",
+                "no_compress": True}
+    changed_at = raw.count("\n", 0, raw.index(old_string)) + 1
+    new_text = raw.replace(old_string, new_string) if replace_all \
+        else raw.replace(old_string, new_string, 1)
     # 若目标是 history 文件，写入前检查其资源上限
     try:
         if Path(path).is_relative_to(agent.get_history_path().resolve()):
@@ -114,16 +131,19 @@ def edit_file(ref: str, content: str = "", line_start: int = 1, line_end: int = 
     except (AttributeError, ValueError):
         pass
     path.write_text(new_text, encoding="utf-8")
+    new_lines = new_text.splitlines()
+    preview_center = min(changed_at, max(1, len(new_lines)))
     preview = "\n".join(
         f"{i}: {line}" for i, line in
-        enumerate(new_lines[max(0, changed_at - 2): changed_at + 3], max(1, changed_at - 1))
+        enumerate(new_lines[max(0, preview_center - 2): preview_center + 3], max(1, preview_center - 1))
     )
-    return {"result": (f"已改写 {ref} 第 {changed_at} 行附近（现共 {len(new_lines)} 行），"
+    return {"result": (f"已改写 {ref} 第 {changed_at} 行附近（替换 {match_count} 处，现共 {len(new_lines)} 行），"
                        f"可再次用 content_search / check_file 确认。改后局部：\n{preview}"),
             "no_compress": True}
 
 def content_search(param, file_ref, search_method: Literal["re_search", "re_filter", "by_line"] = "re_search", agent=None):
-    """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，可配合 edit_file 精确改写）。
+    """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，行号用于定位；
+    改写用 edit_file 引用原文，不依赖行号）。
 
     - re_search（默认）：param 作为正则在全文查找，返回每个匹配片段及其所在行号；
     - re_filter：param 作为正则分隔全文（re.split 语义），返回各匹配之间的间隙内容；
@@ -219,45 +239,52 @@ def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
     get_lines = lines[line_start:line_end] if line_end != 0 else lines[line_start:]
     out = "\n".join([f'{i}: {l}' for i, l in enumerate(get_lines)])
     out = out if length == 0 else out[:length]
-    if len(out) > 20000:
-        return out[:20000] + "\n[输出达到最大 20000 字，剩下请配置参数继续查看。]"
+    if len(out) > 50000:
+        out = out[:50000] + "\n[输出达到最大 50000 字，剩下请配置参数继续查看。]"
     return {"result": out, "no_compress": True}
 
 def list_files(folder="temp", agent=None):
-    """列出指定文件夹（temp / history）下的文件列表。"""
-    if folder == "history":
-        hist_path: Path = agent.get_history_path()
-        usage = dir_usage(hist_path)
-        files = sorted(
-            [f for f in hist_path.iterdir() if f.is_file()],
-            key=lambda f: f.name,
+    """列出指定文件夹下的文件列表。
+
+    folder: "temp"（默认）；"history"（history 根目录）；或 "history/嵌套/路径"
+    （history 下的任意子文件夹）。列表内每个文件的引用都会注册到 ref_map
+    （history 子文件夹内的引用为 "路径/名称" 形式），可直接用于其他工具。
+    """
+    parts = [p for p in str(folder).strip().split("/") if p]
+    if parts[0] != "history":
+        reversed_ref_map = reverse_dict(agent.ref_map)
+        return "\n".join(
+            f"{reversed_ref_map.get(f.name, None)}: {f.name} | size: {(f.stat().st_size / 1024):,.3f} KiB"
+            for f in agent.get_temp_path().iterdir() if f.is_file()
         )
-        lines = [
-            f"# history 占用：{usage['count']} 个文件 / {usage['size']:,} B（上限 {HISTORY_MAX_FILES} 个 / {HISTORY_MAX_SIZE:,} B ≈ {HISTORY_MAX_SIZE // 1024 // 1024} MiB）"
-        ]
-        for f in files:
-            # history_<数字>.tmp → ref 取 stem；其他自定义文件 → ref 取文件名
-            if f.name == f"{f.stem}.tmp" and f.stem.startswith("history_"):
-                ref = f.stem
-            else:
-                ref = f.name
-            agent.ref_map[ref] = str(hist_path / f.name)
-            # fsize = 0
-            if f.stat().st_size is not None:
-                fsize = f"{(f.stat().st_size / 1024):,.3f} KiB"
-            else:
-                fsize = "unknown"
-            lines.append(f"{ref}: {f.name} | size: {fsize}")
-        folders = sorted([d for d in hist_path.iterdir() if d.is_dir()])
-        if folders:
-            lines.append("# 文件夹（move_history_file / zip_files 的 folder 参数可用这些名称）")
-            for d in folders:
-                d_usage = dir_usage(d)
-                lines.append(f"{d.name}/ - {d_usage['count']} 个文件 / {d_usage['size']:,} B")
-        return "\n".join(lines)
-    reversed_ref_map = reverse_dict(agent.ref_map)
-    files = [f"{reversed_ref_map.get(f.name, None)}: {f.name} | size: {(f.stat().st_size / 1024):,.3f} KiB" for f in agent.get_temp_path().iterdir() if f.is_file()]
-    return "\n".join(files)
+    # history / history/嵌套路径：各段过 is_safe_custom_name 防穿越
+    sub = parts[1:]
+    if any(not is_safe_custom_name(p) for p in sub):
+        return f"[无效的文件夹路径：{folder}]"
+    base = agent.get_history_path()
+    for seg in sub:
+        base = safe_join(base, seg)
+    if not base.is_dir():
+        return f"[文件夹 {folder} 不存在]"
+    usage = dir_usage(base)
+    depth_prefix = "/".join(sub)
+    lines = [f"# {folder} 占用：{usage['count']} 个文件 / {usage['size']:,} B（上限 {HISTORY_MAX_FILES} 个）"]
+    for f in sorted([f for f in base.iterdir() if f.is_file()], key=lambda f: f.name):
+        # history_<数字>.tmp → ref 取 stem；其他文件 → ref 为路径形（与文件系统层级一致）
+        ref = f.stem if (f.name == f"{f.stem}.tmp" and f.stem.startswith("history_")) else f.name
+        full_ref = "/".join([*sub, ref]) if sub else ref
+        agent.ref_map[full_ref] = str(f)
+        fsize = f"{(f.stat().st_size / 1024):,.3f} KiB"
+        lines.append(f"{full_ref}: {f.name} | size: {fsize}")
+    folders = sorted([d for d in base.iterdir() if d.is_dir()])
+    if folders:
+        lines.append("# 文件夹（list_files 的 folder 参数加此名称可进入，move_history_file / zip_files 的 folder 参数可用这些名称）")
+        for d in folders:
+            d_usage = dir_usage(d)
+            lines.append(f"{('/'.join([*sub, d.name]))}/ - {d_usage['count']} 个文件 / {d_usage['size']:,} B")
+    if len(lines) == 1:
+        lines.append("（空文件夹）")
+    return "\n".join(lines)
 
 
 def _history_file(ref: str, agent, register: bool = False):
@@ -344,7 +371,7 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
         "w" 覆盖或新建（默认）；"a" 追加或新建（追加时自动补一个换行分隔）。
     """
     if len(content) > 100000:
-        return "[写入失败：写入内容过长 (>100000 字)]"
+        return {"result": "[写入失败：写入内容过长 (>100000 字) 大文件请使用 download 下载到 temp 再转存到 history]", "no_compress": True}
     res = _history_file(ref, agent)
     if res is None:
         return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
@@ -527,22 +554,25 @@ def save_to_history(ref, history_ref="", path="", agent=None):
 
 
 def clear_history_files(agent=None):
-    """清空 history 文件夹里的所有文件，并移除对应引用。"""
+    """清空 history 文件夹里的所有文件（含子文件夹），并移除对应引用。"""
     hist_path = agent.get_history_path()
     removed = 0
     if hist_path.is_dir():
         for item in hist_path.iterdir():
-            if item.is_file() or item.is_symlink():
+            if item.is_dir():
+                removed += sum(1 for f in item.rglob("*") if f.is_file())
+                shutil.rmtree(item)
+            elif item.is_file() or item.is_symlink():
                 item.unlink()
                 removed += 1
     agent.ref_map = {
         k: v for k, v in agent.ref_map.items()
         if not str(v).startswith("data/ai_historys/")
     }
-    return {"result": f"已清空 history，共删除 {removed} 个文件", "no_compress": True}
+    return {"result": f"已清空 history（含文件夹），共删除 {removed} 个文件", "no_compress": True}
 
 
-def zip_files(refs: list[str], name: str, folder: str = "", agent=None):
+def zip_files(refs_or_folders: list[str], name: str, folder: str = "", agent=None):
     """把多个引用文件打包为一个 zip 并转存到 history（自定义名，自动补 .zip 后缀）。
 
     - 压缩过程中压缩包超过 MAX_ZIP_SIZE 立即中止并删除半成品；
@@ -551,19 +581,26 @@ def zip_files(refs: list[str], name: str, folder: str = "", agent=None):
     """
     if agent is None:
         return {"result": "[打包失败：无法获取会话上下文]", "no_compress": True}
-    refs = [str(r).strip() for r in (refs or []) if str(r).strip()]
-    if not refs:
+    refs_or_folders = [str(r).strip() for r in (refs_or_folders or []) if str(r).strip()]
+    if not refs_or_folders:
         return {"result": "[打包失败：refs 不能为空]", "no_compress": True}
-    # 解析全部引用
-    items = []
-    for ref in refs:
+    # 解析全部引用；文件夹引用递归展开为 (zip内路径, 磁盘路径, 来源引用)，保留目录结构
+    items: list[tuple[str, Path, str]] = []
+    for ref in refs_or_folders:
         try:
             p = Path(agent.resolve_ref(ref))
         except KeyError:
             return {"result": f"[打包失败：没有找到引用 {ref}]", "no_compress": True}
-        if not p.is_file():
+        if p.is_file():
+            items.append((p.name, p, ref))
+        elif p.is_dir():
+            files = sorted(f for f in p.rglob("*") if f.is_file())
+            if not files:
+                return {"result": f"[打包失败：引用 {ref} 指向的文件夹是空的]", "no_compress": True}
+            for f in files:
+                items.append((f"{p.name}/{f.relative_to(p).as_posix()}", f, ref))
+        else:
             return {"result": f"[打包失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
-        items.append((p.name, p, ref))
     # zip 内重名检查（同一文件传两次、或不同目录同名文件都算冲突）
     seen: dict[str, str] = {}
     for arcname, _, ref in items:
@@ -683,3 +720,242 @@ def move_history_file(ref: str, folder: str = "", agent=None):
     return {"result": (f"已把 {ref} 移动到 {'/'.join(parts) + '/' if parts else 'history 根目录'}，"
                        f"新引用为 {new_ref}（旧引用已失效）"),
             "ref": new_ref, "no_compress": True}
+
+
+# ---- syntax_check：纯语法检测（绝不执行被检代码）----
+
+# 子进程内执行的解析脚本：从 stdin 读文本（与父进程的 decode_text 结果一致），
+# 输出一行 JSON 结果。启动后先自设 rlimit（替代 preexec_fn——官方不推荐在
+# 多线程进程中使用 fork 后回调，此写法保护等效且无死锁风险），再读入解析；
+# 深嵌套/超大输入的 RecursionError、MemoryError 在此消化。
+# argv: [语言, CPU 超时秒, 地址空间上限字节]
+_SYNTAX_CHECK_SCRIPT = r'''
+import ast, json, resource, sys
+sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+cpu, as_limit = int(sys.argv[2]), int(sys.argv[3])
+resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))
+resource.setrlimit(resource.RLIMIT_AS, (as_limit, as_limit))
+text = sys.stdin.read()
+lang = sys.argv[1]
+try:
+    if lang == "json":
+        json.loads(text)
+    else:
+        ast.parse(text)
+except json.JSONDecodeError as ex:
+    lines = text.splitlines()
+    src = lines[ex.lineno - 1][:200] if 0 < ex.lineno <= len(lines) else ""
+    print(json.dumps({"ok": False, "line": ex.lineno, "col": ex.colno, "msg": ex.msg, "text": src}))
+except SyntaxError as ex:
+    print(json.dumps({"ok": False, "line": ex.lineno, "col": ex.offset, "msg": ex.msg,
+                      "text": (ex.text or "").rstrip()[:200]}))
+except (RecursionError, MemoryError, ValueError):
+    print(json.dumps({"ok": False, "error": "文件过大或嵌套过深，解析器无法处理"}))
+else:
+    print(json.dumps({"ok": True, "lines": len(text.splitlines())}))
+'''
+
+# node 启动包装脚本：子进程内先自设 rlimit 再 execvp node（同上替代 preexec_fn），
+# stdin/stderr 等文件描述符原样继承。argv: [node 可执行名, CPU 超时秒, 地址空间上限字节, ...node 参数]
+_SYNTAX_NODE_LAUNCHER = (
+    "import os, resource, sys\n"
+    "cpu, as_limit = int(sys.argv[2]), int(sys.argv[3])\n"
+    "resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))\n"
+    "resource.setrlimit(resource.RLIMIT_AS, (as_limit, as_limit))\n"
+    "os.execvp(sys.argv[1], [sys.argv[1]] + sys.argv[4:])\n"
+)
+
+# 语法检测语言注册表（单点维护）：扩展名推断表、支持语言白名单均从此派生，
+# 新增语言只需在此登记。runner：
+# - "script"：_SYNTAX_CHECK_SCRIPT 内置解析器（stdin 传文本）
+# - "node"  ：node --check 子进程（stdin + --input-type）
+# 注：tools.json 的 schema 描述是唯一需手动同步的点
+_SYNTAX_LANGUAGES: dict[str, dict] = {
+    "python":     {"exts": (".py", ".pyw"), "runner": "script"},
+    "json":       {"exts": (".json",), "runner": "script"},
+    "javascript": {"exts": (".js", ".mjs", ".cjs"), "runner": "node"},
+}
+_SYNTAX_LANG_BY_EXT = {ext: lang for lang, cfg in _SYNTAX_LANGUAGES.items() for ext in cfg["exts"]}
+
+# ESM 嗅探：行首 import/export 语句（import( 动态导入在 CommonJS 里也合法，排除）。
+# 只决定 node --check 的解析模式，判错也不影响安全性。
+_ESM_SNIFF_RE = re.compile(r"(?:^|\n)[ \t]*(?:export\b|import\b[ \t]*(?!\())")
+
+
+def _looks_like_esm(text: str) -> bool:
+    """按行首 import/export 语句判断文本是否为 ESM 模块。"""
+    return _ESM_SNIFF_RE.search(text) is not None
+
+
+async def _communicate_or_kill(proc: asyncio.subprocess.Process, input_bytes: bytes | None, timeout: float):
+    """等待子进程完成；超时则 kill 并返回 None。
+
+    进程在超时瞬间恰好已退出并被收尸时 kill 会抛 ProcessLookupError，
+    忽略之（否则超时文案会变成异常冒泡）。
+    """
+    try:
+        return await asyncio.wait_for(proc.communicate(input_bytes), timeout)
+    except asyncio.TimeoutError:
+        with contextlib.suppress(ProcessLookupError):
+            proc.kill()
+        return None
+
+
+async def _node_version() -> tuple[int, ...] | None:
+    """探测 node 版本号（每次现探、不缓存：运行中升级 node 也能生效）；失败返回 None。"""
+    proc = await asyncio.create_subprocess_exec(
+        "node", "--version",
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+    out = await _communicate_or_kill(proc, None, 5)
+    if out is None:
+        return None
+    m = re.match(rb"v(\d+)\.(\d+)", out[0].strip())
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+async def _syntax_check_parse(text: str, lang: str) -> dict:
+    """python/json 检测：固定解析脚本在隔离子进程里跑（脚本自设 rlimit），文本经 stdin 传入。"""
+    proc = await asyncio.create_subprocess_exec(
+        sys.executable, "-c", _SYNTAX_CHECK_SCRIPT, lang,
+        str(SYNTAX_CHECK_TIMEOUT), str(SYNTAX_CHECK_AS_LIMIT),
+        stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL)
+    out = await _communicate_or_kill(proc, text.encode("utf-8"), SYNTAX_CHECK_TIMEOUT)
+    if out is None:
+        return {"ok": False, "error": "解析超时"}
+    if proc.returncode != 0:
+        return {"ok": False, "error": f"解析进程异常退出（码 {proc.returncode}）"}
+    try:
+        return json.loads(out[0].decode("utf-8", "replace"))
+    except json.JSONDecodeError:
+        return {"ok": False, "error": "解析进程输出异常"}
+
+
+async def _syntax_check_node(text: str, source_ext: str) -> dict:
+    """javascript 检测：node --check 只做语法解析不执行代码；未装 node 时降级提示。
+
+    node ≥ 12 统一经 stdin + --input-type 检测（ESM/CommonJS 均可，文本与
+    python/json 路径同源、不落盘）；更老版本（如 Ubuntu 20.04 自带 v10）不支持
+    --input-type，退回临时文件真 .js 后缀按 CommonJS 检测，ESM 给出明确的
+    版本过低提示。模块类型按扩展名（.mjs/.cjs）优先，其余靠 import/export 嗅探。
+    """
+    if shutil.which("node") is None:
+        return {"ok": False, "error": "服务器未安装 node，无法检查 javascript"}
+    try:
+        version = await _node_version()
+    except FileNotFoundError:
+        return {"ok": False, "error": "服务器未安装 node，无法检查 javascript"}
+    if version is None:
+        return {"ok": False, "error": "无法获取 node 版本，无法检查 javascript"}
+    if source_ext == ".mjs":
+        is_esm = True
+    elif source_ext == ".cjs":
+        is_esm = False
+    else:
+        is_esm = _looks_like_esm(text)
+    if version < (12,) and is_esm:
+        return {"ok": False,
+                "error": f"node 版本过低（v{'.'.join(map(str, version))}），无法检查 ESM 语法"}
+    rlimit_args = ("node", str(SYNTAX_CHECK_TIMEOUT), str(SYNTAX_CHECK_AS_LIMIT_NODE))
+    temp_path = None
+    try:
+        if version >= (12,):
+            argv = (sys.executable, "-c", _SYNTAX_NODE_LAUNCHER, *rlimit_args,
+                    "--input-type", "module" if is_esm else "commonjs", "--check", "-")
+            input_bytes = text.encode("utf-8")
+        else:
+            # 旧版 node：临时文件真后缀按 CommonJS 检测（uuid 名，用完即删）
+            temp_dir = Path("./data/temp")
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            temp_path = temp_dir / f"syntax-{uuid4().hex}.js"
+            temp_path.write_text(text, encoding="utf-8")
+            argv = (sys.executable, "-c", _SYNTAX_NODE_LAUNCHER, *rlimit_args,
+                    "--check", str(temp_path))
+            input_bytes = None
+        proc = await asyncio.create_subprocess_exec(
+            *argv, stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)
+        out = await _communicate_or_kill(proc, input_bytes, SYNTAX_CHECK_TIMEOUT)
+        if out is None:
+            return {"ok": False, "error": "解析超时"}
+        if proc.returncode == 0:
+            return {"ok": True, "lines": len(text.splitlines())}
+        err = out[1].decode("utf-8", "replace")
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+    # node 报错首行形如 "路径:行号"或"[stdin]:行号"，其后依次是出错行原文、^ 指示、SyntaxError 描述
+    m = re.search(r":(\d+)\r?\n(.*)", err, re.S)
+    if m:
+        rest = [x for x in m.group(2).splitlines() if x.strip()]
+        src = rest[0][:200] if rest else ""
+        msg = next((x.strip() for x in rest[1:] if "Error" in x), rest[-1] if rest else "语法错误")
+        return {"ok": False, "line": int(m.group(1)), "col": 0, "msg": msg, "text": src}
+    return {"ok": False, "error": err.strip()[:300] or "未知语法错误"}
+
+
+def _syntax_result(lang: str, data: dict) -> dict:
+    """把子进程结果格式化为工具返回；错误带 行号/列/出错行/^ 指示，闭环到 edit_file。"""
+    if data.get("ok"):
+        return {"result": f"语法检查通过（{lang}，共 {data.get('lines', '?')} 行）",
+                "language": lang, "no_compress": True}
+    if "error" in data:
+        return {"result": f"[语法检查失败：{lang} 解析器异常（{data['error']}）]", "no_compress": True}
+    line_no = data.get("line") or "?"
+    col = data.get("col")
+    src = (data.get("text") or "").rstrip()
+    msg = data.get("msg") or "语法错误"
+    at = f"第 {line_no} 行" + (f"第 {col} 列" if isinstance(col, int) and col > 0 else "")
+    body = src
+    if src and isinstance(col, int) and col > 0:
+        body = f"{src}\n{' ' * (col - 1)}^"
+    return {"result": (f"语法错误（{lang}）{at}：{msg}"
+                       + (f"\n{body}" if body else "")
+                       + "\n每次报告第一个错误，可用 edit_file 修正后再次检查。"),
+            "no_compress": True}
+
+
+async def syntax_check(ref: str = "", code: str = "", language: str = "", agent=None):
+    """对代码做纯语法检测（绝不执行被检代码），返回首个语法错误的行/列标注。
+
+    ref（temp/history 文件）与 code（内联代码文本）二选一；
+    language 不填时按扩展名推断（.py/.json/.js/.mjs/.cjs），内联代码默认 python。
+    检测在隔离子进程内进行（子进程自设 CPU/内存 rlimit + 墙钟超时 kill）：
+    python/json 用标准库解析器；javascript 用 node --check（仅解析不执行），
+    node ≥ 12 自动识别 ESM/CommonJS，旧版 node 仅支持 CommonJS（ESM 返回
+    版本过低提示）；未安装 node 时返回降级提示。
+    """
+    if bool(ref) == bool(code):
+        return {"result": "[语法检查失败：ref 与 code 二选一]", "no_compress": True}
+    if len(code.encode("utf-8")) > MAX_SYNTAX_CHECK_SIZE:
+        return {"result": f"[语法检查失败：代码过长（>{MAX_SYNTAX_CHECK_SIZE // 1024 // 1024} MiB）]",
+                "no_compress": True}
+    if code:
+        text = code
+        source_ext = ""
+    else:
+        try:
+            path = Path(agent.resolve_ref(ref))
+        except KeyError:
+            return {"result": f"[语法检查失败：没有找到引用 {ref}]", "no_compress": True}
+        if not path.is_file():
+            return {"result": f"[语法检查失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+        if path.stat().st_size > MAX_SYNTAX_CHECK_SIZE:
+            return {"result": f"[语法检查失败：文件过大（>{MAX_SYNTAX_CHECK_SIZE // 1024 // 1024} MiB）]",
+                    "no_compress": True}
+        if detect_file_type(path) != FileType.TEXT:
+            return {"result": "[语法检查失败：该文件不是文本文件]", "no_compress": True}
+        text = decode_text(path.read_bytes())
+        source_ext = path.suffix.lower()
+    lang = (language or "").strip().lower()
+    if not lang:
+        lang = _SYNTAX_LANG_BY_EXT.get(source_ext, "") or ("python" if code else "")
+    if not lang:
+        return {"result": "[语法检查失败：无法从扩展名判断语言，请用 language 参数指定"
+                          f"（{' / '.join(_SYNTAX_LANGUAGES)}）]", "no_compress": True}
+    if lang not in _SYNTAX_LANGUAGES:
+        return {"result": f"[语法检查失败：不支持的语言 {lang}（可选 {' / '.join(_SYNTAX_LANGUAGES)}）]",
+                "no_compress": True}
+    if _SYNTAX_LANGUAGES[lang]["runner"] == "node":
+        return _syntax_result(lang, await _syntax_check_node(text, source_ext))
+    return _syntax_result(lang, await _syntax_check_parse(text, lang))

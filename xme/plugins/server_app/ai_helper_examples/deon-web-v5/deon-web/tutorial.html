@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 助手快速上手 · 漠月 Deon — XME-Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>
+:root{--bg:#f7f3ec;--bg2:#efe9dd;--ink:#171310;--ink2:rgba(23,19,16,.66);--ink3:rgba(23,19,16,.56);--line:rgba(23,19,16,.16);--acc:#cc4b06}
+html.dark{--bg:#0c0a08;--bg2:#161209;--ink:#ece6da;--ink2:rgba(236,230,218,.62);--ink3:rgba(236,230,218,.46);--line:rgba(236,230,218,.15);--acc:#ff7c2d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Space Grotesk","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;transition:background .45s,color .45s}
+::selection{background:var(--acc);color:#fff}
+.font-serifd{font-family:"Noto Serif SC","Songti SC","STSong",serif}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Noto Sans SC",monospace}
+.t-ink2{color:var(--ink2)}.t-ink3{color:var(--ink3)}.bd{border-color:var(--line)}.acc{color:var(--acc)}
+.kicker{font-size:.72rem;letter-spacing:.34em;color:var(--acc);text-transform:uppercase;font-weight:600;font-family:"Space Grotesk",sans-serif}
+.link-u{position:relative;text-decoration:none;color:inherit}
+.link-u::after{content:"";position:absolute;left:0;bottom:-3px;height:1px;width:100%;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.link-u:hover::after{transform:scaleX(1)}
+.vlabel{writing-mode:vertical-rl;letter-spacing:.4em;font-size:.68rem;color:var(--ink2)}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.caret{display:inline-block;width:.5em;height:.95em;background:var(--acc);vertical-align:-.12em;animation:blink 1.05s steps(1) infinite;margin-left:.18em}
+header.sitenav{backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 74%,transparent)}
+.navlink{font-size:.85rem;letter-spacing:.06em;color:var(--ink2);text-decoration:none;display:inline-flex;align-items:center;gap:.5em;transition:color .2s}
+
+/* v5 · 导航字号响应式：≥1024 ≈1.25x（按 1920 校准），2K 再加一档 */
+@media(min-width:1024px){.navlink{font-size:0.96rem}}
+@media(min-width:1900px){.navlink{font-size:1.06rem}}
+.navlink::before{content:"";width:5px;height:5px;border-radius:99px;background:transparent;flex-shrink:0}
+.navlink:hover{color:var(--ink)}
+.navlink.act{color:var(--ink)}
+.navlink.act::before{background:var(--acc)}
+.term{background:#f1eada;color:#2b2316;padding:1.1rem 1.3rem;font-family:ui-monospace,Menlo,Consolas,"Noto Sans SC",monospace;font-size:.84rem;line-height:1.9;overflow:auto;border:1px solid var(--line);transition:background .45s,color .45s}
+html.dark .term{background:#141009;color:#d9d2c0;border-color:rgba(255,255,255,.05)}
+.term .p{color:rgba(43,35,22,.46);user-select:none}
+html.dark .term .p{color:#8f8674}
+.term .hl{color:#c2570e}
+html.dark .term .hl{color:#ffab6e}
+.term .ok{color:#3f7a49}
+html.dark .term .ok{color:#9fd8a8}
+.cmdtbl{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:640px){.cmdtbl{grid-template-columns:1fr 1fr}}
+.cmdtbl>div{padding:.8rem 0;border-bottom:1px solid var(--line)}
+details{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;padding:1.2rem .2rem;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--acc);font-weight:400;font-size:1.4rem;line-height:1;transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{padding:0 .2rem 1.4rem;color:var(--ink2);font-size:.92rem;line-height:1.8;margin:0}
+.copychip{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;border:1px dashed var(--line);padding:.5em 1em;cursor:pointer;transition:border-color .2s,color .2s;background:transparent;color:var(--ink2)}
+.copychip:hover{border-color:var(--acc);color:var(--acc)}
+@media(min-width:768px){article.grid{grid-template-columns:230px 1fr}}
+@media(max-width:767px){.mobgrid{grid-template-columns:1fr}}
+/* v2 · 头部按钮保底（不依赖 Tailwind 加载时序） */
+header.sitenav{position:fixed;top:0;left:0;right:0;z-index:40}
+#themeBtn{display:inline-flex!important;color:var(--acc)!important}
+#mBtn{display:flex!important}
+@media(min-width:768px){#mBtn{display:none!important}}
+/* v2 · 移动菜单展开/收起动画 */
+#mNav.mnav-x{visibility:hidden;opacity:0;transform:translateY(-8px);
+ transition:opacity .3s ease,transform .32s cubic-bezier(.4,0,.2,1),visibility 0s linear .32s}
+#mNav.mnav-x.on{visibility:visible;opacity:1;transform:none;transition-delay:0s}
+@media(min-width:768px){#mNav.mnav-x{display:none!important}}
+/* v2 · FAQ 展开动画基元 */
+.dbody{overflow:hidden;transition:height .38s cubic-bezier(.4,0,.2,1),opacity .32s ease}
+details.closing summary::after{transform:none}
+/* v2 · 防横向溢出兜底 */
+html,body{max-width:100vw;overflow-x:hidden}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ══════════ NAV ══════════ -->
+<header class="sitenav fixed top-0 inset-x-0 z-40 border-b bd">
+  <div class="max-w-[1280px] mx-auto px-5 md:px-10 h-14 flex items-center gap-8">
+    <a href="index.html" class="flex items-baseline gap-2.5 shrink-0 no-underline">
+      <span class="mono font-bold tracking-[.2em] text-[15px]">DEON<span class="caret" style="width:.32em;height:.72em"></span></span>
+      <span class="hidden sm:inline text-[10px] tracking-[.28em] t-ink3">XME-BOT</span>
+    </a>
+    <nav class="ml-auto hidden md:flex items-center gap-7">
+      <a class="navlink" href="index.html">首页</a>
+      <a class="navlink" href="commands.html">指令手册</a>
+      <a class="navlink act" href="#">AI 上手</a>
+      <a class="navlink" style="color:var(--acc)" href="seekeros.html">SeekerOS</a>
+      <a class="navlink" href="https://www.xzadudu179.top" target="_blank" rel="noopener">九镹的主页 ↗</a>
+    </nav>
+    <button id="themeBtn" aria-label="切换昼夜主题" class="ml-auto md:ml-0 text-lg leading-none px-2 py-1 bg-transparent border-0 cursor-pointer acc" title="切换昼夜">◐</button>
+    <button id="mBtn" aria-label="菜单" class="md:hidden w-9 h-9 flex flex-col items-end justify-center gap-[5px] bg-transparent border-0 cursor-pointer p-2">
+      <span class="block h-px w-5" style="background:var(--ink)"></span>
+      <span class="block h-px w-5 ml-auto" style="background:var(--ink)"></span>
+      <span class="block h-px w-3.5 ml-auto" style="background:var(--ink)"></span>
+    </button>
+  </div>
+  <div id="mNav" class="mnav-x md:hidden absolute top-full inset-x-0 border-b bd px-5 pt-3 pb-4" style="background:var(--bg)">
+    <div class="flex-col gap-4 flex">
+      <a class="navlink" href="index.html">首页</a>
+      <a class="navlink" href="commands.html">指令手册</a>
+      <a class="navlink act" href="#">AI 上手</a>
+      <a class="navlink" style="color:var(--acc)" href="seekeros.html">SeekerOS</a>
+      <a class="navlink" href="https://www.xzadudu179.top" target="_blank" rel="noopener">九镹的主页 ↗</a>
+    </div>
+  </div>
+</header>
+
+<main class="pt-32 md:pt-36 pb-24">
+<div class="max-w-[1100px] mx-auto px-5 md:px-10">
+
+  <!-- HEAD -->
+  <div class="grid md:grid-cols-[1fr_auto] items-end gap-8 border-b bd pb-12">
+    <div>
+      <p class="kicker">Tutorial · AI Helper</p>
+      <h1 class="font-serifd font-black text-5xl md:text-7xl mt-4 leading-none">AI 助手，<br class="md:hidden">十分钟上手。</h1>
+      <p class="t-ink2 mt-6 max-w-xl text-[15px] leading-relaxed">
+        <span class="mono acc">/ai</span> 是漠月体内那只更爱说话的小模型：能聊天、查资料、写代码、生成图片，
+        还能把会话变成多人共享的房间。以下六步，带你把它玩明白。
+      </p>
+    </div>
+    <span class="vlabel hidden md:block">Ask · Explore · Create</span>
+  </div>
+
+  <!-- STEP 01 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 01</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">第一次交谈</h3>
+    </div>
+    <div class="max-w-2xl">
+      <p class="t-ink2 text-[15px] leading-relaxed">和它打招呼，就这么简单：</p>
+      <div class="term mt-4"><span class="p">❯</span> <span class="hl">/ai</span> 你好！简单介绍一下你自己吧~</div>
+      <p class="t-ink2 text-[15px] leading-relaxed mt-5">也可以直接抛问题：「今天杭州天气怎么样」「帮我写一段 Python 冒泡排序」。群里喊一声「漠月」或 @TA 再接内容，同样能唤起对话。</p>
+    </div>
+  </article>
+
+  <!-- STEP 02 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 02</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">让它替你干活</h3>
+    </div>
+    <div class="max-w-2xl">
+      <p class="t-ink2 text-[15px] leading-relaxed">它最擅长三件事：<b>联网查资料</b>、<b>写代码</b>（推荐网页三件套 HTML / CSS / JS）、<b>AI 生图</b>。想要多花的图片就多说细节——TA 可能会超常发挥（？）</p>
+      <div class="term mt-4">
+        <span class="p">❯</span> <span class="hl">/ai</span> 用 three.js 写一个旋转的十二面体 demo<br>
+        <span class="p">❯</span> <span class="hl">/ai</span> 画一张「沙漠夜空下的月亮」概念图，橙色主色调<br>
+        <span class="ok">✓ 图片已生成 &gt;&gt;（一张图 80,000 credits）</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 03 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 03</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">模型档位与额度</h3>
+    </div>
+    <div class="max-w-2xl">
+      <div class="cmdtbl mono text-sm">
+        <div><span class="acc">flash</span> · 默认档 —— 快而实惠，日常首选</div>
+        <div><span class="acc">pro</span> · <span class="mono">-m pro</span> —— 更聪明也更贵（消耗 ×10）</div>
+      </div>
+      <div class="term mt-4"><span class="p">❯</span> <span class="hl">/ai -m pro</span> 把上一条代码重构得更优雅</div>
+      <p class="t-ink2 text-[15px] leading-relaxed mt-5">每日额度 6,000,000 credits；命中缓存的回复按 ¼ 价计费，读图、OCR 也折算消耗。额度按天重置。</p>
+    </div>
+  </article>
+
+  <!-- STEP 04 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 04</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">会话收纳术</h3>
+    </div>
+    <div class="max-w-2xl">
+      <p class="t-ink2 text-[15px] leading-relaxed">AI 的记忆按会话独立保存。把控制参数放进任意一句话即可生效：</p>
+      <div class="cmdtbl mono text-sm mt-4">
+        <div><span class="acc">-c new</span> 新建并切换会话</div>
+        <div><span class="acc">-c list</span> 查看全部会话（含序号）</div>
+        <div><span class="acc">-c swi 2</span> 切到 2 号会话</div>
+        <div><span class="acc">-c name 2 项目</span> 给会话重命名</div>
+        <div><span class="acc">-c clear</span> 清空当前会话记忆</div>
+        <div><span class="acc">-c history</span> 回看最近 30 条</div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 05 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 05</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">开房间：共享会话</h3>
+    </div>
+    <div class="max-w-2xl">
+      <p class="t-ink2 text-[15px] leading-relaxed">把会话变成多人房间，凭房码加入，全员同屏——很适合群友一起调教小 AI：</p>
+      <div class="term mt-4">
+        <span class="p">❯</span> <span class="hl">/ai -c share</span> &nbsp;&nbsp;<span class="ok">→ 房间已创建，房码 AI0721</span><br>
+        <span class="p">❯</span> <span class="hl">/ai -c join AI0721</span> &nbsp;&nbsp;<span class="ok">→ 申请已发送，等待群主审批</span><br>
+        <span class="p">❯</span> <span class="hl">/ai -c kick 2</span> &nbsp;&nbsp;<span class="ok">→ 已移出捣乱成员（群主专用）</span><br>
+        <span class="p">❯</span> <span class="hl">/ai -c leave</span> &nbsp;&nbsp;<span class="ok">→ 悄悄退场</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 06 -->
+  <article class="grid md:grid-cols-[180px_1fr] gap-x-10 gap-y-4 py-14 border-b bd mobgrid">
+    <div>
+      <div class="mono text-xs tracking-[.3em] acc">STEP 06</div>
+      <h3 class="font-serifd text-2xl md:text-3xl font-semibold mt-3">紧急制动与小抄</h3>
+    </div>
+    <div class="max-w-2xl">
+      <div class="cmdtbl mono text-sm">
+        <div><span class="acc">aistop</span> 对话进行中随时喊停</div>
+        <div><span class="acc">-r raw</span> 参数总被误判？用它包住纯文本</div>
+        <div><span class="acc">幻觉提醒</span> 重要事实请二次确认（玩梗除外）</div>
+        <div><span class="acc">-c clear</span> 说怪话时的疗方：清空记忆</div>
+      </div>
+      <p class="t-ink2 text-[15px] leading-relaxed mt-5">生成的答案仅供参考——TA 的想象力时常大于事实，但这也是它可爱的地方。</p>
+    </div>
+  </article>
+
+  <!-- FAQ -->
+  <section class="mt-16">
+    <p class="kicker">FAQ</p>
+    <h2 class="font-serifd font-black text-3xl md:text-5xl mt-4 mb-8">几个常见疑问。</h2>
+    <div class="border-t bd">
+      <details>
+        <summary>credit 是什么？怎么计算的？</summary>
+        <p>按模型消耗的 token 计费：flash 为基准价，pro ×10，读图按 80,000 credits/张折算，命中缓存 0.25×。每日总额度 6,000,000，按天重置。</p>
+      </details>
+      <details>
+        <summary>它说的话可以全信吗？</summary>
+        <p>不可以。它充满想象力，重要内容务必自己复核；但让它「假装」或玩梗的时候，永远可以期待惊喜。</p>
+      </details>
+      <details>
+        <summary>会话记录保存在哪？隐私怎么处理？</summary>
+        <p>记录按账号隔离存储。使用 <span class="mono">-c clear</span> 清除当前会话，<span class="mono">-c clear-all</span> 清除并删除全部会话——删掉的东西就真的没有了。</p>
+      </details>
+      <details>
+        <summary>参数总是被误解析怎么办？</summary>
+        <p>在消息开头加 <span class="mono">-r</span>，之后的全部文本都会被当成纯文本处理。</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="mt-20 pt-8 border-t bd flex flex-col md:flex-row justify-between gap-6 items-baseline">
+    <p class="t-ink2 text-[15px]">把这条复制进群，开启第一段对话：</p>
+    <button class="copychip" data-copy="/ai 你好！简单介绍一下你自己吧~">/ai 你好！简单介绍一下你自己吧~ &nbsp;⧉ 点按复制</button>
+  <p class="mt-10 text-sm"><a class="link-u t-ink2 no-underline" href="commands.html">← 回去翻翻指令手册</a><span class="t-ink3 mx-3">/</span><a class="link-u t-ink2 no-underline" href="seekeros.html">学完了？去无尽之海漂一会儿 →</a></p>
+
+</div>
+</main>
+
+<footer class="border-t bd">
+  <div class="max-w-[1100px] mx-auto px-5 md:px-10 py-12 flex flex-col md:flex-row justify-between gap-4 items-baseline">
+    <div class="mono text-xs t-ink3">© 2019–2025 XME-BOT PROJECT · BUILT WITH 🦴 & ORANGE</div>
+    <div class="mono text-xs t-ink3">DEON IS A GOOD DOG FROM THE DESERT PLANET.</div>
+  </div>
+</footer>
+<script src="js/site.js"></script>
+<script>
+(function(){
+  document.querySelectorAll('.copychip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=btn.getAttribute('data-copy');
+      const done=()=>{const o=btn.textContent;btn.textContent='✓ 已复制到剪贴板';setTimeout(()=>btn.textContent=o,1600);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,done);}
+      else done();
+    });
+  });
+})();
+</script>
+</body>
+</html>

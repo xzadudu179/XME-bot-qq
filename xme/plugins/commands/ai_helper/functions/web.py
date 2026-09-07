@@ -22,9 +22,9 @@ from xme.xmetools.videotools.probe import get_video_duration
 from xme.xmetools.msgtools import create_image_message
 from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
 from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image
-from ..constants import MAX_DOWNLOAD_FILE_SIZE
+from ..constants import MAX_DOWNLOAD_FILE_SIZE, FLASH_MODEL
 from config import IMAGE_TEMP_PATH
-from ._common import exception_detail
+from ._common import exception_detail, ImageToolResult
 
 _TYPE_EXTENSIONS = {
     FileType.IMAGE: ".png",
@@ -116,10 +116,10 @@ async def web_search(query: str, max_results: int = 10, depth: Literal["basic", 
         ]
     }
 
-async def view_document_file(ref: str = "", url: str = "", prompt: str = "", agent=None):
-    return await view_item(ref, url, prompt, item_type="file", agent=agent)
+async def view_document_file(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
+    return await view_item(ref, url, prompt, item_type="file", force_use_agent=force_use_agent, agent=agent)
 
-async def view_video(ref: str = "", url: str = "", prompt: str = "", agent=None):
+async def view_video(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
     # 平台页面链接（B站/YouTube 等）：yt-dlp 解析时长 + 下载到本地后以限时链接交给模型
     # （GLM 的 video_url 只认媒体直链，页面 URL 会报格式解析错误）；
     # 直链媒体文件/本地文件：ffprobe 校验时长后原样处理
@@ -135,7 +135,7 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", agent=None)
             return f"[查看视频错误：视频下载失败（{result.error}）]"
         agent.temp_file_paths += result.file_paths  # 对话结束随 temp 清理
         url = get_local_file_url(str(result.file_paths[0]))  # 合集只分析第一个视频
-        return await view_item(url=url, prompt=prompt, item_type="video_url", agent=agent)
+        return await view_item(url=url, prompt=prompt, item_type="video_url", force_use_agent=force_use_agent, agent=agent)
     path_or_url = agent.resolve_ref(ref) if ref else url
     dur = await get_video_duration(path_or_url)
     if not dur:
@@ -144,27 +144,21 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", agent=None)
         return "[查看视频错误：视频时长过长 (>10分钟)]"
     return await view_item(ref, url, prompt, item_type="video_url", agent=agent)
 
-async def view_image(ref: str = "", url: str = "", prompt: str = "", agent=None):
-    return await view_item(ref, url, prompt, item_type="image_url", agent=agent)
+async def view_image(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
+    return await view_item(ref, url, prompt, item_type="image_url", force_use_agent=force_use_agent, agent=agent)
 
-async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", agent=None):
-    """调用 glm-5.3-flash 查看 url 里的内容，并按用户 prompt 回答。
+async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", force_use_agent: bool = False, agent=None):
+    """查看 url 里的内容（图片/视频/文件），按 prompt 让模型解读并返回结果。
 
-    作为 AI 可调用 tool 使用：AI 传入 url 和 prompt，本函数使用 glm-5.3-flash
-    查看该 url 的内容（图片/视频/文件等），并将模型解读结果返回给 AI。
-    模型消耗的 tokens 会通过 agent 计入用户 credits。
+    作为 AI 可调用 tool 使用：当前轮模型本身是视觉模型（flash）时不再发起独立
+    GLM 调用，而是返回 ImageToolResult 把内容直接注入当前对话由模型亲眼看；
+    否则（pro 等无视觉模型）走原路径：用 glm-5.3-flash 单独分析后返回文本。
+    单独调用消耗的 tokens 会通过 agent 计入用户 credits。
     """
     if ref:
         url = get_local_file_url(agent.resolve_ref(ref))
     if not url:
         return "[分析 url 内容错误：ref 与 url 均无内容]"
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
-    system_prompt = (
-        "你是一个用于查看并解析指定 url 内容的模型。"
-        "请根据用户给出的 prompt，仔细查看 url 里的内容并回答。"
-        "如果内容是一张图片或视频，描述/分析其内容；如果是文件，提取并总结关键信息。"
-        "输出应当准确、简洁、直接，不要编造图片或文本里不存在的内容。"
-    )
     name = ""
     match item_type:
         case "file":
@@ -175,17 +169,34 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
             name = "url"
         case _:
             raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
+    part = {"type": item_type, item_type: {name: url}}
+    # 视觉轮直注入：省一次独立调用与重复计费，模型在原对话里直接看
+    if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL and not force_use_agent:
+        type_names = {"file": "文件", "image_url": "图片", "video_url": "视频"}
+        label = type_names.get(item_type, item_type)
+        return ImageToolResult(
+            f"[{label}内容已直接附在输入中，请针对该{label}完成：{prompt}]",
+            [part])
+    client = ZhipuAiClient(api_key=GLM_API_KEY)
+    system_prompt = (
+        "你是一个用于查看并解析指定 url 内容的模型。"
+        "请根据用户给出的 prompt，仔细查看 url 里的内容并回答。"
+        "如果内容是一张图片或视频，描述/分析其内容；如果是文件，提取并总结关键信息。"
+        "输出应当准确、简洁、直接，不要编造图片或文本里不存在的内容。"
+        "若用户提出要你审查，请严谨、严格、苛刻地说明其中所有可能有问题的地方"
+        "（但是没有问题不要编造）并且详细审查内容"
+    )
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": [
             {"type": "text", "text": prompt},
-            {"type": item_type, item_type: {name: url}},
+            part,
         ]},
     ]
     try:
         response = await asyncio.to_thread(
             client.chat.asyncCompletions.create,
-            model="glm-5.3-flash",
+            model=FLASH_MODEL,
             messages=messages,
             temperature=0.3,
         )
@@ -299,5 +310,10 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     if not prompt:
         return (f"截图完成（{width}x{height}）：{file_url}\n"
                 f"链接短期有效，可将该 url 传入 view_image 并附 prompt 进行分析。")
+    # 视觉轮直注入：截图直接进当前对话，不再单独调 view_item 分析
+    if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL:
+        return ImageToolResult(
+            f"截图完成（{width}x{height}），截图已直接附在输入中。请针对该截图完成：{prompt}",
+            [{"type": "image_url", "image_url": {"url": file_url}}])
     analysis = await view_item(url=file_url, prompt=prompt, item_type="image_url", agent=agent)
     return f"[对截图（{width}x{height}）的分析结果]\n{analysis}"

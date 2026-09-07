@@ -28,7 +28,10 @@ async def _(session: CommandSession):
     params = session.current_arg_text.strip()
     if not params:
         params: str = (await aget_session_msg(session, prompt=get_message("plugins", __plugin_name__, 'code_prompt'))).strip()
-
+    if not params.isdecimal():
+        message = get_message("plugins", __plugin_name__, 'content_not_decimal')
+    if len(params) > 5:
+        message = get_message("plugins", __plugin_name__, 'content_too_long')
     if params:
         search = params.strip()
         stat = ": " + x if (x:=h.httpstats(search)) else ""

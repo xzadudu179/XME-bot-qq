@@ -162,7 +162,7 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     grid_color = (57 / 255, 84 / 255, 91 / 255)
     labels = []
 
-    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#448fff", len(expr_strs))]
+    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#448fff", num_colors=len(expr_strs))]
     # debug_msg(colors)
     # 绘制图像
     for i, s in enumerate(expr_strs):

@@ -468,7 +468,7 @@
         "type": "function",
         "function": {
             "name": "delete_history_file",
-            "description": "删除某个历史文件（history_N 或自定义安全文件名）。",
+            "description": "删除某个历史文件（history_N 或自定义安全文件名），或删除整个自定义文件夹（含其中全部文件与子文件夹，引用一并失效）。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -722,6 +722,37 @@
                 "required": [
                     "refs_or_folders",
                     "name"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "extract_archive",
+            "description": "解压压缩包到 history 的独立文件夹（默认以压缩包名命名），解出的文件自动登记引用、可被其他文件工具直接使用。支持 zip / tar / tar.gz / tgz / tar.bz2 / gzip 单文件；7z、rar 暂不支持（请先转成 zip）。password 仅对 zip 生效，且仅支持传统 ZipCrypto 加密（AES 加密的 zip 不支持）。解压前会检查条目数与总大小（防压缩炸弹），条目路径做安全清洗。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string",
+                        "description": "压缩包文件引用（temp 或 history）"
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "可选，解压到 history 下已存在的子文件夹（如 \"项目\"），不填为 history 根目录"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "可选，输出文件夹名（默认用压缩包主名）；已存在会报错"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "可选，zip 的解压密码（仅支持传统 ZipCrypto 加密；tar/gz 无密码，填了会被忽略）"
+                    }
+                },
+                "required": [
+                    "ref"
                 ]
             }
         }

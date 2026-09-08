@@ -62,6 +62,10 @@ MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
 # zip_files 打包的压缩包大小上限
 MAX_ZIP_SIZE = 50 * 1024 * 1024
 
+# extract_archive 解压上限（防压缩炸弹：条目数 / 解压总大小）
+MAX_EXTRACT_FILES = 200
+MAX_EXTRACT_TOTAL_SIZE = 50 * 1024 * 1024
+
 # 语法检测的文件/内联代码大小上限（防超大输入拖垮解析进程）
 MAX_SYNTAX_CHECK_SIZE = 1 * 1024 * 1024
 

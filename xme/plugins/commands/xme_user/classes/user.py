@@ -340,7 +340,7 @@ def reset_limit(user: User, name: str, floor_float: bool = True,
         user.counters[name]["count"] = 0
     if count_add:
         user.counters[name]["count"] += 1
-    user.save()
+    # user.save()
 
 
 def limit_count_tick(user: User, name: str, count=1):
@@ -415,7 +415,6 @@ def get_limit_info(user, name):
     # return (user.counters[name]["time"], user.counters[name]["count"])
 
 
-
 def limit(limit_name: str,
           interval: float | int,
           limit_message: str,
@@ -454,11 +453,8 @@ def limit(limit_name: str,
             if not fails(result):
                 debug_msg("保存用户数据, 增加计数")
                 debug_msg("coins", user.coins)
-                u = try_load(user.id)
-                limit_count_tick(u, limit_name)
-                u.update("counters")
-                # limit_count_tick(user, limit_name)
-                # user.save()
+                limit_count_tick(user, limit_name)
+                user.save()
             if isinstance(result, str):
                 await send_session_msg(session, result)
             return result
@@ -493,13 +489,10 @@ def custom_limit(limit_name: str | FunctionType,
                 name = limit_name
             def count_tick(count=1):
                 debug_msg("保存用户数据, 增加计数")
-                u = try_load(user.id)
-                limit_count_tick(u, name, count)
-                u.update("counters")
-                # user.save()
+                limit_count_tick(user, name, count)
+                user.save()
             def check_invalid():
-                u = try_load(user.id)
-                if detect_limit(user=u, name=name, interval=interval, count_limit=count_limit, unit=unit,
+                if detect_limit(user=user, name=name, interval=interval, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                     # 已受限
                     debug_msg("受到限制")
@@ -514,7 +507,6 @@ def custom_limit(limit_name: str | FunctionType,
         return wrapper
 
     return decorator
-
 
 def get_user_rank(user):
     """获取指定用户 id 的金币排名百分比以及数量和位置

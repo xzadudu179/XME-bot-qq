@@ -8,6 +8,7 @@ from xme.plugins.commands.afdian import __plugin_name__
 from xme.plugins.commands.afdian.constants import CMD_LOGIN
 from xme.xmetools.afdiantools import AFDIAN_CLIENT
 from xme.xmetools.afdiantools.constants import STATE_TTL
+from xme.xmetools.mailtools import send_bot_email
 
 cmd_name = CMD_LOGIN
 alias = ['绑定']
@@ -42,11 +43,11 @@ async def handle(session: CommandSession, arg: str) -> str:
         )
     except ActionFailed as e:
         logger.warning(f"afd {CMD_LOGIN} 私聊发送失败。{e}")
-        # return get_message(
-        #     "plugins", __plugin_name__, cmd_name, 'group_fallback',
-        #     url=url, expire=expire_minutes,
-        # )
-        expire_minutes = expire_minutes * 3
+        r = await send_bot_email(f"{qq}@qq.com", "绑定爱发电账号", f'<div style="margin:0;">点击这个链接来将你的爱发电账号绑定至 XME-bot （漠月）~</div><div style="margin:0;"><a href="{url}">绑定爱发电账号</a></div><div style="margin:0;">链接的有效期为 {expire_minutes} 分钟，记得及时绑定哦~<br/>如果你需要复制链接，可以在此复制：<br/>{url}</div>')
+        if r:
+            return get_message(
+                "plugins", __plugin_name__, cmd_name, 'sent_email',
+            )
         return get_message(
             "plugins", __plugin_name__, cmd_name, 'send_failed',
         )

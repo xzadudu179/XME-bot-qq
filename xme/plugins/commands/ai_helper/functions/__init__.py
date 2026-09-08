@@ -47,6 +47,7 @@ __tools__ = [
     "syntax_check",
     "run_python",
     "zip_files",
+    "extract_archive",
     "name_session",
     "dice",
     "ask_user"
@@ -59,6 +60,7 @@ from .files import (
     content_search,
     delete_history_file,
     edit_file,
+    extract_archive,
     find_history_file,
     get_webs_partial,
     list_files,

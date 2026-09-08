@@ -899,13 +899,14 @@
         "desc": "发电排行",
         "introduction": "查看爱发电用户的发电金额排行榜\n\n> 可加数量参数指定展示条数，如 \"/afd rank 5\"",
         "empty": "还没有人发过电哦 {neutral}",
-        "success": "======发电排行榜======\n{ranking}\n==========\n共 {total} 位发电用户（展示前 {shown} 名）\n发送 \"/afd me\" 查看自己的发电状态哦 嗷呜！"
+        "success": "======发电排行榜======\n{ranking}\n==========\n共 {total} 位发电用户（展示前 {shown} 名）\n发送 \"/afd me\" 查看自己的发电状态哦 {positive}"
       },
       "bind": {
         "desc": "绑定爱发电",
         "introduction": "绑定自己的爱发电账号，绑定后可用 \"/afd me\" 查看发电状态\n\n> 链接 {expire} 分钟内有效，请勿点击或转发他人的绑定链接",
         "private_msg": "请点击下面的链接完成爱发电账号绑定（{expire} 分钟内有效）：\n{url}\n\n绑定成功后回到聊天发送 \"/afd me\" 查看你的发电状态~\n请注意不要把这个链接转发给别人哦",
-        "sent_private": "绑定链接已经私聊发给你啦，注意查收哦 嗷呜！",
+        "sent_private": "绑定链接已经私聊发给你啦，注意查收哦 {positive}",
+        "sent_email": "绑定链接已经发给你的 qq 邮箱啦，注意查收哦 {positive}",
         "send_failed": "私聊发送失败了（可能不是好友）加我为好友后重新试试吧{positive_punc}"
       },
       "unbind": {

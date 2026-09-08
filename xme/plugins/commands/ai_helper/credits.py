@@ -49,7 +49,7 @@ def settle_credits(user, amount: float) -> float:
     if to_extra:
         set_value(__plugin_name__, "credits", search_dict=user.plugin_datas,
                   set_method=lambda v: (float(v) if v is not None else 0.0) - to_extra)
-    user.update("plugin_datas")
+    user.update("plugin_datas", "counters")
     return ai_credits_left(user)
 
 

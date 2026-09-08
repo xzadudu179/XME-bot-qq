@@ -3,10 +3,13 @@
 from pathlib import Path
 import asyncio
 import contextlib
+import gzip
 import json
+import os
 import re
 import shutil
 import sys
+import tarfile
 import zipfile
 from typing import Literal
 from uuid import uuid4
@@ -23,6 +26,7 @@ from ..constants import (
     HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE,
     MAX_SYNTAX_CHECK_SIZE, SYNTAX_CHECK_TIMEOUT,
     SYNTAX_CHECK_AS_LIMIT, SYNTAX_CHECK_AS_LIMIT_NODE,
+    MAX_EXTRACT_FILES, MAX_EXTRACT_TOTAL_SIZE,
 )
 from ._common import exception_detail
 
@@ -406,14 +410,28 @@ def write_to_history(ref: str, content: str = "", mode: str = "w", agent=None):
 
 
 def delete_history_file(ref: str, agent=None):
-    """删除某个历史文件（history_N）。"""
+    """删除历史文件；ref 指向自定义文件夹（含嵌套）时删除整个文件夹。"""
     res = _history_file(ref, agent)
     if res is None:
         return {"result": f"[无效的历史文件引用：{ref}]", "no_compress": True}
     _, path = res
     if not path.exists():
-        return {"result": f"[历史文件 {ref} 不存在]", "no_compress": True}
+        return {"result": f"[历史文件或文件夹 {ref} 不存在]", "no_compress": True}
     try:
+        if path.is_dir():
+            # 自定义文件夹：按深度倒序递归删除（文件走 delete_file 同步指纹，目录随后清空）
+            deleted = 0
+            for p in sorted(path.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+                if p.is_file():
+                    agent.delete_file(p)
+                    deleted += 1
+                else:
+                    p.rmdir()  # 深度序下此时必为空
+            path.rmdir()
+            # 该文件夹及其全部子路径的引用一并失效
+            for k in [k for k in agent.ref_map if k == ref or k.startswith(ref + "/")]:
+                agent.ref_map.pop(k, None)
+            return {"result": f"已删除文件夹 {ref}（含 {deleted} 个文件）", "no_compress": True}
         agent.delete_file(path)
         agent.ref_map.pop(ref, None)
         return {"result": f"已删除历史文件 {ref}", "no_compress": True}
@@ -665,6 +683,200 @@ def zip_files(refs_or_folders: list[str], name: str, folder: str = "", agent=Non
         "files": list(seen.keys()),
         "no_compress": True,
     }
+
+
+def _sanitize_archive_entry(entry_name: str) -> str | None:
+    """清洗压缩包内条目名为安全相对路径（防 zip-slip）；不合法返回 None。
+
+    反斜杠归一为 /；拒绝 ..、.、空段、NUL 字节；深度 ≤ 8；单段长度 ≤ 100 字符。
+    """
+    name = entry_name.replace("\\", "/")
+    if "\x00" in name:
+        return None
+    parts = [p for p in name.split("/") if p not in ("", ".")]
+    if not parts or any(p == ".." for p in parts) or len(parts) > 8:
+        return None
+    if any(len(p) > 100 for p in parts):
+        return None
+    return "/".join(parts)
+
+
+def _default_extract_name(archive_name: str) -> str:
+    """由压缩包文件名推导输出文件夹名：非法字符清洗为 _，清洗后为空用 extracted。"""
+    stem = archive_name
+    for suffix in (".tar.gz", ".tgz", ".tar.bz2", ".tar", ".zip", ".gz"):
+        if stem.lower().endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+    cleaned = re.sub(r"[^\w\u4e00-\u9fff.\-]", "_", stem).strip("._-") or "extracted"
+    return cleaned[:100]
+
+
+def extract_archive(ref: str, folder: str = "", name: str = "",
+                    password: str = "", agent=None):
+    """解压压缩包到 history 的独立文件夹，返回解出的文件引用列表。
+
+    格式：zip / tar / tar.gz / tgz / tar.bz2 / gzip 单文件；7z、rar 暂不支持。
+    password 仅对 zip 生效（标准库仅支持传统 ZipCrypto 加密，AES 加密的 zip 不支持）。
+    解压前预检条目数与总大小（防压缩炸弹），条目名清洗防 zip-slip；
+    每个解出文件经 agent.save_file 落盘（history 守卫 + 指纹自动登记）并登记引用。
+    """
+    try:
+        path = Path(agent.resolve_ref(ref))
+    except KeyError:
+        return {"result": f"[解压失败：没有找到引用 {ref}]", "no_compress": True}
+    if not path.is_file():
+        return {"result": f"[解压失败：引用 {ref} 指向的文件不存在]", "no_compress": True}
+    suffix = path.suffix.lower()
+    full_lower = path.name.lower()
+    if suffix in (".7z", ".rar"):
+        return {"result": f"[解压失败：暂不支持 {suffix} 格式，请先转成 zip]", "no_compress": True}
+    kind = None
+    if suffix == ".zip":
+        kind = "zip"
+    elif full_lower.endswith((".tar.gz", ".tgz", ".tar.bz2")) or suffix == ".tar":
+        kind = "tar"
+    elif suffix == ".gz":
+        kind = "gzip"
+    if kind is None:
+        return {"result": f"[解压失败：不支持的格式 {suffix or '(无扩展名)'}"
+                          f"（支持 zip / tar / tar.gz / tgz / tar.bz2 / gz）]", "no_compress": True}
+
+    # 输出位置：history/<folder>/<name>/
+    parts = [p for p in (folder or "").strip().split("/") if p]
+    if any(not is_safe_custom_name(p) for p in parts):
+        return {"result": f"[解压失败：文件夹名 {folder} 不合法（仅允许中英文/数字/_-. 的段）]",
+                "no_compress": True}
+    folder_dir = agent.get_history_path()
+    for part in parts:
+        folder_dir = safe_join(folder_dir, part)
+    if parts and not folder_dir.is_dir():
+        return {"result": f"[解压失败：文件夹 {'/'.join(parts)} 不存在（请先用 create_history_folder 创建）]",
+                "no_compress": True}
+    out_name = (name or "").strip() or _default_extract_name(path.name)
+    if not is_safe_custom_name(out_name):
+        return {"result": f"[解压失败：输出文件夹名 {out_name} 不合法（仅允许中英文/数字/_-. 的段）]",
+                "no_compress": True}
+    target_dir = safe_join(folder_dir, out_name)
+    if target_dir.exists():
+        return {"result": f"[解压失败：输出文件夹 {out_name} 已存在，请换名或先删除]", "no_compress": True}
+
+    pwd = password.encode("utf-8") if password else None
+    created: list[Path] = []  # 已写入文件（失败回滚用）
+    refs: list[str] = []
+    out_ref_base = "/".join([*parts, out_name]) if parts else out_name
+
+    def _register(target: Path, rel: str) -> None:
+        ref_id = f"{out_ref_base}/{rel}"
+        agent.ref_map[ref_id] = str(target)
+        refs.append(ref_id)
+
+    def _rollback() -> None:
+        for f in reversed(created):
+            try:
+                agent.delete_file(f)
+            except OSError:
+                pass
+        # 自底向上清掉解压产生的空目录
+        for root, dirs, _files in sorted(os.walk(target_dir), reverse=True):
+            try:
+                Path(root).rmdir()
+            except OSError:
+                pass  # 非空（含仍存在的 history 上层）时跳过
+
+    def _fail(msg: str) -> dict:
+        _rollback()
+        return {"result": msg, "no_compress": True}
+
+    # ---- 枚举条目 + 炸弹预检 ----
+    try:
+        if kind == "zip":
+            zf = zipfile.ZipFile(path)
+            infos = [i for i in zf.infolist()
+                     if not i.is_dir() and (i.external_attr >> 16) & 0o170000 != 0o120000]
+            entries = []
+            for info in infos:
+                rel = _sanitize_archive_entry(info.filename)
+                if rel is None:
+                    continue
+                entries.append((info, rel))
+        elif kind == "tar":
+            tf = tarfile.open(path)
+            entries = []
+            for m in tf.getmembers():
+                if not m.isreg():
+                    continue
+                rel = _sanitize_archive_entry(m.name)
+                if rel is not None:
+                    entries.append((m, rel))
+        else:
+            entries = None  # gzip 单文件在解压阶段单独处理
+    except zipfile.BadZipFile as ex:
+        return _fail(f"[解压失败：损坏的 zip 文件（{ex}）]")
+    except tarfile.TarError as ex:
+        return _fail(f"[解压失败：损坏的 tar 文件（{ex}）]")
+
+    if entries is not None:
+        if len(entries) > MAX_EXTRACT_FILES:
+            return _fail(f"[解压失败：压缩包含 {len(entries)} 个文件，超过单次解压上限 {MAX_EXTRACT_FILES} 个]")
+        total = sum((i.file_size for i, _ in entries) if kind == "zip"
+                    else (m.size for m, _ in entries))
+        if total > MAX_EXTRACT_TOTAL_SIZE:
+            return _fail(f"[解压失败：解压总大小 {total / 1048576:.1f} MiB 超过单次上限 "
+                         f"{MAX_EXTRACT_TOTAL_SIZE // 1048576} MiB（疑似压缩炸弹）]")
+        quota_error = _check_history_quota(target_dir, total, agent)
+        if quota_error:
+            return {"result": quota_error, "no_compress": True}
+
+    # ---- 解压 ----
+    target_dir.mkdir(parents=True, exist_ok=False)
+    try:
+        if kind == "zip":
+            for info, rel in entries:
+                target = target_dir.joinpath(*rel.split("/"))
+                target.parent.mkdir(parents=True, exist_ok=True)
+                agent.save_file(target, zf.read(info, pwd=pwd), binary=True)
+                created.append(target)
+                _register(target, rel)
+        elif kind == "tar":
+            for member, rel in entries:
+                target = target_dir.joinpath(*rel.split("/"))
+                target.parent.mkdir(parents=True, exist_ok=True)
+                agent.save_file(target, tf.extractfile(member).read(), binary=True)
+                created.append(target)
+                _register(target, rel)
+        else:  # gzip 单文件
+            with gzip.open(path, "rb") as f:
+                data = f.read(MAX_EXTRACT_TOTAL_SIZE + 1)
+            if len(data) > MAX_EXTRACT_TOTAL_SIZE:
+                return _fail(f"[解压失败：解压总大小超过单次上限 {MAX_EXTRACT_TOTAL_SIZE // 1048576} MiB"
+                             f"（疑似压缩炸弹）]")
+            rel = _sanitize_archive_entry(path.stem) or "extracted"
+            target = target_dir / rel
+            agent.save_file(target, data, binary=True)
+            created.append(target)
+            _register(target, rel)
+    except RuntimeError as ex:
+        # 加密 zip：缺密码 / 密码错误 / AES 加密（标准库不支持）都从这里出来
+        detail = str(ex)
+        if "password" in detail.lower() or "decrypt" in detail.lower():
+            return _fail(f"[解压失败：该 zip 已加密——{detail}。"
+                         f"请传 password（标准库仅支持传统 ZipCrypto 加密，AES 加密请先转格式）]")
+        logger.exception(f"解压失败: {ex}")
+        return _fail(f"[解压失败：{exception_detail(ex)}]")
+    except NotImplementedError as ex:
+        return _fail(f"[解压失败：该 zip 使用的压缩/加密方式标准库不支持（{ex}），请转成常规 zip]")
+    except (OSError, zipfile.BadZipFile, tarfile.TarError) as ex:
+        logger.exception(f"解压失败: {ex}")
+        return _fail(f"[解压失败：{exception_detail(ex)}]")
+
+    size_note = f"共 {len(refs)} 个文件"
+    preview = "、".join(refs[:10]) + ("…" if len(refs) > 10 else "")
+    location = f"history 的 {'/'.join(parts)}/ 文件夹" if parts else "history 根目录"
+    return {"result": (f"已解压到 {location} 的 {out_name}/ 文件夹（{size_note}），"
+                       f"引用：{preview}。可用 check_file / content_search 查看内容。"),
+            "ref": out_ref_base, "no_compress": True}
+
 
 
 def create_history_folder(name: str, agent=None):

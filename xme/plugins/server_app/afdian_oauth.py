@@ -9,6 +9,7 @@ from quart import jsonify, request
 from keys import AFDIAN_OAUTH_FRONTEND_ORIGIN
 from xme.plugins.commands.xme_user.classes.user import User, try_load
 from xme.xmetools.afdiantools import AFDIAN_CLIENT, AfdianApiError
+from xme.xmetools.mailtools import send_bot_email
 
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 
@@ -46,4 +47,4 @@ async def afdian_oauth():
     user.update("afdian_id")
     if len(users) > 0:
         return _json_result(True, "绑定成功", f"警告：有其他用户绑定了你的 afdian 账号：{' '.join(users)}")
-    return _json_result(True, "绑定成功", qq)
+    return _json_result(True, "绑定成功", f"该账号已绑定至 qq {qq}")

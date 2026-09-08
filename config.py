@@ -45,13 +45,13 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.10.5-preview'
+VERSION = '1.10.6-preview'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
 IMAGE_TEMP_PATH = "./data/images/temp/"
 CONTAINER_BOT_PATH = "/xmebot"
-DEBUG = False
+DEBUG = True
 
 USE_PROXY = True
 HTTP_PORT = 7890

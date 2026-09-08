@@ -172,6 +172,7 @@
     "image_summary": "[漠月的图片]",
     "face_summary": "[漠月的小表情]",
     "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/{command_name} -h\" 来查看帮助 {neutral}",
+    "task_prevent_cmd": "你当前还有长期数据指令在执行中哦（例如寻宝）不能使用其他指令呢 {negative}",
     "unknown_error": "指令执行出错了... {negative}\n以下是错误内容：{ex}",
     "call_response": [
       "{shout}",
@@ -885,6 +886,47 @@
     ]
   },
   "plugins": {
+    "sandbox": {
+      "desc": "执行沙箱代码",
+      "introduction": "（SUPERUSER）执行代码，用于测试沙箱的安全性"
+    },
+    "afdian": {
+      "desc": "爱发电",
+      "introduction": "查看发电排行、绑定爱发电账号、查询自己的发电状态\n\n可用操作：\n{operations}\n\n> 金额均为实际支付金额（兑换码计 0 元）",
+      "no_sub": "没有 \"{cmd}\" 这个操作哦，可以发送 \"/afd\" 查看可用操作{positive_punc}",
+      "api_error": "{negative}，爱发电 API 请求失败了，稍后再试试吧",
+      "rank": {
+        "desc": "发电排行",
+        "introduction": "查看爱发电用户的发电金额排行榜\n\n> 可加数量参数指定展示条数，如 \"/afd rank 5\"",
+        "empty": "还没有人发过电哦 {neutral}",
+        "success": "======发电排行榜======\n{ranking}\n==========\n共 {total} 位发电用户（展示前 {shown} 名）\n发送 \"/afd me\" 查看自己的发电状态哦 嗷呜！"
+      },
+      "bind": {
+        "desc": "绑定爱发电",
+        "introduction": "绑定自己的爱发电账号，绑定后可用 \"/afd me\" 查看发电状态\n\n> 链接 {expire} 分钟内有效，请勿点击或转发他人的绑定链接",
+        "private_msg": "请点击下面的链接完成爱发电账号绑定（{expire} 分钟内有效）：\n{url}\n\n绑定成功后回到聊天发送 \"/afd me\" 查看你的发电状态~\n请注意不要把这个链接转发给别人哦",
+        "sent_private": "绑定链接已经私聊发给你啦，注意查收哦 嗷呜！",
+        "send_failed": "私聊发送失败了（可能不是好友）加我为好友后重新试试吧{positive_punc}"
+      },
+      "unbind": {
+        "desc": "解绑",
+        "introduction": "解绑爱发电账号，用于误登录的情况",
+        "no_afdian_id": "你没有绑定任何爱发电账号哦 {neutral}",
+        "success": "成功解绑爱发电账号 {neutral}"
+      },
+      "me": {
+        "desc": "我的发电",
+        "introduction": "查看自己的爱发电状态和本月发电情况",
+        "not_bound": "你还没有绑定爱发电账号，发送 \"/afd login\" 绑定后就可以查看自己的发电状态啦",
+        "no_record": "绑定的账号还没有发电记录哦，去爱发电看看 https://afdian.com/a/xzadudu179 吧{positive_punc}",
+        "success": "======※我的发电状态※======\n昵称：{name}\n本月发电：{month_amount} 元（{month_count} 笔）\n最近{recent_days}天：{recent_amount} 元（{recent_count} 笔）\n累计发电：{total_amount} 元\n首次发电：{first_time}\n最近发电：{last_time}\n当前方案：{plan}\n=========="
+      },
+      "stat": {
+        "desc": "发电统计（仅开发者）",
+        "introduction": "查看爱发电经营统计（本月/累计收入等），仅开发者可用",
+        "success": "======※爱发电统计※======\n{year}年{month}月发电：{month_amount} 元（{month_count} 笔 / {month_sponsors} 人）\n累计发电：{total_amount} 元（{total_count} 笔）\n总发电人数：{sponsor_count} 人\n=========="
+      }
+    },
     "answer": {
       "desc": "翻开答案之书",
       "introduction": "让{bot_name}翻开答案之书的一页，并且读出内容\n\n> 心中默念你的问题，将会得到你的答案。",
@@ -2099,7 +2141,7 @@
         "计算出错啦，请确认格式正确哦 {negative} \n{ex}\n可以用 \"/help calc\" 来查看帮助"
       ],
       "func_builtin_intro": "以下是大部分自带内容及函数列表{positive_punc}",
-      "too_long": "你输入的表达式太长啦！要在 100 字以内哦",
+      "too_long": "你输入的表达式太长啦！要在 1000 字以内哦",
       "have_risk": "警告：你输入的表达式参数有注入风险，请检查表达式内容，以及一定不要尝试注入哦！",
       "success": "算式 \"{formula}\" 的结果是 \"{result}\" 哦",
       "success_image": "算式 \"{formula}\" 的结果是\n{image}\n哦",
@@ -2264,15 +2306,19 @@
       "inprocess_report": "{positive} AI 中途回应：\"{msg}\"",
       "attribute_error": "GLM API 返回了未知内容 {negative}\n内容 Response 为：{content}",
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
-      "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}",
+      "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}\n本次消耗 {credits} credits，剩余 {left} 总 credits",
+      "credits_view": "用户 {qq} 拥有自存 credits：{extra}｜今日可用总数：{total}",
+      "credits_adjusted": "已把 [qq {qq}] 的自存 credits 调整 {delta}{positive_punc}现为 {extra}，总额度 {total}",
+      "credits_denied": "{negative} 这个指令只有 SUPERUSER 能用哦",
+      "credits_usage": "用法：/ai -c credits (qq) (±数值)，例如 \"/ai -c credits 123456 +1000000\"",
       "user_content_reply": "正在将你的回复发给 AI {positive}",
       "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}，AI 最多等待 {timeout} 秒",
       "reply_too_fast": "AI 正在问你问题哦 {neutral}，你发太快或者误发了，发送消息来回复 AI 吧！",
       "reply_is_illegal": "你的回复似乎违规 {negative}",
-      "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦\n本会话没有开启插入对话功能，开启需要使用 \"/ai -c ins\"",
+      "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
       "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
       "ai_send_timeout": "{negative} AI 发送消息秒数超过上限（{secs}s）",
-      "limited": "{negative}，你和 AI 对话的 credits 数已经用完啦，下一天再来吧...",
+      "limited": "{negative}，你的 AI credits 总余额已经用完啦，明天免费额度重置后再来吧 {neutral}",
       "too_long": "你输入的语句太长啦！要在 {count} 字以内哦",
       "session_new": "新建会话成功{positive_punc} 现在发送 \"/ai 对话内容\" 即可开始在这个会话里对话 {positive}",
       "session_exists": "会话 \"{ai_session}\" 已经存在啦，直接发送 /ai 就会继续使用它哦 {neutral}",
@@ -2287,7 +2333,7 @@
       "session_deleted": "已删除会话 \"{ai_session}\"（删除 {count} 个文件）{positive}",
       "session_delete_failed": "删除失败：会话 \"{ai_session}\" 没有可删除的内容",
       "session_clear_no_content": "历史记录清除失败：没有历史记录 {negative}",
-      "session_cleared": "历史记录清除成功（清空 {hist_count} 个历史记录，{file_count} 个转存文件）{positive}",
+      "session_cleared": "历史记录清除成功（清空 {hist_count} 条历史记录，{file_count} 个转存文件）{positive}",
       "session_list_header": "—— 普通会话（{count}/{max_sessions}）——",
       "session_list_item": "{index}. {name}{marks} - {count} 条记录",
       "session_mark_default": "（默认）",
@@ -2358,11 +2404,11 @@
       "shared_insert_off": "已关闭共享会话 {code} 的插入功能",
       "shared_insert_need_owner": "只有群主才能开关插入功能哦 {neutral}",
       "shared_insert_lost": "{negative} 插入消息失败：对话已经结束了。",
-      "insert_mode_on": "已开启会话「{name}」的插入模式 {positive}（对话进行中再发消息会并入当前对话的上下文）",
-      "insert_mode_off": "已关闭会话「{name}」的插入模式",
-      "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），继续执行 {positive}",
+      "insert_mode_on": "已开启会话 \"{name}\" 的插入模式 {positive}（对话进行中再发 /ai xxx会并入当前对话的上下文）",
+      "insert_mode_off": "已关闭会话 \"{name}\" 的插入模式",
+      "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），正在继续执行 {positive}",
       "no_resume": "没有可恢复的中断会话哦 {neutral}",
-      "resume_ask": "检测到你上次有异常中断的对话（{count} 条上下文，中断于 {time}）{negative}\n回复数字选择：1 = 继续该对话（当前消息不带入）；2 = 继续并把当前消息带入上下文；3 = 取消，丢弃旧对话并开始新对话"
+      "resume_ask": "{neutral} 检测到你上次有异常中断的对话（{time}，有 {count} 条上下文）\n回复数字来选择操作吧 {positive}\n1. 继续该对话（不把当前消息带入上下文）\n2. 继续，并把当前消息一并带入上下文\n3. 取消，发送新对话"
     },
     "essence": {
       "desc": "随机精华消息",

@@ -1,9 +1,13 @@
 import re
-from xme.xmetools.texttools import replace_chinese_punctuation, valid_var_name, fullwidth_to_halfwidth
-from . import func
-from sympy import sympify, Integer
+
+from sympy import Integer, sympify
+
 from xme.xmetools.debugtools import debug_msg
-# from nonebot.log import logger
+from xme.xmetools.texttools import fullwidth_to_halfwidth, replace_chinese_punctuation, valid_var_name
+
+from . import func
+from .syntax_guard import assert_safe_syntax
+
 
 def get_func(input_str):
     pattern = r"[a-zA-Z_][a-zA-Z0-9_]*\(.*"
@@ -40,27 +44,56 @@ def extract_function(expression):
             return result
     return result
 
-def detect_too_big(original_formula: str):
-    fors = original_formula.count("**")
-    if fors > 2:
-        return True
-    return False
+def check_integer_size(expr, max_digits=1000):
+    """检查 sympy 表达式中整数字面量的位数，超限抛 ValueError。
+
+    Args:
+        expr (sympy 表达式): 待检查的未求值表达式
+        max_digits (int, optional): 允许的最大位数. Defaults to 1000
+    """
+    for atom in expr.atoms(Integer):
+        if len(str(atom)) > max_digits:
+            raise ValueError(f"{expr} 算式整数过大")
+
+def _safe_sympify(expr):
+    """calc 唯一的 sympify 入口：字符串先过 AST 白名单，再以 evaluate=False 解析。
+
+    Args:
+        expr (str | sympy 表达式): 待解析的表达式（变量值可能已是 sympy 对象）
+
+    Returns:
+        sympy 表达式: 未求值的 sympy 对象
+    """
+    if isinstance(expr, str):
+        assert_safe_syntax(expr)
+    return sympify(expr, evaluate=False)
+
+def _checked_draw_expr(expr):
+    """对绘图表达式做 AST 白名单校验（绘图侧 sympify 为 evaluate=True，须前置拦截）。
+
+    Args:
+        expr (str): 绘图表达式
+
+    Returns:
+        str: 原表达式
+    """
+    if expr:
+        assert_safe_syntax(expr)
+    return expr
 
 def parse_polynomial(formula):
     """处理多项式
 
     Args:
         formula (str): 算式字符串
-        vars (dict | None): 变量字典. Defaults to None
+
+    Returns:
+        tuple[str, Any, int]: (归一化算式, sympy 结果或绘图表达式列表, 绘图模式 0/1/2)
     """
     debug_msg("parsing")
     formula = fullwidth_to_halfwidth(replace_chinese_punctuation(formula)).strip()
     formula = formula.replace("×", '*').replace("÷", "/").replace("^", "**").replace(";", "\r").replace("\n", '\r')
     original_formula = formula
-    # if detect_too_big(original_formula):
-    #     raise ValueError("请不要使用超过 2 个乘方符号")
-    # formula = parse_vars(formula, vars)
-    debug_msg(formula)
     all_vars = get_vars(formula)
     result_formulas = [f.strip() for f in formula.split("\r")]
     need_to_draw = False
@@ -69,21 +102,17 @@ def parse_polynomial(formula):
     for f in result_formulas:
         if f.startswith("::"):
             # 绘制 3D 图像
-            draws_3d.append(parse_func(f[2:]))
+            draws_3d.append(_checked_draw_expr(parse_func(f[2:])))
             need_to_draw = True
         elif f.startswith(":"):
-            draws.append(parse_func(f[1:]))
+            draws.append(_checked_draw_expr(parse_func(f[1:])))
             need_to_draw = True
-    # debug_msg("ntd", need_to_draw, draws)
     if len(draws) != 0 and len(draws_3d) != 0:
         raise ValueError("不能同时绘制 3D 图像和 2D 图像")
     if need_to_draw:
         if len(draws) > 0:
-            # filename, use_temp = draw_exprs(*draws)
             return original_formula.replace(" ", ''), draws, 1
         elif len(draws_3d) > 0:
-            # debug_msg("draws3d:", draws_3d)
-            # filename, use_temp = draw_3d_exprs(*draws_3d)
             return original_formula.replace(" ", ''), draws_3d, 2
 
     result_formula = parse_func(result_formulas[-1])
@@ -91,99 +120,58 @@ def parse_polynomial(formula):
     if not result_formula:
         result_formula = "0"
     try:
-        result = sympify(result_formula,  evaluate=False).subs({k: sympify(v,  evaluate=False) for k, v in all_vars.items()})
+        result = _safe_sympify(result_formula).subs({k: _safe_sympify(v) for k, v in all_vars.items()})
     except Exception as ex:
         if len(all_vars.items()) < 1:
-            result = sympify(result_formula,  evaluate=False)
+            result = _safe_sympify(result_formula)
         else:
             raise ex
 
     return original_formula.replace(" ", ''), result, 0
 
-def check_integer_size(expr, max_digits=1000):
-    for atom in expr.atoms(Integer):
-        if len(str(atom)) > max_digits:
-            raise ValueError(f"{expr} 算式整数过大")
-
-def parse_vars(formula: str, vars=None):
-    """处理变量
-
-    Args:
-        formula (str): 表达式
-        vars (dict | None): 变量字典. Defaults to None
-
-    Returns:
-        str: 处理完的表达式
-    """
-    original_formula = formula
-    all_vars = {}
-    if vars:
-        all_vars = vars
-    all_vars = all_vars | get_vars(formula, all_vars)
-    # debug_msg("formula: ", formula)
-    # debug_msg("vars: ", all_vars)
-    formula = '\r'.join([formula.split("\r")[i].strip() for i, _ in enumerate(original_formula.split("\r")) if not is_var_line(original_formula, original_formula.split("\r")[i].strip())])
-    for key in all_vars.keys():
-        # debug_msg("key: ", key, "formula: ", formula, "keyin: ", key in formula)
-        if key in formula:
-            break
-        return formula.split("\r")[-1]
-    # for name, value in all_vars.items():
-    #     formula = str(parse_polynomial(formula)[1].subs(name, value))
-    return formula
-
 def get_vars(formula: str, all_vars: dict | None = None) -> dict:
+    """扫描算式中的 "变量=值" 行并递归求值，返回变量字典。"""
     if not all_vars:
         all_vars = {}
-    # debug_msg("formula", formula)
     for line in formula.split("\r"):
-        # debug_msg("line is", line)
         var_info = is_var_line(formula, line)
         if not var_info:
             continue
         name, value = var_info
-        # for n, v in all_vars.items():
         value = parse_polynomial(value)[1]
-        # debug_msg("value:", value)
         all_vars[name] = value
 
     return all_vars
 
 def is_var_line(formula, line: str) -> bool | tuple:
+    """判断一行是否为 "变量=值" 定义，是则返回 (变量名, 值)，否则返回 False。"""
     if "=" not in line or line.startswith(":"):
         return False
-    # debug_msg("line:", line)
     name = line.split("=")[0].strip()
     value = "=".join(line.split("=")[1:]).strip()
     # 排除 == >= <=
     if value.startswith("=") or name.endswith((">", "<")):
         return False
     func_names = [func.split("(")[0] for func in get_func(formula)]
-    # debug_msg("var name is", name)
     if not valid_var_name(name):
         raise ValueError("变量名不符合规范（只由数字，字母，下划线组成且不能是数字开头）")
     if name in func_names:
         raise ValueError("变量名不能和函数重名")
-    # if name in ["x", "y"]:
-    #     raise ValueError("变量名不能是 x 或 y")
     return (name, value)
 
 def parse_func(formula):
-    """处理函数
+    """处理自定函数：把算式中的自定函数调用求值并替换为结果字符串。
 
     Args:
         formula (str): 函数字符串
 
     Returns:
-        str: 函数结果
+        str: 替换后的函数结果
     """
     funcs = find_funcs(formula)
     debug_msg(f"funcs: {funcs}")
     for f in funcs:
         func_name = f.split("(")[0]
-        if func_name == "eval":
-            debug_msg("eval func found")
-            return 0
         debug_msg(f"func name: {func_name}")
         if func_name not in func.funcs.keys():
             continue
@@ -191,8 +179,8 @@ def parse_func(formula):
         debug_msg(f"func body: {func_body}")
         args = []
         for arg in func_body.split(","):
-            args.append(parse_polynomial(arg.strip())[-1])
-        # _, args = parse_polynomial(func_body)
+            # 取结果位 [1]（[-1] 是绘图模式标志，历史上导致自定函数参数恒为 0）
+            args.append(parse_polynomial(arg.strip())[1])
         debug_msg(f"args: {args}")
         result = func.funcs[func_name]['func'](*args)
         debug_msg(f"func \"{f}\" result: {result}")

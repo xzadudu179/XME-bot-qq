@@ -1,10 +1,12 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 import re
 
+import config
 from character import get_message
+from xme.xmetools.dicttools import set_value
 from xme.xmetools.msgtools import CMD_END, aget_arg, send_to_user
 
-from . import history, share
+from . import credits, history, share
 from .constants import (
     MAX_JOINED_SHARED,
     MAX_SESSIONS,
@@ -14,6 +16,7 @@ from .constants import (
 )
 from .session import AISession, current_storage, set_current_session
 from .share import SharedSession
+from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.videotools import extract_video_links, extract_and_download
 
 # 注意：命令函数统一签名 (session, user, args=None)；
@@ -302,3 +305,36 @@ async def clear_all_sessions(session, user, args=None):
     share.leave_all(user.id)
     cleared = history.clear_all_history(user.id)
     return get_message("plugins", __plugin_name__, "session_clear_all_done", count=cleared)
+
+
+def adjust_credits(session, user, args=None):
+    """超管查看/调整指定用户的自存 credits：credits (qq) (±数值)。
+
+    无 qq 查看自己的双余额；带 qq 查看该用户；再带 ±数值则调整其自存 credits。
+    仅超级管理员可用。
+    """
+    if user.id not in config.SUPERUSERS:
+        return get_message("plugins", __plugin_name__, "credits_denied")
+    args = [a.strip() for a in (args or []) if a.strip()]
+    if not args:
+        return get_message("plugins", __plugin_name__, "credits_view",
+                           qq=user.id, extra=f"{credits.extra_credits(user):g}",
+                           total=f"{credits.ai_credits_left(user):g}")
+    if not args[0].isdigit():
+        return get_message("plugins", __plugin_name__, "credits_usage")
+    target = u.try_load(int(args[0]))
+    if len(args) == 1:
+        return get_message("plugins", __plugin_name__, "credits_view",
+                           qq=target.id, extra=f"{credits.extra_credits(target):g}",
+                           total=f"{credits.ai_credits_left(target):g}")
+    try:
+        delta = float(args[1])
+    except ValueError:
+        return get_message("plugins", __plugin_name__, "credits_usage")
+    set_value(__plugin_name__, "credits", search_dict=target.plugin_datas,
+              set_method=lambda v: (float(v) if v is not None else 0.0) + delta)
+    target.save()
+    return get_message("plugins", __plugin_name__, "credits_adjusted",
+                       qq=target.id, delta=f"{delta:g}",
+                       extra=f"{credits.extra_credits(target):g}",
+                       total=f"{credits.ai_credits_left(target):g}")

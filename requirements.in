@@ -29,3 +29,5 @@ zai-sdk
 # opencv-python
 tavily-python
 yt_dlp
+openpyxl
+aiosmtplib

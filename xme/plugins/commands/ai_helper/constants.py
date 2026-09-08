@@ -20,7 +20,7 @@ HISTORY_MAX_FILES = 256                 # 最多 256 个文件
 HISTORY_MAX_SIZE = 10 * 1024 * 1024     # 最多 10 MB
 
 # 每个用户最多可创建的 AI 会话数（含默认会话）
-MAX_SESSIONS = 25
+MAX_SESSIONS = 40
 # 会话最长名字
 SESSION_NAME_MAX_LEN = 20
 
@@ -73,6 +73,17 @@ SYNTAX_CHECK_TIMEOUT = 15
 SYNTAX_CHECK_AS_LIMIT = 512 * 1024 * 1024
 SYNTAX_CHECK_AS_LIMIT_NODE = 2 * 1024 * 1024 * 1024
 
+# ---- run_python 工具（沙箱内对文件副本执行 AI 编写的分析代码，见 functions/codeexec.py）----
+
+RUN_PYTHON_TIMEOUT = 30                  # 沙箱墙钟超时（秒）
+RUN_PYTHON_MEM_MB = 768                  # 内存上限（MB），matplotlib + numpy 同 calc 绘图档
+RUN_PYTHON_FSIZE_MB = 16                 # 工作区内单文件写入上限（MB），要保存图表
+RUN_PYTHON_OUTPUT_LIMIT = 8000           # 捕获 print 输出的最大字符数（超出保留末尾）
+RUN_PYTHON_MAX_CODE = 20000              # 代码字符数上限
+RUN_PYTHON_MAX_INPUT_SIZE = 20 * 1024 * 1024   # 输入文件大小上限
+RUN_PYTHON_MAX_FILES = 10                # 产出文件数量上限
+RUN_PYTHON_MAX_FILE_SIZE = 10 * 1024 * 1024    # 产出单文件大小上限
+
 # 视觉模型名（图片直注入的判据 + 全插件单点引用，禁止再硬编码）
 FLASH_MODEL = "glm-5.3-flash"
 
@@ -100,3 +111,6 @@ FOLD_TRIGGER_RATIO = 0.75                # 真实输入达上限 75% → 一级�
 FOLD_HARD_RATIO = 0.90                   # 达 90% → 二级折叠（早期工具结果替换为占位符）
 FOLD_KEEP_RECENT_ASSISTANTS = 10         # 最近 N 条 assistant 保持原样（含完整思考）
 FOLD_KEEP_RECENT_TOOLS = 10              # 最近 N 条 tool 消息保持原样
+
+MAX_HISTORY_FILE_COUNTS = 100
+MAX_HISTORY_FILES_SIZE = 100 * 1024 * 1024

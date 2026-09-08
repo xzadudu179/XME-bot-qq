@@ -447,6 +447,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             while expected_steps > 0 and seek.status == "start":
                 result = seek.parse_steps(expected_steps, total_steps, is_sim=is_sim)
                 # --------- 检测成就
+                # u = user.try_load(_user.id)
                 if player.region.value == SeekRegion.ABYSS and not is_sim:
                     await u.achieve_achievement(session, "来自深渊")
                 if player.region.value == SeekRegion.VOID and player.depth.value > 5000 and not is_sim:
@@ -691,7 +692,6 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     # exit_punish = 1
     # if seek.status == "exit":
         # exit_punish = 0
-
     no_exit_result = int(result_value * gain_ratio)
     depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
     result_value = player.coins.value - depth_punish - tool_prices

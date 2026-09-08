@@ -21,6 +21,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from nonebot.log import logger
 from xme.xmetools import jsontools
 from xme.xmetools.timetools import get_time_now
 
@@ -283,6 +284,8 @@ class SharedSession:
         返回 (清空的历史记录条数, 删除的转存文件数)；转存子目录按 1 个计。
         """
         entries = self.load_history()
+        historys = len(entries)
+        logger.info(f"历史记录{historys} {entries}")
         removed = 0
         if self.dir_path.is_dir():
             for item in self.dir_path.iterdir():
@@ -296,7 +299,7 @@ class SharedSession:
                     removed += 1
         if entries:
             self.save_history([])
-        return len(entries), removed
+        return historys, removed
 
     def delete(self) -> int:
         """删除整个共享会话目录（meta/历史/转存文件，requests 名单随 meta 一并消失），

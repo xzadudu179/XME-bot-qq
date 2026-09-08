@@ -129,7 +129,7 @@ class DriftBottle:
     def remove_self(self):
         """从数据表里移除自己并保存（改为 标记为broken）
         """
-        # DATABASE.remove(DriftBottle.get_table_name(), f"bottle_id = '{self.bottle_id}'")
+        # DATABASE.remove(DriftBottle.get_table_name(), [("bottle_id", "=", self.bottle_id)])
         self.is_broken = True
         self.save()
 

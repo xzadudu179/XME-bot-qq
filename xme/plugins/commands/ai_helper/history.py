@@ -62,13 +62,14 @@ def save_history(user_id, history: list[dict], ai_session=DEFAULT_SESSION) -> No
     path.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def clear_history(user_id, ai_session=DEFAULT_SESSION) -> int:
-    """清空某用户某会话的历史记录文件（data/ai_historys/<用户id>/<会话>.json），返回删除的文件数（0/1）。"""
+def clear_history(user_id, ai_session=DEFAULT_SESSION) -> tuple[int, int]:
+    """清空某用户某会话的历史记录文件（data/ai_historys/<用户id>/<会话>.json），返回删除的历史记录条数。"""
     path = _session_path(user_id, ai_session)
+    history = load_history(user_id, ai_session)
     if not path.exists():
-        return 0
+        return 0, 0
     path.unlink()
-    return 1
+    return len(history), 1
 
 
 def clear_session_files(user_id, ai_session=DEFAULT_SESSION) -> int:
@@ -106,7 +107,7 @@ def clear_all_history(user_id) -> int:
             sessions.add(item.name)
     cleared = 0
     for session in sessions:
-        cleared += clear_history(user_id, session)
+        cleared += clear_history(user_id, session)[0]
         cleared += clear_session_files(user_id, session)
     # 清理目录下可能残留的其它文件（含 .current/.locked 等状态文件，防漏删）
     for item in user_dir_path.iterdir():

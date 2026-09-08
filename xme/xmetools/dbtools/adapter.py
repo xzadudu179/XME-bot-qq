@@ -32,6 +32,50 @@ def validate_identifier(name: str) -> str:
     return name
 
 
+# 结构化条件允许的操作符白名单
+_CONDITION_OPS = frozenset({"=", "!=", "<>", "<", "<=", ">", ">=", "LIKE", "IN", "NOT IN"})
+
+
+def build_where(conditions) -> tuple[str, list]:
+    """把结构化删除条件编译为安全的 WHERE 子句与参数列表（纯函数）。
+
+    值一律以 ? 占位绑定，操作符限白名单。
+
+    Args:
+        conditions: (列名, 操作符, 值) 元组或其列表；操作符仅允许
+            _CONDITION_OPS 白名单，其中 IN / NOT IN 的值须为非空列表或元组；
+            多个条件之间以 AND 连接
+
+    Returns:
+        tuple[str, list]: WHERE 子句字符串（不含 WHERE 关键字）与参数列表
+
+    Raises:
+        ValueError: 条件为空、列名不合法、操作符不在白名单或 IN 条件为空
+    """
+    # 允许直接传单个 (列名, 操作符, 值) 三元组
+    if (isinstance(conditions, tuple) and len(conditions) == 3
+            and isinstance(conditions[0], str)):
+        conditions = [conditions]
+    if not conditions:
+        raise ValueError("删除条件不可为空（如需清空整表请显式使用 exec_query）")
+    clauses = []
+    params = []
+    for column, op, value in conditions:
+        validate_identifier(column)
+        if op not in _CONDITION_OPS:
+            raise ValueError(f"非法的条件操作符: {op!r}，仅允许 {sorted(_CONDITION_OPS)}")
+        if op in ("IN", "NOT IN"):
+            if not isinstance(value, (list, tuple)) or not value:
+                raise ValueError(f"列 {column} 的 {op} 条件须为非空列表或元组")
+            placeholders = ", ".join(["?"] * len(value))
+            clauses.append(f"{column} {op} ({placeholders})")
+            params.extend(value)
+        else:
+            clauses.append(f"{column} {op} ?")
+            params.append(value)
+    return " AND ".join(clauses), params
+
+
 def value_to_sql_type(value: Any) -> str:
     """根据值推导 SQLite 列类型（无副作用，不会递归入库）。
 

@@ -48,8 +48,11 @@ async def _(session: CommandSession, user: User):
     reaction = "\n" + get_message("bot_info", "name") + ": " + get_message("character", "info_reactions") if randtools.random_percent(min(100, max(0, user.xme_favorability))) else ""
     if user.id == 1795886524:
         reaction = "\n" + get_message("bot_info", "name") + ": " + random.choice([get_message("character", "info_reactions_179"), get_message("character", "info_reactions")])
-    message = f'\n{avatar}[用户] {target_user}\n' + str(user) + reaction
+    message = f'\n{avatar}[用户] {target_user}\n' + str(user)
 
-
+    # AI credits 双余额展示（from ai_helper 账本）
+    from xme.plugins.commands.ai_helper.credits import ai_credits_left, extra_credits
+    message += (f"\n剩余个人 AI credits：{extra_credits(user):,.2f} (今日总剩余 {ai_credits_left(user):,.2f})\n")
+    message += reaction
     await send_session_msg(session, message, tips=True)
     return True

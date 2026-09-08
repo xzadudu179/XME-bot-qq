@@ -730,7 +730,7 @@
         "type": "function",
         "function": {
             "name": "screenshot_page",
-            "description": "对网页或 SVG/HTML 文件做内部预览截图，返回一张限时有效的截图 url。\nprompt 非空时会直接把截图交给视觉模型按 prompt 分析并返回分析文本（等价于截图后再调 view_image）；\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
+            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用。\nprompt 非空时截图直接附入当前对话由你亲自查看并按要求分析；\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -802,6 +802,29 @@
                 "required": [
                     "ref",
                     "folder"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "run_python",
+            "description": "在隔离沙箱的一次性工作区内执行你编写的 Python 代码，分析 ref 指向的文件（如 xlsx/csv/json/文本）。原文件不会改动；工作区内只有它的副本，文件名经全局变量 INPUT_FILE 提供，代码里直接 open(INPUT_FILE) 读取。用 print() 输出分析结果；生成的文件（如 matplotlib 图表，需先 import matplotlib 并 savefig 到当前目录）会回传为可发送的引用。可 import numpy、matplotlib、openpyxl 等已安装库。执行超时 30 秒、内存 768MB，代码要一次跑完，不要调用 exit()。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "要执行的完整 Python 代码；用 print() 输出结果，生成的文件保存到当前目录（相对路径）"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "要分析的文件引用（temp/history 文件，如 file_xxx 或 text_xxx）；留空则执行不带输入文件的纯计算代码"
+                    }
+                },
+                "required": [
+                    "code"
                 ]
             }
         }

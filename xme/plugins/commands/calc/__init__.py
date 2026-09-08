@@ -1,18 +1,19 @@
 from nonebot import CommandSession
-from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc
-from character import get_message
-from xme.xmetools.texttools import contains_blacklisted
-from xme.xmetools.xmefunctools import run_with_timeout
-from xme.xmetools.bottools import permission
 from sympy.core.sympify import SympifyError
-from .parser import parse_polynomial
-from xme.xmetools.debugtools import debug_msg
+
+from character import get_message
 from nonebot.log import logger
-from .func import funcs, builtins
-from xme.xmetools.msgtools import send_session_msg, send_to_superusers
-from xme.xmetools.msgtools import image_msg
-from xme.xmetools.drawtools import draw_exprs, draw_3d_exprs
+from xme.xmetools.bottools import permission
+from xme.xmetools.debugtools import debug_msg
+from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.msgtools import image_msg, send_session_msg, send_to_superusers
+from xme.xmetools.plugintools import on_command
+from xme.xmetools.sandboxtools import SandboxError, SandboxTimeoutError, run_in_sandbox
+from xme.xmetools.texttools import contains_blacklisted
+
+from .constants import DRAW_FSIZE_MB, DRAW_MEM_MB, DRAW_TIMEOUT, MAX_ARG_LEN, PARSE_TIMEOUT
+from .evaluator import CalcResult, evaluate_formula
+from .func import builtins, funcs
 
 alias = ['计算', 'cc']
 permissions = ["是 SUPERUSER"]
@@ -27,9 +28,8 @@ __plugin_usage__ = CommandDoc(
 )
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda x: True)
-@permission(lambda sender: sender.is_superuser, permission_help=permissions)
+@permission(lambda sender: True, permission_help=permissions)
 async def _(session: CommandSession):
-    message = "uwu"
     arg = session.current_arg_text.strip()
     if not arg:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
@@ -37,57 +37,50 @@ async def _(session: CommandSession):
         message = get_message("plugins", __plugin_name__, 'func_intro') + "\n"
         for k, v in funcs.items():
             message += f'{k}{v["body"]}: {v["info"] if v["info"] else "-"}\n'
-        if len(funcs.items()) < 1:
+        if len(funcs) < 1:
             message += get_message("plugins", __plugin_name__, 'func_nothing') + '\n'
         return await send_session_msg(session, '\n' + message)
     if arg == 'builtins':
-        message += get_message("plugins", __plugin_name__, 'func_builtin_intro') + "\n"
+        message = get_message("plugins", __plugin_name__, 'func_builtin_intro') + "\n"
         for k, v in builtins.items():
             message += f'{k}: {v if v else "-"}\n'
         return await send_session_msg(session, '\n' + message)
-    if len(arg) > 1000:
-        message = get_message("plugins", __plugin_name__, 'too_long')
-        return await send_session_msg(session, message)
+    if len(arg) > MAX_ARG_LEN:
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long'))
     if contains_blacklisted(arg):
-        message = get_message("plugins", __plugin_name__, 'have_risk')
         await send_to_superusers(session.bot, f"警告：{session.event.user_id} 在 calc 指令里输入了有注入风险的表达式：{arg}")
-        return await send_session_msg(session, message)
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'have_risk'))
     try:
-        TIMEOUT_SECS = 15
-        formula, result, is_image = run_with_timeout(parse_polynomial, TIMEOUT_SECS / 2, f"计算超时 (>{TIMEOUT_SECS / 2}s)", arg)
-        if is_image > 0:
+        # 沙箱回传帧是 JSON 纯数据，dataclass 会被自动转成 dict，这里重建
+        calc_result = CalcResult(**await run_in_sandbox(evaluate_formula, arg, timeout=PARSE_TIMEOUT))
+        if calc_result.draw_mode:
+            # 延迟导入：matplotlib 导入内存开销大，求值沙箱子进程不需要它
+            from xme.xmetools.drawtools import draw_3d_exprs, draw_exprs
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'drawing'))
-            if is_image == 1:
-                path, _ = run_with_timeout(draw_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
-                # path, _ = linux_draw_exprs(*result)
-            elif is_image == 2:
-                path, _ = run_with_timeout(draw_3d_exprs, TIMEOUT_SECS, f"绘图超时 (>{TIMEOUT_SECS}s)", *result)
-                # path, _ = linux_draw_3d_exprs(*result)
-            # message = get_message("plugins", __plugin_name__, 'success_image', image=f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{path}]", formula=formula)
+            draw_func = draw_exprs if calc_result.draw_mode == 1 else draw_3d_exprs
+            try:
+                path, _ = await run_in_sandbox(
+                    draw_func, *calc_result.draw_exprs,
+                    timeout=DRAW_TIMEOUT, mem_mb=DRAW_MEM_MB, fsize_mb=DRAW_FSIZE_MB)
+            except SandboxTimeoutError:
+                return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"绘图超时 (>{DRAW_TIMEOUT}s)"))
             debug_msg("正在发送完成消息...")
-            # message = get_message("plugins", __plugin_name__, 'success_image', image=str(image_msg(path)), formula=formula)
             message = await image_msg(path)
-            # debug_msg(message)
-            await send_session_msg(session, message)
             debug_msg("发送完成")
-            return
-        else:
-            message = get_message("plugins", __plugin_name__, 'success', result=str(result).replace("**", "^"), formula=formula)
-        try:
-            float_result = str(float(result.doit()))
-        except Exception as ex:
-            logger.exception(ex)
-            debug_msg(result)
-            float_result = None
-        if float_result:
-            message += '\n' + get_message("plugins", __plugin_name__, 'float_result', float_result=float_result)
+            return await send_session_msg(session, message)
+        message = get_message("plugins", __plugin_name__, 'success', result=calc_result.result_str.replace("**", "^"), formula=calc_result.formula)
+        if calc_result.float_str:
+            message += '\n' + get_message("plugins", __plugin_name__, 'float_result', float_result=calc_result.float_str)
+    except SandboxTimeoutError:
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"计算超时 (>{PARSE_TIMEOUT}s)"))
     except SyntaxError as ex:
-        # return await send_session_msg(session, get_message("plugins", __plugin_name__, 'syntaxerror', ex=traceback.format_exc()))
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'syntaxerror', ex=ex))
     except SympifyError as ex:
-        # return await send_session_msg(session, get_message("plugins", __plugin_name__, 'sympifyerror', ex=traceback.format_exc()))
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'sympifyerror', ex=ex))
+    except SandboxError as ex:
+        logger.warning(f"calc 沙箱执行失败: {ex}")
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=ex))
     except Exception as ex:
-        # return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=traceback.format_exc()))
+        logger.exception(ex)
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=ex))
     await send_session_msg(session, message)

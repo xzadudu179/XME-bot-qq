@@ -8,16 +8,14 @@ import inspect
 import asyncio
 from traceback import format_exc
 from uuid import uuid4
-from xme.xmetools.cmdtools import is_command
 from xme.xmetools.videotools import extract_video_links, extract_and_download, parse_video
-import config
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join
+from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join, TooManyFilesError, DirectoryTooLargeError
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.debugtools import debug_msg
-from xme.xmetools.msgtools import is_text_can_send, send_session_msg, aget_arg_with_timeout, setup_logger
+from xme.xmetools.msgtools import is_text_can_send, send_session_msg, setup_logger
 from xme.xmetools.bottools import get_user_name
 from xme.xmetools.timetools import get_time_now, Timer
 from xme.xmetools import jsontools
@@ -26,7 +24,6 @@ from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 from zai.core._errors import APIRequestFailedError
-
 from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
     __plugin_name__,
@@ -48,14 +45,23 @@ from .constants import (
     CONTEXT_LIMIT_DEFAULT,
     MODEL_CONTEXT_LIMITS,
     FLASH_MODEL,
+    MAX_HISTORY_FILE_COUNTS,
+    MAX_HISTORY_FILES_SIZE,
 )
 from . import history
+from . import credits
 from . import share
 from .session import AISession, current_storage, normal_insert_enabled
 from .functions._common import ImageToolResult
 
 ai_logger = setup_logger("aihelper", "ai_helper_log")
 
+
+# 文本中的媒体直链（.mp4 等结尾，允许带查询参数）：用户消息里出现时直接作为
+# video_url 附入（LLM 已持有可用直链，无需下载）
+_DIRECT_VIDEO_RE = re.compile(
+    r"https?://[^\s（）()【】\[\]<>\"']+?\.(?:mp4|webm|mov|m4v|avi|mkv|flv)(?:\?[^\s（）()【】\[\]<>\"']*)?",
+    re.IGNORECASE)
 
 class InsertInterrupted(Exception):
     """共享会话有成员插入消息：当前生成被主动打断，已积累的上下文保留待重启。"""
@@ -122,19 +128,13 @@ def build_user_content(text: str, image_urls: list[str] | None = None,
     return parts
 
 
-_UNLOADABLE_PART_LABELS = {
-    "image_url": "[图片（原链接已失效，无法加载）]",
-    "video_url": "[视频（原链接已失效，无法加载）]",
-    "file": "[文件（原链接已失效，无法加载）]",
-}
-
-
 def _strip_unloadable_images(messages: list) -> int:
-    """把上下文里所有图片/视频/文件段替换为占位文本（就地修改），返回替换数量。
+    """静默移除上下文里所有图片/视频/文件段（就地修改），返回移除数量。
 
-    用于 GLM 1210（图片输入解析失败）兜底：历史多模态段引用的是短期本地链接，
-    过期后每次调用都会失败；全部去掉后重试可保住会话，占位文本让模型得知原处有图。
-    非 text 段一并替换（含未知类型），避免漏网段导致重试再次 1210。
+    用于 GLM 1210（媒体输入解析失败）兜底：剥离只为保住会话，属内部机制，
+    不应让模型感知——因此不做"链接失效"类提示（媒体本就是一次性输入，模型
+    无需再次加载）；仅当消息因此变空时补一个中性占位维持结构完整。
+    非 text 段一律移除（含未知类型），避免漏网段导致重试再次 1210。
     """
     removed = 0
     for m in messages:
@@ -143,21 +143,15 @@ def _strip_unloadable_images(messages: list) -> int:
         content = m.get("content")
         if not isinstance(content, list):
             continue
-        new_parts = []
-        changed = False
-        for part in content:
-            ptype = part.get("type") if isinstance(part, dict) else None
-            if ptype is not None and ptype != "text":
-                label = _UNLOADABLE_PART_LABELS.get(ptype, "[图片/文件（原链接已失效，无法加载）]")
-                new_parts.append({"type": "text", "text": label})
-                removed += 1
-                changed = True
-            else:
-                new_parts.append(part)
-        if changed:
+        new_parts = [p for p in content
+                     if not (isinstance(p, dict) and p.get("type") not in (None, "text"))]
+        dropped = len(content) - len(new_parts)
+        if dropped:
+            if not new_parts:
+                new_parts = [{"type": "text", "text": "（媒体）"}]
             m["content"] = new_parts
+            removed += dropped
     return removed
-is_external_stop = False
 
 class _AISTOP:
     def __repr__(self):
@@ -188,6 +182,23 @@ def _validate_tools(tools: list) -> None:
 class AIHelper:
     """AIHelper Agent 实例，生命周期仅存在于单个用户会话中
     """
+
+    def is_history_files_too_many(self):
+        path = self.get_history_path()
+        files = [p for p in path.iterdir() if p.is_file()]
+        return len(files) > MAX_HISTORY_FILE_COUNTS
+
+    def is_history_too_big(self):
+        path = self.get_history_path()
+        total_size = sum(
+            p.stat().st_size
+            for p in path.rglob("*")
+            if p.is_file()
+        )
+        if total_size is None:
+            ai_logger.warning("无法获取 history 的 totalsize")
+            return
+        return total_size > MAX_HISTORY_FILES_SIZE
 
     def get_temp_path(self, string=False):
         self._check_user_path()
@@ -231,6 +242,10 @@ class AIHelper:
         新工具写文件一律走这里，不要手写 write 后再补 note_file_state。
         """
         p = Path(path)
+        if p.is_relative_to(self.get_history_path()) and self.is_history_too_big():
+            raise DirectoryTooLargeError(f"history 文件夹过大 (>{MAX_HISTORY_FILES_SIZE // 1024 // 1024}MiB)，请删除部分文件再试")
+        if p.is_relative_to(self.get_history_path()) and self.is_history_files_too_many():
+            raise TooManyFilesError(f"history 文件夹文件过多 (>{MAX_HISTORY_FILE_COUNTS})，请删除部分文件再试")
         if binary:
             with open(p, "wb") as f:
                 f.write(data)
@@ -320,8 +335,6 @@ class AIHelper:
     def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
-        global is_external_stop
-        is_external_stop = False
         self.shared = shared_session
         self.ai_session = (shared_session.code if shared_session is not None else ai_session) or history.DEFAULT_SESSION
         MODEL_MAP = {
@@ -398,21 +411,18 @@ class AIHelper:
         self.current_model = model
         MAX_RETRY_TIMES = 5
         retry_times = 0
-        image_retry_used = False
         while True:
             try:
                 result = await self.create_and_wait(session, messages, model)
             except APIRequestFailedError as ex:
-                # 1210=图片输入解析失败：历史多模态段引用的短期本地链接过期所致。
-                # 去掉全部图片/附件段后重建任务重试一次，保住会话而非整体报错
-                if image_retry_used or "1210" not in str(ex):
-                    raise
-                image_retry_used = True
+                # 1210=媒体输入解析失败（过期链接 / video_url 不被支持等）。
+                # 剥离全部媒体段后重建任务重试：剥离是破坏性的（媒体段只减不增），
+                # 因此无需次数限制也可保证收敛；无媒体可剥时照抛，避免掩盖其他错误
                 removed = _strip_unloadable_images(messages)
-                if not removed:
+                if "1210" not in str(ex) or not removed:
                     raise
                 ai_logger.warning(
-                    f"图片链接失效（1210），已去除 {removed} 个图片/附件后重建任务重试")
+                    f"媒体输入解析失败（1210），已静默移除 {removed} 个媒体段后重建任务重试")
                 continue
             except RuntimeError:
                 if retry_times >= MAX_RETRY_TIMES:
@@ -424,8 +434,6 @@ class AIHelper:
                     ai_logger.warning(
                         f"模型调用失败，紧急折叠上下文后重试（第 {retry_times} 次，释放约 {freed:,} 字符）")
                 continue
-            if result == False:
-                return False, 0
             message = result.choices[0].message
             self.tokens += result.usage.total_tokens
             self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
@@ -471,7 +479,7 @@ class AIHelper:
             for tool_call in message.tool_calls:
                 result_content = await self.execute_tool(session, tool_call, self.tool_call_times)
                 if result_content is AISTOP:
-                    await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
+                    # 中断文案与结算统一在 user_talk 的 AISTOP 分支处理，此处只中断
                     return False, 0
                 result_text = str(result_content)
                 if isinstance(result_content, ImageToolResult):
@@ -593,7 +601,6 @@ class AIHelper:
             ai_logger.warning(f"保存会话快照失败（不影响对话）: {ex}")
 
     async def create_and_wait(self, session, messages, model):
-        from . import alias
         self._save_snapshot(messages, model)
         response = self.client.chat.asyncCompletions.create(
             model=model,
@@ -616,27 +623,13 @@ class AIHelper:
             if result.task_status == "FAIL":
                 raise RuntimeError(result)
             check_times += 1
-            reply = await aget_arg_with_timeout(session, 1)
-            logger.info(f"{self.user_id} 询问AI中，并正在等待用户指令 (x{check_times})")
-            if (reply is not None and reply.strip() == "aistop") or is_external_stop:
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted"))
-                return False
-            # 发起者本人的追加发言：并入插入队列（开启插入模式的会话，普通/共享通用）
-            if reply is not None and reply.strip() and self.insert_enabled and reply[0] in config.COMMAND_START and reply.split(" ")[0][1:] in (__plugin_name__, *alias):
-                ins_text = " ".join(reply.split(" ")[1:]).strip()
-                image_objects, cq_matches = await get_images_from_message(session.bot, ins_text)
-                for image_cq in cq_matches:
-                    ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-                share.enqueue_insert(self.insert_key, share.Insert(
-                    user_id=self.user_id, text=ins_text,
-                    image_urls=tuple(x["file"] for x in image_objects),
-                    time=get_time_now()))
-                await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted'))
-            if reply is not None and is_command(reply) and reply.split(" ")[0][1:] not in (__plugin_name__, *alias):
-                await send_session_msg(session, get_message("plugins", __plugin_name__, 'ai_sending'))
-            # 成员插入（或上面的发起者追加）：打断当前生成，交由 user_talk 并入上下文后重启
+            # 旧 arg 轮询（aget_arg_with_timeout）已退役：aistop 与同聊插入均由
+            # 消息预处理器接管（工具执行中同样即时生效），这里只做固定间隔轮询 +
+            # 插入打断检查，打断后由 user_talk 并入上下文重启
+            logger.info(f"{session.event.user_id} 获取 AI 状态")
             if self.insert_enabled and share.has_pending_inserts(self.insert_key):
                 raise InsertInterrupted()
+            await asyncio.sleep(1)
         raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
 
     async def _glm_chat(self, messages, model=FLASH_MODEL):
@@ -713,40 +706,70 @@ class AIHelper:
         return 0
 
     async def get_video_url_dicts(self, text):
+        """把文本里的视频链接转为 video_url 输入段。
+
+        - 平台链接（B站/YouTube 等）：yt-dlp 下载到本地后以限时直链附入（文本替换为
+          "[视频:平台] …"，只展示平台链接，不暴露本地直链）；
+        - 媒体直链（.mp4 等）：LLM 已持有可用直链，直接原样附入，不下载。
+        """
         links = extract_video_links(text)
-        pth = f"./data/videos/temp/"
-        pths = []
-        if len(links) < 1:
-            return text, [], []
-
-        result: VideoExtractResult = await extract_and_download(
-            text,
-            output_dir=pth
-        )
-        links = result.links
-
-        video_dicts = []
+        video_dicts: list = []
+        pths: list = []
         new_text = text
-        try:
-            for link, r in sorted(zip(result.links, result.downloads),
-                                key=lambda p: p[0].start, reverse=True):
-                if not r.ok:
-                    raise ValueError(f"下载视频出现错误：{r.error}")
-                video_info = await parse_video(r.url)
-                desc = video_info.description if video_info and video_info.description else "无"
-                desc = desc[:200] + "..." if len(desc) > 200 else desc
-                desc = desc.replace("\r\n", "\n").replace("\r", "\n")
-                title = video_info.title if video_info else (r.title or "未知标题")
-                platform = f"{video_info.platform_name}-{video_info.video_id}" if video_info else "未知平台信息"
-                desc = f"``` Text\n{desc}\n```" if desc.count("\n") > 1 else '"' + desc.strip("\n") + '"'
-                info_text = f"[视频:{platform}] 标题：{title} | url:{link.url} | 介绍:{desc} "
-                new_text = new_text[:link.start] + info_text + new_text[link.end:]
-                for f in r.file_paths:
-                    pths.append(f)
-                    video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
-            return new_text, video_dicts, pths
-        except Exception as ex:
-            return f"[解析视频出现异常: {ex}]" + new_text, [], []
+        if links:
+            try:
+                result: VideoExtractResult = await extract_and_download(
+                    text, output_dir="./data/videos/temp/")
+                for link, r in sorted(zip(result.links, result.downloads),
+                                    key=lambda p: p[0].start, reverse=True):
+                    if not r.ok:
+                        raise ValueError(f"下载视频出现错误：{r.error}")
+                    video_info = await parse_video(r.url)
+                    desc = video_info.description if video_info and video_info.description else "无"
+                    desc = desc[:200] + "..." if len(desc) > 200 else desc
+                    desc = desc.replace("\r\n", "\n").replace("\r", "\n")
+                    title = video_info.title if video_info else (r.title or "未知标题")
+                    platform = f"{video_info.platform_name}-{video_info.video_id}" if video_info else "未知平台信息"
+                    desc = f"``` Text\n{desc}\n```" if desc.count("\n") > 1 else '"' + desc.strip("\n") + '"'
+                    info_text = f"[【视频(已附在输入):{platform}】 标题：{title} | url:{link.url} | 介绍:{desc}]"
+                    new_text = new_text[:link.start] + info_text + new_text[link.end:]
+                    for f in r.file_paths:
+                        pths.append(f)
+                        video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
+            except Exception as ex:
+                return f"[解析视频出现异常: {ex}]" + new_text, [], []
+        # 媒体直链：LLM 已持有可用直链，直接原样附入（不下载、不暴露额外链接）
+        def _direct_repl(m):
+            url = m.group(0)
+            video_dicts.append({"type": "video_url", "video_url": {"url": url}})
+            return f"[视频:直链] {url}"
+        new_text = _DIRECT_VIDEO_RE.sub(_direct_repl, new_text)
+        return new_text, video_dicts, pths
+
+    def compute_credits(self) -> dict:
+        """按已累计 tokens 计算本轮 credits 消耗与参与者均摊（正常结束与中断结算共用）。
+
+        返回 {"credits_use", "credits_split", "cached", "total"}；模型倍率取
+        self.current_model（每轮 run_agent 刷新，中断时即最近一轮的真实模型）。
+        """
+        # 缓存 tokens 占 1/4
+        credits_use = (
+            self.tokens
+            - self.cached_tokens * 0.75
+        )
+        multis = 1
+        match self.current_model:
+            case "glm-5.3":
+                multis = 10
+            case m if m == FLASH_MODEL:  # 裸名是捕获模式，必须用 guard 做值比较
+                multis = 0.5
+        credits_use *= multis
+        credits_use += self.other_credits
+        # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）
+        per_share = credits_use / len(self.participants) if self.participants else credits_use
+        credits_split = {str(uid): round(per_share, 2) for uid in self.participants}
+        return {"credits_use": credits_use, "credits_split": credits_split,
+                "cached": self.cached_tokens, "total": self.tokens}
 
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
@@ -769,7 +792,7 @@ class AIHelper:
             # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
             # matches = re.findall(pattern, text)
             for image_cq in matches:
-                text = text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+                text = text.replace(image_cq, f"[图片{hash_text(image_cq)} 已附在输入里]")
             image_urls = [x["file"] for x in image_objects]
 
             text, video_dicts, pths = await self.get_video_url_dicts(text)
@@ -822,6 +845,17 @@ class AIHelper:
                                           model=self.model, vision_model=real_model)
         self.spent_secs.stop()
         if result == False or result is AISTOP:
+            # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示
+            tokens_use_dict = self.compute_credits()
+            lefts = credits.settle_split(tokens_use_dict["credits_split"])
+            share_used = tokens_use_dict["credits_split"].get(str(self.user_id))
+            left = lefts.get(str(self.user_id))
+            fmt = lambda x: f"{x:,.2f}".rstrip('0').rstrip('.') if x is not None else "未知"
+            await send_session_msg(
+                session,
+                get_message("plugins", __plugin_name__, "ai_send_interrupted",
+                            credits=fmt(share_used), left=fmt(left))
+            )
             return False, {}, {}, 0
         try:
             ans = result.choices[0].message.content
@@ -829,22 +863,9 @@ class AIHelper:
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"
             )
-            # 缓存 tokens 占 1/4
-            credits_use = (
-                self.tokens
-                - self.cached_tokens * 0.75
-            )
-            multis = 1
-            match real_model:
-                case "glm-5.3":
-                    multis = 10
-                case m if m == FLASH_MODEL:  # 裸名是捕获模式，必须用 guard 做值比较
-                    multis = 0.5
-            credits_use *= multis
-            credits_use += self.other_credits
-            # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）
-            per_share = credits_use / len(self.participants) if self.participants else credits_use
-            credits_split = {str(uid): round(per_share, 2) for uid in self.participants}
+            tokens_use_dict = self.compute_credits()
+            credits_use = tokens_use_dict["credits_use"]
+            credits_split = tokens_use_dict["credits_split"]
             debug_msg("处理结果")
             logger.info(
                 f"缓存tokens "
@@ -852,7 +873,7 @@ class AIHelper:
                 f"减少 {credits_use} 个 tokens"
             )
             if not (await is_text_can_send(session, ans, 4)):
-                return "这个话题好像不是很合适呢...我们换个话题聊吧。", {"credits_use": credits_use, "credits_split": credits_split, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}
+                return "这个话题好像不是很合适呢...我们换个话题聊吧。", tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, 0
             build_history(
                 user=user,
                 ask=asks[-1].get("text", text) if asks else text,
@@ -860,7 +881,7 @@ class AIHelper:
                 agent=self,
                 asks=asks,
             )
-            return ans, {"credits_use": credits_use, "credits_split": credits_split, "cached": self.cached_tokens, "total": self.tokens}, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
+            return ans, tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
 

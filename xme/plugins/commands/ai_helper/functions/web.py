@@ -300,7 +300,7 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     except Exception as ex:
         logger.exception(f"截图失败 {source}")
         return f"[截图失败：{exception_detail(ex)}]"
-    # 存入图片缓存目录，生成限时 url 供 AI / GLM 读取
+    # 存入图片缓存目录，生成限时 url 供 GLM 读取（直链不作为文本暴露给模型）
     image_dir = Path(IMAGE_TEMP_PATH)
     image_dir.mkdir(parents=True, exist_ok=True)
     png_path = image_dir / f"screenshot-{uuid4().hex}.png"
@@ -308,8 +308,16 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     file_url = get_local_file_url(str(png_path))
     prompt = (prompt or "").strip()
     if not prompt:
-        return (f"截图完成（{width}x{height}）：{file_url}\n"
-                f"链接短期有效，可将该 url 传入 view_image 并附 prompt 进行分析。")
+        # 无分析需求：不暴露直链，登记 temp 引用供后续 view_image(ref) 使用
+        ref = ""
+        try:
+            res = bytes_to_file(png, agent.user_id, ".png", agent)
+            ref = res["ref"]
+        except FileExistsError as ex:
+            # 同内容截图已存在：反查既有引用复用，不产生第二个引用
+            ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
+        return (f"截图完成（{width}x{height}），已保存到 temp（引用 {ref}）。\n"
+                f"需要分析内容时可用 view_image 传入该引用。")
     # 视觉轮直注入：截图直接进当前对话，不再单独调 view_item 分析
     if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL:
         return ImageToolResult(

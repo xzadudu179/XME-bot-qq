@@ -72,6 +72,16 @@ class User:
         self.last_call_time = time.time()
         DATABASE.update_db(obj=self, id=self.db_id, last_call_time=self.last_call_time)
 
+    def update(self, *objects):
+        # updates = {o: getattr(self, o) for o in objects}
+        updates = {}
+        for o in objects:
+            attr = getattr(self, o)
+            if isinstance(attr, dict):
+                attr = json.dumps(attr)
+            updates[o] = attr
+        DATABASE.update_db(obj=self, id=self.db_id, **updates)
+
     def __init__(
             self,
             user_id: int,
@@ -284,6 +294,16 @@ class User:
             c.get_reg_time()
         return c
 
+    @staticmethod
+    def load_by_afdian_id(afdian_id: str, create_default_user=False):
+        """按爱发电用户 id 加载绑定的用户，未绑定时默认返回 None。"""
+        if not afdian_id:
+            return None
+        c: User = DATABASE.load_class(select_keys=(afdian_id,), query='SELECT * FROM {table_name} WHERE afdian_id = ?', cl=User)
+        if c is None and create_default_user:
+            return User(user_id=-1)
+        return c
+
     def save(self):
         self.db_id = DATABASE.save_to_db(obj=self)
 
@@ -434,8 +454,11 @@ def limit(limit_name: str,
             if not fails(result):
                 debug_msg("保存用户数据, 增加计数")
                 debug_msg("coins", user.coins)
-                limit_count_tick(user, limit_name)
-                user.save()
+                u = try_load(user.id)
+                limit_count_tick(u, limit_name)
+                u.update("counters")
+                # limit_count_tick(user, limit_name)
+                # user.save()
             if isinstance(result, str):
                 await send_session_msg(session, result)
             return result
@@ -470,10 +493,13 @@ def custom_limit(limit_name: str | FunctionType,
                 name = limit_name
             def count_tick(count=1):
                 debug_msg("保存用户数据, 增加计数")
-                limit_count_tick(user, name, count)
-                user.save()
+                u = try_load(user.id)
+                limit_count_tick(u, name, count)
+                u.update("counters")
+                # user.save()
             def check_invalid():
-                if detect_limit(user=user, name=name, interval=interval, count_limit=count_limit, unit=unit,
+                u = try_load(user.id)
+                if detect_limit(user=u, name=name, interval=interval, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
                     # 已受限
                     debug_msg("受到限制")
@@ -588,20 +614,21 @@ def load_dict_user(data: dict):
     # loading a single user via load_from_dict.
     inventory = inventory_data
     # debug_msg(data)
-    celestial = data.get('celestial', None)
+    # celestial = data.get('celestial', None)
 
     return {
             "id": data.get('id', -1),
             "user_id": data["user_id"],
             "coins": data.get('coins', 0),
             "counters": counters,
+            "afdian_id": data.get('afdian_id', ""),
             "xme_favorability": data.get('xme_favorability', 0),
             "desc": data.get('desc', ""),
             "plugin_datas": plugin_datas,
             "achievements": achievements,
             "inventory": inventory,
             "talked_to_bot": talked_to_bot,
-            "celestial": celestial,
+            # "celestial": celestial,
             "last_call_time": data.get('last_call_time', 0),
     }
 
@@ -612,8 +639,8 @@ def load_from_dict(data: dict, id: int) -> User:
     if inventory_data:
         inventory = Inventory.get_inventory(inventory_data)
     # debug_msg(data)
-    celestial = data.get('celestial', None)
-    debug_msg("celestial", celestial)
+    # celestial = data.get('celestial', None)
+    # debug_msg("celestial", celestial)
     # debug_msg(celestial)
     counters = json.loads(data.get('counters', "{}"))
     # timers = json.loads(data.get('timers', "{}"))

@@ -2,7 +2,9 @@ import time
 import jwt
 from hashlib import md5
 
-
+SMTP_HOST = "smtp.example.com"
+MAIL_USERNAME = "mail@example.com"
+MAIL_PASSWORD = ""
 GLM_API_KEY = ""
 TAVILY_API_KEY = ""
 WEATHER_API_KEY = ""
@@ -13,9 +15,16 @@ AFDIAN_USER_ID = ''
 AFDIAN_TOKEN = ''
 AFDIAN_OAUTH_SECRET = ""
 AFDIAN_OAUTH_CLIENT_ID = ""
+# cf 配置 在  /etc/cloudflared/config.yml
+# OAuth 回调地址：需要与爱发电后台登记的可信域名一致，
+# 并在公网入口（反代/隧道）把该地址转发到 bot 的 Quart 端口
+AFDIAN_OAUTH_REDIRECT_URI = "https://oauth.xzadudu179.top/afdian/oauth"
+# OAuth 绑定接口（JSON API）的 CORS 允许来源：前端项目部署后改成它的域名
+# （如 https://afd.example.vercel.app），"*" 表示允许任意来源
+AFDIAN_OAUTH_FRONTEND_ORIGIN = "*"
 TOKEN_TTL = 0
 FILE_TOKENS = {}
-DOMAIN = "example.com"
+DOMAIN = "api.example.com"
 
 def generate_file_token(path: str) -> str:
     ...

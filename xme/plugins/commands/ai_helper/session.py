@@ -211,7 +211,7 @@ class AISession:
 
     def clear(self) -> tuple[int, int]:
         """清空会话内容（历史文件 + 转存文件夹），返回 (删除的历史文件数, 删除的转存文件数)。"""
-        return (history.clear_history(self.user_id, self.ai_session),
+        return (history.clear_history(self.user_id, self.ai_session)[0],
                 history.clear_session_files(self.user_id, self.ai_session))
 
     # ---------- 生命周期 ----------
@@ -221,7 +221,7 @@ class AISession:
         if self.is_default:
             raise ValueError("默认会话不可删除")
         is_current = AISession.current(self.user_id).ai_session == self.ai_session
-        cleared = history.clear_history(self.user_id, self.ai_session) + history.clear_session_files(self.user_id, self.ai_session)
+        cleared = history.clear_history(self.user_id, self.ai_session)[1] + history.clear_session_files(self.user_id, self.ai_session)
         _remove_locked(self.user_id, self.ai_session)
         # 插入模式名单同步移除
         names = _read_insert_sessions(self.user_id)

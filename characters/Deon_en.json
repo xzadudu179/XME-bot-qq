@@ -727,6 +727,45 @@
         ]
     },
     "plugins": {
+        "sandbox": {
+            "desc": "Sandbox security self-test",
+            "introduction": "Runs a battery of escape and isolation probes against the sandbox (network, filesystem, module imports, process visibility, environment leaks), then re-checks the host side for leftovers, reporting whether each surface is properly isolated.\n\nPass cell (strict blank box) or repo (calc profile) to test only that profile; by default both are tested. SUPERUSER only.",
+            "result_header": "🛡 Sandbox security self-test finished",
+            "has_fail": "⚠ Unisolated attack surface detected, check immediately!",
+            "result_footer": "{total} checks: {passed} passed, {failed} failed",
+            "error": "[Sandbox self-test failed: {ex}]"
+        },
+        "afdian": {
+            "desc": "Afdian",
+            "introduction": "View the sponsor ranking, bind your Afdian account, and check your sponsorship status.\n\nAvailable operations:\n{operations}\n\n> All amounts are actually paid (redeem codes count as 0).",
+            "no_sub": "There is no subcommand \"{cmd}\". Send \"/afd\" to see available commands.",
+            "api_error": "{negative}, the Afdian API request failed. Please try again later.",
+            "rank": {
+                "desc": "Sponsor ranking",
+                "introduction": "View the Afdian sponsor ranking by amount.\n\n> Add a count to limit entries, e.g. \"/afd rank 5\".",
+                "empty": "No one has sponsored yet. Be the first!",
+                "success": "======※Sponsor Ranking※======\n{ranking}\n==========\n{total} sponsors in total (top {shown} shown)\nSend \"/afd me\" to check your own sponsorship status!"
+            },
+            "login": {
+                "desc": "Bind Afdian",
+                "introduction": "Bind your Afdian account so you can use \"/afd me\".\n\n> The link is valid for {expire} minutes. Do not click or forward someone else's binding link.",
+                "private_msg": "Click the link below to bind your Afdian account (valid for {expire} minutes):\n{url}\n\nAfter binding, go back to the chat and send \"/afd me\" to view your sponsorship status~\nPlease do not forward this link to others.",
+                "sent_private": "The binding link has been sent to you in private messages, check it out!",
+                "group_fallback": "Failed to send privately (maybe not friends). Here is the link (valid for {expire} minutes, do not forward it to others):\n{url}"
+            },
+            "me": {
+                "desc": "My sponsorship",
+                "introduction": "View your Afdian status and this month's sponsorship.",
+                "not_bound": "You haven't bound an Afdian account yet. Send \"/afd login\" to bind one first.",
+                "no_record": "The bound account has no sponsorship records yet. Go check out {bot_name} on Afdian!",
+                "success": "======※My Sponsorship Status※======\nName: {name}\nThis month: ¥{month_amount} ({month_count} orders)\nLast {recent_days} days: ¥{recent_amount} ({recent_count} orders)\nTotal: ¥{total_amount}\nFirst sponsor: {first_time}\nLatest sponsor: {last_time}\nCurrent plan: {plan}\n=========="
+            },
+            "stat": {
+                "desc": "Sponsorship stats (developer only)",
+                "introduction": "View Afdian business stats (monthly/total income). Developer only.",
+                "success": "======※Afdian Stats※======\n{year}-{month}: ¥{month_amount} ({month_count} orders / {month_sponsors} sponsors)\nTotal: ¥{total_amount} ({total_count} orders)\nSponsors in total: {sponsor_count}\n=========="
+            }
+        },
         "answer": {
             "desc": "Open the Book of Answers",
             "introduction": "Have {bot_name} open a page of the Book of Answers and read it aloud.\n\n> Think your question silently, and you will receive your answer.",
@@ -1882,7 +1921,7 @@
                 "Calculation error, please ensure the format is correct {negative} \n{ex}\nUse \"/help calc\" for help"
             ],
             "func_builtin_intro": "Here are most built-in functions and items{positive_punc}",
-            "too_long": "Your expression is too long! Must be within 100 characters",
+            "too_long": "Your expression is too long! Must be within 1000 characters",
             "have_risk": "Warning: your expression may contain injection risks. Please check the content and do not attempt injection!",
             "success": "The result of \"{formula}\" is \"{result}\"",
             "success_image": "The result of \"{formula}\" is\n{image}",

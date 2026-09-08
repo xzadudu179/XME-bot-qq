@@ -16,10 +16,11 @@
 - DATABASE.update_db(obj, id, **fields)            按主键更新字段，返回受影响行数
 - DATABASE.load_class(select_keys, query, cl)      查询单个模型实例
 - DATABASE.create_class_table(obj)                 建表/自动迁移，返回表名
-- DATABASE.remove(table_name, condition, params)   按条件删除
+- DATABASE.remove(table_name, conditions)          按结构化条件安全删除，返回删除行数
 """
 from xme.xmetools.dbtools.adapter import (
     adapt_value,
+    build_where,
     validate_identifier,
     value_to_sql_type,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "T_DbReadWriteable",
     "XmeDatabase",
     "adapt_value",
+    "build_where",
     "database_connect",
     "ensure_table_schema",
     "get_table_columns",

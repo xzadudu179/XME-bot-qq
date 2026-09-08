@@ -3,6 +3,7 @@
 
 分类：
 - files.py      文件读写/搜索/改写/转存/发送
+- codeexec.py   沙箱内对文件副本执行 Python 分析代码
 - web.py        url 下载、网页阅读、web 搜索、图片/视频/文档内容查看
 - media.py      图片生成与 OCR
 - worldview.py  世界观状态与技能文档
@@ -44,6 +45,7 @@ __tools__ = [
     "send_file",
     "edit_file",
     "syntax_check",
+    "run_python",
     "zip_files",
     "name_session",
     "dice",
@@ -69,6 +71,7 @@ from .files import (
     write_to_temp,
     zip_files,
 )
+from .codeexec import run_python
 from .media import gen_image, ocr_image
 from .misc import ask_user, dice, get_user_input_urls, inprocess_report, name_session
 from .web import (

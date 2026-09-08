@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import inspect
 import re
 import httpx
@@ -14,7 +15,7 @@ from xme.xmetools.bottools import XmeArgumentParser
 from xme.xmetools.msgtools import CMD_END, aget_arg, is_text_can_send, send_session_msg, send_to_user
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.jsontools import read_from_path
-from xme.xmetools.timetools import TimeUnit, get_time_now, secs_to_ymdh
+from xme.xmetools.timetools import get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
 from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
@@ -22,9 +23,10 @@ from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
 from .session import AISession, current_storage, enable_normal_insert
-from . import constants, share
-from .constants import __plugin_name__, TOKENS_LIMIT, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
-from .commands import clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
+from . import constants, share, aistop, credits
+from .credits import ai_credits_left
+from .constants import __plugin_name__, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
+from .commands import adjust_credits, clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
 from .share_commands import (
     join_session,
     kick_member,
@@ -107,6 +109,11 @@ cmds = {
         "args": "",
         "desc": "开关共享会话的插入模式（群主专用，开启后成员可在对话进行中插入消息）",
     },
+    "credits": {
+        "content": adjust_credits,
+        "args": "(qq) (±数值)",
+        "desc": "查看/调整用户自存 credits（超管专用；无 qq 查看自己，无数值仅查看）",
+    },
     "history": {
         "content": session_history,
         "args": "",
@@ -188,21 +195,20 @@ def extract_text(raw: str) -> str:
     return raw.strip()
 
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
-@u.using_user(save_data=True)
-@u.custom_limit(__plugin_name__, 1, unit=TimeUnit.DAY, count_limit=TOKENS_LIMIT)
-async def _(session: CommandSession, user: u.User, validate, count_tick):
+@u.using_user(save_data=False)
+async def _(session: CommandSession, user: u.User):
     global curr_sessions
     superuser_mode = False
 
-    if validate() and user.id not in config.SUPERUSERS:
+    # 每日免费额度 + 自存 credits 双余额：总余额 ≤0 且非超管才拒绝
+    if ai_credits_left(user) <= 0 and user.id not in config.SUPERUSERS:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
     # 如果有 session 在运行
     running_turn = curr_sessions.get(user.id)
     if running_turn:
-        if session.current_arg_text.strip() == "stop":
-            from . import agent
-            agent.is_external_stop = True
+        if session.current_arg_text.strip() in ("stop", "aistop"):
+            aistop.request_stop(session.event.group_id, user.id)
             return False
         if not isinstance(running_turn, dict):
             # 该对话未开启插入模式：维持原有拒绝
@@ -359,13 +365,16 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
 
-        credits_left_now = TOKENS_LIMIT - u.get_limit_info(user, __plugin_name__)[1] - credits_use
         message = "\n".join([str(s) for s in pending_messages])
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
         user_history = storage.load_history()
         *_, normals = history.split(user_history)
+        # 插入模式下全部用量在参与者间均摊，逐人结算（每日额度封顶 + 自存 credits 扣透支；超管跳过）
+        credits_split = tokens_use_dict.get("credits_split") or {str(user.id): credits_use}
+        lefts = credits.settle_split(credits_split)
+        credits_left_now = lefts.get(str(user.id), credits.ai_credits_left(user))
         send_msg = get_message(
             "plugins",
             __plugin_name__,
@@ -383,20 +392,6 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             prefix=prefix
         )
         # ai_logger.info(f"send msg {send_msg}")
-        # 输出风控；插入模式下全部用量在参与者间均摊，逐人计入每日额度（超管跳过）
-        credits_split = tokens_use_dict.get("credits_split") or {str(user.id): credits_use}
-        for split_id, split_amount in credits_split.items():
-            split_uid = int(split_id)
-            if split_uid in config.SUPERUSERS:
-                continue
-            if split_uid == user.id:
-                count_tick(split_amount)
-                continue
-            split_user = u.try_load(split_uid)
-            if split_user is not None:
-                u.limit_count_tick(split_user, __plugin_name__, split_amount)
-                split_user.save()
-        # if len(send_msg) <= 2000:
         moderation_result = await is_text_can_send(session, send_msg, 4)
         can_send = moderation_result["result"]
         reason = moderation_result["reason"]
@@ -409,12 +404,12 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
             session,
             send_msg, tips=True
         )
-
+        # user.update()
         return True
     except Exception:
         # 注意：logging 的格式串必须带 %s 占位符，否则整条记录会被丢弃（静默无日志）
         ai_logger.error(f"AI 调用错误：{format_exc()}")
-        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()[:500]))
+        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
         return False
     finally:
         turn = curr_sessions[user.id]
@@ -422,9 +417,13 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
         # 对话结束时残留的插入消息已无法并入，向插入者致歉（共享/普通通用）
         if isinstance(turn, dict) and turn.get("key"):
             for lost in share.consume_inserts(turn["key"]):
-                await send_to_user(session.bot, lost.user_id,
-                                   get_message("plugins", __plugin_name__, 'shared_insert_lost',
-                                               code=turn["display"]))
+                await send_to_user(
+                    session.bot,
+                    lost.user_id,get_message("plugins",
+                            __plugin_name__,
+                            'shared_insert_lost', code=turn["display"]
+                        )
+                    )
 
 
 async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None):
@@ -468,7 +467,33 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
                                   "group_id": session.event.group_id}
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
-    result = await ai_helper.user_talk(session, role, user, text)
+    # aistop 登记：预处理器 / /ai stop 可随时取消本任务（长工具执行中也即时生效）
+    aistop.register_turn(session.event.group_id, user.id, asyncio.current_task(),
+                         insert_key=ai_helper.insert_key, insert_enabled=ai_helper.insert_enabled)
+    try:
+        result = await ai_helper.user_talk(session, role, user, text)
+    except asyncio.CancelledError:
+        # 被 aistop / /ai stop 取消：不发 talk_result、不写历史，
+        # 但已消耗的 tokens 照常结算（逐参与者），中断文案附带消耗
+        clear_snapshot(user.id)
+        ai_helper.delete_temp()
+        try:
+            tokens_use_dict = ai_helper.compute_credits()
+            lefts = credits.settle_split(tokens_use_dict["credits_split"])
+            share_used = tokens_use_dict["credits_split"].get(str(user.id))
+            left = lefts.get(str(user.id))
+            fmt = lambda x: f"{x:,.2f}".rstrip('0').rstrip('.') if x is not None else "未知"
+            await send_session_msg(
+                session,
+                get_message("plugins", __plugin_name__, "ai_send_interrupted",
+                            credits=fmt(share_used), left=fmt(left))
+            )
+        except Exception:
+            ai_logger.error(f"aistop 中断结算失败：{format_exc()}")
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted", credits="未知", left="未知"))
+        return False, {}, {}, 0
+    finally:
+        aistop.unregister_turn(session.event.group_id, user.id)
     # 对话正常结束（含主动中断）→ 快照已完成使命；异常死亡时快照残留供 --continue 恢复
     clear_snapshot(user.id)
     ai_helper.delete_temp()

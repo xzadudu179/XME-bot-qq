@@ -5,7 +5,7 @@
 from typing import Type
 
 from xme.xmetools.debugtools import debug_msg
-from xme.xmetools.dbtools.adapter import adapt_value, validate_identifier
+from xme.xmetools.dbtools.adapter import adapt_value, build_where, validate_identifier
 from xme.xmetools.dbtools.connection import database_connect
 from xme.xmetools.dbtools.protocol import T_DbReadWriteable
 from xme.xmetools.dbtools.schema import ensure_table_schema
@@ -39,19 +39,30 @@ class XmeDatabase:
         columns = [column[0] for column in cursor.description]
         return dict(zip(columns, datas))
 
-    def remove(self, table_name: str, condition: str, params: tuple = ()) -> None:
-        """按条件删除表中内容。
+    @database_connect
+    def remove(self, cursor, table_name: str, conditions) -> int:
+        """按条件删除表中内容，返回删除的行数。
+
+        条件为 (列名, 操作符, 值) 元组或其列表，值全部参数化绑定、
+        操作符限白名单，函数层面杜绝 SQL 注入；多个条件以 AND 连接。
+        超出该表达能力的删除请显式使用 exec_query。
 
         Args:
             table_name (str): 表名
-            condition (str): WHERE 条件，值必须使用 ? 占位，禁止拼接具体值
-            params (tuple): 条件占位符对应内容
+            conditions: (列名, 操作符, 值) 或其列表；操作符仅允许
+                = != <> < <= > >= LIKE IN NOT IN，其中 IN / NOT IN
+                的值为非空列表或元组
+
+        Returns:
+            int: 删除的行数
 
         Raises:
-            ValueError: 表名不合法
+            ValueError: 表名/列名不合法、操作符不在白名单或条件为空
         """
         validate_identifier(table_name)
-        self.exec_query(query=f"DELETE FROM {table_name} WHERE {condition}", params=params)
+        where, params = build_where(conditions)
+        cursor.execute(f"DELETE FROM {table_name} WHERE {where}", tuple(params))
+        return cursor.rowcount
 
     @database_connect
     def create_class_table(self, cursor, obj: T_DbReadWriteable) -> str:

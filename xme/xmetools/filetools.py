@@ -57,6 +57,18 @@ def get_file_size(path: str | Path):
     path = Path(path)
     return path.stat().st_size
 
+
+class FileLimitError(Exception):
+    """文件相关限制异常。"""
+
+
+class TooManyFilesError(FileLimitError):
+    """文件数量超过限制。"""
+
+
+class DirectoryTooLargeError(FileLimitError):
+    """文件夹大小超过限制。"""
+
 class FileType(Enum):
     EMPTY = "空文件"
     IMAGE = "图片文件"

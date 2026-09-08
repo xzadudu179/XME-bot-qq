@@ -340,7 +340,7 @@ def reset_limit(user: User, name: str, floor_float: bool = True,
         user.counters[name]["count"] = 0
     if count_add:
         user.counters[name]["count"] += 1
-    # user.save()
+    user.save()
 
 
 def limit_count_tick(user: User, name: str, count=1):

@@ -92,6 +92,7 @@ class OpenAICompatProvider:
         self.on_delta = on_delta
         self.stream_fallback = stream_fallback   # 流式不可用时回退非流式（部分中转端点流式兼容差）
         self._stream_produced = False            # 本次流式是否已产出增量（决定能否安全回退）
+        self._silent = False                     # 静默调用标记（不写流式日志）
         self._stream_buffers: dict[str, str] = {}  # 流式日志的行缓冲（按 reasoning/content 分路）
         self._client: httpx.AsyncClient | None = None
 
@@ -136,6 +137,8 @@ class OpenAICompatProvider:
 
     def _emit(self, kind: str, text: str) -> None:
         """立即输出一条增量（不做缓冲；note 类提示与整行输出走这里）。"""
+        if getattr(self, "_silent", False):
+            return   # 静默调用（如话题分类）：不写流式日志
         if self.on_delta and text:
             try:
                 self.on_delta(kind, text)
@@ -181,12 +184,13 @@ class OpenAICompatProvider:
     # ---------- 对外 ----------
 
     async def chat(self, messages, *, model, tools=None, temperature=None,
-                   thinking=False, on_tick=None) -> ChatResult:
+                   thinking=False, on_tick=None, silent=False) -> ChatResult:
         """发起一次对话调用，返回统一结果。失败抛 LLMError。
 
         on_tick：流式读块期间周期性回调（每若干块一次），供上层检查
         "是否有插入消息/是否需要中断"——回调抛出的异常会原样穿透，用于打断当前生成。
         """
+        self._silent = bool(silent)   # silent=True：本次调用不写流式日志（分类等内部短调用）
         use_stream = self.stream
         self._reset_stream_buffers()
         payload = self._payload(messages, model, tools, temperature, thinking, use_stream)

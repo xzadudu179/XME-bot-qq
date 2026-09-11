@@ -22,7 +22,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
-from .session import AISession, current_storage, enable_normal_insert, set_user_model, user_model
+from .session import AISession, current_storage, enable_normal_insert, has_custom_model, set_user_model, user_model
 from . import constants, share, aistop, credits
 from .credits import ai_credits_left
 from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
@@ -132,7 +132,7 @@ def get_command_list():
 def get_model_list():
     """模型列表文案（别名 / 简介 / 计费倍率），供帮助与报错提示展示。"""
     return "\n".join(
-        f"{n}:\t{m.get('description', '')}（计费 x{m.get('credit_multiplier', 1)}）"
+        f"{n}:\t{m.get('description', '')}（计费 x{m.get('credit_multiplier', 1)} 缓存 x{m.get('cache_credit_ratio', 0.25)}）"
         for n, m in LLM_MODELS.items()
     )
 
@@ -374,9 +374,15 @@ async def _(session: CommandSession, user: u.User):
             return False
     try:
         ai_session = storage.ai_session
-        if len(storage.load_history()) <= constants.COMPRESS_TRIGGER:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=model, ai_session=ai_session))
-        t, tokens_use_dict, messages_dict, tool_call_times = await talk(session, text, user, model, ai_session, shared=shared_session, resume_data=resume_data)
+        # 注意："正在使用 X 模型" 提示改为在 talk 内、模型确定（话题路由/媒体切换）之后发送，
+        # 这样显示的是本轮真正使用的模型
+        # 默认模型动态分配（集中判断）
+        routing_allowed = (bool(constants.LLM_TOPIC_ROUTING_ENABLED)
+                           and not args.model
+                           and not has_custom_model(user))
+        t, tokens_use_dict, messages_dict, tool_call_times = await talk(
+            session, text, user, model, ai_session, shared=shared_session,
+            resume_data=resume_data, routing_allowed=routing_allowed)
         if not t:
             return False
         pending_messages = messages_dict["messages"]
@@ -450,7 +456,7 @@ async def _(session: CommandSession, user: u.User):
                     )
 
 
-async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None):
+async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None, routing_allowed: bool = False):
     httpx_client = httpx.Client(
         proxy=None,
         trust_env=False,
@@ -477,7 +483,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
-    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data)
+    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data, routing_allowed=routing_allowed)
     # 新会话默认开启插入模式：只在会话尚未存在（= 此刻创建）时登记，
     # 用户事后 -c ins 关闭的不会被这里加回
     if shared is None:

@@ -290,7 +290,7 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         result = await provider.chat(messages, model=entry["model"], temperature=0.3)
         # 计费 tokens 到 credits（带外调用，跟随会话模型倍率折算）
         if agent is not None:
-            agent.other_credits += result.usage.billable_tokens
+            agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
         return result.text or "[没有识别到内容]"
     except Exception as ex:
         logger.exception(f"查看 url 内容失败: {ex}")

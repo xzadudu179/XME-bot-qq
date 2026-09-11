@@ -60,10 +60,13 @@ class Usage:
     total_tokens: int = 0
     cached_tokens: int = 0
 
-    @property
-    def billable_tokens(self) -> float:
-        """折算为计费 tokens：缓存部分按 1/4 计（全插件单点公式）。"""
-        return self.total_tokens - self.cached_tokens * 0.75
+    def billable_tokens(self, cache_ratio: float = 0.25) -> float:
+        """折算为计费 tokens：缓存命中的部分按 cache_ratio 计价（其余按全价）。
+
+        cache_ratio 由模型配置提供（LLM_MODELS 的 cache_credit_ratio）——
+        各家缓存折扣差异很大：GLM 命中部分按 0.25 计，DeepSeek 仅按 0.02 计。
+        """
+        return self.total_tokens - self.cached_tokens * (1 - cache_ratio)
 
 
 @dataclass

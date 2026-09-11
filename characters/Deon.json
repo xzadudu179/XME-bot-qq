@@ -2400,7 +2400,7 @@
       "shared_deleted": "已删除共享会话 {title}（{code}），清理了 {file_count} 个文件 {positive}",
       "shared_deleted_notify": "你所在/申请加入的共享会话 {title}（{code}）已被群主删除 {negative}",
       "shared_insert_accepted": "成功插入消息{positive_punc} AI 将会开始一起处理这些消息 {positive}",
-      "no_shared_insert": "好像你没有输入任何可以插入的消息呢 {negative}",
+      "no_shared_insert": "AI 正在思考中{positive_punc}\n想要插入消息的话 发送 \"/ai 插入内容\" 就好啦 {neutral}",
       "shared_insert_queue_full": "{negative} 插入队列已满（{max_pending} 条）",
       "shared_insert_hint": "\n如果要插入消息，可让会话主使用 \"/ai -c ins\" 启用对话插入哦{positive_punc}",
       "shared_insert_on": "已开启共享会话 {code} 的插入功能 {positive}（成员可在对话进行中插入消息，AI 会打断当前对话并一并回应）",
@@ -2413,7 +2413,9 @@
       "no_resume": "没有可恢复的中断会话哦 {neutral}",
       "resume_ask": "{neutral} 检测到你上次有异常中断的对话（{time}，有 {count} 条上下文）\n回复数字来选择操作吧 {positive}\n1. 继续该对话（不把当前消息带入上下文）\n2. 继续，并把当前消息一并带入上下文\n3. 取消，发送新对话",
       "model_saved": "已把默认模型切换为 {model} {positive}\n之后就可以使用 \"/ai 对话\" 调用它啦{positive_punc} 想临时换别的模型用 \"/ai -m 模型 对话内容\" 就好啦。",
-      "model_list": "当前默认模型：{current}\n可用模型列表：\n{models}\n用法：\"/ai -m 模型名\"切换默认模型；\"/ai -m 模型名 对话内容\" 在这次对话临时使用这个模型"
+      "model_list": "当前默认模型：{current}\n可用模型列表：\n{models}\n用法：\"/ai -m 模型名\"切换默认模型；\"/ai -m 模型名 对话内容\" 在这次对话临时使用这个模型",
+      "model_fallback_prefix": "[BOT] 注意：{model} 模型当前不可用哦，已回退到 {fallback}\n",
+      "empty_reply": "{neutral} AI 这次没有返回任何内容（原因：{reason}）\n可以换个说法再问一次，或稍后重试；若反复出现可让管理员查看日志"
     },
     "essence": {
       "desc": "随机精华消息",

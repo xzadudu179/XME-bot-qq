@@ -370,11 +370,17 @@ class AISession:
 
 
 def user_model(user) -> str:
-    """用户默认模型（plugin_datas["ai_helper"]["model"]）；未设置或已失效时用默认别名。"""
+    """用户默认模型（plugin_datas["ai_helper"]["model"]）。
+
+    以下情况一律回退到默认别名（LLM_DEFAULT_MODEL，通常为 flash）：
+    未设置、别名已不存在、或该模型所属 provider 已从配置中移除。
+    """
     from .llm import registry
     spec = get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
     if spec and registry.is_valid_model(spec):
-        return spec
+        entry = registry.resolve_model(spec)
+        if registry.provider_configured(entry.get("provider", "")):
+            return spec
     return registry.default_alias()
 
 
@@ -383,3 +389,12 @@ def set_user_model(user, spec: str) -> None:
     set_value(__plugin_name__, "model", search_dict=user.plugin_datas,
               set_method=lambda _: spec)
     user.save()
+
+
+def has_custom_model(user) -> bool:
+    """用户是否自己设置过默认模型（/ai -m <模型> 不带对话内容）。
+
+    动态模型分配据此让路：用户显式选过就完全听用户的。
+    """
+    spec = get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
+    return bool(spec)

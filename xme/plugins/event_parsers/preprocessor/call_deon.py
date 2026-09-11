@@ -1,6 +1,7 @@
 from nonebot import NoneBot
 from nonebot.plugin import PluginManager
 from nonebot import message_preprocessor
+from xme.xmetools.cmdtools import is_command
 from xme.xmetools.msgtools import send_event_msg, get_message
 import aiocqhttp
 from xme.xmetools.dicttools import get_value
@@ -35,7 +36,7 @@ async def call_deon(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plugin
         annoying_index = max(annoying_index, 0)
         last_down_time = time.time()
 
-    if msg.split(" ")[-1] not in [character_name, f"{character_name}在嘛", f"{character_name}在吗", f"{character_name}呢"] and not is_repeated_substring(msg, character_name):
+    if msg.split(" ")[-1] not in [character_name, f"{character_name}在嘛", f"{character_name}在吗", f"{character_name}呢"] and not is_repeated_substring(msg, character_name) or is_command(msg):
         if mute:
             called_deon[event.user_id] = {
                 # "count": count,

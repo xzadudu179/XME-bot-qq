@@ -366,7 +366,7 @@ class AIHelper:
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None):
+    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None, routing_allowed: bool = False):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
         self.shared = shared_session
@@ -381,8 +381,23 @@ class AIHelper:
         # 经模型目录解析出目录项（provider/真实模型名/视觉能力/倍率/上下文上限）
         self.model_arg = model
         self.model_entry = registry.resolve_model(model)
+        # provider 未配置（配置被改名/删除等）→ 直接回退默认模型，避免对话一开口就报错
+        self.model_fallback_note = ""
+        if not registry.provider_configured(self.model_entry.get("provider", "")):
+            fallback = registry.default_alias()
+            fallback_entry = registry.resolve_model(fallback)
+            if registry.provider_configured(fallback_entry.get("provider", "")):
+                self.model_fallback_note = get_message(
+                    "plugins", __plugin_name__, "model_fallback_prefix",
+                    model=self.model_entry["model"], fallback=fallback_entry["model"])
+                self.model_entry = fallback_entry
         self.model_alias = self.model_entry.get("alias", model)
         self.model = self.model_entry["model"]
+        # 运行期是否已回退过（每次对话最多回退一次，避免反复重试）
+        self.model_fallback_used = False
+        # 动态模型分配：是否按话题自动挑模型（由入口集中判断：全局开关 + 本次没带 -m
+        # + 用户自己没设置过默认模型 三者都满足才开启）
+        self.routing_allowed = bool(routing_allowed)
         # 当前轮真实使用的模型（带图轮会强制切视觉模型）：工具执行时据此决定
         # 是否走图片直注入（ImageToolResult）；每轮由 run_agent 刷新
         self.current_model = self.model
@@ -676,7 +691,7 @@ class AIHelper:
             raise LLMError(LLMErrorKind.BAD_REQUEST,
                            f"provider {entry['provider']} 未配置", provider=entry["provider"])
         result = await provider.chat(messages, model=entry["model"], temperature=temperature)
-        self.other_credits += result.usage.billable_tokens
+        self.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
         return result
 
     async def _glm_chat(self, messages, model=FLASH_MODEL):
@@ -732,7 +747,7 @@ class AIHelper:
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
                 )
-                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.model_arg, ai_session=self.ai_session))
+                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.current_model, ai_session=self.ai_session))
                 return len(summary)
         except Exception as ex:
             ai_logger.exception(f"上下文压缩失败: {ex}")
@@ -794,17 +809,87 @@ class AIHelper:
                              model=self.model, vision_model=entry["model"])
         return entry, prefix
 
+    @staticmethod
+    def recent_context_text(history: list) -> str:
+        """提取话题分类用的上下文：**对话开头的第一次用户输入 + 最近若干轮**。
+
+        人设/角色扮演等设定几乎都写在开场第一句（"你是漠月，用她的语气说话"），
+        只取最近几轮会把它丢掉、导致后续"嗯嗯"这类短输入判错，所以开场输入必带；
+        其余取最近 N 轮（LLM_TOPIC_CONTEXT_ITEMS），每轮截断并受总长度上限约束。
+        """
+        items = int(getattr(constants, "LLM_TOPIC_CONTEXT_ITEMS", 3))
+        total_chars = int(getattr(constants, "LLM_TOPIC_CONTEXT_CHARS", 600))
+        per_item = max(60, total_chars // max(1, (items + 1) * 2))
+
+        def text_of(m) -> str:
+            content = m.get("content")
+            if isinstance(content, list):
+                content = " ".join(p.get("text", "") for p in content
+                                   if isinstance(p, dict) and p.get("type") == "text")
+            return str(content or "").strip()
+
+        dialog = [(m.get("role"), text_of(m)) for m in (history or [])
+                  if isinstance(m, dict) and m.get("role") in ("user", "assistant")]
+        dialog = [(r, t) for r, t in dialog if t]
+        if not dialog:
+            return ""
+
+        picked: list[tuple[str, str]] = []
+        first_user = next((t for r, t in dialog if r == "user"), "")
+        if first_user:
+            picked.append(("user", first_user))          # 开场设定（人设/角色扮演常在此）
+        picked.extend(dialog[-items:])                    # 最近的对话
+        lines, seen = [], set()
+        for role, text in picked:
+            who = "用户" if role == "user" else "AI"
+            line = f"{who}: {text[:per_item]}"
+            if line in seen:                              # 开场与最近轮重叠时去重
+                continue
+            seen.add(line)
+            lines.append(line)
+        return "\n".join(lines)[:total_chars]
+
+    async def route_model_entry(self, text: str, context: str = "") -> dict | None:
+        """按话题给本轮挑模型（动态分配）；不适用时返回 None（用会话默认模型）。
+
+        context 为最近对话文本（识别"角色扮演在开头定义"这类情况）。
+        仅在动态分配开启、用户没有自己设置默认模型时生效；分类失败或路由目标
+        的 provider 未配置时返回 None，由调用方回落到会话默认模型。
+        """
+        from .llm import topic as topic_module
+        if not self.routing_allowed:
+            return None
+        try:
+            category = await topic_module.classify_topic(text, context=context, agent=self)
+        except Exception as ex:   # 分类器自身已兜底，这里只是最后一道保险
+            ai_logger.warning(f"话题分类异常（{type(ex).__name__}: {ex}），使用默认模型")
+            return None
+        routing = getattr(constants, "LLM_TOPIC_ROUTING", {}) or {}
+        alias = routing.get(category)
+        if not alias:
+            ai_logger.info(f"话题分类：{category}（无对应模型，使用默认模型）")
+            return None
+        try:
+            entry = registry.resolve_model(alias)
+        except Exception:
+            ai_logger.warning(f"话题分类：{category} → 模型 {alias} 无效，使用默认模型")
+            return None
+        if not registry.provider_configured(entry.get("provider", "")):
+            ai_logger.warning(
+                f"话题分类：{category} → {alias}（provider {entry.get('provider')} 未配置，使用默认模型）")
+            return None
+        ai_logger.info(f"话题分类：{category} → {alias}（{entry['model']}）")
+        return entry
+
     def compute_credits(self) -> dict:
         """按已累计 tokens 计算本轮 credits 消耗与参与者均摊（正常结束与中断结算共用）。
 
         返回 {"credits_use", "credits_split", "cached", "total"}；模型倍率取
         self.current_model（每轮 run_agent 刷新，中断时即最近一轮的真实模型）。
         """
-        # 缓存 tokens 占 1/4
-        credits_use = (
-            self.tokens
-            - self.cached_tokens * 0.75
-        )
+        # 缓存 tokens 按该模型的缓存倍率折算（各 provider 折扣不同，见 LLM_MODELS.cache_credit_ratio）
+        cache_ratio = registry.cache_credit_ratio(getattr(self, "model_entry", None))
+        credits_use = self.tokens - self.cached_tokens * (1 - cache_ratio)
         # 倍率取自模型目录：按当前轮真实模型名反查（中断时即最近一轮）
         multis = 1
         for entry in (getattr(constants, "LLM_MODELS", {}) or {}).values():
@@ -859,15 +944,41 @@ class AIHelper:
             if url_dicts:
                 real_entry, prefix = self.entry_for_media()
             else:
-                real_entry = self.model_entry
+                # 无媒体的普通对话：按话题动态挑模型（带上最近对话，识别开场设定的人设/角色扮演）
+                real_entry = await self.route_model_entry(
+                    text, self.recent_context_text(history)) or self.model_entry
             # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
             asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
             self.asks = asks
+        # 模型已确定（话题路由 / 媒体切换 / 快照恢复）→ 这时才提示用户在用哪个模型，
+        # 与压缩后补发的提示（_compress_context 内）保持一致
+        if self.resume_messages is None and len(self.storage.load_history()) <= COMPRESS_TRIGGER:
+            await send_session_msg(session, get_message(
+                "plugins", __plugin_name__, "talking_to_ai",
+                model=real_entry["model"], ai_session=self.ai_session))
         # 插入队列键：共享会话按群号码，普通会话按 用户+会话名（与 AIHelper.insert_key 一致）
         while True:
             try:
                 result, tool_call_times = await self.run_agent(session, ai_params, real_entry)
                 break
+            except LLMError as ex:
+                # 仅"模型名失效/请求被拒"回退默认模型重试一次；
+                # 连接不上（超时）、服务端错误、鉴权失败一律照抛报错——这些是配置/网络问题，
+                # 回退只会掩盖原因（限流/超时类由 run_agent 自身重试）
+                fallback_alias = registry.default_alias()
+                if (ex.kind in (LLMErrorKind.BAD_REQUEST, LLMErrorKind.UNKNOWN)
+                        and not self.model_fallback_used
+                        and real_entry.get("alias", "") != fallback_alias):
+                    self.model_fallback_used = True
+                    old_model = real_entry["model"]
+                    real_entry = registry.resolve_model(fallback_alias)
+                    self.model_entry = real_entry      # 本会话后续轮次也用它
+                    prefix += get_message("plugins", __plugin_name__, "model_fallback_prefix",
+                                          model=old_model, fallback=real_entry["model"])
+                    ai_logger.warning(
+                        f"模型不可用（{ex.kind}）：{old_model} → 回退到 {real_entry['model']} 重试")
+                    continue
+                raise
             except InsertInterrupted:
                 # 打断点：把全部待插入消息并入上下文后重入 agent 循环（messages 数组原样延续）
                 inserts = share.consume_inserts(self.insert_key)
@@ -892,6 +1003,9 @@ class AIHelper:
                     real_entry, switch_prefix = self.entry_for_media()
                     prefix += switch_prefix
         self.spent_secs.stop()
+        # 构造期若发生过 provider 预检回退，提示一并带出（原来只记录未展示）
+        if self.model_fallback_note:
+            prefix = self.model_fallback_note + prefix
         if result == False or result is AISTOP:
             # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示
             tokens_use_dict = self.compute_credits()
@@ -906,7 +1020,15 @@ class AIHelper:
             )
             return False, {}, {}, 0
         try:
-            ans = result.text
+            ans = result.text or ""
+            # 空回复兜底：模型可能被安全策略拦截（finish_reason=sensitive）或未产出文本，
+            # 直接送空内容会导致用户端"什么都没收到"，这里显式告知原因与建议
+            if not ans.strip():
+                reason = result.finish_reason or "未知"
+                ai_logger.warning(
+                    f"模型未返回文本内容：finish_reason={reason}，"
+                    f"usage={result.usage}，tool_calls={len(result.tool_calls)}")
+                ans = get_message("plugins", __plugin_name__, "empty_reply", reason=reason)
 
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"

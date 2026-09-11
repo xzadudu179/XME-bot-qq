@@ -53,6 +53,22 @@ def _delta_logger(provider_name: str):
     return on_delta
 
 
+def provider_configured(name: str) -> bool:
+    """该 provider 是否真的可用（配置齐全：有 base_url 与 api_key）。
+
+    glm 没有显式配置时也能走官方兼容端点回落，但同样要求 keys.GLM_API_KEY 存在；
+    配置项缺 api_key 视为不可用（避免回退到一个必然失败的模型）。
+    """
+    if not name:
+        return False
+    cfg = _load_provider_configs().get(name)
+    if cfg is None and name == "glm":
+        cfg = _glm_fallback()
+    if not cfg:
+        return False
+    return bool(cfg.get("api_key")) and bool(cfg.get("base_url") or name == "glm")
+
+
 def get_provider(name: str):
     """按名取 provider（惰性构造并缓存）；无该配置时回落 GLM。返回 None 表示不可用。"""
     if name in _providers:
@@ -178,6 +194,19 @@ def vision_entry() -> dict:
 def _default_context_limit() -> int:
     from .. import constants
     return getattr(constants, "CONTEXT_LIMIT_DEFAULT", 1_000_000)
+
+
+def cache_credit_ratio(entry: dict | None) -> float:
+    """模型目录项的缓存计费倍率（LLM_MODELS 的 cache_credit_ratio；缺省 0.25）。"""
+    from .. import constants
+    default = getattr(constants, "DEFAULT_CACHE_CREDIT_RATIO", 0.25)
+    if not entry:
+        return default
+    value = entry.get("cache_credit_ratio")
+    try:
+        return float(value) if value is not None else default
+    except (TypeError, ValueError):
+        return default
 
 
 def get_capability(name: str) -> dict:

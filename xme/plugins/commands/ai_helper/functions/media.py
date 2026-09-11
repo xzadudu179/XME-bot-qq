@@ -62,7 +62,10 @@ async def ocr_image(url, agent=None):
                     {"type": "image_url", "image_url": {"url": url}}]}],
                 model=cap.get("model", ""), temperature=0.1)
             if agent is not None:
-                agent.tokens += result.usage.billable_tokens * 0.125
+                # 计费：缓存倍率取自该 OCR 模型在目录里的配置（未命中则用默认）
+                billing_entry = registry.model_by_name(cap.get("model", "")) or {}
+                agent.tokens += result.usage.billable_tokens(
+                    registry.cache_credit_ratio(billing_entry)) * 0.125
             return result.text or "[没有识别到内容]"
         except Exception as ex:
             logger.exception(f"图片 OCR 失败: {ex}")

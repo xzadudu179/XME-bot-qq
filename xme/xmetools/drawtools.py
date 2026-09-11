@@ -207,16 +207,27 @@ def generate_command_trend_chart(
         return image_path, True
 
     plt.figure(figsize=(10, 6), facecolor=BG_COLOR)
-    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#75ff8c", "#4c94ff", "#e875ff", num_colors=len(data_list))]
+    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#ffea75", "#75ff9e", "#4c58ff", "#ff7587", num_colors=len(data_list))]
     for i, (x, y, label) in enumerate(data_list):
         if not x or not y:
             continue
         y_arr = np.asarray(y, dtype=float)
         if np.any(y_arr <= 0):
-            y_arr = np.clip(y_arr, 0.1, None)
+            y_arr = np.clip(y_arr, 1, None)
         x_arr = np.asarray(x, dtype=float)
-        line, = plt.plot(x_arr, y_arr, color=colors[i], label=label, marker='o', markersize=3)
+        line, = plt.plot(x_arr, y_arr, color=colors[i], label='_nolegend_', marker='o', markersize=3)
         ax = plt.gca()
+        ax.annotate(
+            label,
+            xy=(x_arr[0], y_arr[0]),
+            xytext=(-8, 0),
+            textcoords='offset points',
+            color=line.get_color(),
+            fontsize=9,
+            va='center',
+            ha='right',
+            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
+        )
         ax.annotate(
             f"{y_arr[-1]:.3g}",
             xy=(x_arr[-1], y_arr[-1]),
@@ -237,7 +248,6 @@ def generate_command_trend_chart(
     ax.tick_params(axis='x', colors=FONT_COLOR)
     ax.tick_params(axis='y', colors=FONT_COLOR)
     plt.grid(True, color=GRID_COLOR, linestyle='--', linewidth=1)
-    plt.legend(fontsize=12, facecolor=BG_COLOR, edgecolor=SEC_COLOR, labelcolor=FONT_COLOR)
     plt.savefig(image_path, dpi=150, bbox_inches='tight')
     plt.close()
     return image_path, False

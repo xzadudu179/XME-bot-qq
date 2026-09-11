@@ -19,6 +19,7 @@ from nonebot.message import message_preprocessor, CanceledException
 
 from character import get_message
 from xme.xmetools.cmdtools import is_command
+from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.timetools import get_time_now
 
@@ -69,7 +70,7 @@ async def handle_running_turn_input(bot, event, plugin_manager):
         """吞掉本消息（可选先回复一条），后续命令分发不再进行。"""
         if reply:
             try:
-                await bot.send(event, reply)
+                await send_event_msg(bot, event, reply)
             except Exception:
                 logger.warning(f"aistop 预处理器回复失败（消息仍被吞掉）：{reason}")
         raise CanceledException(reason)
@@ -90,6 +91,10 @@ async def handle_running_turn_input(bot, event, plugin_manager):
             turn["task"].cancel()
             logger.info(f"{event.user_id} 发送 /ai stop：已中断其运行中的 AI 会话")
             raise CanceledException("/ai stop")
+        if not ins_text:
+            await swallow("insert", reply=get_message(
+                "plugins", __plugin_name__, "no_shared_insert"))
+            return
         if not turn.get("insert_enabled"):
             await swallow("ai-cmd-no-insert")  # 未开插入模式：与旧 arg 通道一致，静默吞掉
             return

@@ -159,7 +159,7 @@
         "type": "function",
         "function": {
             "name": "view_document_file",
-            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的文档文件（例如 pdf pptx docx xlsx），并按你给的 prompt 解析回答。",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的文档文件（例如 pdf pptx docx xlsx），并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -190,7 +190,7 @@
         "type": "function",
         "function": {
             "name": "view_image",
-            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -221,7 +221,7 @@
         "type": "function",
         "function": {
             "name": "view_video",
-            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的视频，并按你给的 prompt 解析回答。",
+            "description": "使用 glm-5.3-flash 查看指定 url 或者 ref 里的视频，并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {

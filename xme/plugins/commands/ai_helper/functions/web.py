@@ -1,18 +1,21 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 """网络类工具：url 下载、网页阅读、web 搜索与图片/视频/文档内容查看。"""
 import asyncio
+import io
 from pathlib import Path
 import html
 import mimetypes
 import re
 from typing import Literal
 from urllib.parse import urlparse
+import aiohttp
 from tavily import AsyncTavilyClient
 from uuid import uuid4
+from PIL import Image
 
 from zai import ZhipuAiClient
 
-from keys import GLM_API_KEY, TAVILY_API_KEY
+from keys import GLM_API_KEY, TAVILY_API_KEY, DOMAIN, FILE_TOKENS
 from nonebot.log import logger
 from xme.xmetools.filetools import (
     bytes_to_file, decode_text, detect_file_type, get_local_file_url, FileType,
@@ -147,6 +150,86 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", force_use_a
 async def view_image(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
     return await view_item(ref, url, prompt, item_type="image_url", force_use_agent=force_use_agent, agent=agent)
 
+
+# ---- 媒体可解析性探测（注入前校验，避免"声称已附上但模型实际加载失败"的误判）----
+
+_MEDIA_PROBE_MAX_SIZE = 4 * 1024 * 1024  # 探测下载上限；超限属"无法判定"，按放行处理
+_MEDIA_PROBE_HEAD = 64 * 1024            # 本地文件只读头部即可判定格式
+
+# 视频容器文件头（mp4/mov 的 ftyp 在偏移 4 处，单独判断）
+_VIDEO_MAGICS = (
+    b"\x1a\x45\xdf\xa3",   # webm / mkv
+    b"FLV",                # flv
+    b"\x00\x00\x01\xba",   # mpeg-ps
+    b"\x00\x00\x01\xb3",   # mpeg-ts
+)
+
+
+def _looks_like_video(head: bytes) -> bool:
+    """按文件头粗判是否视频容器。"""
+    if head[4:8] == b"ftyp":                    # mp4 / mov / m4v
+        return True
+    if head[:4] in _VIDEO_MAGICS:
+        return True
+    if head[:4] == b"RIFF" and head[8:12] == b"AVI ":
+        return True
+    return False
+
+
+def _check_media_bytes(data: bytes, item_type: str) -> str | None:
+    """校验已取到的字节是否为该类型可解析的媒体；不通过返回原因，通过返回 None。"""
+    if not data:
+        return "内容为空"
+    if item_type == "image_url":
+        try:
+            with Image.open(io.BytesIO(data)) as img:
+                img.format  # 触发头部解析（不完整数据也能判定格式）
+            return None
+        except Exception:
+            return "内容不是可解析的图片格式"
+    if item_type == "video_url":
+        return None if _looks_like_video(data[:16]) else "内容不是可识别的视频格式"
+    return None  # 文档类只要可读取即可
+
+
+async def _media_probe(url: str, item_type: str) -> str | None:
+    """探测媒体能否被解析：返回明确的失败原因，None 表示可注入。
+
+    本地限时链接（我们自己的 /file/<token>）反查本地文件校验——零网络且最准，
+    顺带能发现链接已过期；外部 http(s) 下载校验，HTTP 错误或内容不是目标媒体即判失败。
+    超时/连接错误/体积过大等"无法判定"的情况按放行处理：若模型侧仍加载失败，会由
+    1210 兜底把结果显式改写为加载失败，不会静默误判。
+    """
+    # 1) 本地限时链接：反查 token 直接校验本地文件
+    if url.startswith("http") and "/file/" in url and DOMAIN in url:
+        token = url.split("/file/", 1)[1].split("?", 1)[0].strip("/")
+        info = FILE_TOKENS.get(token)
+        if not info:
+            return "本地链接无效或已过期，请重新生成"
+        path = Path(info["path"])
+        if not path.is_file() or path.stat().st_size == 0:
+            return "本地文件不存在或为空"
+        try:
+            with open(path, "rb") as f:
+                return _check_media_bytes(f.read(_MEDIA_PROBE_HEAD), item_type)
+        except OSError as ex:
+            return f"本地文件读取失败（{ex}）"
+    # 2) 外部地址：下载校验
+    if not url.startswith(("http://", "https://")):
+        return None  # data:/file: 等无法本地校验，放行
+    try:
+        data, _ctype = await fetch_file_stream(url, max_size=_MEDIA_PROBE_MAX_SIZE, timeout=15)
+    except aiohttp.ClientResponseError as ex:
+        return f"无法访问该地址（HTTP {ex.status}）"
+    except ValueError as ex:
+        msg = str(ex)
+        return None if "超出" in msg else msg  # 体积超限不判定；SSRF/协议类明确失败
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        return None  # 网络类不确定：放行，交 1210 兜底显式告知
+    except Exception:
+        return None
+    return _check_media_bytes(data, item_type)
+
 async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", force_use_agent: bool = False, agent=None):
     """查看 url 里的内容（图片/视频/文件），按 prompt 让模型解读并返回结果。
 
@@ -174,6 +257,11 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
     if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL and not force_use_agent:
         type_names = {"file": "文件", "image_url": "图片", "video_url": "视频"}
         label = type_names.get(item_type, item_type)
+        # 注入前探测：解析不了的媒体绝不谎称"已附上"，显式报告给模型
+        probe_error = await _media_probe(url, item_type)
+        if probe_error:
+            return (f"[{label}无法解析，未附入输入：{probe_error}]"
+                    f"（可让用户重新发送该{label}，或先下载到本地改用 ref 传入）")
         return ImageToolResult(
             f"[{label}内容已直接附在输入中，请针对该{label}完成：{prompt}]",
             [part])

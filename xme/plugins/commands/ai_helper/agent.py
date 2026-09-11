@@ -128,29 +128,71 @@ def build_user_content(text: str, image_urls: list[str] | None = None,
     return parts
 
 
-def _strip_unloadable_images(messages: list) -> int:
-    """静默移除上下文里所有图片/视频/文件段（就地修改），返回移除数量。
+# 工具注入媒体的标记文本（注入的 user 消息首段；剥离时据此识别"本轮注入的媒体块"）
+_INJECT_MEDIA_NOTE = "[以上工具返回的图片/附件已附在本消息中，请结合上方工具结果处理]"
+# 媒体加载失败时给模型看的显式说明（避免其误以为看到了内容）
+_MEDIA_LOAD_FAILED_NOTE = ("[注意：本次工具附带的媒体无法被模型加载，已从输入中移除，"
+                           "请勿据此作答或声称已看到内容]")
 
-    用于 GLM 1210（媒体输入解析失败）兜底：剥离只为保住会话，属内部机制，
-    不应让模型感知——因此不做"链接失效"类提示（媒体本就是一次性输入，模型
-    无需再次加载）；仅当消息因此变空时补一个中性占位维持结构完整。
+
+def _find_injected_media_blocks(messages: list) -> set[int]:
+    """找出"本轮工具注入的媒体块"的消息索引：注入的 user 消息 + 其前紧邻的 tool 消息。
+
+    注入块是本次重试才第一次进入模型视野的消息，媒体加载失败时必须显式告知；
+    其余（历史消息里的旧媒体）模型早已见过，静默移除即可。
+    """
+    idxs: set[int] = set()
+    for i, m in enumerate(messages):
+        if not isinstance(m, dict) or m.get("role") != "user":
+            continue
+        content = m.get("content")
+        if not isinstance(content, list) or not content:
+            continue
+        first = content[0]
+        if not (isinstance(first, dict) and first.get("text") == _INJECT_MEDIA_NOTE):
+            continue
+        idxs.add(i)
+        j = i - 1
+        while j >= 0 and isinstance(messages[j], dict) and messages[j].get("role") == "tool":
+            idxs.add(j)
+            j -= 1
+    return idxs
+
+
+def _strip_unloadable_images(messages: list) -> int:
+    """移除上下文里加载失败的媒体段（就地修改），返回移除数量。
+
+    用于 GLM 1210（媒体输入解析失败）兜底。两种情形区别对待：
+    - 本轮工具新注入的媒体块：模型在这次重试才第一次看到它们，必须在工具结果上显式
+      注明"媒体无法加载"——否则模型会误以为看到了内容（静默剥离的误判来源）；
+    - 历史消息里的旧媒体（用户早期发的图等）：模型已经见过，静默移除即可，不加失效措辞。
     非 text 段一律移除（含未知类型），避免漏网段导致重试再次 1210。
     """
+    injected = _find_injected_media_blocks(messages)
     removed = 0
-    for m in messages:
+    for i, m in enumerate(messages):
         if not isinstance(m, dict):
             continue
         content = m.get("content")
+        if isinstance(content, str):
+            # 注入块里的 tool 结果（纯字符串）：追加显式说明，保留工具原有文本
+            if i in injected and m.get("role") == "tool" and _MEDIA_LOAD_FAILED_NOTE not in content:
+                m["content"] = content + "\n" + _MEDIA_LOAD_FAILED_NOTE
+            continue
         if not isinstance(content, list):
             continue
         new_parts = [p for p in content
                      if not (isinstance(p, dict) and p.get("type") not in (None, "text"))]
         dropped = len(content) - len(new_parts)
-        if dropped:
-            if not new_parts:
-                new_parts = [{"type": "text", "text": "（媒体）"}]
-            m["content"] = new_parts
-            removed += dropped
+        if not dropped:
+            continue
+        if i in injected:
+            # 注入的 user 消息：标记文本本身陈述了"已附在输入中"，必须替换而非保留
+            m["content"] = [{"type": "text", "text": _MEDIA_LOAD_FAILED_NOTE}]
+        else:
+            # 历史媒体：静默（仅当消息因此变空时补中性占位维持结构）
+            m["content"] = new_parts or [{"type": "text", "text": "（媒体）"}]
+        removed += dropped
     return removed
 
 class _AISTOP:
@@ -496,8 +538,7 @@ class AIHelper:
             # 调用转述，而是合并为一条 user 消息附给本轮模型，让模型亲自查看
             if injected_parts and self.current_model == FLASH_MODEL:
                 messages.append({"role": "user", "content": build_user_content(
-                    "[以上工具返回的图片/附件已附在本消息中，请结合上方工具结果处理]",
-                    [], injected_parts)})
+                    _INJECT_MEDIA_NOTE, [], injected_parts)})
 
             # 插入模式：工具执行完毕后先打断以并入插入消息，再发起下一次模型调用
             if self.insert_enabled and share.has_pending_inserts(self.insert_key):
@@ -762,7 +803,9 @@ class AIHelper:
             case "glm-5.3":
                 multis = 10
             case m if m == FLASH_MODEL:  # 裸名是捕获模式，必须用 guard 做值比较
-                multis = 0.5
+                # 打折结束
+                multis = 1
+                # multis = 0.5
         credits_use *= multis
         credits_use += self.other_credits
         # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）

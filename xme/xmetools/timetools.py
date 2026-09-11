@@ -306,6 +306,11 @@ def time_diff(t1: float, t2: float, unit: TimeUnit = TimeUnit.SECOND) -> float:
     return (t2 - t1) / unit.value
 
 def get_valuetime(time_float, unit: TimeUnit):
+    if unit is TimeUnit.WEEK:
+        # 周对齐到周一 00:00：纪元 0 是周四 00:00 UTC，而入参是 GMT+8 时间戳，
+        # 周一 00:00（GMT+8）= UTC 周日 16:00 = 纪元基准后 3 天 16 小时，
+        # 故 +3 天后按周取整，边界正好落在周一 00:00（GMT+8）
+        return math.floor((time_float + 3 * TimeUnit.DAY.value) / unit.value)
     if unit in [TimeUnit.DAY, TimeUnit.MONTH, TimeUnit.YEAR] and time_float < 50000:
         return time_float
     return math.floor(time_float / unit.value)

@@ -127,7 +127,7 @@ class AfdianClient:
     async def ping(self) -> dict:
         """测试签名与网络连通性，返回 data（含 echo 的 request 信息）。
 
-        实测服务端对空对象 params（"{}"）会误报 400003 "params was not
+        服务端对空对象 params（"{}"）会误报 400003 "params was not
         valid json string"，因此这里传一个无害的非空 params。
         """
         return self._unwrap(await self._signed_post("ping", {"page": 1}), "ping")

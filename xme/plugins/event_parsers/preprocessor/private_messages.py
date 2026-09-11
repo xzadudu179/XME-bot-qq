@@ -1,4 +1,5 @@
 from nonebot import NoneBot
+from nonebot.message import CanceledException
 from nonebot.plugin import PluginManager
 from xme.xmetools import cmdtools
 from nonebot import message_preprocessor
@@ -24,3 +25,6 @@ async def private_message_copy(bot: NoneBot, event: aiocqhttp.Event, plugin_mana
         # await send_to_superusers(bot, get_message("event_parsers", "private_message_copy_prefix", msg=event.raw_message, sender=f'{await get_stranger_name(event.user_id)}({event.user_id})'))
         return
     # 私聊指令
+    friends = await bot.get_friend_list()
+    if not any(friend["user_id"] == event.user_id for friend in friends):
+        raise CanceledException(f"用户没有加好友")

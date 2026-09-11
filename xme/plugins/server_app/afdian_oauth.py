@@ -40,11 +40,14 @@ async def afdian_oauth():
     if not afdian_user_id:
         return _json_result(False, "绑定失败", "no afdian user id")
     user = try_load(int(qq))
-    user.afdian_id = afdian_user_id
-    logger.info(f"用户 {qq} 已绑定爱发电账号 {afdian_user_id}")
     # 在此之前，检查一遍其他用户有没有绑定这个账号
-    users = [u["user_id"] for u in User.get_users() if u.get("afdian_id", "") and u.id != user.id]
+    bind_user = User.load_by_afdian_id(afdian_user_id)
+    if bind_user is not None:
+        if bind_user.id != user.id:
+            return _json_result(False, "绑定失败", f"该账号已经被他人绑定了(qq{bind_user.id})")
+        return _json_result(False, "绑定失败", f"你已绑定了爱发电账号，如需更换请使用 /afd unbind 解绑。")
+    # users = [u["user_id"] for u in User.get_users() if u.get("afdian_id", "") and u["user_id"] != user.id]
+    user.afdian_id = afdian_user_id
     user.update("afdian_id")
-    if len(users) > 0:
-        return _json_result(True, "绑定成功", f"警告：有其他用户绑定了你的 afdian 账号：{' '.join(users)}")
+    logger.info(f"用户 {qq} 已绑定爱发电账号 {afdian_user_id}")
     return _json_result(True, "绑定成功", f"该账号已绑定至 qq {qq}")

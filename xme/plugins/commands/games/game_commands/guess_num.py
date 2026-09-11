@@ -1,4 +1,5 @@
 from nonebot import CommandSession
+from nonebot.log import logger
 from xme.plugins.commands.games.play import cmd_name
 from xme.xmetools.cmdtools import is_command
 from .game import Game
@@ -139,6 +140,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
     ask_to_guess = True
     quit_inputs = ("quit", "退出游戏", "退出", "exit")
     while True:
+        logger.info(f"guess num {guess.answer_num}")
         user_input = (await aget_session_msg(session, prompt=get_message("plugins", cmd_name, name, 'guess_prompt',
             prefix=prefix,
             quit_input=quit_inputs[0]) if ask_to_guess else None, can_use_command=False)).strip()
@@ -181,9 +183,11 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
                     get_message("plugins", cmd_name, name, 'num_right_result')
         )
         # message = f"{num} {'大啦' if result == 1 else '小啦' if result == -1 else '正确~'}"
+        logger.info(f"guessnum {guess.answer_num}, {times_limit}={default_times_limit}, range{num_range} guessingtimes{guess.guessing_times} left{get_award_times_left} result{result}")
         if result == 0:
             await send_session_msg(session, message)
-            if times_limit == default_times_limit and num_range == (0, 100) and guess.guessing_times == 1 and get_award_times_left >= 0:
+            if times_limit == default_times_limit and num_range == [0, 100] and guess.guessing_times == 1 and get_award_times_left >= 0:
+                logger.info("拿到成就oneshot")
                 await u.achieve_achievement(session, "One Shot")
             break
         message += "\n" + get_message("plugins", cmd_name, name, 'remaining_times', times=guess.max_guessing_times - guess.guessing_times)

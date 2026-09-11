@@ -51,7 +51,7 @@ USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
 IMAGE_TEMP_PATH = "./data/images/temp/"
 CONTAINER_BOT_PATH = "/xmebot"
-DEBUG = True
+DEBUG = False
 
 USE_PROXY = True
 HTTP_PORT = 7890

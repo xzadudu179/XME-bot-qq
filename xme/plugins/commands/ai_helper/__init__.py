@@ -200,7 +200,7 @@ async def _(session: CommandSession, user: u.User):
     global curr_sessions
     superuser_mode = False
 
-    # 每日免费额度 + 自存 credits 双余额：总余额 ≤0 且非超管才拒绝
+    # 每周免费额度 + 自存 credits 双余额：总余额 ≤0 且非超管才拒绝
     if ai_credits_left(user) <= 0 and user.id not in config.SUPERUSERS:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
@@ -222,7 +222,7 @@ async def _(session: CommandSession, user: u.User):
     # current_arg 带 CQ 码（图片等）；current_arg_text 会把 CQ 整个剥掉导致图片丢失
     raw = str(session.current_arg)
     parser = XmeArgumentParser(session=session, usage=arg_usage)
-    parser.exit_mssage = get_message("config", "shell_error", command_name=__plugin_name__)
+    parser.exit_mssage = get_message("plugins", __plugin_name__, "shell_error")
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)
     parser.add_argument('-C','--continue', dest='resume', action='store_true', default=False)
     parser.add_argument('-m', '--model', type=str)
@@ -371,7 +371,7 @@ async def _(session: CommandSession, user: u.User):
         message += t
         user_history = storage.load_history()
         *_, normals = history.split(user_history)
-        # 插入模式下全部用量在参与者间均摊，逐人结算（每日额度封顶 + 自存 credits 扣透支；超管跳过）
+        # 插入模式下全部用量在参与者间均摊，逐人结算（本周额度封顶 + 自存 credits 扣透支；超管跳过）
         credits_split = tokens_use_dict.get("credits_split") or {str(user.id): credits_use}
         lefts = credits.settle_split(credits_split)
         credits_left_now = lefts.get(str(user.id), credits.ai_credits_left(user))

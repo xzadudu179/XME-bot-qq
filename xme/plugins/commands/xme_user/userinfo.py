@@ -52,7 +52,7 @@ async def _(session: CommandSession, user: User):
 
     # AI credits 双余额展示（from ai_helper 账本）
     from xme.plugins.commands.ai_helper.credits import ai_credits_left, extra_credits
-    message += (f"\n剩余个人 AI credits：{extra_credits(user):,.2f} (今日总剩余 {ai_credits_left(user):,.2f})\n")
+    message += (f"\n剩余个人 AI credits：{extra_credits(user):,.2f} (本周总剩余 {ai_credits_left(user):,.2f})\n")
     message += reaction
     await send_session_msg(session, message, tips=True)
     return True

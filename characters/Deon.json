@@ -2411,7 +2411,9 @@
       "insert_mode_off": "已关闭会话 \"{name}\" 的插入模式",
       "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），正在继续执行 {positive}",
       "no_resume": "没有可恢复的中断会话哦 {neutral}",
-      "resume_ask": "{neutral} 检测到你上次有异常中断的对话（{time}，有 {count} 条上下文）\n回复数字来选择操作吧 {positive}\n1. 继续该对话（不把当前消息带入上下文）\n2. 继续，并把当前消息一并带入上下文\n3. 取消，发送新对话"
+      "resume_ask": "{neutral} 检测到你上次有异常中断的对话（{time}，有 {count} 条上下文）\n回复数字来选择操作吧 {positive}\n1. 继续该对话（不把当前消息带入上下文）\n2. 继续，并把当前消息一并带入上下文\n3. 取消，发送新对话",
+      "model_saved": "已把默认模型切换为 {model} {positive}\n之后就可以使用 \"/ai 对话\" 调用它啦{positive_punc} 想临时换别的模型用 \"/ai -m 模型 对话内容\" 就好啦。",
+      "model_list": "当前默认模型：{current}\n可用模型列表：\n{models}\n用法：\"/ai -m 模型名\"切换默认模型；\"/ai -m 模型名 对话内容\" 在这次对话临时使用这个模型"
     },
     "essence": {
       "desc": "随机精华消息",

@@ -23,33 +23,30 @@ from xme.xmetools.jsontools import read_from_path
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
-from zai.core._errors import APIRequestFailedError
 from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
     __plugin_name__,
-    MAX_CHECK_TIMES,
     MAX_TOOL_CALL_TIMES,
     MAX_HISTORY_COUNT,
     COMPRESS_TRIGGER,
     CONTEXT_KEEP_RECENT,
     COMPRESS_MAX_LENGTH,
-    THINKING_PARAMS,
     CONTEXT_LIMIT_DEFAULT,
-    FOLD_HARD_RATIO,
-    FOLD_KEEP_RECENT_ASSISTANTS,
-    FOLD_KEEP_RECENT_TOOLS,
     FOLD_HARD_RATIO,
     FOLD_KEEP_RECENT_ASSISTANTS,
     FOLD_KEEP_RECENT_TOOLS,
     FOLD_TRIGGER_RATIO,
-    CONTEXT_LIMIT_DEFAULT,
-    MODEL_CONTEXT_LIMITS,
     FLASH_MODEL,
     MAX_HISTORY_FILE_COUNTS,
     MAX_HISTORY_FILES_SIZE,
 )
 from . import history
+from . import constants
 from . import credits
+from .llm import (
+    ChatResult, LLMError, LLMErrorKind, message_to_dict,
+)
+from .llm import registry
 from . import share
 from .session import AISession, current_storage, normal_insert_enabled
 from .functions._common import ImageToolResult
@@ -65,11 +62,6 @@ _DIRECT_VIDEO_RE = re.compile(
 
 class InsertInterrupted(Exception):
     """共享会话有成员插入消息：当前生成被主动打断，已积累的上下文保留待重启。"""
-
-
-def _context_limit(model: str) -> int:
-    """按模型名查输入上下文上限（tokens）；未知模型用兜底值。"""
-    return MODEL_CONTEXT_LIMITS.get(model, CONTEXT_LIMIT_DEFAULT)
 
 
 def _snapshot_path(user_id) -> Path:
@@ -379,21 +371,22 @@ class AIHelper:
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
         self.shared = shared_session
         self.ai_session = (shared_session.code if shared_session is not None else ai_session) or history.DEFAULT_SESSION
-        MODEL_MAP = {
-            "pro": "glm-5.3",
-        }
         self.ref_map = {}
         # 文件内容指纹（路径 → sha256）：AI 经工具读到/写出文件时更新，
         # edit_file 写入前比对，拦截"读取后文件被外部改动"的静默错改
         self.file_hashes: dict[str, str] = {}
         self.tokens = 0
         self.other_credits = 0
+        # 模型：model 为用户给的规格（别名如 flash/pro，或 "provider/model"），
+        # 经模型目录解析出目录项（provider/真实模型名/视觉能力/倍率/上下文上限）
         self.model_arg = model
-        m = MODEL_MAP.get(model, None)
-        self.model = m if m is not None else FLASH_MODEL
+        self.model_entry = registry.resolve_model(model)
+        self.model_alias = self.model_entry.get("alias", model)
+        self.model = self.model_entry["model"]
         # 当前轮真实使用的模型（带图轮会强制切视觉模型）：工具执行时据此决定
         # 是否走图片直注入（ImageToolResult）；每轮由 run_agent 刷新
         self.current_model = self.model
+        self.current_vision = bool(self.model_entry.get("vision"))
         self.cached_tokens = 0
         self.client = ai_client
         self.session = session
@@ -423,10 +416,17 @@ class AIHelper:
         # 会话快照恢复：/ai --continue 时由快照还原全部进行中状态
         self.resume_messages: list | None = None
         self.resume_model: str | None = None
+        self.resume_entry: dict | None = None
         self.asks: list[dict] = []
         if resume_data:
             self.resume_messages = resume_data.get("messages") or []
             self.resume_model = resume_data.get("model")
+            # 快照恢复模型目录项：新快照含 provider/别名，旧快照只有真实模型名（反查）
+            self.resume_entry = (
+                registry.resolve_model(resume_data["model_alias"])
+                if resume_data.get("model_alias") and resume_data["model_alias"] in registry.list_model_aliases()
+                else registry.model_by_name(resume_data.get("model") or "")
+            )
             self.asks = list(resume_data.get("asks") or [])
             self.used_tools = list(resume_data.get("used_tools") or [])
             self.participants = list(resume_data.get("participants") or [user_id])
@@ -448,40 +448,46 @@ class AIHelper:
             self.tools = json.load(f)
         _validate_tools(self.tools)
 
-    async def run_agent(self, session, messages, model):
-        # 本轮真实模型：工具（view_item/screenshot_page 等）据此决定图片直注入与否
-        self.current_model = model
+    async def run_agent(self, session, messages, model_entry):
+        """单轮 agent 循环：反复调用模型并执行工具，直到模型不再请求工具。
+
+        model_entry 为模型目录项（provider/真实模型名/视觉能力等），由 user_talk 解析。
+        """
+        # 本轮真实模型与视觉能力：工具（view_item/screenshot_page 等）据此决定
+        # 是否走图片直注入（ImageToolResult）
+        self.current_model = model_entry["model"]
+        self.current_vision = bool(model_entry.get("vision"))
         MAX_RETRY_TIMES = 5
         retry_times = 0
         while True:
             try:
-                result = await self.create_and_wait(session, messages, model)
-            except APIRequestFailedError as ex:
-                # 1210=媒体输入解析失败（过期链接 / video_url 不被支持等）。
-                # 剥离全部媒体段后重建任务重试：剥离是破坏性的（媒体段只减不增），
-                # 因此无需次数限制也可保证收敛；无媒体可剥时照抛，避免掩盖其他错误
-                removed = _strip_unloadable_images(messages)
-                if "1210" not in str(ex) or not removed:
-                    raise
-                ai_logger.warning(
-                    f"媒体输入解析失败（1210），已静默移除 {removed} 个媒体段后重建任务重试")
-                continue
-            except RuntimeError:
-                if retry_times >= MAX_RETRY_TIMES:
+                result = await self.create_and_wait(session, messages, model_entry)
+            except LLMError as ex:
+                if ex.kind == LLMErrorKind.MEDIA_INVALID:
+                    # 媒体输入解析失败（GLM 1210 / 兼容端点同类错误）：剥离全部媒体段后
+                    # 重建任务重试。剥离是破坏性的（媒体段只减不增），无需次数限制也可收敛；
+                    # 无媒体可剥时照抛，避免掩盖其他错误
+                    removed = _strip_unloadable_images(messages)
+                    if not removed:
+                        raise
+                    ai_logger.warning(
+                        f"媒体输入解析失败（{ex.code or ex.kind}），已移除 {removed} 个媒体段后重建任务重试")
+                    continue
+                if ex.kind not in LLMErrorKind.RETRYABLE or retry_times >= MAX_RETRY_TIMES:
                     raise
                 retry_times += 1
                 # 紧急折叠后再重试：若失败源于输入超长，重试才有机会成功
                 freed = _fold_early_context(messages, fold_tools=True)
                 if freed:
                     ai_logger.warning(
-                        f"模型调用失败，紧急折叠上下文后重试（第 {retry_times} 次，释放约 {freed:,} 字符）")
+                        f"模型调用失败（{ex.kind}），紧急折叠上下文后重试"
+                        f"（第 {retry_times} 次，释放约 {freed:,} 字符）")
                 continue
-            message = result.choices[0].message
             self.tokens += result.usage.total_tokens
-            self.cached_tokens += result.usage.prompt_tokens_details.cached_tokens
+            self.cached_tokens += result.usage.cached_tokens
             # 轮内上下文折叠：用本次请求的真实输入量判断，在下一轮请求前瘦身
             self.last_prompt_tokens = result.usage.prompt_tokens
-            limit = _context_limit(model)
+            limit = model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT
             if self.last_prompt_tokens > limit * FOLD_TRIGGER_RATIO:
                 fold_tools = self.last_prompt_tokens > limit * FOLD_HARD_RATIO
                 freed = _fold_early_context(messages, fold_tools=fold_tools)
@@ -489,36 +495,31 @@ class AIHelper:
                     ai_logger.info(
                         f"上下文折叠：输入 {self.last_prompt_tokens:,}/{limit:,} tokens，"
                         f"{'含工具结果' if fold_tools else '仅思考'}，释放约 {freed:,} 字符")
-            if message.reasoning_content:
+            if result.reasoning:
                 ai_logger.info(
-                    f"\n===== GLM Reasoning {session.event.user_id} =====\n"
-                    f"{message.reasoning_content}\n"
+                    f"\n===== AI Reasoning {session.event.user_id} =====\n"
+                    f"{result.reasoning}\n"
                     f"========================="
                 )
 
             # 没有工具调用
-            if not message.tool_calls:
+            if not result.tool_calls:
                 return result, self.tool_call_times
             # 有工具调用
             self.tool_call_times += 1
-            if message.tool_calls:
-                for tool_call in message.tool_calls:
-                    ai_logger.info(
-                        f"[GLM Tool Call] "
-                        f"{tool_call.function.name}"
-                        f"({tool_call.function.arguments})"
-                    )
+            for tool_call in result.tool_calls:
+                ai_logger.info(
+                    f"[AI Tool Call] {tool_call.name}({tool_call.arguments})"
+                )
 
             # 把 assistant 的原始消息加入上下文（含 reasoning_content）。
-            # 交错式思考的硬性要求（GLM 文档）：工具结果必须与未修改的
-            # reasoning_content 一并回传，model_dump 原样保留该字段
-            assistant_message = message.model_dump(exclude_none=True)
-
-            messages.append(assistant_message)
+            # 交错式思考的硬性要求：工具结果必须与未修改的 reasoning_content
+            # 一并回传（message_to_dict 原样保留该字段）
+            messages.append(message_to_dict(result))
 
             # 执行所有工具
             injected_parts: list = []
-            for tool_call in message.tool_calls:
+            for tool_call in result.tool_calls:
                 result_content = await self.execute_tool(session, tool_call, self.tool_call_times)
                 if result_content is AISTOP:
                     # 中断文案与结算统一在 user_talk 的 AISTOP 分支处理，此处只中断
@@ -536,7 +537,7 @@ class AIHelper:
                 })
             # 图片直注入（ImageToolResult）：工具拿到的图片/视频/文件不再经独立视觉
             # 调用转述，而是合并为一条 user 消息附给本轮模型，让模型亲自查看
-            if injected_parts and self.current_model == FLASH_MODEL:
+            if injected_parts and self.current_vision:
                 messages.append({"role": "user", "content": build_user_content(
                     _INJECT_MEDIA_NOTE, [], injected_parts)})
 
@@ -551,12 +552,12 @@ class AIHelper:
             return f"[工具执行失败：次数已达到上限，请在下一个会话继续]"
         if curr_tool_call_times >= MAX_TOOL_CALL_TIMES - 7:
             prefix = f"[警告：剩余 {MAX_TOOL_CALL_TIMES - curr_tool_call_times} 次 tools 调用次数]\n"
-        name = tool_call.function.name
+        name = tool_call.name
         if name not in self.used_tools:
             self.used_tools.append(name)
         try:
-            arguments = json.loads(tool_call.function.arguments)
-            ai_logger.info(get_message("plugins", __plugin_name__, "call_tool", tool_name=name, arguments=tool_call.function.arguments))
+            arguments = json.loads(tool_call.arguments)
+            ai_logger.info(get_message("plugins", __plugin_name__, "call_tool", tool_name=name, arguments=tool_call.arguments))
 
             func = self.tool_functions.get(name)
 
@@ -612,7 +613,7 @@ class AIHelper:
             ai_logger.exception(f"执行工具 {name} 失败")
             return f"[工具执行失败：{type(e).__name__}: {e}]"
 
-    def _save_snapshot(self, messages: list, model: str) -> None:
+    def _save_snapshot(self, messages: list, model_entry: dict) -> None:
         """把进行中的完整上下文落盘为快照（best-effort）。
 
         每次模型调用前覆盖写；进程异常死亡时文件残留，
@@ -623,7 +624,9 @@ class AIHelper:
                 "user_id": self.user_id,
                 "ai_session": None if self.shared is not None else self.ai_session,
                 "shared_code": self.shared.code if self.shared is not None else None,
-                "model": model,
+                "model": model_entry.get("model"),
+                "provider": model_entry.get("provider"),
+                "model_alias": model_entry.get("alias"),
                 "messages": messages,
                 "asks": self.asks,
                 "used_tools": self.used_tools,
@@ -641,55 +644,45 @@ class AIHelper:
         except Exception as ex:
             ai_logger.warning(f"保存会话快照失败（不影响对话）: {ex}")
 
-    async def create_and_wait(self, session, messages, model):
-        self._save_snapshot(messages, model)
-        response = self.client.chat.asyncCompletions.create(
-            model=model,
-            messages=messages,
-            tools=self.tools,
-            thinking=dict(THINKING_PARAMS),
-            tool_choice="auto",
-            temperature=0.5,
-        )
-        task_id = response.id
-        check_times = 0
-        while check_times <= MAX_CHECK_TIMES:
-            result = self.client.chat.asyncCompletions.retrieve_completion_result(
-                id=task_id
-            )
+    async def create_and_wait(self, session, messages, model_entry):
+        """通过统一 provider 发起一次对话调用（流式读块期间可被插入消息打断）。"""
+        self._save_snapshot(messages, model_entry)
+        provider = registry.get_provider(model_entry["provider"])
+        if provider is None:
+            raise LLMError(LLMErrorKind.BAD_REQUEST,
+                           f"provider {model_entry['provider']} 未配置（见 keys.py 的 LLM_PROVIDERS）",
+                           provider=model_entry["provider"])
 
-            if result.task_status == "SUCCESS":
-                return result
-
-            if result.task_status == "FAIL":
-                raise RuntimeError(result)
-            check_times += 1
-            # 旧 arg 轮询（aget_arg_with_timeout）已退役：aistop 与同聊插入均由
-            # 消息预处理器接管（工具执行中同样即时生效），这里只做固定间隔轮询 +
-            # 插入打断检查，打断后由 user_talk 并入上下文重启
-            logger.info(f"{session.event.user_id} 获取 AI 状态")
+        def on_tick():
+            # 流式读块期间周期性检查：有插入消息则打断，交由 user_talk 并入上下文后重启。
+            # （aistop 走 asyncio 任务取消，无需在此处理）
             if self.insert_enabled and share.has_pending_inserts(self.insert_key):
                 raise InsertInterrupted()
-            await asyncio.sleep(1)
-        raise TimeoutError(f"AI 调用超时 (>{MAX_CHECK_TIMES}次)")
+
+        return await provider.chat(
+            messages,
+            model=model_entry["model"],
+            tools=self.tools,
+            temperature=0.5,
+            thinking=True,
+            on_tick=on_tick,
+        )
+
+    async def _chat_once(self, messages, model_entry=None, temperature=None) -> ChatResult:
+        """一次性对话调用（历史压缩等带外用途），返回统一结果并计入 other_credits。"""
+        entry = model_entry or self.model_entry
+        provider = registry.get_provider(entry["provider"])
+        if provider is None:
+            raise LLMError(LLMErrorKind.BAD_REQUEST,
+                           f"provider {entry['provider']} 未配置", provider=entry["provider"])
+        result = await provider.chat(messages, model=entry["model"], temperature=temperature)
+        self.other_credits += result.usage.billable_tokens
+        return result
 
     async def _glm_chat(self, messages, model=FLASH_MODEL):
-        """通用的一次性 chat 完成调用（用于历史压缩等），返回模型文本。"""
-        response = self.client.chat.asyncCompletions.create(
-            model=model,
-            messages=messages,
-        )
-        task_id = response.id
-        while True:
-            result = self.client.chat.asyncCompletions.retrieve_completion_result(
-                id=task_id
-            )
-            if result.task_status == "SUCCESS":
-                self.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
-                return result.choices[0].message.content
-            if result.task_status == "FAIL":
-                raise RuntimeError("AI 压缩调用失败")
-            await asyncio.sleep(0.5)
+        """兼容旧调用名：一次性对话，返回文本（历史压缩用）。"""
+        result = await self._chat_once(messages)
+        return result.text
 
     @staticmethod
     def _build_compress_input(summary, to_compress, skills=()) -> str:
@@ -787,6 +780,20 @@ class AIHelper:
         new_text = _DIRECT_VIDEO_RE.sub(_direct_repl, new_text)
         return new_text, video_dicts, pths
 
+    def entry_for_media(self) -> tuple[dict, str]:
+        """带媒体（图片/视频）的轮次用哪个模型。
+
+        当前模型自身具备视觉能力 → 直接用它（不切换、无提示）；
+        否则切到配置的视觉模型（LLM_CAPABILITIES.vision）。
+        返回 (模型目录项, 切换提示文案；无切换时为空串)。
+        """
+        if self.model_entry.get("vision"):
+            return self.model_entry, ""
+        entry = registry.vision_entry()
+        prefix = get_message("plugins", __plugin_name__, "model_change_prefix",
+                             model=self.model, vision_model=entry["model"])
+        return entry, prefix
+
     def compute_credits(self) -> dict:
         """按已累计 tokens 计算本轮 credits 消耗与参与者均摊（正常结束与中断结算共用）。
 
@@ -798,14 +805,12 @@ class AIHelper:
             self.tokens
             - self.cached_tokens * 0.75
         )
+        # 倍率取自模型目录：按当前轮真实模型名反查（中断时即最近一轮）
         multis = 1
-        match self.current_model:
-            case "glm-5.3":
-                multis = 10
-            case m if m == FLASH_MODEL:  # 裸名是捕获模式，必须用 guard 做值比较
-                # 打折结束
-                multis = 1
-                # multis = 0.5
+        for entry in (getattr(constants, "LLM_MODELS", {}) or {}).values():
+            if entry.get("model") == self.current_model:
+                multis = entry.get("credit_multiplier", 1)
+                break
         credits_use *= multis
         credits_use += self.other_credits
         # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）
@@ -823,7 +828,7 @@ class AIHelper:
             compressed = 0
             ai_params = self.resume_messages
             asks = self.asks
-            real_model = self.resume_model or self.model
+            real_entry = self.resume_entry or self.model_entry
             text = asks[-1].get("text", "") if asks else text
             prefix = get_message("plugins", __plugin_name__, "resume_prefix", count=len(ai_params))
         else:
@@ -851,16 +856,17 @@ class AIHelper:
                 *history,
                 {"role": "user","content": build_user_content(f"{curr_text}\n{text}", image_urls, url_dicts)},
             ]
-            real_model = FLASH_MODEL if len(url_dicts) > 0 else self.model
-            if real_model != self.model:
-                prefix = get_message("plugins", __plugin_name__, "model_change_prefix", model=self.model, vision_model=real_model)
+            if url_dicts:
+                real_entry, prefix = self.entry_for_media()
+            else:
+                real_entry = self.model_entry
             # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
             asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
             self.asks = asks
         # 插入队列键：共享会话按群号码，普通会话按 用户+会话名（与 AIHelper.insert_key 一致）
         while True:
             try:
-                result, tool_call_times = await self.run_agent(session, ai_params, model=real_model)
+                result, tool_call_times = await self.run_agent(session, ai_params, real_entry)
                 break
             except InsertInterrupted:
                 # 打断点：把全部待插入消息并入上下文后重入 agent 循环（messages 数组原样延续）
@@ -881,11 +887,10 @@ class AIHelper:
                     if ins.user_id not in self.participants:
                         self.participants.append(ins.user_id)
                     ai_logger.info(f"插入消息已并入上下文: {ins.user_id} {ins.text[:150]!r}" + "..." if len(ins.text) > 150 else "")
-                if has_image_insert and real_model != FLASH_MODEL:
-                    # 插入消息带图片：切换到视觉模型
-                    real_model = FLASH_MODEL
-                    prefix += get_message("plugins", __plugin_name__, "model_change_prefix",
-                                          model=self.model, vision_model=real_model)
+                if has_image_insert and not real_entry.get("vision"):
+                    # 插入消息带图片，且当前轮模型不支持视觉：切换到视觉模型
+                    real_entry, switch_prefix = self.entry_for_media()
+                    prefix += switch_prefix
         self.spent_secs.stop()
         if result == False or result is AISTOP:
             # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示
@@ -901,7 +906,7 @@ class AIHelper:
             )
             return False, {}, {}, 0
         try:
-            ans = result.choices[0].message.content
+            ans = result.text
 
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"

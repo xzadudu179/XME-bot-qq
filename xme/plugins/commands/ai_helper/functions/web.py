@@ -25,7 +25,8 @@ from xme.xmetools.videotools.probe import get_video_duration
 from xme.xmetools.msgtools import create_image_message
 from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
 from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image
-from ..constants import MAX_DOWNLOAD_FILE_SIZE, FLASH_MODEL
+from ..constants import MAX_DOWNLOAD_FILE_SIZE
+from xme.plugins.commands.ai_helper.llm import registry
 from config import IMAGE_TEMP_PATH
 from ._common import exception_detail, ImageToolResult
 
@@ -225,7 +226,7 @@ async def _media_probe(url: str, item_type: str) -> str | None:
         msg = str(ex)
         return None if "超出" in msg else msg  # 体积超限不判定；SSRF/协议类明确失败
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        return None  # 网络类不确定：放行，交 1210 兜底显式告知
+        return None  # 网络类不确定：放行，兜底显式告知
     except Exception:
         return None
     return _check_media_bytes(data, item_type)
@@ -235,7 +236,7 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
 
     作为 AI 可调用 tool 使用：当前轮模型本身是视觉模型（flash）时不再发起独立
     GLM 调用，而是返回 ImageToolResult 把内容直接注入当前对话由模型亲眼看；
-    否则（pro 等无视觉模型）走原路径：用 glm-5.3-flash 单独分析后返回文本。
+    否则（无视觉能力的模型）走原路径：用配置的视觉模型（LLM_CAPABILITIES.vision）单独分析后返回文本。
     单独调用消耗的 tokens 会通过 agent 计入用户 credits。
     """
     if ref:
@@ -254,7 +255,7 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
             raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
     part = {"type": item_type, item_type: {name: url}}
     # 视觉轮直注入：省一次独立调用与重复计费，模型在原对话里直接看
-    if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL and not force_use_agent:
+    if agent is not None and getattr(agent, "current_vision", False) and not force_use_agent:
         type_names = {"file": "文件", "image_url": "图片", "video_url": "视频"}
         label = type_names.get(item_type, item_type)
         # 注入前探测：解析不了的媒体绝不谎称"已附上"，显式报告给模型
@@ -265,7 +266,6 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         return ImageToolResult(
             f"[{label}内容已直接附在输入中，请针对该{label}完成：{prompt}]",
             [part])
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
     system_prompt = (
         "你是一个用于查看并解析指定 url 内容的模型。"
         "请根据用户给出的 prompt，仔细查看 url 里的内容并回答。"
@@ -282,31 +282,16 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         ]},
     ]
     try:
-        response = await asyncio.to_thread(
-            client.chat.asyncCompletions.create,
-            model=FLASH_MODEL,
-            messages=messages,
-            temperature=0.3,
-        )
-        task_id = response.id
-        MAX_TRY_TIMES = 500
-        try_times = 0
-        while try_times < MAX_TRY_TIMES:
-            try_times += 1
-            result = await asyncio.to_thread(
-                client.chat.asyncCompletions.retrieve_completion_result,
-                id=task_id,
-            )
-            if result.task_status == "SUCCESS":
-                break
-            if result.task_status == "FAIL":
-                raise RuntimeError("view_file 模型任务失败")
-            await asyncio.sleep(0.5)
-        # 计费 tokens 到 credits（跟随会话模型倍率折算）
+        # 视觉分析走统一 provider（能力配置 vision：默认 GLM flash，可改为其他兼容端点）
+        entry = registry.vision_entry()
+        provider = registry.get_provider(entry["provider"])
+        if provider is None:
+            return f"[查看文件失败：provider {entry['provider']} 未配置]"
+        result = await provider.chat(messages, model=entry["model"], temperature=0.3)
+        # 计费 tokens 到 credits（带外调用，跟随会话模型倍率折算）
         if agent is not None:
-            agent.other_credits += result.usage.total_tokens - (result.usage.prompt_tokens_details.cached_tokens * 0.75)
-        content = result.choices[0].message.content
-        return content if content else "[没有识别到内容]"
+            agent.other_credits += result.usage.billable_tokens
+        return result.text or "[没有识别到内容]"
     except Exception as ex:
         logger.exception(f"查看 url 内容失败: {ex}")
         return f"[查看文件失败: {ex}]"
@@ -407,7 +392,7 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
         return (f"截图完成（{width}x{height}），已保存到 temp（引用 {ref}）。\n"
                 f"需要分析内容时可用 view_image 传入该引用。")
     # 视觉轮直注入：截图直接进当前对话，不再单独调 view_item 分析
-    if agent is not None and getattr(agent, "current_model", "") == FLASH_MODEL:
+    if agent is not None and getattr(agent, "current_vision", False):
         return ImageToolResult(
             f"截图完成（{width}x{height}），截图已直接附在输入中。请针对该截图完成：{prompt}",
             [{"type": "image_url", "image_url": {"url": file_url}}])

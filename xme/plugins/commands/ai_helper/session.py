@@ -2,8 +2,9 @@
 from pathlib import Path
 
 from xme.xmetools.filetools import is_safe_custom_name
+from xme.xmetools.dicttools import get_value, set_value
 from . import history
-from .constants import CURRENT_SHARED_FILE, MAX_SESSIONS, SESSION_NAME_MAX_LEN
+from .constants import CURRENT_SHARED_FILE, MAX_SESSIONS, SESSION_NAME_MAX_LEN, __plugin_name__
 from .share import SharedSession, is_valid_code
 
 # 用户目录下的状态文件（clear_all_history 清理目录时会一并移除）
@@ -366,3 +367,19 @@ class AISession:
         if lock:
             new.lock()
         return new
+
+
+def user_model(user) -> str:
+    """用户默认模型（plugin_datas["ai_helper"]["model"]）；未设置或已失效时用默认别名。"""
+    from .llm import registry
+    spec = get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
+    if spec and registry.is_valid_model(spec):
+        return spec
+    return registry.default_alias()
+
+
+def set_user_model(user, spec: str) -> None:
+    """设置并持久化用户的默认模型（/ai -m <模型> 不带对话内容时调用）。"""
+    set_value(__plugin_name__, "model", search_dict=user.plugin_datas,
+              set_method=lambda _: spec)
+    user.save()

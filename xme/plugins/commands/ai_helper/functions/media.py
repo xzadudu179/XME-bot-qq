@@ -10,6 +10,7 @@ from xme.xmetools.msgtools import create_image_message
 from zai import ZhipuAiClient
 from keys import GLM_API_KEY
 from ..constants import IMAGE_GEN_CREDITS
+from ..llm import registry
 
 async def get_image_msg(url, max_size = 1024):
     image = await get_url_image(url, headers={
@@ -43,17 +44,41 @@ def get_skill_md(name: str, agent=None):
     return {"result": content, "no_compress": True}
 
 async def ocr_image(url, agent=None):
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
+    """OCR 图片文字：按能力配置 LLM_CAPABILITIES["ocr"] 分派实现。
+
+    api = "glm_layout_parsing"（默认）：GLM 专用版面解析接口（效果最好）；
+    api = "chat"：走统一 provider 的视觉模型 + 提取文字的提示词（任意兼容端点可用）。
+    """
+    cap = registry.get_capability("ocr")
+    api = cap.get("api") or "glm_layout_parsing"
+    if api == "chat":
+        provider = registry.get_provider(cap.get("provider", ""))
+        if provider is None:
+            return f"[图片 OCR 失败：provider {cap.get('provider')} 未配置]"
+        try:
+            result = await provider.chat(
+                [{"role": "user", "content": [
+                    {"type": "text", "text": "请提取这张图片里的全部文字，按原样输出，不要添加解释。"},
+                    {"type": "image_url", "image_url": {"url": url}}]}],
+                model=cap.get("model", ""), temperature=0.1)
+            if agent is not None:
+                agent.tokens += result.usage.billable_tokens * 0.125
+            return result.text or "[没有识别到内容]"
+        except Exception as ex:
+            logger.exception(f"图片 OCR 失败: {ex}")
+            return f"[图片 OCR 失败: {ex}]"
+    if api != "glm_layout_parsing":
+        return f"[图片 OCR 失败：未知的 OCR 实现 {api}（LLM_CAPABILITIES['ocr']）]"
+    client = ZhipuAiClient(api_key=cap.get("api_key") or GLM_API_KEY)
     try:
         response = await asyncio.to_thread(
             client.layout_parsing.create,
-            model="glm-ocr",
+            model=cap.get("model") or "glm-ocr",
             file=url
         )
         result = response.md_results
         if agent is not None:
             agent.tokens += response.usage.total_tokens * 0.125
-        # response.usage.prompt_tokens_details.
         if result is None:
             return "[没有识别到内容]"
         return result
@@ -62,11 +87,12 @@ async def ocr_image(url, agent=None):
         return f"[图片 OCR 失败: {ex}]"
 
 async def gen_image(prompt, action: str = "send", size="1024x1024", agent=None):
-    client = ZhipuAiClient(api_key=GLM_API_KEY)
+    cap = registry.get_capability("image_gen")
+    client = ZhipuAiClient(api_key=cap.get("api_key") or GLM_API_KEY)
     try:
         response = await asyncio.to_thread(
             client.images.generations,
-            model="glm-image",
+            model=cap.get("model") or "glm-image",
             prompt=prompt,
             size=size,
             # quality=quality,

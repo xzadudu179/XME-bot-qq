@@ -24,7 +24,32 @@ AFDIAN_OAUTH_REDIRECT_URI = "https://oauth.xzadudu179.top/afdian/oauth"
 AFDIAN_OAUTH_FRONTEND_ORIGIN = "*"
 TOKEN_TTL = 0
 FILE_TOKENS = {}
+# BOT severapp 使用域名
 DOMAIN = "api.example.com"
+
+# ---- 多 Provider LLM 配置（密钥与端点；模型目录见 ai_helper/constants.py 的 LLM_MODELS）----
+# 协议：OpenAI Chat Completions（/chat/completions）。新增供应商只需在此加一项，
+# 再到 constants.LLM_MODELS 里给它加模型别名即可（如 "ds": {"provider": "deepseek", ...}）。
+# 字段：
+#   base_url  必填：兼容端点根地址（不含 /chat/completions）
+#   api_key   必填
+#   transport 可选：openai_http（默认，httpx 直连）
+#   stream    可选：默认 True（流式读块并写调试日志；不支持流式的端点设为 False）
+#   timeout   可选：单次调用超时秒数（默认取 constants.LLM_TIMEOUT）
+#   temperature / extra_headers 可选
+LLM_PROVIDERS = {
+    "glm": {
+        "base_url": "https://open.bigmodel.cn/api/paas/v4",
+        "api_key": GLM_API_KEY,
+        "stream": True,
+    },
+    # 示例：接入任意 OpenAI 兼容端点（DeepSeek / Qwen / vLLM / Ollama / OpenRouter ...）
+    # "deepseek": {
+    #     "base_url": "https://api.deepseek.com/v1",
+    #     "api_key": "",
+    #     "stream": True,
+    # },
+}
 
 def generate_file_token(path: str) -> str:
     ...

@@ -92,6 +92,77 @@ RUN_PYTHON_MAX_FILE_SIZE = 10 * 1024 * 1024    # 产出单文件大小上限
 # 视觉模型名（图片直注入的判据 + 全插件单点引用，禁止再硬编码）
 FLASH_MODEL = "glm-5.3-flash"
 
+# ---- 多 Provider：模型目录 / 能力配置 / 流式日志（配置单点，可在此直接改）----
+# 说明：密钥与端点写在 keys.py 的 LLM_PROVIDERS（keys.py 不提交）；
+# 本段只放"可提交"的目录信息：别名 → provider/模型/能力/计费倍率/上下文上限。
+# 切换第三方（如 DeepSeek）：在 keys.py 加 provider 配置，再在此处加一个别名即可。
+
+# 默认模型别名（/ai 不带 -m 时使用）
+LLM_DEFAULT_MODEL = "flash"
+
+# 模型别名 → 目录项；provider 需在 keys.py 的 LLM_PROVIDERS 里存在
+LLM_MODELS = {
+    "flash": {
+        "provider": "glm",
+        "model": "glm-5.3-flash",
+        "vision": True,              # 是否支持图片/视觉输入（决定图片直注入与带图切换）
+        "context_limit": 1_000_000,  # 输入上下文上限（tokens，触发轮内折叠）
+        "credit_multiplier": 1,      # credits 计费倍率
+        "description": "glm-5.3-flash 模型",
+    },
+    "pro": {
+        "provider": "glm",
+        "model": "glm-5.3",
+        "vision": False,
+        "context_limit": 1_000_000,
+        "credit_multiplier": 10,
+        "description": "glm-5.3 模型",
+    },
+    "dsflash": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "vision": True,
+        "context_limit": 1_000_000,
+        "credit_multiplier": 1.2,
+        "description": "deepseek-flash 模型",
+    },
+    "xzadudu179": {
+        "provider": "kirari",
+        "model": "xzadudu179",
+        "vision": True,
+        "context_limit": 1_000_000,
+        "credit_multiplier": 0,
+        "description": "???",
+    },
+    "localgpt": {
+        "provider": "local",
+        "model": "gpt-oss-20b",
+        "vision": False,
+        "context_limit": 32000,
+        "credit_multiplier": 0,
+        "description": "本地 gpt 小模型，只有32k上下文，没什么用但免费",
+    }
+
+
+}
+
+# 能力配置：各项能力用哪个 provider/模型；api 标识实现方式
+# （"chat" 走对话协议；glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
+LLM_CAPABILITIES = {
+    "vision": {"provider": "glm", "model": "glm-5.3-flash", "api": "chat"},
+    "ocr": {"provider": "glm", "model": "glm-ocr", "api": "glm_layout_parsing"},
+    "image_gen": {"provider": "glm", "model": "glm-image", "api": "glm_images"},
+    "web_reader": {"provider": "glm", "model": "", "api": "glm_reader"},
+    "moderation": {"provider": "glm", "model": "", "api": "glm_moderations"},
+}
+
+# 半流式日志：把模型的增量输出（思考/回复/工具调用）逐块写进 ai_helper 调试日志，
+# 便于后台排查模型输出问题；最终回复形态与计费完全不受影响
+LLM_STREAM_LOG = True
+
+# 单次对话调用超时（秒）
+LLM_TIMEOUT = 300.0
+
 # 共享会话插入模式：待插入消息队列上限（对话进行中其他成员的消息）
 MAX_PENDING_INSERTS = 5
 

@@ -22,10 +22,10 @@ from xme.plugins.commands.xme_user.classes import user as u
 from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
-from .session import AISession, current_storage, enable_normal_insert
+from .session import AISession, current_storage, enable_normal_insert, set_user_model, user_model
 from . import constants, share, aistop, credits
 from .credits import ai_credits_left
-from .constants import __plugin_name__, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
+from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
 from .commands import adjust_credits, clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
 from .share_commands import (
     join_session,
@@ -129,6 +129,12 @@ def get_command_list():
     cmd_list_str += "指令示例：\n\"/ai -c join AI0000\" 代表申请加入群号为 AI0000 的共享会话\n\"/ai -c clear\" 代表清除当前会话历史记录"
     return cmd_list_str
 
+def get_model_list():
+    """模型列表文案（别名 / 简介 / 计费倍率），供帮助与报错提示展示。"""
+    return "\n".join(
+        f"{n}:\t{m.get('description', '')}（计费 x{m.get('credit_multiplier', 1)}）"
+        for n, m in LLM_MODELS.items()
+    )
 
 async def parse_control(session: CommandSession, text: str, user: u.User) -> str:
     cmd_name, args = text.split(" ")[0], text.split(" ")[1:]
@@ -165,7 +171,8 @@ arg_usage = shell_like_usage("OPTION", [
     {
         "name": "model",
         "abbr": "m",
-        "desc": "切换模型，可使用 \"pro\" 或 \"flash\" 两种，默认 \"flash\"。"
+        "desc": (f"指定模型：只发 \"/ai -m 模型\" 会把该模型设为你之后默认使用的模型；"
+                 f"\"/ai -m 模型 对话内容\" 则只在这次对话临时用它。模型列表：\n{get_model_list()}")
     },
     {
         "name": "ctrl",
@@ -189,7 +196,8 @@ def extract_text(raw: str) -> str:
     match = re.search(r"(?:^|\s)-r(?:\s|$)", raw)
     if match:
         return raw[match.end():].strip()
-    # 没有 -r，剥离开头的普通选项
+    # 没有 -r，剥离开头的普通选项（容忍前导空白：命令参数常带一个空格）
+    raw = raw.lstrip()
     raw = re.sub(r"^(?:-c|--ctrl)\s*", "", raw)
     raw = re.sub(r"^(?:-m|--model)\s+\S+\s*", "", raw)
     return raw.strip()
@@ -219,8 +227,15 @@ async def _(session: CommandSession, user: u.User):
     else:
         pending_insert = None
     MAX_LENGTH = 3000
+    from . import llm
+    available_models = llm.registry.list_model_aliases()
     # current_arg 带 CQ 码（图片等）；current_arg_text 会把 CQ 整个剥掉导致图片丢失
     raw = str(session.current_arg)
+    # /ai -m（只给了选项、没给模型名）→ 列出可用模型与当前默认（在 argparse 报错前拦截）
+    if re.fullmatch(r"(?:-m|--model)", raw.strip()):
+        return await send_session_msg(session, get_message(
+            "plugins", __plugin_name__, "model_list",
+            models=get_model_list(), current=user_model(user)))
     parser = XmeArgumentParser(session=session, usage=arg_usage)
     parser.exit_mssage = get_message("plugins", __plugin_name__, "shell_error")
     parser.add_argument('-c', '--ctrl', action='store_true', default=False)
@@ -245,6 +260,15 @@ async def _(session: CommandSession, user: u.User):
             return False
         await send_session_msg(session, control)
         return False
+    # /ai -m <模型> 且没有对话内容：把该模型设为用户的默认模型（持久化，之后 /ai 都用它）
+    if args.model and not text:
+        if not llm.registry.is_valid_model(args.model):
+            return await send_session_msg(session, get_message(
+                "plugins", __plugin_name__, 'error_model', model=args.model,
+                models="、".join([f'"{i}"' for i in available_models])))
+        set_user_model(user, args.model)
+        return await send_session_msg(session, get_message(
+            "plugins", __plugin_name__, 'model_saved', model=args.model))
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False
@@ -271,9 +295,9 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted', code=pending_insert["display"]))
         return False
 
-    available_models = ["flash", "pro"]
-    model = args.model if args.model else "flash"
-    if model not in available_models:
+    # 指定 -m 为临时使用（不落库）；未指定则用该用户的默认模型
+    model = args.model or user_model(user)
+    if not llm.registry.is_valid_model(model):
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
     # 检测上次异常中断的会话快照：三选项（1 原样继续 / 2 继续并带入当前消息 / 3 取消）
     resume_data = None

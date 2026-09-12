@@ -45,7 +45,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.10.6-preview'
+VERSION = '1.11.2-preview'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

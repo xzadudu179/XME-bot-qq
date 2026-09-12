@@ -172,6 +172,9 @@ DEFAULT_CACHE_CREDIT_RATIO = 0.25
 # ---- 动态模型分配（按话题自动挑选默认模型）----
 # 仅在"用户没有自己设置默认模型（/ai -m xxx）且本次没带 -m"时生效；
 # 想要彻底关闭：把 LLM_TOPIC_ROUTING_ENABLED 设为 False（行为与关闭前完全一致）
+# 保留字：/ai -m auto 表示"按话题自动选择模型"（可存为默认模型，也可临时使用）
+LLM_AUTO_MODEL_ALIAS = "auto"
+
 LLM_TOPIC_ROUTING_ENABLED = True
 
 # 类别 → 模型别名（键就是分类器要输出的类别，单点维护：改这里即可增删类别/换模型）
@@ -189,8 +192,8 @@ LLM_TOPIC_ROUTING = {
 # glm-4.7-flashx 单次 40s 太慢，glm-4.5-air 约 1s、glm-4-flashx 约 0.2s 稳定可用，
 # 故把稳定的放前面、免费的放最后兜底。
 LLM_TOPIC_CLASSIFIERS = [
-    {"provider": "glm", "model": "glm-4.5-air"},
     {"provider": "glm", "model": "glm-4-flashx"},
+    {"provider": "glm", "model": "glm-4.5-air"},
     {"provider": "glm", "model": "glm-4.7-flash"},
 ]
 LLM_TOPIC_BILLABLE = False   # 分类调用是否计入用户 credits（内部开销，默认不计）

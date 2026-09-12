@@ -2415,7 +2415,8 @@
       "model_saved": "已把默认模型切换为 {model} {positive}\n之后就可以使用 \"/ai 对话\" 调用它啦{positive_punc} 想临时换别的模型用 \"/ai -m 模型 对话内容\" 就好啦。",
       "model_list": "当前默认模型：{current}\n可用模型列表：\n{models}\n用法：\"/ai -m 模型名\"切换默认模型；\"/ai -m 模型名 对话内容\" 在这次对话临时使用这个模型",
       "model_fallback_prefix": "[BOT] 注意：{model} 模型当前不可用哦，已回退到 {fallback}\n",
-      "empty_reply": "{neutral} AI 这次没有返回任何内容（原因：{reason}）\n可以换个说法再问一次，或稍后重试；若反复出现可让管理员查看日志"
+      "empty_reply": "{neutral} AI 这次没有返回任何内容（原因：{reason}）\n可以换个说法再问一次，或稍后重试；若反复出现可让管理员查看日志",
+      "model_saved_auto": "已把默认模型设为「自动选择」{positive}\n之后每个话题会自动挑合适的模型哦"
     },
     "essence": {
       "desc": "随机精华消息",

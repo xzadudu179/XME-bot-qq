@@ -369,14 +369,27 @@ class AISession:
         return new
 
 
+def user_model_setting(user) -> str | None:
+    """用户默认模型的原始设置值：None（未设置）/ "auto"（自动选择）/ 具体模型规格。
+
+    与 user_model 的区别：这里不做任何校验与回退，供入口判断"是否让动态分配介入"。
+    """
+    return get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
+
+
 def user_model(user) -> str:
     """用户默认模型（plugin_datas["ai_helper"]["model"]）。
 
-    以下情况一律回退到默认别名（LLM_DEFAULT_MODEL，通常为 flash）：
-    未设置、别名已不存在、或该模型所属 provider 已从配置中移除。
+    - 设为 "auto"（自动选择）→ 返回全局默认别名作为基线（实际模型由话题路由决定）；
+    - 具体模型且可用 → 用它；
+    - 以下情况回退默认别名（LLM_DEFAULT_MODEL，通常为 flash）：
+      未设置、别名已不存在、或该模型所属 provider 已从配置中移除。
     """
     from .llm import registry
-    spec = get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
+    from .constants import LLM_AUTO_MODEL_ALIAS
+    spec = user_model_setting(user)
+    if spec == LLM_AUTO_MODEL_ALIAS:
+        return registry.default_alias()
     if spec and registry.is_valid_model(spec):
         entry = registry.resolve_model(spec)
         if registry.provider_configured(entry.get("provider", "")):
@@ -391,10 +404,12 @@ def set_user_model(user, spec: str) -> None:
     user.save()
 
 
-def has_custom_model(user) -> bool:
-    """用户是否自己设置过默认模型（/ai -m <模型> 不带对话内容）。
+def allows_auto_model(user) -> bool:
+    """动态模型分配是否可以介入该用户。
 
-    动态模型分配据此让路：用户显式选过就完全听用户的。
+    未设置过默认模型 → 可以；设为 "auto" → 明确要求自动选择，可以；
+    设成具体模型 → 用户已指定，完全听用户的（不介入）。
     """
-    spec = get_value(__plugin_name__, "model", search_dict=user.plugin_datas, default=None)
-    return bool(spec)
+    from .constants import LLM_AUTO_MODEL_ALIAS
+    spec = user_model_setting(user)
+    return spec is None or spec == LLM_AUTO_MODEL_ALIAS

@@ -1,5 +1,6 @@
 # Made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 from pathlib import Path
+import re
 
 from xme.xmetools.filetools import is_safe_custom_name
 from xme.xmetools.dicttools import get_value, set_value
@@ -233,10 +234,12 @@ class AISession:
             _write_current(self.user_id, DEFAULT_SESSION)
         return cleared
 
-    def rename(self, new_name, lock=False) -> bool:
+    def rename(self, new_name, lock=False, keep_lock: bool = True) -> bool:
         """重命名会话（历史文件 + 转存文件夹一起移动）。
 
-        lock=True 时新名字标记为 AI 不可修改（用户命名）；若原名已锁定，锁随会话转移到新名。
+        lock=True 时新名字标记为 AI 不可修改（用户命名）；默认 keep_lock=True 表示
+        "原名已锁定时锁随会话转移到新名"。清空历史后改名（名字回归自动名）应传
+        keep_lock=False —— 名字已不是用户命名，不该继续占用命名锁。
         默认会话不可重命名（用 promote_default）。
         """
         if self.is_default or not self.is_valid_name(new_name) or new_name == self.ai_session:
@@ -254,9 +257,10 @@ class AISession:
         except OSError:
             return False
         # 锁随会话走：旧名解锁（若之前锁定），新名按需加锁
+        # keep_lock=False 时即使原名锁定也不带到新名（如"清空历史后回归自动名"）
         locked = _read_locked(self.user_id)
         locked.discard(old_name)
-        if was_locked or lock:
+        if lock or (was_locked and keep_lock):
             locked.add(new_name)
         _write_locked(self.user_id, locked)
         # 插入模式名单随会话改名迁移
@@ -285,6 +289,11 @@ class AISession:
         return (isinstance(name, str) and is_safe_custom_name(name)
                 and name != DEFAULT_SESSION and not name.startswith("history_")
                 and not is_valid_code(name))
+
+    @staticmethod
+    def is_auto_name(name: str) -> bool:
+        """是否为自动生成的会话名（会话1、会话2…，与 next_auto_name 同源）。"""
+        return bool(re.fullmatch(r"会话\d+", (name or "").strip()))
 
     @staticmethod
     def next_auto_name(user_id) -> str:

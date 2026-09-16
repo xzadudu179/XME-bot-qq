@@ -747,7 +747,7 @@ class AIHelper:
                 ai_logger.info(
                     f"上下文已压缩：把 {len(to_compress)} 条历史压成摘要（{len(summary)} 字），保留最近 {len(keep)} 条。"
                 )
-                await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.current_model, ai_session=self.ai_session))
+                # await send_session_msg(session, get_message("plugins", __plugin_name__, 'talking_to_ai', model=self.current_model, ai_session=self.ai_session))
                 return len(summary)
         except Exception as ex:
             ai_logger.exception(f"上下文压缩失败: {ex}")
@@ -1043,7 +1043,7 @@ class AIHelper:
                 f"减少 {credits_use} 个 tokens"
             )
             if not (await is_text_can_send(session, ans, 4)):
-                return "这个话题好像不是很合适呢...我们换个话题聊吧。", tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, 0
+                return "这个话题好像不是很合适呢...我们换个话题聊吧。（本次对话不记录历史）", tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, 0
             build_history(
                 user=user,
                 ask=asks[-1].get("text", text) if asks else text,

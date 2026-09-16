@@ -74,7 +74,7 @@ async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_supe
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)
-        return await analyze_risk(response["result_list"], bot, event, risk_send_to_superusers=risk_send_to_superusers)
+        return await analyze_risk(response.get("result_list", []), bot, event, risk_send_to_superusers=risk_send_to_superusers)
 
     except Exception as ex:
         logger.exception(traceback.format_exc())
@@ -85,7 +85,7 @@ async def is_text_can_send(session: CommandSession, text: str, strictness=3):
     try:
         logger.info(f"正在分析 \"{text}\"")
         response = await text_moderations(text)
-        return await analyze_risk(response["result_list"], session.bot, session.event, True, session, strictness)
+        return await analyze_risk(response.get("result_list", []), session.bot, session.event, True, session, strictness)
     except Exception as ex:
         logger.exception(traceback.format_exc())
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}

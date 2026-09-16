@@ -174,7 +174,7 @@ def release_busy(code: str) -> list[Insert]:
     return leftover
 
 
-class SharedSession:
+class  SharedSession:
     """单个共享会话对象：封装群号码、成员/请求/屏蔽名单与共享历史的读写。
 
     - members[0] 恒为群主；admins 为预留的管理员扩展位（当前恒空）。

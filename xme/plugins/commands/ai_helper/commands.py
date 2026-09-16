@@ -3,11 +3,13 @@ import re
 
 import config
 from character import get_message
+from nonebot.log import logger
 from xme.xmetools.dicttools import set_value
 from xme.xmetools.msgtools import CMD_END, aget_arg, send_to_user
 
 from . import credits, history, share
 from .constants import (
+    DEFAULT_SHARED_TITLE,
     MAX_JOINED_SHARED,
     MAX_SESSIONS,
     MAX_SHARED_MEMBERS,
@@ -192,6 +194,7 @@ async def clear_history(session, user, args=None):
 
     当前处于共享会话时，无参 clear 作用于共享会话（仅群主可清），
     不再误清各自的普通会话。
+    清除了会话历史记录后名字也会变为默认
     """
     num = _parse_index(args)
     # ---- a 序号：删除整个共享会话（仅群主）----
@@ -220,22 +223,28 @@ async def clear_history(session, user, args=None):
     # ---- 无参：清空当前会话（统一指针解析：共享会话仅群主可清，普通会话照旧）----
     if num is None:
         current = current_storage(user.id)
+        suffix = "，仅重置了会话名"
         if isinstance(current, SharedSession):
             if not current.is_owner(user.id):
                 return get_message("plugins", __plugin_name__, "shared_clear_need_owner")
             cleared_hist, cleared_files = current.clear()
+            current.rename(DEFAULT_SHARED_TITLE)
             if cleared_hist == 0 and cleared_files == 0:
-                return get_message("plugins", __plugin_name__, "session_clear_no_content")
+                return get_message("plugins", __plugin_name__, "session_clear_no_content", suffix=suffix)
             return get_message(
                 "plugins", __plugin_name__, "session_cleared",
                 hist_count=cleared_hist, file_count=cleared_files,
             )
         cleared_hist, cleared_files = current.clear()
+        if not current.is_default:
+            if not current.exists():
+                AISession.create(user.id, current.ai_session)
+            if not AISession.is_auto_name(current.ai_session):
+                current.rename(AISession.next_auto_name(user.id), False, keep_lock=False)
+            else:
+                suffix = ""
         if cleared_hist == 0 and cleared_files == 0:
-            return get_message("plugins", __plugin_name__, "session_clear_no_content")
-        # 非默认会话被清空后重新建立一个空会话，避免当前指针指向不存在的会话（命名锁保持）
-        if not current.is_default and not current.exists():
-            AISession.create(user.id, current.ai_session)
+            return get_message("plugins", __plugin_name__, "session_clear_no_content", suffix=suffix)
         return get_message(
             "plugins", __plugin_name__, "session_cleared",
             hist_count=cleared_hist, file_count=cleared_files,

@@ -11,23 +11,36 @@ from ..session import AISession
 
 async def ask_user(prompt: str, session, timeout: int = 120):
     from ..agent import AISTOP
-    from .. import __plugin_name__
+    from .. import __plugin_name__, aistop
     send_time = time.time()
     if timeout > 400:
         timeout = 400
     interval = 0
     islegal = False
-    while interval < 3 and not islegal:
-        reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
-        reply_time = time.time()
-        interval = reply_time - send_time
-        if interval < 3:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_too_fast"))
-            continue
-        islegal = await is_text_can_send(session, reply, 4)
-        if not islegal:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
-            continue
+    reply = None
+    attempts = 0
+    # 提问期间标记"AI 在等用户回复"：消息预处理器据此放行，让回复能进 arg 通道
+    aistop.set_awaiting_reply(session.event.group_id, session.event.user_id, True)
+    try:
+        # 注意：条件只应看"是否拿到合法回复"；原先写成 `interval < 3 and not islegal`，
+        # 而 interval 在正常回复时必然 ≥3 → 短路导致"违规重问"逻辑形同虚设
+        while not islegal and attempts < 5:
+            attempts += 1
+            reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
+            if reply is None:
+                break   # 超时：不再反复提问
+            reply_time = time.time()
+            interval = reply_time - send_time
+            if interval < 3:
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_too_fast"))
+                continue
+            # is_text_can_send 返回 dict，必须取 result 判断（原先当 bool 用导致风控与提示失效）
+            islegal = bool((await is_text_can_send(session, reply, 4)).get("result", False))
+            if not islegal:
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
+                continue
+    finally:
+        aistop.set_awaiting_reply(session.event.group_id, session.event.user_id, False)
     if not reply:
         return "[用户未在时限内回复任何内容]"
     if reply == "aistop":

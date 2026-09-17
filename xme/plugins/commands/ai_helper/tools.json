@@ -348,7 +348,7 @@
         "type": "function",
         "function": {
             "name": "inprocess_report",
-            "description": "在会话途中跟用户反馈消息，不会被记录到历史记录，通常可用于表示自己在做什么或者将要做什么防止用户等待太久关闭会话。两次发送最小间隔 30s",
+            "description": "在会话途中跟用户回应消息，不会被记录到历史记录，通常可用于表示自己在做什么或者将要做什么防止用户等待太久关闭会话。两次发送最小间隔 30s",
             "parameters": {
                 "type": "object",
                 "properties": {

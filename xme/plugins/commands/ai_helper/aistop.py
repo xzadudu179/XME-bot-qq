@@ -35,7 +35,19 @@ def register_turn(group_id, user_id, task: asyncio.Task, insert_key: str = None,
     """会话开始时登记任务与插入信息（talk() 调用）。"""
     _running_turns[(group_id, user_id)] = {
         "task": task, "insert_key": insert_key, "insert_enabled": insert_enabled,
+        "awaiting_reply": False,
     }
+
+
+def set_awaiting_reply(group_id, user_id, flag: bool) -> None:
+    """标记"AI 正在等用户回复"（ask_user 提问期间）。
+
+    此时预处理器不再接管消息（直接放行），让用户回复经 nonebot 的 arg 通道
+    送给 ask_user；否则回复会被当作"普通文本"静默吞掉，ask_user 只能等到超时。
+    """
+    turn = _running_turns.get((group_id, user_id))
+    if turn is not None:
+        turn["awaiting_reply"] = bool(flag)
 
 
 def unregister_turn(group_id, user_id) -> None:
@@ -56,6 +68,24 @@ def request_stop(group_id, user_id) -> bool:
     return True
 
 
+def _insert_enabled_now(turn: dict) -> bool:
+    """按插入键实时查询插入模式是否开启（对话进行中切换可立即生效）。
+
+    构造期登记的快照值可能过期（群主在对话中打开插入），故以实时配置为准。
+    """
+    key = turn.get("insert_key") or ""
+    try:
+        if key.startswith("shared:"):
+            return bool(share.SharedSession(key[len("shared:"):]).insert_enabled)
+        if key.startswith("user:"):
+            _, uid, name = key.split(":", 2)
+            from . import session as session_module
+            return session_module.normal_insert_enabled(int(uid), name)
+    except Exception:
+        pass
+    return bool(turn.get("insert_enabled"))
+
+
 @message_preprocessor
 async def handle_running_turn_input(bot, event, plugin_manager):
     """接管运行中会话发起者在本聊天的消息：aistop / 插入 / 指令提示 / 静默。"""
@@ -64,6 +94,10 @@ async def handle_running_turn_input(bot, event, plugin_manager):
         return
     turn = _running_turns.get((event.get("group_id"), event.user_id))
     if turn is None:
+        return
+    # AI 正在等用户回复（ask_user 提问期间）：放行消息，交给 nonebot 的 arg 通道，
+    # 让 ask_user 拿到回复（顺带 aistop 也能经此送达并触发中断）
+    if turn.get("awaiting_reply"):
         return
 
     async def swallow(reason: str, reply: str = ""):
@@ -95,8 +129,11 @@ async def handle_running_turn_input(bot, event, plugin_manager):
             await swallow("insert", reply=get_message(
                 "plugins", __plugin_name__, "no_shared_insert"))
             return
-        if not turn.get("insert_enabled"):
-            await swallow("ai-cmd-no-insert")  # 未开插入模式：与旧 arg 通道一致，静默吞掉
+        if not _insert_enabled_now(turn):
+            # 未开插入模式：给提示（原指令路径的 ai_session_on 提示因预处理器先接管而永不触发）
+            from character import get_message as _gm
+            await swallow("ai-cmd-no-insert",
+                          reply=_gm("plugins", __plugin_name__, "ai_session_on"))
             return
         image_objects, cq_matches = await get_images_from_message(bot, ins_text)
         for image_cq in cq_matches:

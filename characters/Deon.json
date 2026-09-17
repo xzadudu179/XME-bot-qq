@@ -2406,7 +2406,7 @@
       "shared_insert_on": "已开启共享会话 {code} 的插入功能 {positive}（成员可在对话进行中插入消息，AI 会打断当前对话并一并回应）",
       "shared_insert_off": "已关闭共享会话 {code} 的插入功能",
       "shared_insert_need_owner": "只有群主才能开关插入功能哦 {neutral}",
-      "shared_insert_lost": "{negative} 插入消息失败：对话已经结束了。",
+      "shared_insert_lost": "{negative} 插入消息失败：会话 {code} 的对话已经结束了。",
       "insert_mode_on": "已开启会话 \"{name}\" 的插入模式 {positive}（对话进行中再发 /ai xxx会并入当前对话的上下文）",
       "insert_mode_off": "已关闭会话 \"{name}\" 的插入模式",
       "resume_prefix": "已恢复上次中断的对话（{count} 条上下文），正在继续执行 {positive}",

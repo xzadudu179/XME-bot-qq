@@ -130,6 +130,15 @@ def get_command_list():
     cmd_list_str += "指令示例：\n\"/ai -c join AI0000\" 代表申请加入群号为 AI0000 的共享会话\n\"/ai -c clear\" 代表清除当前会话历史记录"
     return cmd_list_str
 
+async def safe_get_images(bot, text):
+    """取消息里的图片，失败时降级为"没有图片"（避免 bot.get_image 异常中断整条指令）。"""
+    try:
+        return await get_images_from_message(bot, text)
+    except Exception as ex:
+        ai_logger.warning(f"提取消息中的图片失败（按无图处理）：{type(ex).__name__}: {ex}")
+        return [], []
+
+
 def auto_model_list() -> str:
     """auto（按话题自动选择）的类别 → 模型映射文案，供切换回执展示。"""
     return "、".join(f"{cat}→{alias}" for cat, alias in
@@ -295,7 +304,7 @@ async def _(session: CommandSession, user: u.User):
             # 与首次调用同源：nonebot1 会把该消息经会话 arg 通道交给运行中的 agent 插入，
             # 指令路径不再入队，避免同一句话被插入两次（nonebot1 双投递规避）
             return False
-        image_objects, cq_matches = await get_images_from_message(session.bot, text)
+        image_objects, cq_matches = await safe_get_images(session.bot, text)
         image_urls = [x["file"] for x in image_objects]
         ins_text = text
         for image_cq in cq_matches:
@@ -333,7 +342,7 @@ async def _(session: CommandSession, user: u.User):
             choice = (confirm or "").strip().translate(str.maketrans("１２３", "123"))
             if choice.startswith("2"):
                 # 继续并把本条新消息（含图片）并入恢复的上下文
-                image_objects, cq_matches = await get_images_from_message(session.bot, text)
+                image_objects, cq_matches = await safe_get_images(session.bot, text)
                 image_urls = [x["file"] for x in image_objects]
                 new_text = text
                 for image_cq in cq_matches:
@@ -370,7 +379,7 @@ async def _(session: CommandSession, user: u.User):
         if not share.insert_context_allowed(shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})"))
             return False
-        image_objects, cq_matches = await get_images_from_message(session.bot, text)
+        image_objects, cq_matches = await safe_get_images(session.bot, text)
         image_urls = [x["file"] for x in image_objects]
         ins_text = text
         for image_cq in cq_matches:
@@ -421,8 +430,8 @@ async def _(session: CommandSession, user: u.User):
         user_history = storage.load_history()
         *_, normals = history.split(user_history)
         # 插入模式下全部用量在参与者间均摊，逐人结算（本周额度封顶 + 自存 credits 扣透支；超管跳过）
-        credits_split = tokens_use_dict.get("credits_split") or {str(user.id): credits_use}
-        lefts = credits.settle_split(credits_split)
+        # 结算已在 user_talk 内完成（settle_once，幂等）：这里只读余额展示
+        lefts = tokens_use_dict.get("lefts") or {}
         credits_left_now = lefts.get(str(user.id), credits.ai_credits_left(user))
         send_msg = get_message(
             "plugins",
@@ -457,8 +466,13 @@ async def _(session: CommandSession, user: u.User):
         return True
     except Exception:
         # 注意：logging 的格式串必须带 %s 占位符，否则整条记录会被丢弃（静默无日志）
-        ai_logger.error(f"AI 调用错误：{format_exc()}")
-        await send_session_msg(session, get_message("config", "unknown_error", ex=format_exc()))
+        detail = format_exc()
+        ai_logger.error(f"AI 调用错误：{detail}")   # 完整栈只进日志
+        # 发给用户的只保留异常类型与首行（完整 traceback 几十行，体验很差）
+        lines = [ln.strip() for ln in detail.strip().splitlines() if ln.strip()]
+        brief = lines[-1] if lines else "未知错误"
+        brief = brief[:300]
+        await send_session_msg(session, get_message("config", "unknown_error", ex=brief))
         return False
     finally:
         turn = curr_sessions[user.id]
@@ -527,8 +541,8 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
         clear_snapshot(user.id)
         ai_helper.delete_temp()
         try:
-            tokens_use_dict = ai_helper.compute_credits()
-            lefts = credits.settle_split(tokens_use_dict["credits_split"])
+            tokens_use_dict = ai_helper.settle_once()   # 幂等：重复调用不会二次扣费
+            lefts = tokens_use_dict.get("lefts", {})
             share_used = tokens_use_dict["credits_split"].get(str(user.id))
             left = lefts.get(str(user.id))
             fmt = lambda x: f"{x:,.2f}".rstrip('0').rstrip('.') if x is not None else "未知"

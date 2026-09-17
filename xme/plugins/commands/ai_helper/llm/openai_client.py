@@ -45,10 +45,15 @@ def _map_error(status: int, body: object, provider: str) -> LLMError:
     elif status >= 500:
         kind = LLMErrorKind.SERVER
     elif status == 400:
-        # GLM 1210：媒体输入格式/解析错误；其他供应商用关键词兜底识别
+        # 媒体输入相关错误统一归为 MEDIA_INVALID（上层据此剥离媒体后重试）。
+        # GLM 用 1210/"文件解析失败"；其他供应商措辞各异，例如 DeepSeek 报
+        # "Failed to download image from ..." / "You have uploaded an unsupported image"，
+        # 故关键词要覆盖 image/图片/vision 等（宁可多认，剥离重试一次代价很小）
         low = f"{code} {message}".lower()
         media_hint = any(k in low for k in
-                         ("1210", "图片输入", "image input", "media", "文件解析"))
+                         ("1210", "图片输入", "image input", "media", "文件解析",
+                          "image", "图片", "vision", "unsupported image",
+                          "download image", "invalid image"))
         kind = LLMErrorKind.MEDIA_INVALID if media_hint else LLMErrorKind.BAD_REQUEST
     else:
         kind = LLMErrorKind.UNKNOWN
@@ -93,6 +98,7 @@ class OpenAICompatProvider:
         self.stream_fallback = stream_fallback   # 流式不可用时回退非流式（部分中转端点流式兼容差）
         self._stream_produced = False            # 本次流式是否已产出增量（决定能否安全回退）
         self._silent = False                     # 静默调用标记（不写流式日志）
+        self._stats: dict | None = None           # 上一次调用的产出统计容器
         self._stream_buffers: dict[str, str] = {}  # 流式日志的行缓冲（按 reasoning/content 分路）
         self._client: httpx.AsyncClient | None = None
 
@@ -145,6 +151,11 @@ class OpenAICompatProvider:
             except Exception:
                 pass  # 日志失败绝不影响对话
 
+    def _bump_stats(self, chars: int) -> None:
+        """累计本次流式已产出的字符数（供上层在中断时估算未返回 usage 的用量）。"""
+        if isinstance(self._stats, dict) and chars > 0:
+            self._stats["produced_chars"] = int(self._stats.get("produced_chars", 0)) + chars
+
     def _reset_stream_buffers(self) -> None:
         self._stream_buffers = {"reasoning": "", "content": "", "tool_call": ""}
 
@@ -184,13 +195,15 @@ class OpenAICompatProvider:
     # ---------- 对外 ----------
 
     async def chat(self, messages, *, model, tools=None, temperature=None,
-                   thinking=False, on_tick=None, silent=False) -> ChatResult:
+                   thinking=False, on_tick=None, silent=False,
+                   stats: dict | None = None) -> ChatResult:
         """发起一次对话调用，返回统一结果。失败抛 LLMError。
 
         on_tick：流式读块期间周期性回调（每若干块一次），供上层检查
         "是否有插入消息/是否需要中断"——回调抛出的异常会原样穿透，用于打断当前生成。
         """
         self._silent = bool(silent)   # silent=True：本次调用不写流式日志（分类等内部短调用）
+        self._stats = stats           # 调用方容器：流式过程中累计已产出字符（中断时估算用量）
         use_stream = self.stream
         self._reset_stream_buffers()
         payload = self._payload(messages, model, tools, temperature, thinking, use_stream)
@@ -293,6 +306,7 @@ class OpenAICompatProvider:
                     reasoning = delta.get("reasoning_content")
                     if reasoning:
                         self._stream_produced = True
+                        self._bump_stats(len(reasoning))
                         if not first_reasoning:
                             first_reasoning = True
                             self._emit_delta("reasoning", "[思考] ")
@@ -301,6 +315,7 @@ class OpenAICompatProvider:
                     content = delta.get("content")
                     if content:
                         self._stream_produced = True
+                        self._bump_stats(len(content))
                         if not first_content:
                             first_content = True
                             self._emit_delta("content", "[回复] ")

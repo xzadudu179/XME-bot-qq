@@ -151,6 +151,34 @@ def _find_injected_media_blocks(messages: list) -> set[int]:
     return idxs
 
 
+_SNAPSHOT_MEDIA_PLACEHOLDER = "（历史媒体未保留）"
+
+
+def _strip_media_for_snapshot(messages: list) -> list:
+    """生成"用于写快照"的副本：把媒体段换成中性占位文本。
+
+    快照里的媒体链接注定失效（本地限时链接 TTL 只有 30 秒、QQ CDN 直链也会过期），
+    恢复时必然报"图片无法解析"并终止对话，所以快照不保留媒体；原 messages 深拷贝后
+    再改，当前轮对话里的图片照常可用。
+    """
+    try:
+        copy = json.loads(json.dumps(messages, ensure_ascii=False))
+    except (TypeError, ValueError):
+        return messages   # 理论上不会发生（能写盘就能序列化），兜底不阻断保存
+    for m in copy:
+        if not isinstance(m, dict):
+            continue
+        content = m.get("content")
+        if not isinstance(content, list):
+            continue
+        m["content"] = [
+            {"type": "text", "text": _SNAPSHOT_MEDIA_PLACEHOLDER}
+            if (isinstance(p, dict) and p.get("type") not in (None, "text")) else p
+            for p in content
+        ]
+    return copy
+
+
 def _strip_unloadable_images(messages: list) -> int:
     """移除上下文里加载失败的媒体段（就地修改），返回移除数量。
 
@@ -478,15 +506,15 @@ class AIHelper:
             try:
                 result = await self.create_and_wait(session, messages, model_entry)
             except LLMError as ex:
-                if ex.kind == LLMErrorKind.MEDIA_INVALID:
-                    # 媒体输入解析失败（GLM 1210 / 兼容端点同类错误）：剥离全部媒体段后
-                    # 重建任务重试。剥离是破坏性的（媒体段只减不增），无需次数限制也可收敛；
-                    # 无媒体可剥时照抛，避免掩盖其他错误
+                # 媒体相关失败（含 provider 措辞任意、未被关键词识别的 400）：剥离媒体段重试。
+                # 剥离是破坏性的（媒体段只减不增），无需次数限制也可收敛；无媒体可剥时照抛。
+                if ex.kind == LLMErrorKind.MEDIA_INVALID or ex.kind in (
+                        LLMErrorKind.BAD_REQUEST, LLMErrorKind.UNKNOWN):
                     removed = _strip_unloadable_images(messages)
                     if not removed:
-                        raise
+                        raise   # 没有媒体段可剥：不是媒体问题，按原错误抛出
                     ai_logger.warning(
-                        f"媒体输入解析失败（{ex.code or ex.kind}），已移除 {removed} 个媒体段后重建任务重试")
+                        f"模型调用失败（{ex.kind} {ex.code or ''}），已移除 {removed} 个媒体段后重试")
                     continue
                 if ex.kind not in LLMErrorKind.RETRYABLE or retry_times >= MAX_RETRY_TIMES:
                     raise
@@ -517,6 +545,10 @@ class AIHelper:
                     f"========================="
                 )
 
+            # 插入检查点（任何模式都生效）：非流式/流式回退路径没有 on_tick，
+            # 只在工具轮之后检查会让"本轮无工具调用"的插入消息丢失
+            if self.insert_enabled_now() and share.has_pending_inserts(self.insert_key):
+                raise InsertInterrupted()
             # 没有工具调用
             if not result.tool_calls:
                 return result, self.tool_call_times
@@ -557,7 +589,7 @@ class AIHelper:
                     _INJECT_MEDIA_NOTE, [], injected_parts)})
 
             # 插入模式：工具执行完毕后先打断以并入插入消息，再发起下一次模型调用
-            if self.insert_enabled and share.has_pending_inserts(self.insert_key):
+            if self.insert_enabled_now() and share.has_pending_inserts(self.insert_key):
                 raise InsertInterrupted()
 
     # session 留着以后有用
@@ -642,7 +674,7 @@ class AIHelper:
                 "model": model_entry.get("model"),
                 "provider": model_entry.get("provider"),
                 "model_alias": model_entry.get("alias"),
-                "messages": messages,
+                "messages": _strip_media_for_snapshot(messages),
                 "asks": self.asks,
                 "used_tools": self.used_tools,
                 "participants": self.participants,
@@ -662,6 +694,9 @@ class AIHelper:
     async def create_and_wait(self, session, messages, model_entry):
         """通过统一 provider 发起一次对话调用（流式读块期间可被插入消息打断）。"""
         self._save_snapshot(messages, model_entry)
+        # 流式产出统计：中断时用它估算"在途调用"的用量（正常返回后清空）
+        stats: dict = {}
+        self._stream_stats = stats
         provider = registry.get_provider(model_entry["provider"])
         if provider is None:
             raise LLMError(LLMErrorKind.BAD_REQUEST,
@@ -671,17 +706,21 @@ class AIHelper:
         def on_tick():
             # 流式读块期间周期性检查：有插入消息则打断，交由 user_talk 并入上下文后重启。
             # （aistop 走 asyncio 任务取消，无需在此处理）
-            if self.insert_enabled and share.has_pending_inserts(self.insert_key):
+            if self.insert_enabled_now() and share.has_pending_inserts(self.insert_key):
                 raise InsertInterrupted()
 
-        return await provider.chat(
+        result = await provider.chat(
             messages,
             model=model_entry["model"],
             tools=self.tools,
             temperature=0.5,
             thinking=True,
             on_tick=on_tick,
+            stats=stats,
         )
+        # 调用已返回：用量由 usage 计入，清掉统计避免被当成"在途调用"重复估算
+        self._stream_stats = None
+        return result
 
     async def _chat_once(self, messages, model_entry=None, temperature=None) -> ChatResult:
         """一次性对话调用（历史压缩等带外用途），返回统一结果并计入 other_credits。"""
@@ -881,28 +920,82 @@ class AIHelper:
         ai_logger.info(f"话题分类：{category} → {alias}（{entry['model']}）")
         return entry
 
+    def insert_enabled_now(self) -> bool:
+        """实时查询插入模式开关（对话进行中切换可立即生效）。
+
+        `self.insert_enabled` 是构造期快照：群主在对话进行中用 /ai -c ins 打开后，
+        运行中的 agent 若不动态查询就永远不会消费成员插入的消息。
+        """
+        if self.shared is not None:
+            return bool(getattr(self.shared, "insert_enabled", False))
+        return normal_insert_enabled(self.user_id, self.ai_session)
+
+    def billing_entry(self) -> dict:
+        """计费口径用的模型目录项：**按当轮真实模型反查**。
+
+        倍率与缓存倍率必须来自同一项——否则动态路由/带图切换后会出现
+        "倍率按 flash、缓存按 dsflash"的错配（实测少计约 58%）。
+        模型不在目录里（如临时用 provider/model 形式）时回落构造期目录项或空。
+        """
+        return (registry.model_by_name(self.current_model)
+                or getattr(self, "model_entry", None) or {})
+
+    def in_flight_tokens(self) -> float:
+        """在途调用的 tokens 估算（中断时那一次调用拿不到 usage）。
+
+        流式过程中累计已产出字符数，按约 1.5 字符/token 估算；
+        调用正常返回后 `_stream_stats` 会被清空，所以这里非零只意味着"有一次调用没跑完"。
+        """
+        stats = getattr(self, "_stream_stats", None)
+        if not stats:
+            return 0.0
+        chars = int(stats.get("produced_chars", 0) or 0)
+        return chars / 1.5 if chars > 0 else 0.0
+
     def compute_credits(self) -> dict:
         """按已累计 tokens 计算本轮 credits 消耗与参与者均摊（正常结束与中断结算共用）。
 
-        返回 {"credits_use", "credits_split", "cached", "total"}；模型倍率取
-        self.current_model（每轮 run_agent 刷新，中断时即最近一轮的真实模型）。
+        - 倍率与缓存倍率都取自当轮真实模型的目录项（billing_entry）；
+        - 中断时补上"在途调用"的估算用量，避免输出一大段却计 0；
+        - participants 为空时兜底按发起者单人分摊（否则不扣费且文案显示"未知"）。
         """
+        entry = self.billing_entry()
+        cache_ratio = registry.cache_credit_ratio(entry)
+        multis = entry.get("credit_multiplier", 1) if entry else 1
+        in_flight = self.in_flight_tokens()
         # 缓存 tokens 按该模型的缓存倍率折算（各 provider 折扣不同，见 LLM_MODELS.cache_credit_ratio）
-        cache_ratio = registry.cache_credit_ratio(getattr(self, "model_entry", None))
         credits_use = self.tokens - self.cached_tokens * (1 - cache_ratio)
-        # 倍率取自模型目录：按当前轮真实模型名反查（中断时即最近一轮）
-        multis = 1
-        for entry in (getattr(constants, "LLM_MODELS", {}) or {}).values():
-            if entry.get("model") == self.current_model:
-                multis = entry.get("credit_multiplier", 1)
-                break
         credits_use *= multis
         credits_use += self.other_credits
+        credits_use += in_flight * multis
         # 共享会话插入模式：全部用量在参与者间均摊（发起者 + 插入者）
         per_share = credits_use / len(self.participants) if self.participants else credits_use
         credits_split = {str(uid): round(per_share, 2) for uid in self.participants}
+        credits_split = credits_split or {str(self.user_id): round(credits_use, 2)}
         return {"credits_use": credits_use, "credits_split": credits_split,
-                "cached": self.cached_tokens, "total": self.tokens}
+                "cached": self.cached_tokens, "total": self.tokens,
+                "in_flight": in_flight}
+
+    def settle_once(self) -> dict:
+        """本轮结算（幂等）：算账 → 落账 → 清零累加器 → 清快照。
+
+        幂等是为了防两类重复扣费：
+        1. 结算后到发送之间还有 await，此刻被 aistop 取消会再次走到结算分支；
+        2. 结算后若进程异常退出，残留快照会在 --continue 时把同一批用量再算一遍
+           （清零累加器 + 立刻清快照双重保证）。
+        """
+        cached_result = getattr(self, "credits_settled", None)
+        if cached_result is not None:
+            return cached_result
+        data = self.compute_credits()
+        data["lefts"] = credits.settle_split(data["credits_split"])
+        self.credits_settled = data
+        self.tokens = 0.0
+        self.cached_tokens = 0.0
+        self.other_credits = 0.0
+        self._stream_stats = None
+        clear_snapshot(self.user_id)   # 已结算即视为本轮结束：避免恢复后再扣一次
+        return data
 
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
@@ -920,10 +1013,12 @@ class AIHelper:
             compressed = await self._compress_context(session)
             history, curr_text = await get_history(user, self.storage)
 
-            # 提取 text 里的图片
-            image_objects, matches = await get_images_from_message(session.bot, text)
-            # pattern = r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*file=[^\]]*?\]"
-            # matches = re.findall(pattern, text)
+            # 提取 text 里的图片（取图失败只降级为"无图继续"，不终止整轮对话）
+            image_objects, matches = [], []
+            try:
+                image_objects, matches = await get_images_from_message(session.bot, text)
+            except Exception as ex:
+                ai_logger.warning(f"提取消息中的图片失败（按无图继续）：{type(ex).__name__}: {ex}")
             for image_cq in matches:
                 text = text.replace(image_cq, f"[图片{hash_text(image_cq)} 已附在输入里]")
             image_urls = [x["file"] for x in image_objects]
@@ -939,7 +1034,9 @@ class AIHelper:
             ai_params = [
                 {"role": "system","content": role},
                 *history,
-                {"role": "user","content": build_user_content(f"{curr_text}\n{text}", image_urls, url_dicts)},
+                # 注意：url_dicts 已包含全部图片段（image_url）与视频段，位置参数再传
+                # image_urls 会让同一张图出现两次（浪费 tokens，也更容易触发媒体错误）
+                {"role": "user","content": build_user_content(f"{curr_text}\n{text}", [], url_dicts)},
             ]
             if url_dicts:
                 real_entry, prefix = self.entry_for_media()
@@ -997,7 +1094,9 @@ class AIHelper:
                     has_image_insert = has_image_insert or bool(ins.image_urls)
                     if ins.user_id not in self.participants:
                         self.participants.append(ins.user_id)
-                    ai_logger.info(f"插入消息已并入上下文: {ins.user_id} {ins.text[:150]!r}" + "..." if len(ins.text) > 150 else "")
+                    ai_logger.info(
+                        f"插入消息已并入上下文: {ins.user_id} {ins.text[:150]!r}"
+                        + ("..." if len(ins.text) > 150 else ""))
                 if has_image_insert and not real_entry.get("vision"):
                     # 插入消息带图片，且当前轮模型不支持视觉：切换到视觉模型
                     real_entry, switch_prefix = self.entry_for_media()
@@ -1007,9 +1106,9 @@ class AIHelper:
         if self.model_fallback_note:
             prefix = self.model_fallback_note + prefix
         if result == False or result is AISTOP:
-            # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示
-            tokens_use_dict = self.compute_credits()
-            lefts = credits.settle_split(tokens_use_dict["credits_split"])
+            # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示（幂等）
+            tokens_use_dict = self.settle_once()
+            lefts = tokens_use_dict.get("lefts", {})
             share_used = tokens_use_dict["credits_split"].get(str(self.user_id))
             left = lefts.get(str(self.user_id))
             fmt = lambda x: f"{x:,.2f}".rstrip('0').rstrip('.') if x is not None else "未知"
@@ -1033,7 +1132,8 @@ class AIHelper:
             ai_logger.info(
                 f"AI 返回了以下 response：{result}"
             )
-            tokens_use_dict = self.compute_credits()
+            # 正常结束：直接结算（幂等），入口不再二次落账
+            tokens_use_dict = self.settle_once()
             credits_use = tokens_use_dict["credits_use"]
             credits_split = tokens_use_dict["credits_split"]
             debug_msg("处理结果")
@@ -1054,6 +1154,7 @@ class AIHelper:
             return ans, tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
+            self.settle_once()   # 已发生的用量照常结算，避免漏记
 
             await send_session_msg(
                 session,
@@ -1068,6 +1169,7 @@ class AIHelper:
             return False, {}, {}, 0
         except Exception as ex:
             ai_logger.error(f"AI 出现错误: {ex}")
+            self.settle_once()   # 已发生的用量照常结算，避免漏记
             await send_session_msg(
                 session,
                 get_message(

@@ -46,7 +46,7 @@ def _delta_logger(provider_name: str):
                 return
             from ..agent import ai_logger  # 延迟导入避免循环依赖
             label = {"reasoning": "流式思考", "content": "流式回复",
-                     "tool_call": "流式工具", "note": "提示"}.get(kind, kind)
+                     "note": "提示"}.get(kind, kind)
             ai_logger.info(f"[{provider_name} {label}] {text}")
         except Exception:
             pass

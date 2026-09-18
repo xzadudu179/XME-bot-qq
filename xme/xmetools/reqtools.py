@@ -1,7 +1,9 @@
 import functools
+import socket
 
 import aiohttp
 import yarl
+from aiohttp.abc import AbstractResolver
 # import asyncio
 import json
 # from xme.xmetools.debugtools import debug_msg
@@ -87,14 +89,16 @@ async def fetch_data(url, response_type="json", raise_error=False, **args):
                     )
             return data
 
-def assert_public_http_url(url: str) -> None:
+def assert_public_http_url(url: str) -> dict[str, list[str]]:
     """SSRF 防护：校验 http(s) URL 的主机不是本机/内网/链路本地/保留地址。
 
     域名会实际解析 DNS 后逐 IP 检查（防 "localtest.me" 这类解析到 127.0.0.1 的绕过）。
-    不合规抛 ValueError；非 http(s) 协议同样抛错。重定向由 fetch_file_stream 逐跳复检。
+    不合规抛 ValueError；非 http(s) 协议同样抛错。
+    返回 {主机: 已校验 IP 列表}，调用方（fetch_file_stream）据此构造钉扎解析器，
+    保证连接只连这些 IP——校验与连接各自独立解析 DNS 时，域名可在两次解析间被
+    rebinding 到内网地址。重定向由 fetch_file_stream 逐跳复检。
     """
     import ipaddress
-    import socket
     from urllib.parse import urlsplit
 
     parts = urlsplit(url)
@@ -108,10 +112,48 @@ def assert_public_http_url(url: str) -> None:
                                    proto=socket.IPPROTO_TCP)
     except socket.gaierror:
         raise ValueError(f"无法解析主机 {host}")
+    allowed: list[str] = []
     for info in infos:
-        ip = ipaddress.ip_address(info[4][0])
-        if not ip.is_global:
-            raise ValueError(f"禁止访问内网/本机地址（{host} → {ip}）")
+        ip_text = info[4][0]
+        if not ipaddress.ip_address(ip_text).is_global:
+            raise ValueError(f"禁止访问内网/本机地址（{host} → {ip_text}）")
+        if ip_text not in allowed:
+            allowed.append(ip_text)
+    if not allowed:
+        raise ValueError(f"主机 {host} 没有可连接的地址")
+    return {host: allowed}
+
+
+class _PinnedResolver(AbstractResolver):
+    """只解析到已校验 IP 的钉扎解析器：连接时的 DNS 查询被替换为查校验结果表。
+
+    表外的主机名一律拒绝解析；IP 列表来自 assert_public_http_url 的返回值，
+    校验后域名再怎么变解析结果都不会绕开已校验的地址。
+    """
+
+    def __init__(self, allowed: dict[str, list[str]]):
+        self._allowed = allowed
+
+    async def resolve(self, host: str, port: int = 0, family: int = socket.AF_INET) -> list[dict]:
+        import ipaddress
+        ips = self._allowed.get(host)
+        if not ips:
+            raise ValueError(f"主机 {host} 未经过公网校验，拒绝解析")
+        out = []
+        for ip_text in ips:
+            addr_family = socket.AF_INET6 if ipaddress.ip_address(ip_text).version == 6 \
+                else socket.AF_INET
+            if family not in (0, socket.AF_UNSPEC, addr_family):
+                continue
+            out.append({"hostname": host, "host": ip_text, "port": port,
+                        "family": addr_family, "proto": socket.IPPROTO_TCP,
+                        "flags": socket.AI_NUMERICHOST})
+        if not out:
+            raise OSError(f"主机 {host} 在该地址族下没有已校验的 IP")
+        return out
+
+    async def close(self) -> None:
+        pass
 
 
 async def fetch_file_stream(url: str, *, max_size: int = 20 * 1024 * 1024, timeout: float = 60, headers: dict | None = None, proxy: str | None = PROXY_URL) -> tuple[bytes, str]:
@@ -122,12 +164,16 @@ async def fetch_file_stream(url: str, *, max_size: int = 20 * 1024 * 1024, timeo
     proxy: 默认取 config 的 PROXY_URL（USE_PROXY 时）；显式传 None 强制直连。
     """
     # SSRF 防护：先校验初始地址；重定向手动逐跳跟随并逐一复检（最多 5 跳），
-    # 防止公网地址 302 跳到内网/元数据端点绕过检查
+    # 防止公网地址 302 跳到内网/元数据端点绕过检查。
+    # 校验返回的 IP 逐跳登记进 allowed，连接经钉扎解析器只连已校验 IP，
+    # 校验后 DNS rebinding 换址无法生效
     current_url = url
-    async with aiohttp.ClientSession() as aiosession:
+    allowed: dict[str, list[str]] = {}
+    async with aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(resolver=_PinnedResolver(allowed))) as aiosession:
         merged_headers = {"User-Agent": DEFAULT_UA, **(headers or {})}
         for _hop in range(6):
-            assert_public_http_url(current_url)
+            allowed.update(assert_public_http_url(current_url))
             async with aiosession.get(current_url, headers=merged_headers, proxy=proxy, allow_redirects=False, timeout=aiohttp.ClientTimeout(total=timeout)) as response:
                 if response.status in (301, 302, 303, 307, 308):
                     location = response.headers.get("Location", "")

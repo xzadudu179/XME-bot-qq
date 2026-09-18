@@ -16,6 +16,9 @@ from xme.xmetools.jsontools import change_json, read_from_path
 from nonebot import SenderRoles
 import time
 from .seek_tools import TOOLS
+from .seek_items import get_item
+from .constants import INVENTORY_MAX_SLOTS, HARDCORE_ITEM_LIMIT
+from .datas import get_inventory, save_inventory, can_save_items, get_gain_ratio, drop_inventory_items
 from .classes.tool import Tool
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -33,6 +36,117 @@ from xme.xmetools.msgtools import send_session_msg, aget_session_msg, aget_arg_w
 from uuid import uuid4
 random.seed()
 hti = Html2Image()
+
+async def select_carry_items(session: CommandSession, inventory: list) -> list:
+    """无依无靠模式下让玩家从物品栏选择本次携带的物品
+
+    发送序号选择（支持空格分隔批量选择，可分多条消息追加），发送 "ok" 确认出发，
+    最多携带 HARDCORE_ITEM_LIMIT 件且不可重复，超时视为不携带任何物品
+
+    Args:
+        session (CommandSession): 会话
+        inventory (list): 物品栏（物品 id 列表）
+
+    Returns:
+        list: 携带的物品 id 列表
+    """
+    items_str = "\n".join(
+        f"{i + 1}. {item['name']}（{item['desc']}）"
+        for i, item in enumerate(map(get_item, inventory)) if item
+    )
+    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'carry_select', limit=HARDCORE_ITEM_LIMIT, items=items_str))
+    selected: list = []
+    while True:
+        try:
+            reply = await aget_arg_with_timeout(session, 150)
+        except TimeoutError:
+            return []
+        if reply is None:
+            return []
+        reply = reply.strip()
+        if reply.lower() == "ok":
+            return selected
+        added = False
+        invalid = False
+        for part in reply.split():
+            if not part.isdecimal() or not 1 <= int(part) <= len(inventory):
+                invalid = True
+                continue
+            item_id = inventory[int(part) - 1]
+            item = get_item(item_id)
+            if item is None:
+                invalid = True
+                continue
+            if item_id in selected:
+                await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'carry_dup', item=item["name"]))
+                continue
+            if len(selected) >= HARDCORE_ITEM_LIMIT:
+                await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'carry_full', limit=HARDCORE_ITEM_LIMIT))
+                continue
+            selected.append(item_id)
+            added = True
+        if invalid:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'carry_invalid'))
+        if added:
+            names = "、".join(get_item(item_id)["name"] for item_id in selected)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'carry_added', items=names))
+
+async def load_carried_items(session: CommandSession, u: user.User, player: Player) -> list:
+    """读取用户物品栏并按模式决定本次携带的物品
+
+    普通模式自动携带全部物品；无依无靠模式下最多携带 HARDCORE_ITEM_LIMIT 件
+    且不可重复，需要玩家交互选择
+
+    Args:
+        session (CommandSession): 会话
+        u (user.User): 用户
+        player (Player): 玩家
+
+    Returns:
+        list: 携带的物品 id 列表
+    """
+    inventory = [item_id for item_id in get_inventory(u) if get_item(item_id)]
+    is_hardcore = any(tool.name == "无依无靠" for tool in player.tools)
+    player.item_limit = HARDCORE_ITEM_LIMIT if is_hardcore else INVENTORY_MAX_SLOTS
+    if is_hardcore and inventory:
+        return await select_carry_items(session, inventory)
+    return inventory[:player.item_limit]
+
+async def handle_inventory_command(session: CommandSession, u: user.User, arg: str) -> bool:
+    """处理 /sk inv 物品栏管理指令（查看与丢弃）
+
+    用法："/sk inv" 查看物品栏；"/sk inv drop 序号 数量" 丢弃物品（数量不填默认 1）
+
+    Args:
+        session (CommandSession): 会话
+        u (user.User): 用户
+        arg (str): 指令参数（以 inv 开头）
+
+    Returns:
+        bool: 是否处理成功
+    """
+    parts = arg.split()
+    inventory = get_inventory(u)
+    if len(parts) == 1:
+        items = [item for item in map(get_item, inventory) if item]
+        if not items:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_empty'))
+            return True
+        items_str = "\n".join(f"{i + 1}. {item['name']}（{item['desc']}）" for i, item in enumerate(items))
+        space = f"{len(items)} / {INVENTORY_MAX_SLOTS}"
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_info', space=space, items=items_str))
+        return True
+    if parts[1] != "drop" or len(parts) < 3 or not parts[2].isdecimal() or (len(parts) > 3 and not parts[3].isdecimal()):
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_drop_fail'))
+        return False
+    count = int(parts[3]) if len(parts) > 3 else 1
+    removed, item_name = drop_inventory_items(u, int(parts[2]), count)
+    if removed <= 0:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_drop_fail'))
+        return False
+    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_drop_success', count=removed, item=item_name))
+    return True
+
 
 
 class Seek:
@@ -118,7 +232,12 @@ class Seek:
         coins = html_messy_string(coins, self.player.get_messy_rate())
         attr_header = html_messy_string("----------当前属性----------", self.player.get_messy_rate())
         gain_header = html_messy_string("----------收益统计----------", self.player.get_messy_rate())
-        msg = f"<hr/>\n<h2>{attr_header}</h2>\n<div class=\"fl\">{self.player.get_attr_str(detailed=True)}\n</div>\n<h2>{gain_header}</h2>\n<div class=\"fl coin\"><div>{coins}</div></div>"
+        items_str = ""
+        item_names = [item["name"] for item in map(get_item, self.player.items) if item]
+        if item_names:
+            items_header = html_messy_string("----------物品----------", self.player.get_messy_rate())
+            items_str = f"\n<h2>{items_header}</h2>\n<div class=\"fl\"><div>{html_messy_string('、'.join(item_names), self.player.get_messy_rate())}</div></div>"
+        msg = f"<hr/>\n<h2>{attr_header}</h2>\n<div class=\"fl\">{self.player.get_attr_str(detailed=True)}\n</div>\n<h2>{gain_header}</h2>\n<div class=\"fl coin\"><div>{coins}</div></div>{items_str}"
         # decision = steps_result['decision']
         # msg.replace("\n\n", "\n")
         # if decision is not None and decision_first:
@@ -404,6 +523,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'enable'))
             return change_json(BOT_SETTINGS_PATH, "seek_enable_groups", set_method=lambda _: enable_groups)
 
+        # 物品栏管理（不占用每日寻宝次数）
+        if arg == "inv" or arg.startswith("inv "):
+            return await handle_inventory_command(session, u, arg)
 
         if arg not in ["start", "st"] and not is_sim:
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'introduction'))
@@ -539,6 +661,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'choose_tool_succes', cost=tool.price, tool=tool.name))
 
         player.tools = tools
+        # 携带物品栏中的物品（无依无靠模式需要交互选择，带被动效果的物品转换为道具）
+        for item_id in await load_carried_items(session, u, player):
+            player.add_item(item_id)
         # await send_session_msg(session, msg)
         total_steps = 0
         expected_steps = player.seek_max_steps.value
@@ -674,18 +799,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     if player.depth.value > 20 and seek.status == "exit":
         result_value = 0 if result_value > 0 else result_value
 
-    gain_ratio = 1
-    # 深度惩罚
-    if player.depth.value > 300:
-        gain_ratio = 0
-    elif player.depth.value > 200:
-        gain_ratio = 0.1
-    elif player.depth.value > 100:
-        gain_ratio = 0.2
-    elif player.depth.value > 50:
-        gain_ratio = 0.5
-    elif player.depth.value > 20:
-        gain_ratio = 0.7
+    gain_ratio = get_gain_ratio(player.depth.value)
 
     #########
     # 去除放弃惩罚
@@ -729,4 +843,13 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         await u.get_coins(session, result_value, _get_message = get_message("plugins", __plugin_name__, command_name, 'result_msg_with_coins', gain=f"{coins_str}", coins=result_value))
     else:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg', gain=f"{coins_str}"))
+    # 物品保存：未死亡且深度惩罚比例小于阈值时保留物品栏，否则清空
+    if not is_sim:
+        died, _, _ = player.is_die()
+        keep_items = (not died) and can_save_items(player.depth.value, player.depth_gain_ratio.value)
+        save_inventory(u, player.items if keep_items else [])
+        if player.items:
+            item_names = "、".join(item["name"] for item in map(get_item, player.items) if item)
+            await send_session_msg(session, get_message("plugins", __plugin_name__, command_name,
+                'settle_items_saved' if keep_items else 'settle_items_lost', items=item_names))
     return True

@@ -70,6 +70,10 @@ MAX_EXTRACT_TOTAL_SIZE = 50 * 1024 * 1024
 # 语法检测的文件/内联代码大小上限（防超大输入拖垮解析进程）
 MAX_SYNTAX_CHECK_SIZE = 1 * 1024 * 1024
 
+# content_search 的全文匹配超时（秒）：匹配在子线程执行，超时即报错返回；
+# 灾难性回溯正则最多占住一个后台线程，不再冻结事件循环
+CONTENT_SEARCH_TIMEOUT = 5
+
 # 语法检测子进程超时（秒），超时 kill
 SYNTAX_CHECK_TIMEOUT = 15
 
@@ -232,3 +236,16 @@ FOLD_KEEP_RECENT_TOOLS = 10              # 最近 N 条 tool 消息保持原样
 
 MAX_HISTORY_FILE_COUNTS = 100
 MAX_HISTORY_FILES_SIZE = 100 * 1024 * 1024
+
+# ---- 网络搜索（search/ 包：多引擎抽象 + 按序回退）----
+# 引擎名单与顺序在 keys.SEARCH_PROVIDERS（dict 书写顺序即回退优先级，删项即禁用）
+SEARCH_TIMEOUT = 15.0                 # 单引擎搜索超时（秒）
+SEARCH_COOLDOWN_QUOTA = 6 * 3600.0    # 额度用完（tavily 432 / brave 月配额）：6h 后重试探路
+SEARCH_COOLDOWN_AUTH = float("inf")   # key 无效：本进程内不再使用该引擎（重启才重试）
+SEARCH_COOLDOWN_RETRYABLE = 60.0      # 限流/超时/网络抖动：短冷却后重试
+SEARCH_COOLDOWN_UNKNOWN = 600.0       # 未分类错误：10 分钟冷却
+
+# ---- 用户私聊文件缓存（received_files.py：get_received_files 工具的数据源）----
+RECEIVED_FILES_KEEP_PER_USER = 50     # 每个用户最多缓存的文件条数
+RECEIVED_FILES_KEEP_TOTAL = 500       # 全局最多缓存的文件条数（防内存/磁盘膨胀）
+RECEIVED_FILES_DEDUPE_WINDOW = 60.0   # 同文件双路上报（消息段+notice）的判重窗口（秒）

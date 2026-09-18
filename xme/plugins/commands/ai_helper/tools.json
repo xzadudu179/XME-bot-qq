@@ -42,13 +42,13 @@
         "type": "function",
         "function": {
             "name": "get_skill_md",
-            "description": "获取内部的 skill md文件的内容。",
+            "description": "获取内部的 skill md文件的内容。name 只能是技能文档名（中英文/数字/_-.，不含任何路径符号）。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "skill名称，必须完全对应。"
+                        "description": "skill名称（不含 .md 后缀与路径），必须完全对应。"
                     }
                 },
                 "required": [
@@ -128,7 +128,7 @@
         "type": "function",
         "function": {
             "name": "web_search",
-            "description": "对一个 query 进行联网搜索，并获取识别内容字典列表。",
+            "description": "对一个 query 进行联网搜索，返回网页结果列表（标题/链接/摘要）。系统会自动在多个搜索引擎之间按序回退（无需关心引擎细节），返回中的 engine 字段标明本次实际使用的引擎。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -140,13 +140,9 @@
                         "type": "integer",
                         "description": "结果数量，默认 10"
                     },
-                    "depth": {
-                        "type": "string",
-                        "description": "搜索深度，分为\"basic\" \"advanced\" \"fast\" \"ultra-fast\" 四个等级，默认 basic"
-                    },
                     "time_range": {
                         "type": "string",
-                        "description": "时间范围，默认 year"
+                        "description": "时间范围过滤：day/week/month/year，留空表示不限时间"
                     }
                 },
                 "required": [
@@ -286,47 +282,14 @@
     {
         "type": "function",
         "function": {
-            "name": "get_webs_partial",
-            "description": "得到联网搜索内容的部分最接近指定搜索规则的结果。",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "key": {
-                        "type": "string",
-                        "description": "要搜索的部分名，有 \"title\" \"url\" 和 \"content\" 可选。"
-                    },
-                    "file_ref": {
-                        "type": "string",
-                        "description": "要搜索的内容文件引用名，例如 \"json_1\""
-                    },
-                    "search_str": {
-                        "type": "string",
-                        "description": "搜索文本/表达式本身"
-                    },
-                    "search_method": {
-                        "type": "string",
-                        "description": "要使用的搜索方法，默认 \"re_search\" 会使用正则表达式 search。还有 \"re_filter\" 正则表达式只保留 fullmatch 内容，输入其他内容会回退至 \"re_search\""
-                    }
-                },
-                "required": [
-                    "key",
-                    "file_ref",
-                    "search_str"
-                ]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "content_search",
-            "description": "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号用于定位；改写用 edit_file 引用原文，不依赖行号）。re_search（默认）：param 作为正则在全文查找匹配片段；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
+            "description": "按 search_method 搜索文件内容，所有模式的结果统一为\"行号: 内容\"（1 起算，行号用于定位；改写用 edit_file 引用原文，不依赖行号）。re_search（默认）：param 作为正则在全文查找匹配片段，^/$ 按行锚定；re_filter：param 作为正则分隔全文，返回各匹配之间的间隙内容；by_line：param 作为普通子串逐行匹配整行。超过 100 条会被截断。返回的内容为 行号:内容，如果是普通搜索模式 一行搜到多个内容也会返回多个 行号:内容",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "param": {
                         "type": "string",
-                        "description": "正则表达式语句"
+                        "description": "re_search/re_filter 模式：正则表达式（^/$ 按行锚定；忽略大小写加 (?i) 前缀，多关键词用 | 分隔）；by_line 模式：普通子串（大小写敏感，不解析正则语法）"
                     },
                     "file_ref": {
                         "type": "string",
@@ -334,7 +297,7 @@
                     },
                     "search_method": {
                         "type": "string",
-                        "description": "搜索模式：re_search（默认，正则匹配内容片段）/ re_filter（正则分隔取间隙内容）/ by_line（子串逐行匹配整行）；非法正则只影响前两者，by_line 不受影响"
+                        "description": "搜索模式：re_search（默认，正则匹配内容片段）/ re_filter（正则分隔取间隙内容）/ by_line（子串逐行匹配整行，正则/多关键词/忽略大小写请改用 re_search）；非法正则只影响前两者，by_line 不受影响"
                     }
                 },
                 "required": [
@@ -594,6 +557,31 @@
     {
         "type": "function",
         "function": {
+            "name": "get_received_files",
+            "description": "获取当前用户最近在私聊里发送给机器人的 QQ 文件（仅限用户本人发的文件），下载后写入 temp 或转存 history。\n返回每个文件的引用 ref 与发送时间；过期或不可下载的文件会明确标注失败。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "max_count": {
+                        "type": "integer",
+                        "description": "最多获取的文件数量，默认 5"
+                    },
+                    "within_hours": {
+                        "type": "number",
+                        "description": "时间范围（小时）：只获取最近 N 小时内发送的文件，默认 24"
+                    },
+                    "save_to_history": {
+                        "type": "boolean",
+                        "description": "true 时转存到 history（跨会话长期保留），false 时只写入 temp（本轮对话结束清理），默认 false"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "ask_user",
             "description": "主动向用户询问内容",
             "parameters": {
@@ -841,7 +829,7 @@
         "type": "function",
         "function": {
             "name": "run_python",
-            "description": "在隔离沙箱的一次性工作区内执行你编写的 Python 代码，分析 ref 指向的文件（如 xlsx/csv/json/文本）。原文件不会改动；工作区内只有它的副本，文件名经全局变量 INPUT_FILE 提供，代码里直接 open(INPUT_FILE) 读取。用 print() 输出分析结果；生成的文件（如 matplotlib 图表，需先 import matplotlib 并 savefig 到当前目录）会回传为可发送的引用。可 import numpy、matplotlib、openpyxl 等已安装库。执行超时 30 秒、内存 768MB，代码要一次跑完，不要调用 exit()。",
+            "description": "在隔离沙箱的一次性工作区内执行你编写的 Python 代码，分析 ref 指向的文件（如 xlsx/csv/json/文本）。原文件不会改动；工作区内只有它的副本，文件名经全局变量 INPUT_FILE 提供，代码里直接 open(INPUT_FILE) 读取；未传 ref 时 INPUT_FILE 为 None，纯计算代码不要读取它。用 print() 输出分析结果；生成的文件（如 matplotlib 图表，需先 import matplotlib 并 savefig 到当前目录）会回传为可发送的引用。可 import numpy、matplotlib、openpyxl 等已安装库。执行超时 30 秒、内存 768MB，代码要一次跑完，不要调用 exit()。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -851,7 +839,7 @@
                     },
                     "ref": {
                         "type": "string",
-                        "description": "要分析的文件引用（temp/history 文件，如 file_xxx 或 text_xxx）；留空则执行不带输入文件的纯计算代码"
+                        "description": "要分析的文件引用（temp/history 文件均可，如 file_1、text_1、history_3 或嵌套路径引用）；留空则执行不带输入文件的纯计算代码"
                     }
                 },
                 "required": [

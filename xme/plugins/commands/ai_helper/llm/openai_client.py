@@ -157,7 +157,7 @@ class OpenAICompatProvider:
             self._stats["produced_chars"] = int(self._stats.get("produced_chars", 0)) + chars
 
     def _reset_stream_buffers(self) -> None:
-        self._stream_buffers = {"reasoning": "", "content": "", "tool_call": ""}
+        self._stream_buffers = {"reasoning": "", "content": ""}
 
     def _emit_delta(self, kind: str, text: str) -> None:
         """流式增量的行缓冲输出：把逐 token 的增量按行合并，一行文本落一条日志。
@@ -332,7 +332,7 @@ class OpenAICompatProvider:
                             slot["name"] += str(fn["name"])
                         if fn.get("arguments"):
                             slot["arguments"] += str(fn["arguments"])
-                        self._emit_delta("tool_call", json.dumps(tc, ensure_ascii=False))
+                        # 分片只拼装不落日志：逐片 JSON 刷屏严重，拼好的调用由上层完整记录
                     if choice.get("finish_reason"):
                         finish_reason = str(choice["finish_reason"])
                 if data.get("usage"):
@@ -341,10 +341,9 @@ class OpenAICompatProvider:
                 if on_tick is not None and ticks % 5 == 0:
                     on_tick()   # 上层可能抛打断异常：原样穿透，交由调用方处理
         finally:
-            # 收尾 flush：把三路未换行的尾巴也落成日志
+            # 收尾 flush：把两路未换行的尾巴也落成日志
             self._emit_delta("reasoning", "")
             self._emit_delta("content", "")
-            self._emit_delta("tool_call", "")
         tool_calls = [
             ToolCall(id=v["id"] or f"call_{i}", name=v["name"], arguments=v["arguments"] or "{}")
             for i, v in sorted(calls.items())

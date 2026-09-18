@@ -6,7 +6,8 @@
 - `aistop`：取消会话任务并吞掉消息（长工具执行中同样即时生效）；
 - `/ai xxx`：插入消息入队（开启插入模式时），`/ai stop` 直接中断；
 - 其他指令：回复"正在与 AI 聊天中"提示；
-- 普通文本：静默吞掉（与旧轮询窗口期的行为一致）。
+- 普通文本：私聊下作为插入消息入队（开启插入模式时，未开则提示如何开启）；
+  群聊下静默吞掉（避免群内闲聊被误吞/误插）。
 以上均吞掉消息（CanceledException），不再进入任何命令/会话流；发送者在该聊天
 没有运行中的会话时，本预处理器不干预，消息照常流转。
 取消的收尾统一在 talk() 的 CancelledError 分支：清快照、清 temp、发送中断文案。
@@ -109,6 +110,23 @@ async def handle_running_turn_input(bot, event, plugin_manager):
                 logger.warning(f"aistop 预处理器回复失败（消息仍被吞掉）：{reason}")
         raise CanceledException(reason)
 
+    async def enqueue_and_ack(ins_text: str):
+        """提取图片后把文本入插入队列，并按结果回执（/ai 分支与私聊普通文本共用）。"""
+        image_objects, cq_matches = await get_images_from_message(bot, ins_text)
+        for image_cq in cq_matches:
+            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+        enqueued = share.enqueue_insert(turn["insert_key"], share.Insert(
+            user_id=event.user_id, text=ins_text,
+            image_urls=tuple(x["file"] for x in image_objects),
+            time=get_time_now()))
+        if enqueued:
+            await swallow("insert", reply=get_message(
+                "plugins", __plugin_name__, "shared_insert_accepted"))
+            return
+        await swallow("insert-full", reply=get_message(
+            "plugins", __plugin_name__, "shared_insert_queue_full",
+            max_pending=MAX_PENDING_INSERTS))
+
     # aistop：任意时刻（含长工具执行中）即时取消
     if text == "aistop":
         turn["task"].cancel()
@@ -135,24 +153,20 @@ async def handle_running_turn_input(bot, event, plugin_manager):
             await swallow("ai-cmd-no-insert",
                           reply=_gm("plugins", __plugin_name__, "ai_session_on"))
             return
-        image_objects, cq_matches = await get_images_from_message(bot, ins_text)
-        for image_cq in cq_matches:
-            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-        enqueued = share.enqueue_insert(turn["insert_key"], share.Insert(
-            user_id=event.user_id, text=ins_text,
-            image_urls=tuple(x["file"] for x in image_objects),
-            time=get_time_now()))
-        if enqueued:
-            await swallow("insert", reply=get_message(
-                "plugins", __plugin_name__, "shared_insert_accepted"))
-            return
-        await swallow("insert-full", reply=get_message(
-            "plugins", __plugin_name__, "shared_insert_queue_full",
-            max_pending=MAX_PENDING_INSERTS))
+        await enqueue_and_ack(ins_text)
         return
 
-    # 其他指令：提示正在与 AI 聊天中；普通文本：静默吞掉（同旧轮询窗口期行为）
+    # 其他指令：提示正在与 AI 聊天中
     if is_command(text):
         await swallow("other-cmd", reply=get_message("plugins", __plugin_name__, "ai_sending"))
+        return
+    # 私聊普通文本：开了插入模式 → 作为插入消息入队并回执（私聊下最自然的插入方式）；
+    # 未开 → 提示如何开启。群聊维持静默（避免群内闲聊被误吞/误插）。
+    if event.get("group_id") is None and (turn.get("insert_key") or "").startswith("user:"):
+        if not _insert_enabled_now(turn):
+            await swallow("plain-text-no-insert", reply=get_message(
+                "plugins", __plugin_name__, "normal_insert_off"))
+            return
+        await enqueue_and_ack(text)
         return
     await swallow("plain-text")

@@ -6,16 +6,15 @@ from pathlib import Path
 import html
 import mimetypes
 import re
-from typing import Literal
+import time
 from urllib.parse import urlparse
 import aiohttp
-from tavily import AsyncTavilyClient
 from uuid import uuid4
 from PIL import Image
 
 from zai import ZhipuAiClient
 
-from keys import GLM_API_KEY, TAVILY_API_KEY, DOMAIN, FILE_TOKENS
+from keys import GLM_API_KEY, DOMAIN, FILE_TOKENS
 from nonebot.log import logger
 from xme.xmetools.filetools import (
     bytes_to_file, decode_text, detect_file_type, get_local_file_url, FileType,
@@ -25,10 +24,14 @@ from xme.xmetools.videotools.probe import get_video_duration
 from xme.xmetools.msgtools import create_image_message
 from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
 from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image
+from xme.xmetools.bottools import bot_call_action
 from ..constants import MAX_DOWNLOAD_FILE_SIZE
 from xme.plugins.commands.ai_helper.llm import registry
-from config import IMAGE_TEMP_PATH
+from config import IMAGE_TEMP_PATH, CONTAINER_BOT_PATH
 from ._common import exception_detail, ImageToolResult
+from .. import received_files
+# 别名导入：get_received_files 的参数名 save_to_history 会遮蔽同名函数
+from .files import save_to_history as _save_to_history
 
 _TYPE_EXTENSIONS = {
     FileType.IMAGE: ".png",
@@ -47,6 +50,26 @@ def _url_suffix(url: str) -> str:
         return suffix
     return ""
 
+
+def _save_received_bytes(data: bytes, url: str, content_type: str, agent) -> dict:
+    """探测后缀并写入用户 temp（download 与 get_received_files 共用的落盘单点）。
+
+    后缀探测顺序：URL 扩展名 → Content-Type → 魔数探测；文本文件统一转 utf-8。
+    """
+    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
+    probe.write_bytes(data)
+    suffix = _url_suffix(url)
+    if not suffix:
+        main_type = (content_type or "").split(";")[0].strip().lower()
+        guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
+        suffix = guessed if guessed and main_type != "application/octet-stream" else ""
+    if not suffix:
+        suffix = _TYPE_EXTENSIONS.get(detect_file_type(probe), ".bin")
+    if detect_file_type(probe) == FileType.TEXT:
+        data = decode_text(data).encode("utf-8")
+    probe.unlink(missing_ok=True)
+    return bytes_to_file(data, agent.user_id, suffix, agent)
+
 async def download(url: str, agent):
     """异步下载 url 指向的文件到 temp 文件夹（上限 MAX_DOWNLOAD_FILE_SIZE）。
     """
@@ -61,28 +84,26 @@ async def download(url: str, agent):
     except TimeoutError:
         logger.warning(f"下载超时: {url}")
         return "[下载失败：连接/下载超时（60s），目标站点可能不可达（被墙）或响应过慢]"
+    except aiohttp.ClientResponseError as ex:
+        # 4xx/5xx 是链接本身的常见问题，报错附带排查方向，省去 AI 盲试下一轮
+        logger.warning(f"下载 {url} 失败：HTTP {ex.status}")
+        if ex.status == 404:
+            return ("[下载失败：404 Not Found——链接失效或路径/分支错误。"
+                    "GitHub raw 链接注意分支名（main/master）与文件在仓库内的实际路径；"
+                    "不确定时可先用 read_webpage 打开对应页面确认]")
+        if ex.status in (401, 403):
+            return (f"[下载失败：HTTP {ex.status}——目标站点拒绝访问（可能反爬或需要登录）；"
+                    "可尝试换源，或用 read_webpage 查看页面内容]")
+        return f"[下载失败：HTTP {ex.status} {ex.message}——目标站点返回错误，可确认链接后重试]"
     except Exception as ex:
         logger.exception(f"下载 {url} 失败")
         return f"[下载失败：{exception_detail(ex)}]"
     if not data:
         return "[下载失败：文件为空]"
 
-    # 先落盘探测类型：扩展名（URL → Content-Type → detect_file_type）+ 文本转 utf-8
-    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
-    probe.write_bytes(data)
-    suffix = _url_suffix(url)
-    if not suffix:
-        main_type = content_type.split(";")[0].strip().lower()
-        guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
-        suffix = guessed if guessed and main_type != "application/octet-stream" else ""
-    if not suffix:
-        suffix = _TYPE_EXTENSIONS.get(detect_file_type(probe), ".bin")
-    if detect_file_type(probe) == FileType.TEXT:
-        data = decode_text(data).encode("utf-8")
-    probe.unlink(missing_ok=True)
-
+    # 后缀探测与落盘（与 get_received_files 共用单点）
     try:
-        res = bytes_to_file(data, agent.user_id, suffix, agent)
+        res = _save_received_bytes(data, url, content_type, agent)
     except FileExistsError as ex:
         # 查重命中：报错中止，不分配新 ref；反查已有引用供 AI 直接使用（不产生第二个引用）
         dup_name = str(ex)
@@ -98,26 +119,140 @@ async def download(url: str, agent):
     return {"result": result_text, "ref": res["ref"], "file_name": res["file_name"],
             "size": res["size"], "no_compress": True}
 
-async def web_search(query: str, max_results: int = 10, depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "basic", time_range: str = "year"):
-    tavily = AsyncTavilyClient(
-        api_key=TAVILY_API_KEY
-    )
-    result = await tavily.search(
-        query=query,
-        max_results=max_results,
-        search_depth=depth,
-        time_range=time_range
-    )
+
+def _from_container_path(path: str) -> Path:
+    """协议端（容器）路径 → bot 本地路径：/xmebot/data/... → ./data/...；无前缀则原样返回。"""
+    p = Path(path)
+    try:
+        return Path(".") / p.relative_to(CONTAINER_BOT_PATH)
+    except ValueError:
+        return p
+
+
+async def _fetch_received_file_data(item, agent) -> tuple[bytes, str]:
+    """下载一条私聊文件记录的原始字节：缓存直链优先，OneBot get_file API 兜底。
+
+    返回 (data, "") 或 (b"", 失败原因)。
+    """
+    max_size = MAX_DOWNLOAD_FILE_SIZE
+    if item.size and item.size > max_size:
+        return b"", f"文件 {item.size / 1048576:.1f} MiB 超过 {max_size / 1048576:.0f} MiB 下载上限"
+    if item.url and urlparse(item.url).scheme in ("http", "https"):
+        try:
+            data, _ = await fetch_file_stream(item.url, max_size=max_size)
+            if data:
+                return data, ""
+        except Exception as ex:
+            logger.info(f"私聊文件直链下载失败（{item.name}），改走 get_file 兜底: {ex}")
+    session = agent.session
+    if session is None or getattr(session, "bot", None) is None:
+        return b"", "直链下载失败且无会话上下文（无法调用 get_file 兜底）"
+    if not item.file_id:
+        return b"", "直链下载失败且协议端未提供 file_id（无法调用 get_file 兜底）"
+    try:
+        info = await bot_call_action(session.bot, "get_file", file_id=item.file_id)
+    except Exception as ex:
+        return b"", f"get_file 调用失败（{exception_detail(ex)}）"
+    if not isinstance(info, dict):
+        return b"", "get_file 返回结构不符合预期"
+    remote_url = str(info.get("url") or "")
+    if remote_url.startswith("http"):
+        try:
+            data, _ = await fetch_file_stream(remote_url, max_size=max_size)
+            if data:
+                return data, ""
+        except Exception as ex:
+            logger.info(f"get_file 返回的 url 下载失败（{item.name}）: {ex}")
+    local = _from_container_path(str(info.get("file") or ""))
+    if local.is_file():
+        try:
+            return local.read_bytes(), ""
+        except OSError as ex:
+            return b"", f"协议端本地文件不可读（{ex}）"
+    return b"", "文件已过期或暂不可下载，请让用户重新发送"
+
+
+async def get_received_files(max_count: int = 5, within_hours: float = 24.0,
+                             save_to_history: bool = False, agent=None):
+    """获取当前用户最近在私聊里发给机器人的 QQ 文件（数据源见 received_files.py）。"""
+    items = received_files.recent_private_files(
+        agent.user_id, within_hours=within_hours, max_count=max_count)
+    if not items:
+        return {"result": "[没有找到你最近在私聊里发送的文件：确认文件是私聊发给机器人的、"
+                "且在指定时间范围内；bot 刚重启也可能丢失更早的记录，可让用户重新发送]",
+                "no_compress": True}
+    files: list[dict] = []
+    for item in items:
+        sent_at = time.strftime("%m-%d %H:%M", time.localtime(item.time))
+        entry = {"file_name": item.name, "sent_at": sent_at}
+        data, err = await _fetch_received_file_data(item, agent)
+        if err:
+            entry["error"] = err
+            files.append(entry)
+            continue
+        try:
+            res = _save_received_bytes(data, item.url or item.name, "", agent)
+        except FileExistsError as ex:
+            dup_name = str(ex)
+            existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
+            if existing_ref:
+                entry.update({"ref": existing_ref, "size": item.size, "saved": "temp",
+                              "note": f"temp 已有相同内容的文件（{dup_name}），直接使用引用 {existing_ref}"})
+            else:
+                entry.update({"ref": None, "size": item.size, "saved": "temp",
+                              "note": f"temp 已有相同内容的文件（{dup_name}）但本会话没有对应引用，"
+                                       f"可直接使用该文件（check_file 引用名 {dup_name}）"})
+            files.append(entry)
+            continue
+        except Exception as ex:
+            entry["error"] = f"落盘失败：{exception_detail(ex)}"
+            files.append(entry)
+            continue
+        entry.update({"ref": res["ref"], "size": res["size"], "saved": "temp"})
+        if save_to_history:
+            hres = _save_to_history(res["ref"], agent=agent)
+            if hres.get("ref"):
+                entry.update({"ref": hres["ref"], "saved": "history"})
+            else:
+                entry["history_error"] = (hres.get("result") or "").strip("[]")
+        files.append(entry)
+    ok = sum(1 for f in files if f.get("ref"))
+    parts = []
+    for f in files:
+        if f.get("ref"):
+            line = (f"{f['file_name']}（{f['sent_at']} 发送）→ 引用 {f['ref']}"
+                    f"（{f['size'] / 1048576:.2f} MiB，存于 {f['saved']}")
+            if f.get("note"):
+                line += f"；{f['note']}"
+            line += "）"
+            if f.get("history_error"):
+                line += f"；转存 history 失败：{f['history_error']}"
+            parts.append(line)
+        else:
+            parts.append(f"{f['file_name']}（{f['sent_at']} 发送）→ 获取失败：{f.get('error')}")
+    tail = ("文本文件可用 check_file 查看内容，其他类型可用 view_document_file / view_image / view_video 查看。"
+            if save_to_history else
+            "temp 文件在本轮对话结束会清理，需要保留请用 save_to_history 转存。"
+            "文本文件可用 check_file 查看内容，其他类型可用 view_document_file / view_image / view_video 查看。")
+    result_text = f"共获取 {ok}/{len(files)} 个私聊文件：" + "；".join(parts) + "。" + tail
+    return {"result": result_text, "files": files, "no_compress": True}
+
+async def web_search(query: str, max_results: int = 10, time_range: str = ""):
+    """联网搜索薄壳：多引擎抽象层按配置顺序自动回退（keys.SEARCH_PROVIDERS）。"""
+    from ..search import search_with_fallback
+    resp = await search_with_fallback(query, max_results=max_results, time_range=time_range)
     return {
-        "query": query,
+        "query": resp.query,
+        "engine": resp.engine,
         "results": [
             {
-                "title": item["title"],
-                "url": item["url"],
-                "content": item["content"],
+                "title": item.title,
+                "url": item.url,
+                "content": item.content,
+                "score": round(item.score, 3),
             }
-            for item in result["results"]
-        ]
+            for item in resp.results
+        ],
     }
 
 async def view_document_file(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
@@ -320,6 +455,13 @@ async def read_webpage(
             retain_images=retain_images,
         )
         if not isinstance(result, dict) or "reader_result" not in result:
+            err = result.get("error") if isinstance(result, dict) else None
+            if isinstance(err, dict):
+                # 上游阅读服务的错误（如网络错误）：去掉无用的错误 id，附上替代方案
+                reason = str(err.get("message") or "未知错误").split("，错误id")[0]
+                logger.warning(f"网页阅读服务报错: {err}")
+                return (f"[网页阅读失败：阅读服务暂时不可用（{reason}）；"
+                        "可稍后重试，或改用 web_search / download 获取内容]")
             return f"[网页阅读失败: {result}]"
         reader_result = result.get("reader_result", {}) or {}
         content = reader_result.get("content", "")

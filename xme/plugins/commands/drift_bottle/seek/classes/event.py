@@ -1,5 +1,7 @@
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from .player import Player, PlayerAttr, SeekRegion
+from .item import meets_require_items
+from ..seek_items import get_item
 from xme.xmetools.randtools import random_percent
 from inspect import iscoroutinefunction
 import random
@@ -16,11 +18,30 @@ class Event:
     def __init__(self, player: Player):
         self.player = player
 
+    def can_pick_event(self, event_dict: dict) -> bool:
+        """事件是否可被抽取（require_items 不满足时静默跳过）
+
+        决策事件的所有选项都被过滤时会连带整个事件不可抽取
+
+        Args:
+            event_dict (dict): 事件字典
+
+        Returns:
+            bool: 是否可被抽取
+        """
+        if not meets_require_items(self.player, event_dict.get("require_items", None)):
+            return False
+        if event_dict.get("type") == "decision":
+            decisions = event_dict.get("decisions", None) or []
+            if decisions and not any(meets_require_items(self.player, d.get("require_items", None)) for d in decisions):
+                return False
+        return True
+
     def gen_event(self, event_list: list[dict], current_region: SeekRegion, is_sim=False) -> str | dict:
         region_events = Event.get_region_event_list(event_list, self.player.region.value)
         # 符合条件的事件
         # print("region_events", region_events)
-        eligible_events = [e for e in region_events if e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered, is_sim)]
+        eligible_events = [e for e in region_events if self.can_pick_event(e) and e["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance, self.player.events_encountered, is_sim)]
         # print("eligible_events", eligible_events)
         chosen_event = Event.choose_event(eligible_events)
         return self.create_event(chosen_event, current_region)
@@ -106,9 +127,12 @@ class Event:
     def build_normal_event(self, event_dict: dict, html=True, is_tool=False, event_datas={}) -> str:
         event_changes: dict = event_dict["changes"]
         region_change = event_dict.get("region_change", None)
-        build_changes = Event.build_changes(event_changes)
+        item_changes = event_changes.get("items", None)
+        # items 字段由玩家物品系统处理，不参与属性结算
+        attr_changes = {k: v for k, v in event_changes.items() if k != "items"}
+        build_changes = Event.build_changes(attr_changes)
         event_desc: str = random.choice(event_dict["descs"])
-        return self.normal_event(event_desc, build_changes, region_change, is_tool, html=html)
+        return self.normal_event(event_desc, build_changes, region_change, is_tool, html=html, item_changes=item_changes)
 
     def parse_event_messages(messages, current_region: SeekRegion):
         # 解析事件消息列表
@@ -141,21 +165,25 @@ class Event:
             "changes": bigwin_changes,
             "msg": bigwin_msg,
             "region_change": event_dict["big_win"].get("region_change", None),
+            "items": event_dict["big_win"].get("items", None),
         }
         win = {
             "changes": ok_changes,
             "msg": ok_msg,
             "region_change": event_dict["ok"].get("region_change", None),
+            "items": event_dict["ok"].get("items", None),
         }
         fail = {
             "changes": fail_changes,
             "msg": fail_msg,
             "region_change": event_dict["fail"].get("region_change", None),
+            "items": event_dict["fail"].get("items", None),
         }
         big_fail = {
             "changes": bigfail_changes,
             "msg": bigfail_msg,
             "region_change": event_dict["big_fail"].get("region_change", None),
+            "items": event_dict["big_fail"].get("items", None),
         }
         return self.dice_event(
             event_desc=desc,
@@ -191,6 +219,52 @@ class Event:
             await event_func(event_datas, self.player)
         return await self.decision_event(session, current_region, can_quit, desc, event_dict["decisions"], message_prefix, event_datas=event_datas, long=event_dict.get("long", False))
 
+    def build_check_event(self, event_dict: dict, current_region: SeekRegion, html=True, event_datas={}) -> str:
+        from .. import command_name
+        """检测物品事件：全部检测物品都携带时执行成功事件（按需消耗物品），否则执行失败事件
+
+        展示格式为 [检测物品：xxx、xxx]，携带的物品名为绿色（win），未携带为红色（failed），
+        被消耗的物品名后会带"已消耗"；后继事件支持 normal / dice / check 递归组合
+
+        Args:
+            event_dict (dict): 事件字典，字段：check_items（检测的物品 id 列表）、consume（成功时是否消耗）、
+                success / fail（后继事件字典）
+            current_region (SeekRegion): 当前区域
+            html (bool): 是否输出 html
+            event_datas (dict): 事件数据
+
+        Returns:
+            str: 事件结果
+        """
+        event_desc = random.choice(event_dict["descs"])
+        check_items: list = event_dict.get("check_items", None) or []
+        consume: bool = event_dict.get("consume", False)
+        # 先校验后继事件类型，再执行消耗等副作用
+        for branch in ("success", "fail"):
+            if (event_dict.get(branch, None) or {}).get("type", "normal") == "decision":
+                raise ValueError("检测物品事件的后继事件不支持决策事件，请使用决策事件自身的 require_items 实现门控")
+        success = bool(check_items) and all(self.player.has_item(item_id) for item_id in check_items)
+        parts = []
+        for item_id in check_items:
+            item = get_item(item_id)
+            name = item["name"] if item else item_id
+            owned = self.player.has_item(item_id)
+            suffix = " 已消耗" if success and consume and owned else ""
+            if html:
+                cls = "win" if owned else "failed"
+                parts.append(f'<span class="{cls}">{html_messy_string(name, self.player.get_messy_rate())}</span>{suffix}')
+            else:
+                parts.append(name + suffix)
+        check_result = "、".join(parts)
+        if success and consume:
+            for item_id in check_items:
+                self.player.remove_item(item_id)
+        follow_event = event_dict["success"] if success else event_dict["fail"]
+        follow_result = self.build_event(follow_event, current_region, html=html, event_datas=event_datas)
+        key = 'check_event' if html else 'check_event_no_html'
+        event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=html)
+        return get_message("plugins", __plugin_name__, command_name, key, event_desc=event_desc, check_result=check_result) + "\n" + follow_result
+
     # 构建事件
     def build_event(self, event_dict: dict, current_region: SeekRegion, html=True, event_datas={}) -> str | dict:
         """构造并且执行事件
@@ -221,6 +295,8 @@ class Event:
                 return self.build_normal_event(event_dict, html=html, event_datas=event_datas)
             case 'dice':
                 return self.build_dice_event(event_dict, current_region, html=html, event_datas=event_datas)
+            case 'check':
+                return self.build_check_event(event_dict, current_region, html=html, event_datas=event_datas)
             # 单独处理决策事件
             case 'decision':
                 return event_dict
@@ -242,6 +318,12 @@ class Event:
             str: 决策事件返回结果
         """
         # 决策事件里的决策是封装的普通事件或者其他事件，当然也可以是决策事件
+        # require_items 不满足的选项静默过滤
+        decisions = [e for e in decisions if meets_require_items(self.player, e.get("require_items", None))]
+        if not decisions:
+            # gen_event 已过滤所有选项不可用的事件，此处为兜底
+            logger.warning("决策事件过滤后没有任何可用选项，已跳过")
+            return ""
         decision_strs = [f'{i + 1}. {messy_string(random.choice(e["names"]), self.player.get_messy_rate())} {(messy_string(e.get("tip", ""), self.player.get_messy_rate())) if self.player.hardcore.value == 0 else "[???]"}' for i, e in enumerate(decisions)]
         decision_chunks = [decision_strs[i : i + 2] for i in range(0, len(decision_strs), 2)]
         decision_str = "\n".join(["\t".join(a) for a in decision_chunks])
@@ -269,20 +351,26 @@ class Event:
 
 
     # 一般事件，只有结果
-    def normal_event(self, event_desc: str, attr_changes: dict[str, Any] | None = None, region_change=None, is_tool=False, html=True) -> str:
+    def normal_event(self, event_desc: str, attr_changes: dict[str, Any] | None = None, region_change=None, is_tool=False, html=True, item_changes: dict | None = None) -> str:
         from .. import command_name
-        """一般事件
+        """一般事件，只有结果
 
         Args:
             event_desc (str): 事件介绍
             attr_changes (dict[str, str] | None, optional): 事件所改变的属性值. Defaults to None.
+            region_change (optional): 事件导致的区域变化. Defaults to None.
+            is_tool (bool, optional): 是否为道具触发的事件. Defaults to False.
+            html (bool, optional): 是否输出 html. Defaults to True.
+            item_changes (dict | None, optional): 事件中的物品增减（changes 的 items 字段）. Defaults to None.
 
         Returns:
-            str: 事件返回内容
+            str: 事件结果
         """
         attr_change = ''
         if attr_changes is not None:
             attr_change = self.player.change_attr(attr_changes, html=html)
+        if item_changes:
+            attr_change += self.player.apply_item_changes(item_changes, html=html)
         region_ch = ""
         if region_change is not None:
             region_ch = self.player.change_region(region_change, html=html)
@@ -325,6 +413,7 @@ class Event:
         state = ""
         msg = ""
         region_change = None
+        item_spec = None
         if rd == 1 and attr_value >= 1:
             # 大成功
             state = "<span class=\"win\">大成功</span>"
@@ -334,6 +423,7 @@ class Event:
             result = big_win["changes"]
             msg = big_win["msg"]
             region_change = big_win["region_change"]
+            item_spec = big_win.get("items", None)
         elif rd <= attr_value:
             # 成功
             state = "<span class=\"win\">成功</span>"
@@ -343,6 +433,7 @@ class Event:
             result = win["changes"]
             msg = win["msg"]
             region_change = win["region_change"]
+            item_spec = win.get("items", None)
         elif rd == dice_faces and dice_faces > attr_value + 2:
             # 大失败
             state = "<span class=\"failed\">大失败</span>"
@@ -352,6 +443,7 @@ class Event:
             result = big_fail["changes"]
             msg = big_fail["msg"]
             region_change = big_fail["region_change"]
+            item_spec = big_fail.get("items", None)
         else:
             # 失败
             state = "<span class=\"failed\">失败</span>"
@@ -361,6 +453,7 @@ class Event:
             result = fail["changes"]
             msg = fail["msg"]
             region_change = big_fail["region_change"]
+            item_spec = fail.get("items", None)
         # if win:
         #     # attr_change = self.player.change_attr(ok_result, magnification)
         #     # await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'limited'))
@@ -369,6 +462,8 @@ class Event:
         if region_change is not None:
             region_ch = self.player.change_region(region_change, html=html)
         attr_change = self.player.change_attr(result, html=html)
+        if item_spec:
+            attr_change += self.player.apply_item_changes(item_spec, html=html)
         event_desc = html_messy_string(event_desc, self.player.get_messy_rate(), html=html)
         attr_name = html_messy_string(attr_name, self.player.get_messy_rate(), html=html)
         dice_faces_str = html_messy_string(str(dice_faces), self.player.get_messy_rate(), html=html)

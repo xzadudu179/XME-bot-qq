@@ -39,9 +39,10 @@ __tools__ = [
     "read_webpage",
     "web_search",
     "content_search",
-    "get_webs_partial",
+    # "get_webs_partial",
     "get_user_input_urls",
     "download",
+    "get_received_files",
     "send_file",
     "edit_file",
     "syntax_check",
@@ -62,7 +63,7 @@ from .files import (
     edit_file,
     extract_archive,
     find_history_file,
-    get_webs_partial,
+    # get_webs_partial,
     list_files,
     move_history_file,
     rename_history_file,
@@ -78,6 +79,7 @@ from .media import gen_image, ocr_image
 from .misc import ask_user, dice, get_user_input_urls, inprocess_report, name_session
 from .web import (
     download,
+    get_received_files,
     read_webpage,
     screenshot_page,
     view_document_file,

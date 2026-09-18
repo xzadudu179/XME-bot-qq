@@ -51,8 +51,29 @@ LLM_PROVIDERS = {
     # },
 }
 
+# ---- 网络搜索配置（dict 书写顺序即回退优先级；删除某项即禁用该引擎）----
+# 已内置引擎：tavily（需 api_key）/ duckduckgo（免 key，国内服务器必须走代理）/
+#             brave（需 api_key，免费 2000 次/月，brave.com/search/api 注册）
+# proxy 字段：True 走 config 统一代理（reqtools.PROXY_URL），字符串则显式指定，缺省直连
+# 文件里没有该配置时自动回落 tavily-only（用上面的 TAVILY_API_KEY）
+SEARCH_PROVIDERS = {
+    "tavily": {"api_key": TAVILY_API_KEY},
+    # "duckduckgo": {"proxy": True},
+    # "brave": {"api_key": "", "proxy": True},
+}
+
 def generate_file_token(path: str) -> str:
-    ...
+    # 发放前清掉过期项：访问端只在 token 被再次访问时才惰性删除，
+    # 从未被再次访问的过期 token 会常驻内存
+    now = time.time()
+    for expired in [t for t, info in FILE_TOKENS.items() if info["expires_at"] < now]:
+        FILE_TOKENS.pop(expired, None)
+    token = secrets.token_urlsafe(32)
+    FILE_TOKENS[token] = {
+        "path": path,
+        "expires_at": now + TOKEN_TTL,
+    }
+    return token
 
 def generate_jwt(qq: str, secret_key: str) -> str:
     ...

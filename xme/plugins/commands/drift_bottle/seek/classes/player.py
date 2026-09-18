@@ -4,6 +4,7 @@ import random
 from functools import total_ordering
 from enum import Enum
 from xme.plugins.commands.xme_user.classes.user import coin_name
+from ..constants import INVENTORY_MAX_SLOTS
 from xme.xmetools.colortools import mix_hex_color_lab
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -132,6 +133,10 @@ class Player:
         self.back_max_steps = PlayerAttr("返回最大步数", 30, 70, show=False)
         # 道具
         self.tools: list[Tool] = tools
+        # 局内携带的物品（物品 id 列表），事件判定与结算实时读写
+        self.items: list[str] = []
+        # 可携带的物品上限，出发时按模式设定（普通 INVENTORY_MAX_SLOTS / 无依无靠 HARDCORE_ITEM_LIMIT）
+        self.item_limit: int = INVENTORY_MAX_SLOTS
         # 区域
         self.region = PlayerAttr("区域", SeekRegion.SHALLOW_SEA)
         self.last_region = PlayerAttr("上个区域", SeekRegion.SHALLOW_SEA, show=False)
@@ -518,6 +523,95 @@ class Player:
         elif self.san.value <= 0:
             return (True, html_messy_string("混乱而死", self.get_messy_rate()), "混乱而死")
         return (False, "", "")
+
+    def has_item(self, item_id: str) -> bool:
+        """判断玩家是否携带了指定物品
+
+        Args:
+            item_id (str): 物品 id
+
+        Returns:
+            bool: 是否携带
+        """
+        return item_id in self.items
+
+    def add_item(self, item_id: str) -> bool:
+        """携带一个物品，带被动效果的物品会转换为道具在之后的步骤自动生效
+
+        Args:
+            item_id (str): 物品 id
+
+        Returns:
+            bool: 是否携带成功（物品不存在、超出上限或无依无靠模式下已携带同种物品时失败）
+        """
+        from ..seek_items import get_item
+        from .item import build_item_tool
+        item = get_item(item_id)
+        if item is None:
+            return False
+        if len(self.items) >= self.item_limit:
+            return False
+        if self.hardcore.value == 1 and self.has_item(item_id):
+            return False
+        self.items.append(item_id)
+        tool = build_item_tool(item, self)
+        if tool is not None:
+            self.tools.append(tool)
+        return True
+
+    def remove_item(self, item_id: str) -> bool:
+        """移除一个携带中的物品，同时移除其对应道具（不回滚已生效的属性变化）
+
+        Args:
+            item_id (str): 物品 id
+
+        Returns:
+            bool: 是否移除成功
+        """
+        if item_id not in self.items:
+            return False
+        self.items.remove(item_id)
+        for index, tool in enumerate(self.tools):
+            if tool.id == item_id:
+                self.tools.pop(index)
+                break
+        return True
+
+    def apply_item_changes(self, item_changes: dict, html=True) -> str:
+        """应用事件 changes 中的物品增减，返回用于展示的文案
+
+        add 元素支持传入 callable（返回物品 id）实现随机发放；携带失败（上限已满）
+        会给出提示，无依无靠模式下已携带同种物品或移除不存在的物品时静默跳过
+
+        Args:
+            item_changes (dict): {"add": [...], "remove": [...]}
+            html (bool): 是否输出 html
+
+        Returns:
+            str: 物品变化文案，无变化时为空字符串
+        """
+        from ..seek_items import get_item
+        from .. import command_name
+        from character import get_message
+        from xme.plugins.commands.drift_bottle import __plugin_name__
+        result_strs = []
+        for raw_id in item_changes.get("add", None) or []:
+            item_id = raw_id() if callable(raw_id) else raw_id
+            item = get_item(item_id)
+            if item is None:
+                continue
+            if self.add_item(item_id):
+                result_strs.append(get_message("plugins", __plugin_name__, command_name, 'item_gain', item=item["name"]))
+            elif not self.has_item(item_id):
+                result_strs.append(get_message("plugins", __plugin_name__, command_name, 'item_full', item=item["name"]))
+        for item_id in item_changes.get("remove", None) or []:
+            item = get_item(item_id)
+            if item is not None and self.remove_item(item_id):
+                result_strs.append(get_message("plugins", __plugin_name__, command_name, 'item_loss', item=item["name"]))
+        content = '，'.join(result_strs)
+        if not content:
+            return ""
+        return " " + html_messy_string(content, self.get_messy_rate(), html=html)
 
     def get_attr_str(self, detailed=False, html=True) -> str:
         index = 0

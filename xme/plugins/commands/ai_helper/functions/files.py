@@ -23,6 +23,7 @@ from xme.xmetools.filetools import (
 from xme.xmetools.texttools import regex_filter
 from xme.xmetools.bottools import bot_call_action
 from ..constants import (
+    CONTENT_SEARCH_TIMEOUT,
     HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE,
     MAX_SYNTAX_CHECK_SIZE, SYNTAX_CHECK_TIMEOUT,
     SYNTAX_CHECK_AS_LIMIT, SYNTAX_CHECK_AS_LIMIT_NODE,
@@ -150,31 +151,23 @@ def edit_file(ref: str, old_string: str, new_string: str, replace_all: bool = Fa
                        f"可再次用 content_search / check_file 确认。改后局部：\n{preview}"),
             "no_compress": True}
 
-def content_search(param, file_ref, search_method: Literal["re_search", "re_filter", "by_line"] = "re_search", agent=None):
-    """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，行号用于定位；
-    改写用 edit_file 引用原文，不依赖行号）。
+def _content_search_sync(path: Path, param: str, pattern: re.Pattern | None, search_method: str) -> list[str]:
+    """content_search 的纯计算部分：读文件并按模式搜集命中，返回「行号: 内容」列表。
 
-    - re_search（默认）：param 作为正则在全文查找，返回每个匹配片段及其所在行号；
-    - re_filter：param 作为正则分隔全文（re.split 语义），返回各匹配之间的间隙内容；
-    - by_line：param 作为普通子串逐行匹配，返回包含该子串的整行。
-    超过 100 条截断。
+    阻塞 CPU（大文件全文扫描 + 正则回溯），须在子线程中调用；灾难性回溯
+    正则最多占住一个后台线程，由调用方按 CONTENT_SEARCH_TIMEOUT 报错。
+    pattern 为 None 时按 by_line 子串模式匹配；否则按编译好的正则匹配，
+    search_method 在 re_search / re_filter 中取分支（合法性由调用方先行校验）。
     """
-    path = agent.resolve_ref(file_ref)
     text = decode_text(Path(path).read_bytes())
-    agent.note_file_state(path)
-    cap = 100
     hits: list[str] = []
+    cap = 100
 
-    if search_method == "by_line":
+    if pattern is None:  # by_line：普通子串逐行匹配
         hits = [f"{line_no}: {line[:8000] + '...' if len(line) > 8000 else line}"
                 for line_no, line in enumerate(text.splitlines(), 1)
                 if param in line]
-    elif search_method in ("re_search", "re_filter"):
-        try:
-            pattern = re.compile(param)
-        except re.error as ex:
-            return {"result": f"[搜索失败：正则不合法（{ex}）；子串匹配请改用 by_line 模式]", "no_compress": True}
-
+    else:
         def line_at(pos: int) -> int:
             return text.count("\n", 0, pos) + 1
 
@@ -195,13 +188,8 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
                 base += len(line) + 1  # +1 为换行符
                 at_line_start = True
 
-        if search_method == "re_search":
-            for m in pattern.finditer(text):
-                if m.group(0):
-                    hits.append(f"{line_at(m.start())}: {m.group(0)}")
-                if len(hits) >= cap:
-                    break
-        else:  # re_filter：与 re.split 语义一致，取匹配之间的间隙，逐行带行号
+        if search_method == "re_filter":
+            # 与 re.split 语义一致，取匹配之间的间隙，逐行带行号
             last_end = 0
             for m in pattern.finditer(text):
                 if m.end() > m.start():
@@ -211,30 +199,72 @@ def content_search(param, file_ref, search_method: Literal["re_search", "re_filt
                     break
             if len(hits) < cap:
                 flatten(last_end, text[last_end:])
-    else:
-        return {"result": f"[无效的 search_method：{search_method}（可选 re_search / re_filter / by_line）]",
-                "no_compress": True}
+        else:  # re_search
+            for m in pattern.finditer(text):
+                if m.group(0):
+                    hits.append(f"{line_at(m.start())}: {m.group(0)}")
+                if len(hits) >= cap:
+                    break
 
     if len(hits) >= cap:
         hits.append("…（命中过多，仅显示前 100 条，请缩小搜索范围）")
+    return hits
+
+
+async def content_search(param, file_ref, search_method: Literal["re_search", "re_filter", "by_line"] = "re_search", agent=None):
+    """按 search_method 搜索文件内容，所有模式的结果统一为「行号: 内容」（1 起算，行号用于定位；
+    改写用 edit_file 引用原文，不依赖行号）。
+
+    - re_search（默认）：param 作为正则在全文查找，返回每个匹配片段及其所在行号
+      （^/$ 按行锚定，与逐行 grep 的直觉一致）；
+    - re_filter：param 作为正则分隔全文（re.split 语义），返回各匹配之间的间隙内容；
+    - by_line：param 作为普通子串逐行匹配，返回包含该子串的整行。
+    超过 100 条截断。匹配在子线程执行，超过 CONTENT_SEARCH_TIMEOUT 秒按
+    疑似灾难性回溯正则报错。
+    """
+    if search_method not in ("re_search", "re_filter", "by_line"):
+        return {"result": f"[无效的 search_method：{search_method}（可选 re_search / re_filter / by_line）]",
+                "no_compress": True}
+    pattern = None
+    if search_method != "by_line":
+        try:
+            # ^/$ 按行锚定：行首/行尾断言的使用直觉来自逐行 grep，全文模式下几乎必失配。
+            # 编译本身不执行匹配，放事件循环内只做语法校验
+            pattern = re.compile(param, re.MULTILINE)
+        except re.error as ex:
+            return {"result": f"[搜索失败：正则不合法（{ex}）；子串匹配请改用 by_line 模式]", "no_compress": True}
+    path = agent.resolve_ref(file_ref)
+    try:
+        hits = await asyncio.wait_for(
+            asyncio.to_thread(_content_search_sync, path, param, pattern, search_method),
+            timeout=CONTENT_SEARCH_TIMEOUT)
+    except asyncio.TimeoutError:
+        return {"result": f"[搜索失败：匹配耗时超过 {CONTENT_SEARCH_TIMEOUT}s（疑似灾难性回溯正则），"
+                          "请简化正则或改用 by_line 子串模式]", "no_compress": True}
+    agent.note_file_state(path)
     if not hits:
+        if search_method == "by_line":
+            return {"result": f"[未找到匹配 \"{param}\" 的内容"
+                              "（by_line 为大小写敏感的子串精确匹配，不解析正则语法；"
+                              "正则/多关键词/忽略大小写请用 re_search，如 (?i)词1|词2）]",
+                    "no_compress": True}
         return {"result": f"[未找到匹配 \"{param}\" 的内容]", "no_compress": True}
     return {"result": "\n".join(hits), "no_compress": True}
 
 
-def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
-    path = agent.resolve_ref(file_ref)
-    agent.note_file_state(path)
-    method = None
-    search_methods = {
-        # "re_search": regex_search,
-        "re_search": None,
-        "re_filter": regex_filter,
-        # "fuzzy_match": None,
-    }
-    method = search_methods.get(search_method, None)
+# def get_webs_partial(key, file_ref, search_str, search_method: Literal["re_search", "re_filter"] = "re_search", agent=None):
+#     path = agent.resolve_ref(file_ref)
+#     agent.note_file_state(path)
+#     method = None
+#     search_methods = {
+#         # "re_search": regex_search,
+#         "re_search": None,
+#         "re_filter": regex_filter,
+#         # "fuzzy_match": None,
+#     }
+#     method = search_methods.get(search_method, None)
 
-    return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_json(search_str, path, key, search_func=method))]), "no_compress": True}
+#     return {"result": "\n".join([f"{i + 1}. {c}" for i, c in enumerate(search_json(search_str, path, key, search_func=method))]), "no_compress": True}
 
 def check_file(ref: str, line_start=0, line_end=0, length=0, agent=None):
     """获取保存进用户 temp 的文本文件的内容。"""
@@ -643,7 +673,7 @@ def zip_files(refs_or_folders: list[str], name: str, folder: str = "", agent=Non
         return {"result": f"[打包失败：文件夹 {'/'.join(parts)} 不存在（请先用 create_history_folder 创建）]", "no_compress": True}
     target = safe_join(folder_dir, name)
     if target.exists():
-        return {"result": f"[打包失败：历史文件 {name} 已存在，请换名]", "no_compress": True}
+        return {"result": f"[打包失败：历史文件 {name} 已存在，请换名或先 delete_history_file 后重试]", "no_compress": True}
     # 流式压缩：每写入一个文件检查一次压缩包体积，超限立即中止
     part = target.with_name(target.name + ".part")
     part.parent.mkdir(parents=True, exist_ok=True)

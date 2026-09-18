@@ -567,7 +567,9 @@ async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800
     """用系统 Chrome 无头模式对 url 截图，返回 PNG 字节。
 
     wait_ms 经 --virtual-time-budget 控制页面加载/动态渲染的等待时间；
-    width/height 为视口大小。调用方需自行完成 URL 的安全校验（SSRF 等）。
+    width/height 为视口大小。file:// 源渲染时页面网络整体关闭（所有
+    http(s)/ws 子资源请求逼进死代理，loopback 与 IP 直连也不例外），
+    页面内容不可信时 iframe/img 借此也探不到内网；公网 url 源需正常联网。
     """
     import asyncio
     import tempfile
@@ -580,8 +582,10 @@ async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800
         f"--window-size={int(width)},{int(height)}",
         f"--virtual-time-budget={int(max(0, wait_ms))}",
         f"--timeout={int(timeout_secs * 1000)}",
-        url,
     ]
+    if url.startswith("file:"):
+        cmd += ["--proxy-server=http://127.0.0.1:9", "--proxy-bypass-list=<-loopback>"]
+    cmd.append(url)
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)

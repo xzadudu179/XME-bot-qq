@@ -19,8 +19,9 @@
   只读方式进入沙箱；数据库文件在 repo 档被空文件覆盖绑定遮蔽；家目录、/etc、
   日志完全不进沙箱；cell 档连仓库都不进。
 - 写不了沙箱外文件：/usr、venv 与仓库源码全部只读，可写点仅限 repo 档的
-  data/ 与 logs/ 运行目录、cell 档的工作区，以及各沙箱私有的 tmpfs（/tmp、
-  /run、/home）；沙箱内的落盘副作用随容器销毁。
+  data/ 与 logs/ 运行目录、cell 档的工作区、共享的 data/mplcache 字体缓存
+  （跨运行持久，父进程按限额整体清理），以及各沙箱私有的 tmpfs（/tmp、
+  /run、/home）；其余落盘副作用随容器销毁。
 - 低权限：非特权 user namespace + 新会话 + no_new_privs；沙箱内资源仍受
   resource.setrlimit 约束（内存 RLIMIT_AS、CPU 时间、落盘 RLIMIT_FSIZE、
   打开文件数 RLIMIT_NOFILE，hard 一并压低）。
@@ -97,6 +98,12 @@ _SANDBOX_PYTHON = f"{_SANDBOX_VENV}/bin/{_PYTHON_VERSION}" if _HOST_VENV_ROOT el
 _REPO_SHADOWED_FILES = ("guild1.db", "guild1.db-shm", "guild1.db-wal")
 
 _REPO_ROOT = str(Path(__file__).resolve().parents[2])
+
+# matplotlib 字体缓存目录（沙箱内映射为 /tmp/mplconfig）：持久化避免每次绘图重建
+# 缓存；该目录以读写挂载进各档沙箱，构建容器前按限额整体清理（纯缓存可安全重建）
+_MPL_CACHE_DIR = Path(_REPO_ROOT, "data/mplcache")
+_MPL_CACHE_MAX_TOTAL = 128 * 1024 * 1024
+_MPL_CACHE_MAX_FILES = 128
 _HEADER = struct.Struct(">Q")
 _logger = logging.getLogger(__name__)
 
@@ -576,6 +583,43 @@ async def _exchange(proc: asyncio.subprocess.Process, payload: bytes, result_lim
     return frame
 
 
+def _prune_mpl_cache(cache_dir: Path) -> None:
+    """字体缓存目录超限额（总大小/文件数）即整体清空，把沙箱的落盘占用收敛在限额内。
+
+    纯缓存内容，matplotlib 下次运行会自行重建；阻塞 I/O，须在子线程中调用。
+    """
+    total = 0
+    count = 0
+    over = False
+    for root, _dirs, files in os.walk(cache_dir):
+        for name in files:
+            count += 1
+            try:
+                total += os.lstat(os.path.join(root, name)).st_size
+            except OSError:
+                pass
+            if count > _MPL_CACHE_MAX_FILES or total > _MPL_CACHE_MAX_TOTAL:
+                over = True
+                break
+        if over:
+            break
+    if not over:
+        return
+    _logger.info("matplotlib 字体缓存超限（%d 文件 / %d B），整体清空", count, total)
+    try:
+        entries = list(cache_dir.iterdir())
+    except OSError:
+        return
+    for entry in entries:
+        try:
+            if entry.is_symlink() or not entry.is_dir():
+                entry.unlink()
+            else:
+                shutil.rmtree(entry)
+        except OSError:
+            pass
+
+
 def _bwrap_args(profile: str, work_dir: str | None) -> list[str]:
     """构造 bubblewrap 包裹参数（含 --chdir），返回完整参数表。
 
@@ -607,9 +651,8 @@ def _bwrap_args(profile: str, work_dir: str | None) -> list[str]:
         args += ["--ro-bind", str(_HOST_VENV_ROOT), _SANDBOX_VENV]
     # matplotlib 字体缓存持久化到仓库 data/，否则沙箱私有 tmpfs 会让每次绘图
     # 重建缓存（首次可达数十秒）
-    mpl_cache = Path(_REPO_ROOT, "data/mplcache")
-    mpl_cache.mkdir(parents=True, exist_ok=True)
-    args += ["--bind", str(mpl_cache), "/tmp/mplconfig"]
+    _MPL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    args += ["--bind", str(_MPL_CACHE_DIR), "/tmp/mplconfig"]
     if profile == REPO_PROFILE:
         args += ["--ro-bind", _REPO_ROOT, _SANDBOX_APP]
         # 仓库依赖的宿主运行时：html2image 在导入期定位 Chrome（经 alternatives
@@ -671,6 +714,8 @@ async def _run_container(payload: bytes, *, profile: str, work_dir: str | None,
     bwrap_path = shutil.which("bwrap")
     if not bwrap_path:
         raise SandboxError("未找到 bubblewrap（bwrap），沙箱拒绝以弱隔离模式运行；请安装：apt install bubblewrap")
+    # 限额清理放子线程：超限目录的遍历与删除不卡事件循环
+    await asyncio.to_thread(_prune_mpl_cache, _MPL_CACHE_DIR)
     bwrap_args = _bwrap_args(profile, work_dir)
     # 子进程 import numpy/sympy 可能需要数秒，spawn 超时单独封顶；超时瞬间可能
     # 已启动半截容器，subreaper 已把它收编为直接子进程，清扫即可回收

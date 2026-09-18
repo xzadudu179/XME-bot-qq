@@ -29,20 +29,6 @@ async def get_image_msg(url, max_size = 1024):
         logger.exception(traceback.format_exc())
         return MessageSegment.text("[图片加载失败]")
 
-def get_skill_md(name: str, agent=None):
-    skill = ""
-    content = ""
-    try:
-        with open(f"./static/skills/{name}.md", 'r', encoding="utf-8") as file:
-            skill = file.read()
-    except Exception as ex:
-        content = f"[寻找 skill 文件发生错误：{ex}]"
-    if skill == "":
-        content = "[这个 skill 似乎是空白的。]"
-    content = skill
-    agent.activate_skills.append(name)
-    return {"result": content, "no_compress": True}
-
 async def ocr_image(url, agent=None):
     """OCR 图片文字：按能力配置 LLM_CAPABILITIES["ocr"] 分派实现。
 

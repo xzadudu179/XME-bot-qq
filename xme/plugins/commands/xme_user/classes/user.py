@@ -17,6 +17,7 @@ from xme.xmetools.msgtools import send_to_superusers # noqa: E402
 from nonebot import get_bot # noqa: E402
 # from ..tools.map_tools import ImageDraw, draw_text_on_image, mark_point # noqa: E402
 import inspect # noqa: E402
+import asyncio # noqa: E402
 # from xme.xmetools.imgtools import hash_image # noqa: E402
 import math # noqa: E402
 from xme.xmetools.msgtools import send_session_msg # noqa: E402
@@ -182,13 +183,17 @@ class User:
             debug_msg("更新database")
             rows = DATABASE.update_db(obj=self, id=self.db_id, coins=self.coins, achievements=json.dumps(self.achievements, ensure_ascii=False))
             debug_msg("受影响的行数:", rows)
-        sent = False
-        while not sent:
+        # 发送失败要有上限与退避：bot 被禁言/风控时 ActionFailed 会持续快速失败，
+        # 无上限重试会永久挂起该会话并狂刷 OneBot API
+        for attempt in range(3):
             try:
                 await send_session_msg(session, achievement_message)
-                sent = True
+                break
             except ActionFailed:
-                continue
+                if attempt < 2:
+                    await asyncio.sleep(2)
+        else:
+            logger.warning(f"成就 {achievement_name} 的通知消息发送失败（已重试 3 次），放弃")
 
     def __str__(self):
         # debug_msg("self.get_reg_time()", self.get_reg_time())

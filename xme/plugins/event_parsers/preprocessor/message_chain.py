@@ -35,6 +35,11 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
             "raw_msg": raw_msg,
         }
     )
+    # 长接龙/刷同一句话时列表只增不减且每条消息全量遍历（O(n²)），
+    # 封顶保留最近若干条（接龙判定窗口只需 3 条）；已接过的接龙词列表同样收敛
+    if len(groups_messages[event.group_id]) > 50:
+        del groups_messages[event.group_id][:-50]
+    sent_msgs[event.group_id] = sent_msgs[event.group_id][-50:]
     msgs = groups_messages[event.group_id]
     if len(msgs) < 2:
         return

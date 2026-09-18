@@ -1,4 +1,5 @@
 from nonebot import NoneBot
+import asyncio
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools.msgtools import send_event_msg
@@ -30,8 +31,11 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
                 pass
             return await send_event_msg(bot, event, get_message("event_parsers", "is_prime", "too_long"))
         try:
-            is_prime = sympy.isprime(int(x))
-        except OverflowError:
+            # BPSW 对 576 位是多项式时间（几十~几百 ms），但跑在事件循环上会短冻
+            # 整个 bot 且可被连发叠加；放后台线程 + 墙钟兜底，超时按数字过长处理
+            is_prime = await asyncio.wait_for(
+                asyncio.to_thread(sympy.isprime, int(x)), 5)
+        except (OverflowError, asyncio.TimeoutError):
             try:
                 del last_process[id]
             except Exception:

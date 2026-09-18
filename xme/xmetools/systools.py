@@ -71,7 +71,6 @@ def system_info():
         disk_msg += f"  - {disk['name']}: {bytes_to_mib(disk['used']):,.2f} / {bytes_to_mib(disk['total']):,.2f} MiB ({(disk['used'] / disk['total']):.2f}%)\n"
     disk_msg = disk_msg.rstrip("\n")
     content = f"""    === 当前系统状态 ===
-- 机器名: {platform.node()}
 - 系统: {platform.system()} {platform.version()} {platform.machine()}
 - CPU 使用率: {pt.cpu_percent(interval=0.1)}%
 - 内存消耗: {bytes_to_mib(mem.used):,.2f} / {bytes_to_mib(mem.total):,.2f} MiB ({(mem.used / mem.total):.2f}%)

@@ -14,6 +14,7 @@ from xme.xmetools.imgtools import get_qq_avatar
 # from xme.xmetools.bottools import bot_call_action
 from nonebot import Message
 from xme.xmetools.debugtools import debug_msg
+from xme.xmetools.texttools import escape_cq
 # from nonebot.log import logger
 alias = ['ess']
 __plugin_name__ = 'essence'
@@ -44,8 +45,8 @@ async def _(session: CommandSession):
         __plugin_name__,
         'result',
         avatar=await image_msg(await get_qq_avatar(essence["sender_uin"]), max_size=64, to_jpeg=False),
-        sender=essence["sender_nick"],
-        operator=essence["add_digest_nick"],
+        sender=escape_cq(essence["sender_nick"]),
+        operator=escape_cq(essence["add_digest_nick"]),
         operator_id=f'{essence["add_digest_uin"]}',
         date=datetime.fromtimestamp(essence['add_digest_time']),
         sender_id=f'{essence["sender_uin"]}',

@@ -1,12 +1,12 @@
 from nonebot.default_config import *  # noqa: F403
 import character
 from datetime import timedelta
-# import keys
+import keys
 
 # SUPERUSERS = character.get_item('config', 'super_users', default={1795886524})
 SUPERUSERS = {1795886524}
 COMMAND_START = ['/', '.', '。', '／']
-# ACCESS_TOKEN = keys.ACCESS_TOKEN
+ACCESS_TOKEN = keys.ACCESS_TOKEN
 HOST = '0.0.0.0'
 PORT = 18980
 DEFAULT_VALIDATION_FAILURE_EXPRESSION = character.get_message('config', 'default_validation_failure_expression')
@@ -45,7 +45,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.11.2-preview'
+VERSION = '1.13.0-preview'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

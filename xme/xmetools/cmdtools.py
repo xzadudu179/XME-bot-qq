@@ -168,9 +168,10 @@ def get_args(arg_text: str):
 
 def clean_cmd_msgs():
     t = time.time()
-    for k, v in command_msgs.items():
-        # 默认超时2分钟
-        if time_diff(v.get('time', 0), t) < 120:
-            continue
+    # 先收集再删：迭代字典时直接 del 会抛 RuntimeError（dictionary changed size
+    # during iteration），此前靠调用方吞异常兜底，导致每次最多清掉一条
+    expired = [k for k, v in command_msgs.items()
+               if time_diff(v.get('time', 0), t) >= 120]
+    for k in expired:
         logger.info("删除指令消息: " + str(command_msgs[k]))
         del command_msgs[k]

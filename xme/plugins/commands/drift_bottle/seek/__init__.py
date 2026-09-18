@@ -5,7 +5,7 @@ from .classes.player import SeekRegion
 from xme.xmetools.bottools import get_group_name
 # from xme.xmetools.filetools import b64_encode_file
 # from xme.xmetools.timetools import TimeUnit
-from config import BOT_SETTINGS_PATH
+from config import BOT_SETTINGS_PATH, IMAGE_TEMP_PATH
 from html2image import Html2Image
 from xme.xmetools.randtools import html_messy_string, messy_image, random_percent
 from character import get_message
@@ -18,7 +18,7 @@ import time
 from .seek_tools import TOOLS
 from .seek_items import get_item
 from .constants import INVENTORY_MAX_SLOTS, HARDCORE_ITEM_LIMIT
-from .datas import get_inventory, save_inventory, can_save_items, get_gain_ratio, drop_inventory_items
+from .datas import get_inventory, save_inventory, can_save_items, get_gain_ratio, drop_inventory_items, get_stats, update_stats
 from .classes.tool import Tool
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -34,8 +34,17 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg, aget_session_msg, aget_arg_with_timeout
 from uuid import uuid4
+from collections import Counter
+import asyncio
 random.seed()
 hti = Html2Image()
+hti.output_path = IMAGE_TEMP_PATH
+
+
+def _release_seek_lock(group_id, user_id) -> None:
+    """幂等释放寻宝的群/玩家锁；不存在时静默（重复释放/未占用都允许）。"""
+    seeking_groups.pop(group_id, None)
+    seeking_players.pop(user_id, None)
 
 async def select_carry_items(session: CommandSession, inventory: list) -> list:
     """无依无靠模式下让玩家从物品栏选择本次携带的物品
@@ -145,6 +154,34 @@ async def handle_inventory_command(session: CommandSession, u: user.User, arg: s
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_drop_fail'))
         return False
     await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'inv_drop_success', count=removed, item=item_name))
+    return True
+
+async def handle_stats_command(session: CommandSession, u: user.User) -> bool:
+    """处理 /sk stats 指令，展示用户的探险统计
+
+    Args:
+        session (CommandSession): 会话
+        u (user.User): 用户
+
+    Returns:
+        bool: 是否处理成功
+    """
+    stats = get_stats(u)
+    if stats.get("runs", 0) <= 0:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'stats_empty'))
+        return True
+    regions = stats.get("regions", None) or {}
+    regions_str = "、".join(f"{name} ×{count}" for name, count in regions.items())
+    await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'stats_info',
+        runs=stats.get("runs", 0),
+        earned=stats.get("coins_earned", 0),
+        lost=stats.get("coins_lost", 0),
+        depth=stats.get("max_depth", 0),
+        steps=stats.get("max_steps", 0),
+        chance=stats.get("max_chance_used", 0),
+        income=stats.get("max_income", 0),
+        regions=regions_str or "无",
+    ))
     return True
 
 
@@ -262,7 +299,20 @@ class Seek:
             await send_session_msg(session, steps + msg + suffix)
         return [steps, msg + suffix]
 
-def get_img_msg(
+def _render_step_card(html_content: str):
+    """Chrome 渲染寻宝卡片 PNG 并裁剪透明边（同步、秒级，调用方须放后台线程）。"""
+    name = f"seekcard{uuid4()}.png"
+    path = os.path.join(IMAGE_TEMP_PATH, name)
+    try:
+        hti.screenshot(html_str=html_content, save_as=name, size=(1920, 10000))
+        return crop_transparent_area(path)
+    finally:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+async def get_img_msg(
         md_str,
         player: Player,
     ):
@@ -421,12 +471,7 @@ def get_img_msg(
     </body>
 </html>
     """
-    uid = str(uuid4())
-    hti.screenshot(html_str=html_content, save_as=f"seekcard{uid}.png", size=(1920, 10000))
-    image = crop_transparent_area(f"seekcard{uid}.png")
-    os.remove(f"seekcard{uid}.png")
-    return image
-    # return markdown.markdown(md_text)
+    return await asyncio.to_thread(_render_step_card, html_content)
 
 # 寻宝每一步
 class SeekStep:
@@ -456,24 +501,29 @@ command_name = "seek"
 
 TIMES_LIMIT = 2
 
-seeking_groups = [
-
-]
+# 群锁：群号 → 占用时间戳。带 TTL 自愈——任务被取消（CancelledError 不走
+# except Exception）等逃逸路径漏释放时，超过 SEEK_LOCK_TTL 秒后自动放行，
+# 不会把整群永久封锁到重启
+SEEK_LOCK_TTL = 7200
+seeking_groups: dict[int, float] = {}
 seeking_players = {
     # xxx: time
 }
 
 
 async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
-    # debug_msg(args, kwargs)
+    # debug_args(args)
     result = await func(session, user, *args, **kwargs)
-    # debug_msg(result)
+    # debug_result(result)
     if result['state'] == 'OK':
         result['data']['limited'] = True
     return result
 
 def validate_group(session: CommandSession, sender):
     if sender.is_groupchat and session.event.group_id in seeking_groups:
+        if time.time() - seeking_groups[session.event.group_id] > SEEK_LOCK_TTL:
+            del seeking_groups[session.event.group_id]
+            return True
         return False
     return True
 
@@ -527,6 +577,10 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         if arg == "inv" or arg.startswith("inv "):
             return await handle_inventory_command(session, u, arg)
 
+        # 探险统计（不占用每日寻宝次数）
+        if arg == "stats":
+            return await handle_stats_command(session, u)
+
         if arg not in ["start", "st"] and not is_sim:
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'introduction'))
             return False
@@ -559,7 +613,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             "place": f"{await get_group_name(session.event.group_id)}" if session.event.group_id is not None else "私聊"
         }
         if sender.is_groupchat:
-            seeking_groups.append(session.event.group_id)
+            seeking_groups[session.event.group_id] = time.time()
             # 处理 每一次机会（？）
         async def parse_event_steps(total_steps, expected_steps, prefix='', msg_prefix="", prefix_onlyonce=False):
             # seek_operate_time = time.time()
@@ -596,7 +650,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                 if step_results[0].strip() != prefix:
                     md_msg = "\n".join(step_results)
                     msg = msg_prefix + (await image_msg(messy_image(
-                        get_img_msg(md_msg, player),
+                        await get_img_msg(md_msg, player),
                         (100 - player.san.value) / 3.5, rand_color=False))) + (continue_message if result["decision"] is None else "")
                     if result["decision"] is None:
                     # new_messages += [change_group_message_content(msg_dict, r) for r in step_results]
@@ -664,6 +718,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         # 携带物品栏中的物品（无依无靠模式需要交互选择，带被动效果的物品转换为道具）
         for item_id in await load_carried_items(session, u, player):
             player.add_item(item_id)
+        # 快照出发时携带的物品，结算时用于区分「原有物品」与「本次新增物品」
+        player.starting_items = list(player.items)
         # await send_session_msg(session, msg)
         total_steps = 0
         expected_steps = player.seek_max_steps.value
@@ -689,6 +745,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             msg_prefix=message,
             prefix_onlyonce=True
         )
+        # 本次探险消耗的行动机会次数（主循环每轮 -1）
+        used_chance = 0
         while seek.status == "start" and player.chance.value > 0:
             expected_steps = 0
             valid_reply = False
@@ -741,6 +799,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
             if afk:
                 break
             player.chance.change(lambda v: v - 1)
+            used_chance += 1
             if player.hardcore.value == 1:
                 tip_text = "你不知道你到底适不适合探险"
                 random_tip = False
@@ -781,15 +840,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     except TimeoutError:
         seek.status = "exit"
     except Exception:
-        if sender.is_groupchat:
-            try:
-                seeking_groups.remove(session.event.group_id)
-            except Exception:
-                logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
-        try:
-            del seeking_players[session.event.user_id]
-        except Exception:
-            logger.error(f"无法移除用户 id {session.event.user_id} 因为不存在。")
+        _release_seek_lock(session.event.group_id, session.event.user_id)
         traceback.print_exc()
         return await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'error_msg', ex=traceback.format_exc()))
     # await sleep(10)
@@ -825,15 +876,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         coins_str = f"{player.coins.name}: {player.coins.value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:
         await u.achieve_achievement(session, "满载无归")
-    try:
-        del seeking_players[session.event.user_id]
-    except Exception:
-        logger.error(f"无法移除用户 {session.event.user_id} 因为不存在。")
-    if sender.is_groupchat:
-        try:
-            seeking_groups.remove(session.event.group_id)
-        except Exception:
-            logger.error(f"无法移除群 id {session.event.group_id} 因为不存在。")
+    _release_seek_lock(session.event.group_id, session.event.user_id)
     if is_sim:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg_simulation', gain=f"{coins_str}"))
         return
@@ -843,13 +886,29 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         await u.get_coins(session, result_value, _get_message = get_message("plugins", __plugin_name__, command_name, 'result_msg_with_coins', gain=f"{coins_str}", coins=result_value))
     else:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg', gain=f"{coins_str}"))
-    # 物品保存：未死亡且深度惩罚比例小于阈值时保留物品栏，否则清空
+    # 物品结算：未死亡且深度惩罚比例小于阈值时全部保留；
+    # 否则只保留出发时已有的物品（被事件消耗的不算），本次新获得的物品丢失
     if not is_sim:
         died, _, _ = player.is_die()
         keep_items = (not died) and can_save_items(player.depth.value, player.depth_gain_ratio.value)
-        save_inventory(u, player.items if keep_items else [])
-        if player.items:
+        if keep_items:
+            save_inventory(u, player.items)
+        else:
+            kept_items = list((Counter(player.starting_items) & Counter(player.items)).elements())
+            save_inventory(u, kept_items)
+        if keep_items and player.items:
             item_names = "、".join(item["name"] for item in map(get_item, player.items) if item)
             await send_session_msg(session, get_message("plugins", __plugin_name__, command_name,
-                'settle_items_saved' if keep_items else 'settle_items_lost', items=item_names))
+                'settle_items_saved', items=item_names))
+        else:
+            lost_items = list((Counter(player.items) - Counter(player.starting_items)).elements())
+            if lost_items:
+                item_names = "、".join(item["name"] for item in map(get_item, lost_items) if item)
+                await send_session_msg(session, get_message("plugins", __plugin_name__, command_name,
+                    'settle_items_lost', items=item_names))
+        # 累计探险统计（模拟模式不计入）
+        earned = result_value if (result_value > 0 and seek.status != "exit") else 0
+        update_stats(u, coins_earned=earned, coins_lost=depth_punish + tool_prices,
+            depth=player.depth.value, steps=total_steps, chance_used=used_chance,
+            income=earned, regions=player.region_visits)
     return True

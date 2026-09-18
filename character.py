@@ -1,5 +1,5 @@
 from xme.xmetools import jsontools
-from xme.xmetools.texttools import replace_formatted
+from xme.xmetools.texttools import escape_cq, replace_formatted
 from xme.xmetools.randtools import str_choice
 from xme.xmetools import dicttools
 from nonebot.message import Message
@@ -84,7 +84,7 @@ def get_message(*keys: str, default: str="[bot 未输出任何消息 请私信 b
     result = str_choice(result)
     result = character_format(result, **kwargs)
     if replace_cq_str:
-        result = result.replace("[", "&#91;").replace("]","&#93;")
+        result = escape_cq(result)
     return result
 
 def character_format(message, **kwargs):

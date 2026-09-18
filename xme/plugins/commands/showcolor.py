@@ -1,5 +1,6 @@
 from nonebot import message_preprocessor, NoneBot
 from nonebot.plugin import PluginManager
+import re
 import aiocqhttp
 from xme.xmetools.doctools import SpecialDoc
 from ...xmetools import colortools as c
@@ -27,7 +28,10 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     color_num_str = raw_msg.split("#")[-1]
     if not raw_msg.startswith("#") or len(color_num_str) not in [3, 6]:
         return
-    elif len(color_num_str) == 3:
+    # 只接受 3/6 位十六进制：色值会拼进落盘文件名，杜绝其他字符混入路径
+    if not re.fullmatch(r"[0-9A-F]+", color_num_str):
+        return
+    if len(color_num_str) == 3:
         color_num_str = "".join([c + c for c in color_num_str])
     try:
         path = gen_color_image(color_num_str)

@@ -58,7 +58,8 @@ async def _(session: CommandSession, user: User):
             count = c
             break
         count = min(times_left_now, count)
-        while user.coins - count * arg < 0:
+        # 下界保护：未来任何路径出现负余额时，这里会退化成无 await 的死循环冻结整个 bot
+        while arg > 1 and user.coins - count * arg < 0:
             arg -= 1
         debug_msg("count is", count)
     if len(arg_list) > 1 and not all_in:

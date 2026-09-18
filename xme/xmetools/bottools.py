@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from nonebot.argparse import ParserExit
 from character import get_message
 import json
+import os
 from traceback import format_exc
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -77,10 +78,30 @@ async def get_group_member_name(group_id, user_id, card=False, default=None):
         result = result['nickname']
     return result
 
+_settings_cache: dict | None = None
+_settings_mtime = -1.0
+
+
 async def get_settings():
-    with open(BOT_SETTINGS_PATH, 'r', encoding='utf-8') as jsonfile:
-        settings = json.load(jsonfile)
-    return settings
+    """读取 bot 设置（_botsettings.json），按 mtime 缓存并容忍缺失键。
+
+    该函数挂在消息预处理器上、每条消息都会调用，不能每次都同步读盘；
+    文件损坏/缺失时返回空 dict（缺键用 .get 取默认值），不再向每条消息抛异常。
+    """
+    global _settings_cache, _settings_mtime
+    try:
+        mtime = os.path.getmtime(BOT_SETTINGS_PATH)
+    except OSError:
+        mtime = -1.0
+    if _settings_cache is None or mtime != _settings_mtime:
+        try:
+            with open(BOT_SETTINGS_PATH, 'r', encoding='utf-8') as jsonfile:
+                _settings_cache = json.load(jsonfile)
+        except Exception:
+            logger.warning(f"读取 {BOT_SETTINGS_PATH} 失败，本次按空设置处理")
+            _settings_cache = {}
+        _settings_mtime = mtime
+    return _settings_cache
 
 async def get_stranger_name(user_id, default=None):
     try:

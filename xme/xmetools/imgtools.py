@@ -53,7 +53,7 @@ def compress_moderation_image(image: Image.Image):
             quality=75
         )
     original_bytes = buffer.getvalue()
-    image_bytes = compress_image_to_size(image, True, True, original_bytes, max_bytes=10 * 1024 * 1024 * 1024)
+    image_bytes = compress_image_to_size(image, True, True, original_bytes, max_bytes=2 * 1024 * 1024)
     path = f"./data/images/temp/{uuid4().hex}.{image_format}"
     with open(path, "wb") as f:
         f.write(image_bytes)
@@ -73,26 +73,37 @@ async def is_images_can_send(bot, event, images: list[Image.Image], session=None
 
     Args:
         session (CommandSession): 当前会话
-        images (list[Image.Image]): 图片列表
+        images (list[Image.Image]): 待检测图片
     """
     from xme.xmetools.msgtools import analyze_risk
     if len(images) < 1:
         return {"result": True, "reason": ""}
     is_url_invalid = True
     try_times = 0
+    results = None
     paths = await get_moderation_image_paths(images)
     while is_url_invalid and try_times < 10:
+        try_times += 1  # 计数在循环体推进：空 result_list 等异常响应也能退出，不会死循环
         urls = [filetools.get_local_file_url(p) for p in paths]
         response = await _is_images_url_can_send(urls)
-        for result in response["result_list"]:
-            try_times += 1
+        results = response.get("result_list") if isinstance(response, dict) else None
+        if not results:
+            logger.warning(f"图片风控返回异常（第 {try_times} 次重试）: {str(response)[:200]}")
+            await asyncio.sleep(1)
+            continue
+        for result in results:
             risk = result['risk_level']
             risk_type = result.get("risk_type", ['未知'])
             if risk == "REJECT" and len(risk_type) < 1:
                 logger.info(f"有无效链接, 尝试重新解析 (第 {try_times} 次)")
                 continue
             is_url_invalid = False
-    return await analyze_risk(response["result_list"], bot, event, True, session)
+        if is_url_invalid:
+            await asyncio.sleep(1)
+    if not results:
+        # 风控持续异常：按不通过处理（fail-closed），不让 None 流进 analyze_risk
+        return {"result": False, "reason": "风控服务暂时不可用，请稍后再试"}
+    return await analyze_risk(results, bot, event, True, session)
 
 def make_circle_image(path_or_image: str | Image.Image) -> Image.Image:
 
@@ -194,6 +205,12 @@ def get_html_image(html_str, height=2500, width=1920) -> Image.Image:
     image = crop_transparent_area(pth)
     # os.remove(name)
     return image
+
+async def get_html_image_async(html_str, height=2500, width=1920) -> Image.Image:
+    """get_html_image 的异步版：Chrome 渲染 + PIL 裁剪都是秒级同步操作，
+    必须经后台线程执行，避免冻结事件循环（async 命令处理器一律用本入口）。
+    """
+    return await asyncio.to_thread(get_html_image, html_str, height=height, width=width)
 
 def crop_transparent_area(input_path) -> Image.Image:
     """将透明底 PNG 图片的外侧透明部分切除

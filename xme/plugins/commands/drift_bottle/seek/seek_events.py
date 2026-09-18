@@ -19,7 +19,7 @@ def repair_bottle(data: dict, p: Player):
   p.achieved_achievements.append("打捞者"),
 
 async def get_bottle_content(datas):
-  return await image_msg(get_pickedup_bottle_card(datas["bottle"], suffix="<div></div>"))
+  return await image_msg(await get_pickedup_bottle_card(datas["bottle"], suffix="<div></div>"))
 
 EVENTS = [
   {

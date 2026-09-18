@@ -137,6 +137,10 @@ class Player:
         self.items: list[str] = []
         # 可携带的物品上限，出发时按模式设定（普通 INVENTORY_MAX_SLOTS / 无依无靠 HARDCORE_ITEM_LIMIT）
         self.item_limit: int = INVENTORY_MAX_SLOTS
+        # 本次探险出发时携带的物品快照，用于结算时区分「原有物品」与「本次新增物品」
+        self.starting_items: list[str] = []
+        # 本次探险到访的区域次数（初始区域计 1 次），结算时并入统计
+        self.region_visits: dict = {SeekRegion.SHALLOW_SEA.value: 1}
         # 区域
         self.region = PlayerAttr("区域", SeekRegion.SHALLOW_SEA)
         self.last_region = PlayerAttr("上个区域", SeekRegion.SHALLOW_SEA, show=False)
@@ -167,6 +171,9 @@ class Player:
         temp = self.last_region.value
         self.last_region.value = self.region.value
         self.region.value = change_func(temp)
+        # 统计区域足迹
+        region_name = self.region.value.value
+        self.region_visits[region_name] = self.region_visits.get(region_name, 0) + 1
         # self.region = region
         # if (self.last_region == SeekRegion.SHIPWRECK and self.region == SeekRegion.SHIPWRECK):
             # self.last_region = SeekRegion.SHALLOW_SEA

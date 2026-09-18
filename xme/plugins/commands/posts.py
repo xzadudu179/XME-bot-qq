@@ -1,3 +1,5 @@
+import asyncio
+
 from xme.xmetools.rsstools import show_rss, catch_179rss
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.doctools import CommandDoc
@@ -35,5 +37,12 @@ async def _(session: CommandSession):
     except Exception:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
         # return await send_msg(session, f"请输入正确的文章数量哦")
-    debug_msg("rss" + show_rss(catch_179rss(), count))
-    await send_session_msg(session, get_message("plugins", __plugin_name__, 'post_msg', count=count, posts=show_rss(catch_179rss(), count).replace("xzadudu179.github.io", "blog.xzadudu179.top")), tips=True, tips_percent=20)
+    # feedparser 底层是同步 urllib 且无超时，必须放后台线程 + 墙钟兜底，
+    # 且一次抓取只调一遍（原先 debug 与发送各抓一次）
+    try:
+        rss_list = await asyncio.wait_for(asyncio.to_thread(catch_179rss), 30)
+    except asyncio.TimeoutError:
+        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'invalid_count'))
+    posts_text = show_rss(rss_list, count).replace("xzadudu179.github.io", "blog.xzadudu179.top")
+    debug_msg("rss" + posts_text)
+    await send_session_msg(session, get_message("plugins", __plugin_name__, 'post_msg', count=count, posts=posts_text), tips=True, tips_percent=20)

@@ -4,6 +4,8 @@
 SEEK_DATAS_KEY = "seek"
 # plugin_datas 中物品栏的键名
 INVENTORY_KEY = "inventory"
+# plugin_datas 中统计数据的键名
+STATS_KEY = "stats"
 # 物品栏容量上限（普通模式）
 INVENTORY_MAX_SLOTS = 6
 # 无依无靠模式下可携带的物品上限

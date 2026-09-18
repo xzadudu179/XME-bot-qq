@@ -128,7 +128,7 @@ def get_local_file_url(path: str):
     path = Path(path).absolute()
     root = Path(".").absolute()
     if not path.is_relative_to(root):
-        ValueError(f"文件 {path} 层级不能低于项目层级 {root}")
+        raise ValueError(f"文件 {path} 层级不能低于项目层级 {root}")
     token = generate_file_token(path)
     # 有 30秒的过期时间
     url = f"http://{DOMAIN}/file/{token}"
@@ -422,6 +422,8 @@ def clear_temp(folder="./data/images/temp"):
         log.logger.info(f"正在删除 \"{f}\"...")
         os.remove(folder + '/' + f)
 
-def clear_temps(folders=["./data/images/temp", "./data/temp"]):
+def clear_temps(folders=["./data/images/temp", "./data/temp", "./data/videos/temp"]):
+    # videos/temp：AI 会话下载的视频副本（单文件可达 200MB），异常路径漏删时
+    # 靠本清单兜底回收；clear_temp 只删直系文件，不会误碰 data/temp/<qq> 子目录
     for f in folders:
         clear_temp(f)

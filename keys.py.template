@@ -1,6 +1,12 @@
 import time
 import jwt
 from hashlib import md5
+import secrets
+
+# OneBot 事件端点鉴权 token（python: secrets.token_urlsafe(32) 生成）：
+# 需与协议端（NapCat 等）配置的 Access Token 一致，协议端请求头带
+# Authorization: Bearer <该值> 或 access_token 参数
+ACCESS_TOKEN = ""
 
 SMTP_HOST = "smtp.example.com"
 MAIL_USERNAME = "mail@example.com"
@@ -15,6 +21,14 @@ AFDIAN_USER_ID = ''
 AFDIAN_TOKEN = ''
 AFDIAN_OAUTH_SECRET = ""
 AFDIAN_OAUTH_CLIENT_ID = ""
+# state JWT 的独立签名密钥（python: secrets.token_urlsafe(32) 生成）：
+# 与 client_secret 分离——client_secret 按 base64(user_id + "_" + client_id)
+# 规则生成、两段皆公开可得，用作 state 密钥等于任何人可伪造 state
+AFDIAN_OAUTH_STATE_SECRET = ""
+# webhook 回调 URL 的密钥段（python: secrets.token_urlsafe(24) 生成）：
+# 官方 webhook 不携带 sign 字段，凭 URL 密钥鉴权，
+# 爱发电后台的通知地址需配置为 .../afdian/webhook/<该值>
+AFDIAN_WEBHOOK_TOKEN = ""
 # cf 配置 在  /etc/cloudflared/config.yml
 # OAuth 回调地址：需要与爱发电后台登记的可信域名一致，
 # 并在公网入口（反代/隧道）把该地址转发到 bot 的 Quart 端口

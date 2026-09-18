@@ -14,6 +14,7 @@ from keys import (
     AFDIAN_OAUTH_CLIENT_ID,
     AFDIAN_OAUTH_REDIRECT_URI,
     AFDIAN_OAUTH_SECRET,
+    AFDIAN_OAUTH_STATE_SECRET,
     AFDIAN_TOKEN,
     AFDIAN_USER_ID,
     afdian_sign,
@@ -59,6 +60,7 @@ class AfdianClient:
         oauth_client_id: str,
         oauth_secret: str,
         redirect_uri: str,
+        state_secret: str = "",
         cache_ttl: int = CACHE_TTL,
     ) -> None:
         """初始化客户端。
@@ -67,14 +69,19 @@ class AfdianClient:
             user_id (str): 创作者的爱发电 user_id
             token (str): 开放平台 API token
             oauth_client_id (str): OAuth 应用 client_id
-            oauth_secret (str): OAuth 应用 client_secret（同时用作 state JWT 密钥）
+            oauth_secret (str): OAuth 应用 client_secret（code 兑换用）
             redirect_uri (str): OAuth 回调地址，须与爱发电后台登记一致
+            state_secret (str): state JWT 的独立签名密钥（与 client_secret 分离：
+                client_secret 按 base64(user_id_client_id) 规则生成、可被公开推算，
+                用它签 state 等于任何人可伪造 state 替别人完成绑定；空则回落
+                client_secret，仅兼容旧配置）
             cache_ttl (int): 全量列表缓存秒数
         """
         self.user_id = user_id
         self.token = token
         self.oauth_client_id = oauth_client_id
         self.oauth_secret = oauth_secret
+        self.state_secret = state_secret or oauth_secret
         self.redirect_uri = redirect_uri
         self.cache_ttl = cache_ttl
         # {缓存键: (过期时间戳, 值)}，仅存于实例内，避免模块级可变状态
@@ -200,14 +207,14 @@ class AfdianClient:
     def make_login_state(self, qq: int | str, ttl: int = STATE_TTL) -> str:
         """为 QQ 用户签发 OAuth state JWT（HS256，带过期时间）。"""
         payload = {"qq": str(qq), "exp": int(time.time()) + ttl}
-        return jwt.encode(payload, self.oauth_secret, algorithm="HS256")
+        return jwt.encode(payload, self.state_secret, algorithm="HS256")
 
     def parse_login_state(self, state: str) -> str | None:
         """解析并校验 OAuth state JWT，返回 qq 号字符串；无效或过期返回 None。"""
         if not state:
             return None
         try:
-            payload = jwt.decode(state, self.oauth_secret, algorithms=["HS256"])
+            payload = jwt.decode(state, self.state_secret, algorithms=["HS256"])
         except jwt.PyJWTError:
             return None
         qq = payload.get("qq")
@@ -246,4 +253,5 @@ AFDIAN_CLIENT = AfdianClient(
     oauth_client_id=AFDIAN_OAUTH_CLIENT_ID,
     oauth_secret=AFDIAN_OAUTH_SECRET,
     redirect_uri=AFDIAN_OAUTH_REDIRECT_URI,
+    state_secret=AFDIAN_OAUTH_STATE_SECRET,
 )

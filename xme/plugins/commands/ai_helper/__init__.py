@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import inspect
 import re
-import httpx
 
 import config
 from nonebot import CommandSession
@@ -17,9 +16,7 @@ from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
-from keys import GLM_API_KEY
 from xme.plugins.commands.xme_user.classes import user as u
-from zai import ZhipuAiClient
 
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
 from .session import (AISession, allows_auto_model, current_storage, enable_normal_insert,
@@ -477,27 +474,31 @@ async def _(session: CommandSession, user: u.User):
     finally:
         turn = curr_sessions[user.id]
         curr_sessions[user.id] = False
-        # 对话结束时残留的插入消息已无法并入，向插入者致歉（共享/普通通用）
-        if isinstance(turn, dict) and turn.get("key"):
-            for lost in share.consume_inserts(turn["key"]):
-                await send_to_user(
-                    session.bot,
-                    lost.user_id,get_message("plugins",
-                            __plugin_name__,
-                            'shared_insert_lost', code=turn["display"]
-                        )
+        # 共享会话忙锁在所有退出路径（正常/异常/取消）都要释放；残留的插入消息
+        # 已无法并入，随释放一并取出并向插入者致歉。普通会话无忙锁，只做插入清点
+        if shared_session is not None:
+            lost_inserts = share.release_busy(shared_session.code)
+            display = (turn.get("display") if isinstance(turn, dict) else None) \
+                or f"{shared_session.title}({shared_session.code})"
+        elif isinstance(turn, dict) and turn.get("key"):
+            lost_inserts = share.consume_inserts(turn["key"])
+            display = turn.get("display")
+        else:
+            lost_inserts = []
+            display = None
+        for lost in lost_inserts:
+            await send_to_user(
+                session.bot,
+                lost.user_id,get_message("plugins",
+                        __plugin_name__,
+                        'shared_insert_lost', code=display or ""
                     )
+                )
 
 
 async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None, routing_allowed: bool = False):
-    httpx_client = httpx.Client(
-        proxy=None,
-        trust_env=False,
-        timeout=60.0
-    )
     global curr_sessions
     curr_sessions[user.id] = True
-    client = ZhipuAiClient(api_key=GLM_API_KEY, http_client=httpx_client)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
     with open("./static/telia.txt") as tel:
@@ -516,7 +517,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
-    ai_helper = AIHelper(client, user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data, routing_allowed=routing_allowed)
+    ai_helper = AIHelper(user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data, routing_allowed=routing_allowed)
     # 新会话默认开启插入模式：只在会话尚未存在（= 此刻创建）时登记，
     # 用户事后 -c ins 关闭的不会被这里加回
     if shared is None:
@@ -555,6 +556,10 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
             ai_logger.error(f"aistop 中断结算失败：{format_exc()}")
             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted", credits="未知", left="未知"))
         return False, {}, {}, 0
+    except BaseException:
+        # 异常中断：temp（含本轮下载的视频）也要清理，快照保留供 --continue 恢复
+        ai_helper.delete_temp()
+        raise
     finally:
         aistop.unregister_turn(session.event.group_id, user.id)
     # 对话正常结束（含主动中断）→ 快照已完成使命；异常死亡时快照残留供 --continue 恢复

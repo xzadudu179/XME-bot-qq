@@ -31,6 +31,8 @@ async def get_weather(city: str) -> dict:
     return json_dict
 
 async def fetch_data_post(url, json, *args, **kwargs):
+    # GLM 系接口（阅读/风控等）响应偏慢，默认总超时 120s；调用方可经 timeout 覆盖
+    kwargs.setdefault("timeout", aiohttp.ClientTimeout(total=120))
     try:
         async with aiohttp.ClientSession() as aiosession:
             async with aiosession.post(url, *args, **kwargs, json=json) as response:
@@ -70,6 +72,8 @@ async def glm_api_request(path: str, method: str = "POST", **payload) -> dict:
     return await fetch_data_post(url, json=body, headers=headers)
 
 async def fetch_data(url, response_type="json", raise_error=False, **args):
+    # 缺省 30s 总超时：不传 timeout 时 aiohttp 默认 5 分钟，慢端点会拖住整个会话
+    args.setdefault("timeout", aiohttp.ClientTimeout(total=30))
     async with aiohttp.ClientSession() as aiosession:
         async with aiosession.get(url, **args) as response:
             if raise_error:

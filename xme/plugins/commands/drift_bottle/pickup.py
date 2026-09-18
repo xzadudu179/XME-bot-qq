@@ -3,13 +3,13 @@ from datetime import datetime
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.xmetools.cmdtools import send_cmd
 # from xme.xmetools import jsontools
-from xme.xmetools.texttools import remove_invisible
+from xme.xmetools.texttools import escape_cq, remove_invisible
 from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.bottools import get_stranger_name, get_group_name
 from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
-from xme.xmetools.imgtools import get_html_image
+from xme.xmetools.imgtools import get_html_image_async
 from xme.xmetools.msgtools import image_msg
 # from xme.xmetools.dicttools import set_value, get_value
 from character import get_message
@@ -116,7 +116,7 @@ async def comment(session, bottle_id, user_id, comment_content):
     bottle.save()
     debug_msg("评论了")
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{sender} ({user_id}) 评论了 {index} 号漂流瓶：{comment_content}")
+        await session.bot.send_private_msg(user_id=superuser,message=f"{escape_cq(sender)} ({user_id}) 评论了 {index} 号漂流瓶：{escape_cq(comment_content)}")
     # debug_msg(bottle)
     await send_session_msg(session, content)
     return True
@@ -124,9 +124,10 @@ async def comment(session, bottle_id, user_id, comment_content):
 async def report(session, bottle: DriftBottle, user_id, message_prefix="举报了一个漂流瓶", send_success_message=True, report_content=""):
     content = get_message("plugins", __plugin_name__, "reported")
     messy_rate = max(0, min(100, bottle.views * 2 - bottle.likes * 3))
-    card = await image_msg(get_html_image(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%"), 1200, 700))
+    card = await image_msg(await get_html_image_async(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%"), 1200, 700))
     for superuser in config.SUPERUSERS:
-        await session.bot.send_private_msg(user_id=superuser,message=f"{(await get_stranger_name( user_id=user_id))} ({user_id}) {message_prefix}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {bottle.sender} ({bottle.sender_id})\n来自群：{bottle.from_group} ({bottle.group_id})\n（如果是举报）举报原因：{report_content}")
+        reporter = await get_stranger_name(user_id=user_id)
+        await session.bot.send_private_msg(user_id=superuser,message=f"{escape_cq(reporter)} ({user_id}) {escape_cq(message_prefix)}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {escape_cq(bottle.sender)} ({bottle.sender_id})\n来自群：{escape_cq(bottle.from_group)} ({bottle.group_id})\n（如果是举报）举报原因：{escape_cq(report_content)}")
     if send_success_message:
         await send_session_msg(session, content)
 
@@ -275,7 +276,7 @@ async def _(session: CommandSession, user: u.User, validate, count_tick):
     logger.info(f"混乱程度：{messy_rate}, 破碎概率：{broken_rate}%")
     broken = randtools.random_percent(broken_rate)
     #     # 普通瓶子会越来越混乱
-    bottle_card = get_pickedup_bottle_card(bottle, skin_name=skin_name, view_minus=1)
+    bottle_card = await get_pickedup_bottle_card(bottle, skin_name=skin_name, view_minus=1)
     # await send_session_msg(session, bottle_card)
     prefix_message = get_message("plugins", __plugin_name__, "bottle_picked_prefix")
     if is_broken_bottle:

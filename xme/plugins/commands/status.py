@@ -1,4 +1,5 @@
 from nonebot import CommandSession
+import asyncio
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from ...xmetools import systools as st
@@ -38,7 +39,8 @@ async def _(session: CommandSession):
     if info != no_info and isinstance(info, dict):
         info = f'- bot 实例 APP: {info["app_name"]} v{info["app_version"]}'
     try:
-        message = st.system_info()
+        # system_info 内含 lsblk 子进程与 psutil 采样，同步执行须放后台线程
+        message = await asyncio.to_thread(st.system_info)
     except Exception:
         message = get_message("plugins", __plugin_name__, 'fetch_failed')
         # message = "当前运行设备暂不支持展示系统状态——"
@@ -47,15 +49,11 @@ async def _(session: CommandSession):
     # user_datas = read_from_path("./data/users.json")
     user_count = len(user.User.get_users())
 
-    # 获取指令统计数据
-    datas = PluginCallData.get_datas()
+    # 获取指令统计数据（SQL 直接限定 95 天窗口，统计表逐指令增长、不能全表加载）
+    start_time = datetime.now() - timedelta(days=95)
+    datas = PluginCallData.get_datas(since=start_time.timestamp())
     if datas:
-        # 过滤最近95天的数据
-        current_time = datetime.now()
-        start_time = current_time - timedelta(days=95)
-        # 将 start_time 转换为时间戳，在循环过滤时直接对比浮点数，效率更高
-        start_timestamp = start_time.timestamp()
-        filtered_datas = [d for d in datas if d.call_time >= start_timestamp]
+        filtered_datas = datas
 
         if filtered_datas:
             # 按每 7 天聚合调用量
@@ -92,7 +90,9 @@ async def _(session: CommandSession):
 
                 data_list.append((x, y, name))
 
-            image_path, _ = generate_command_trend_chart(
+            # matplotlib 画图是同步 CPU 密集操作，放后台线程执行
+            image_path, _ = await asyncio.to_thread(
+                generate_command_trend_chart,
                 data_list,
                 title=f'最近 95 天日均调用最多的 {TOP_K} 个指令',
                 xlabel='时间周期（每7天）',

@@ -6,7 +6,7 @@ from xme.xmetools.bottools import permission
 from .tools.bottlecard import get_class_bottle_card_html
 from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.msgtools import image_msg
-from xme.xmetools.imgtools import get_html_image
+from xme.xmetools.imgtools import get_html_image_async
 from character import get_message
 from xme.xmetools.randtools import messy_image
 from .tools.bottlecard import get_example_bottle
@@ -32,7 +32,7 @@ async def _(session: CommandSession, user: u.User):
     skin_name = user.get_custom_setting(__plugin_name__, "custom_cards")
     bottle_id = session.current_arg_text.strip()
     if bottle_id == "example":
-        return await send_session_msg(session, (await image_msg(get_html_image(get_example_bottle(skin_name=skin_name)))), tips=True)
+        return await send_session_msg(session, (await image_msg(await get_html_image_async(get_example_bottle(skin_name=skin_name)))), tips=True)
     else:
         bottle: DriftBottle = DriftBottle.get(bottle_id)
 
@@ -73,7 +73,7 @@ async def _(session: CommandSession, user: u.User):
     if str(index) == "-179":
         # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
         suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
-    bottle_card = messy_image(get_html_image(get_class_bottle_card_html(
+    bottle_card = messy_image(await get_html_image_async(get_class_bottle_card_html(
         bottle=bottle,
         messy_rate=messy_rate,
         messy_rate_str=messy_rate_string,

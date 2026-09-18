@@ -9,7 +9,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import image_msg, send_session_msg, send_to_superusers
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.sandboxtools import SandboxError, SandboxTimeoutError, run_in_sandbox
-from xme.xmetools.texttools import contains_blacklisted
+from xme.xmetools.texttools import contains_blacklisted, escape_cq
 
 from .constants import DRAW_FSIZE_MB, DRAW_MEM_MB, DRAW_TIMEOUT, MAX_ARG_LEN, PARSE_TIMEOUT
 from .evaluator import CalcResult, evaluate_formula
@@ -48,7 +48,7 @@ async def _(session: CommandSession):
     if len(arg) > MAX_ARG_LEN:
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long'))
     if contains_blacklisted(arg):
-        await send_to_superusers(session.bot, f"警告：{session.event.user_id} 在 calc 指令里输入了有注入风险的表达式：{arg}")
+        await send_to_superusers(session.bot, f"警告：{session.event.user_id} 在 calc 指令里输入了有注入风险的表达式：{escape_cq(arg)}")
         return await send_session_msg(session, get_message("plugins", __plugin_name__, 'have_risk'))
     try:
         # 沙箱回传帧是 JSON 纯数据，dataclass 会被自动转成 dict，这里重建

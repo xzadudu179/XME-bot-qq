@@ -210,15 +210,19 @@ async def aget_arg(
 def add_to_open_cmd_msgs(event_msg_id, cmd_msg_id) -> bool:
     if cmd_msg_id is None:
         return False
+    # 统一存 {"message_id": id}：bot.send 系返回的是 dict，send_forward_msg 取的是
+    # 裸 int，混存会让撤回清理端（group_recall 按 dict 读）抛 TypeError
+    if not isinstance(cmd_msg_id, dict):
+        cmd_msg_id = {"message_id": cmd_msg_id}
     msgs = command_msgs.get(event_msg_id, None)
     if msgs is None:
         return False
     set_value("ids", search_dict=msgs, set_method=lambda v: v + [cmd_msg_id])
     return False
 
-async def gif_msg(input_path, scale=1):
+def _gif_msg_sync(input_path, scale=1):
+    """gif_msg 的同步解码/缩放部分（逐帧 PIL 操作，帧多时秒级，须在后台线程跑）。"""
     img = Image.open(input_path)
-
     frames = []
     for frame in range(img.n_frames):
         img.seek(frame)  # 选中当前帧
@@ -226,7 +230,11 @@ async def gif_msg(input_path, scale=1):
             (img.width * scale, img.height * scale), Image.Resampling.NEAREST
         )  # 放大
         frames.append(resized_frame.convert("RGBA"))
-    b64 = gif_to_base64(img, frames)
+    return gif_to_base64(img, frames)
+
+
+async def gif_msg(input_path, scale=1):
+    b64 = await asyncio.to_thread(_gif_msg_sync, input_path, scale)
     debug_msg("gif b64 success")
     try:
         result = await asyncio.to_thread(create_image_message, b64)
@@ -235,6 +243,23 @@ async def gif_msg(input_path, scale=1):
         logger.error(f"发生错误: {e}")
         logger.exception(traceback.format_exc())
         return MessageSegment.text("[图片加载失败]")
+
+
+def _open_image_sync(path_or_image):
+    """按路径打开本地图片；传已是 Image 对象则原样返回，路径打不开（如 url）返回 None。"""
+    if not isinstance(path_or_image, str):
+        return path_or_image
+    try:
+        return Image.open(path_or_image)
+    except Exception:
+        return None
+
+
+def _encode_image_sync(image, max_size, to_jpeg):
+    """image_msg 的同步编码部分（缩放 + 循环压缩编码，须在后台线程跑）。"""
+    if max_size > 0:
+        image = limit_size(image, max_size)
+    return image_to_base64(image, to_jpeg)
 
 
 async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message("config", "image_summary")):
@@ -249,22 +274,12 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     Returns:
         MessageSegment: 消息段
     """
-    is_image = False
-    if not isinstance(path_or_image, str):
-        is_image = True
-    debug_msg(is_image)
-    try:
-        image = path_or_image if is_image else Image.open(path_or_image)
-    except Exception:
+    image = await asyncio.to_thread(_open_image_sync, path_or_image)
+    if image is None:
+        # 本地路径打不开：按 url 下载（异步下载路径不变）
         image = await get_url_image(path_or_image)
-    # image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
-    if max_size > 0:
-        debug_msg("重新缩放")
-        image = limit_size(image, max_size)
-    debug_msg(image)
-    b64 = image_to_base64(image, to_jpeg)
+    b64 = await asyncio.to_thread(_encode_image_sync, image, max_size, to_jpeg)
     debug_msg("b64 success")
-    # return MessageSegment.image('base64://' + b64, cache=True, timeout=10)
     try:
         # 将消息发送的同步方法放到后台线程执行
         result = await asyncio.to_thread(create_image_message, b64, summary=summary)

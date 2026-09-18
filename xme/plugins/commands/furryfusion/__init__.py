@@ -5,8 +5,9 @@ from .apicalls import get_countdown, search
 from .cards import get_countdown_cards
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from xme.xmetools.cmdtools import use_args
-from xme.xmetools.imgtools import get_html_image
+from xme.xmetools.imgtools import get_html_image_async
 from xme.xmetools.typetools import try_parse
+from xme.xmetools.texttools import escape_cq
 import random
 from xme.xmetools.msgtools import CMD_END, send_session_msg, aget_session_msg
 from xme.xmetools.msgtools import image_msg
@@ -34,10 +35,10 @@ async def get_search_fusion_data_msg(data):
     msg = get_message(
         "plugins", __plugin_name__, "fusion_data",
         image=await image_msg(data['image'], max_size=300),
-        name=data['title'],
+        name=escape_cq(data['title']),
         state=search_state.get(data['state'], "未知"),
-        groups="\n  " + "\n  ".join(data["groups"]) if len(data["groups"]) > 1 else data["groups"][0],
-        correlation="、".join(data["correlation"]) if data["correlation"][0] != "" else "无别名",
+        groups="\n  " + "\n  ".join(escape_cq(g) for g in data["groups"]) if len(data["groups"]) > 1 else escape_cq(data["groups"][0]),
+        correlation="、".join(escape_cq(c) for c in data["correlation"]) if data["correlation"][0] != "" else "无别名",
     )
     return msg
 
@@ -46,7 +47,7 @@ async def get_countdown_card(u: User):
     if response["code"] != "OK":
         return get_message("plugins", __plugin_name__, "error", code=response['code'])
     html_card = get_countdown_cards(response["data"], u)
-    msg = get_message("plugins", __plugin_name__, "countdown", image=(await image_msg(get_html_image(html_card, height=5000))))
+    msg = get_message("plugins", __plugin_name__, "countdown", image=(await image_msg(await get_html_image_async(html_card, height=5000))))
     return msg
 
 async def search_by_name(session: CommandSession, content, mode):

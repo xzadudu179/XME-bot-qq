@@ -11,7 +11,7 @@ from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.dicttools import set_value, get_value
 from xme.plugins.commands.xme_user.classes.user import User, using_user
 from character import get_message
-from xme.xmetools.imgtools import get_html_image
+from xme.xmetools.imgtools import get_html_image_async
 from xme.xmetools.msgtools import image_msg
 
 __plugin_name__ = "custom"
@@ -181,7 +181,7 @@ async def _(session: CommandSession, user: User, arg_list:list[str]):
     elif setting_index == "":
         stats, result = get_custom_items_html(*keys, user=user, curr_custom=curr_custom, default_value=default)
         suffix = "" if not stats else get_message("plugins", __plugin_name__, 'custom_info_suffix')
-        html_image = await image_msg(get_html_image(result))
+        html_image = await image_msg(await get_html_image_async(result))
         message = get_message("plugins", __plugin_name__, 'custom_info', items_name=items_name, html_image=html_image, suffix=suffix, curr_custom=curr_custom)
         if not stats:
             await send_session_msg(session, message, tips=True)

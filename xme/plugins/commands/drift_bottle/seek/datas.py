@@ -9,7 +9,7 @@
 """
 from xme.xmetools.dicttools import get_value, set_value
 from xme.plugins.commands.drift_bottle import __plugin_name__
-from .constants import SEEK_DATAS_KEY, INVENTORY_KEY, INVENTORY_MAX_SLOTS, ITEM_SAVE_PUNISH_RATE
+from .constants import SEEK_DATAS_KEY, INVENTORY_KEY, STATS_KEY, INVENTORY_MAX_SLOTS, ITEM_SAVE_PUNISH_RATE
 from .seek_items import get_item
 
 
@@ -24,6 +24,55 @@ def get_seek_datas(user) -> dict:
     """
     datas = get_value(__plugin_name__, SEEK_DATAS_KEY, search_dict=user.plugin_datas, default=None)
     return datas if isinstance(datas, dict) else {}
+
+
+def get_stats(user) -> dict:
+    """获取用户的探险统计数据
+
+    Args:
+        user (User): 用户
+
+    Returns:
+        dict: 统计数据，不存在时返回空 dict
+    """
+    stats = get_value(__plugin_name__, SEEK_DATAS_KEY, STATS_KEY, search_dict=user.plugin_datas, default=None)
+    return stats if isinstance(stats, dict) else {}
+
+
+def update_stats(user, coins_earned: int = 0, coins_lost: int = 0, depth: int = 0, steps: int = 0, chance_used: int = 0, income: int = 0, regions: dict | None = None) -> None:
+    """累计一次真实探险的统计数据
+
+    Args:
+        user (User): 用户
+        coins_earned (int): 本次实际获得的星币
+        coins_lost (int): 本次损失的星币（深度惩罚 + 道具消费）
+        depth (int): 本次抵达的最大深度
+        steps (int): 本次行走的总步数
+        chance_used (int): 本次消耗的行动机会次数
+        income (int): 本次实际获得的星币（用于单次最高收入统计）
+        regions (dict | None): 本次到访的区域次数 {区域名: 次数}
+    """
+    regions = regions if isinstance(regions, dict) else {}
+
+    def merge(old):
+        old = old if isinstance(old, dict) else {}
+        old_regions = old.get("regions", None)
+        merged_regions = dict(old_regions) if isinstance(old_regions, dict) else {}
+        for name, count in regions.items():
+            merged_regions[name] = merged_regions.get(name, 0) + count
+        return {
+            "runs": old.get("runs", 0) + 1,
+            "coins_earned": old.get("coins_earned", 0) + coins_earned,
+            "coins_lost": old.get("coins_lost", 0) + coins_lost,
+            "max_depth": max(old.get("max_depth", 0), depth),
+            "max_steps": max(old.get("max_steps", 0), steps),
+            "max_chance_used": max(old.get("max_chance_used", 0), chance_used),
+            "max_income": max(old.get("max_income", 0), income),
+            "regions": merged_regions,
+        }
+
+    set_value(__plugin_name__, SEEK_DATAS_KEY, STATS_KEY, search_dict=user.plugin_datas, set_method=merge)
+    user.update("plugin_datas")
 
 
 def get_inventory(user) -> list:

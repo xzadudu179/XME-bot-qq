@@ -22,7 +22,6 @@ from xme.xmetools import jsontools
 from xme.xmetools.jsontools import read_from_path
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
-from zai import ZhipuAiClient
 from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
     __plugin_name__,
@@ -394,7 +393,7 @@ class AIHelper:
                 return candidate
         raise KeyError(f"无法找到引用 {ref}")
 
-    def __init__(self, ai_client: ZhipuAiClient, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None, routing_allowed: bool = False):
+    def __init__(self, user_id: int, session, model="flash", ai_session=history.DEFAULT_SESSION, shared_session=None, resume_data=None, routing_allowed: bool = False):
         # ai_session：用户当前使用的 AI 会话名；session：bot 的 CommandSession
         # shared_session：共享会话对象（share.SharedSession）；不为 None 时历史读写走共享会话
         self.shared = shared_session
@@ -431,7 +430,6 @@ class AIHelper:
         self.current_model = self.model
         self.current_vision = bool(self.model_entry.get("vision"))
         self.cached_tokens = 0
-        self.client = ai_client
         self.session = session
         self.user_id = user_id
         self.temp_file_paths = []

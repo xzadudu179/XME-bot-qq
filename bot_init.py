@@ -200,8 +200,9 @@ def init_all_databases():
 
 
 def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
-    # 设置日志的格式
-    log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1, encoding="utf-8")
+    # 设置日志的格式；backupCount 缺省 0 会永久保留每天的轮转文件（无界增长）
+    log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1,
+                                           backupCount=120, encoding="utf-8")
     log_handler.suffix = "%Y-%m-%d"  # 按年-月-日格式保存日志文件
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

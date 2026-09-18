@@ -111,6 +111,13 @@ def replace_formatted(s: str, **formats):
 
     return result
 
+def escape_cq(text: str) -> str:
+    """转义文本中的 CQ 码特殊字符（& → &amp;、[ → &#91;、] → &#93;，按此顺序），
+    使其经 OneBot 发送时只呈现为字面文本、不被解析成消息段。
+    用户可控文本拼进待发送字符串前必须经过本函数。
+    """
+    return str(text).replace("&", "&amp;").replace("[", "&#91;").replace("]", "&#93;")
+
 def protect_special_word_and_quoted_text(text, tag='nz'):
     """
     将引号内的内容替换为占位符，并注册为 jieba 词典词，以及忽略自带词典

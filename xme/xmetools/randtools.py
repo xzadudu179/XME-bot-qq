@@ -1,6 +1,7 @@
 import random
 from .jsontools import read_from_path
 from PIL import Image
+import numpy as np
 from functools import wraps
 random.seed()
 
@@ -91,15 +92,14 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
     region_count = int((messy_rate) * (boxsize / max_block_size / 8))
     # 最大的
     if messy_rate >= 100 and max_messy_break:
-        for y in range(img.height):
-            random_color = (
-                random.randint(0, 255),
-                random.randint(0, 255),
-                random.randint(0, 255)
-            )
-            for x in range(img.width):
-                pixels[x, y] = random_color
-        return img
+        # 每行一个随机色的全图噪声。numpy 向量化替代逐像素 Python 循环
+        # （几十万~数百万次循环会同步卡住调用方数秒）
+        row_colors = np.random.randint(0, 256, size=(h, 3), dtype=np.uint8)
+        noise = np.broadcast_to(row_colors[:, None, :], (h, w, 3)).copy()
+        if img.mode == "RGBA":
+            noise = np.concatenate(
+                [noise, np.full((h, w, 1), 255, dtype=np.uint8)], axis=2)
+        return Image.fromarray(noise, "RGBA" if img.mode == "RGBA" else "RGB")
 
     for _ in range(region_count):
         block_size = random.randint(1, max_block_size)

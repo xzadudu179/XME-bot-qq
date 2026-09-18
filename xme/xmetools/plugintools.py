@@ -12,6 +12,7 @@ from bot_variables import command_msgs
 from traceback import format_exc
 from xme.xmetools.dicttools import set_value
 from xme.xmetools.cmdtools import clean_cmd_msgs
+from xme.xmetools.texttools import escape_cq
 from nonebot.command import _FinishException
 import functools
 # from xme.xmetools.debugtools import debug_msg
@@ -47,8 +48,16 @@ class PluginCallData:
         return f"id:{self.id}, name: {self.name}, calltime: {self.call_time}, from: {self.from_user_id}, group: {self.call_group}, success: {self.success}, time_cost: {self.time_cost}, args: \"{self.args}\""
 
     @staticmethod
-    def get_datas():
-        return [PluginCallData.form_dict(d) for d in DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}", dict_data=True)]
+    def get_datas(since: float | None = None):
+        """读取指令统计（完整保留、不删任何记录）；since 给定时只取
+        call_time >= since 的记录（参数化），供 /status 免全表加载。"""
+        if since is None:
+            rows = DATABASE.exec_query(f"SELECT * FROM {PluginCallData.get_table_name()}", dict_data=True)
+        else:
+            rows = DATABASE.exec_query(
+                f"SELECT * FROM {PluginCallData.get_table_name()} WHERE call_time >= ?",
+                (since,), dict_data=True)
+        return [PluginCallData.form_dict(d) for d in rows]
 
     def save(self):
         self.id = DATABASE.save_to_db(self)
@@ -135,10 +144,7 @@ def on_command(
             call_time = time.time()
             success = False
             # 清理指令消息绑定
-            try:
-                clean_cmd_msgs()
-            except RuntimeError:
-                pass
+            clean_cmd_msgs()
             if session.event.message_id is not None:
                 command_msgs[session.event.message_id] = {
                     "ids": [],
@@ -160,7 +166,8 @@ def on_command(
             except Exception:
                 logger.error(f"Command {cmd_name[0]} failed")
                 try:
-                    msg = get_message("config", "unknown_error", ex=format_exc())
+                    # 异常文本常回显用户输入（URL/文件名等），发群部分须 CQ 转义
+                    msg = get_message("config", "unknown_error", ex=escape_cq(format_exc()))
                     await send_session_msg(session, msg)
                     await send_to_superusers(session.bot, msg + f"\n来自群 {session.event.group_id}，调用者 {session.event.user_id}")
                 except Exception:

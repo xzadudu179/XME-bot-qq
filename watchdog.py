@@ -92,7 +92,15 @@ if os.name == "nt":
 if __name__ == "__main__":
     logger = setup_logger()
     logger.info(f"BOT 数据已备份至 {backup_data_dir()}")
+    # 重启退避：启动阶段连续崩溃（配置错/端口占用等）时固定 5s 重启会形成
+    # 重启风暴刷爆日志；连续异常退出按 5→10→…→300s 递增，子进程稳定运行
+    # STABLE_SECS 后计数复位
+    BASE_DELAY = 5
+    MAX_DELAY = 300
+    STABLE_SECS = 1800
+    consecutive_failures = 0
     while running:
+        start_time = time.time()
         proc = start_process()
 
         while running and proc.poll() is None:
@@ -116,9 +124,13 @@ if __name__ == "__main__":
         else:
             logger.error(f"{TARGET_SCRIPT} 异常退出，返回码: {ret}")
 
-        RESTART_DELAY = 5
-        logger.info(f"{TARGET_SCRIPT} 已退出，将在 {RESTART_DELAY} 秒后重启...")
-        time.sleep(RESTART_DELAY)
+        if time.time() - start_time >= STABLE_SECS:
+            consecutive_failures = 0
+        restart_delay = min(BASE_DELAY * (2 ** consecutive_failures), MAX_DELAY)
+        consecutive_failures += 1
+        logger.info(f"{TARGET_SCRIPT} 已退出，将在 {restart_delay:.0f} 秒后重启"
+                    f"（连续异常 {consecutive_failures} 次）...")
+        time.sleep(restart_delay)
 
     stop_process()
     logger.info("watchdog 已退出")

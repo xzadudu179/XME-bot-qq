@@ -185,3 +185,4 @@ guild1.db-wal
 AGENT_DEV_RULES.md
 
 .zcode
+.watchdog.lock

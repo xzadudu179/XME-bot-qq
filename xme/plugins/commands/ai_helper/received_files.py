@@ -143,8 +143,33 @@ def recent_private_files(user_id: int, within_hours: float = 24.0,
 def clear_state() -> None:
     """清空进程内缓存（测试用）。"""
     _received.clear()
+    _sent_files.clear()
     global _loaded
     _loaded = True   # 防止后续操作又从磁盘读回旧数据
+
+
+# ---------- bot 发出的私聊文件登记（过滤预览点击的回显） ----------
+# 用户在 QQ 客户端里点击 bot 发来的文件预览/下载时，协议端会把该文件作为一条
+# 来自用户的 [CQ:file] 消息上报（回显）；插入消息通道凭此登记把回显过滤掉，
+# 不让它污染 AI 上下文。短 TTL 内存态，不落盘。
+SENT_FILE_TTL = 600.0
+_sent_files: dict[int, list[tuple[str, float]]] = {}   # user_id → [(文件名, 过期时间)]
+
+
+def record_sent_file(user_id: int, name: str) -> None:
+    """登记 bot 刚向该用户私聊发送的文件名（同名文件在 TTL 内视为回显）。"""
+    now = time.time()
+    entries = [e for e in _sent_files.get(int(user_id), []) if e[1] > now]
+    entries.append((str(name or ""), now + SENT_FILE_TTL))
+    _sent_files[int(user_id)] = entries[-50:]
+
+
+def is_bot_sent_file(user_id: int, name: str) -> bool:
+    """该文件名是否为 bot 近期发给该用户的文件（顺带清理过期项）。"""
+    now = time.time()
+    entries = [e for e in _sent_files.get(int(user_id), []) if e[1] > now]
+    _sent_files[int(user_id)] = entries
+    return str(name or "") in [e[0] for e in entries]
 
 
 # ---------- 事件监听 ----------

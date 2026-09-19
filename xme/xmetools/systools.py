@@ -68,12 +68,12 @@ def system_info():
     disks = get_disks()
     disk_msg = ""
     for disk in disks:
-        disk_msg += f"  - {disk['name']}: {bytes_to_mib(disk['used']):,.2f} / {bytes_to_mib(disk['total']):,.2f} MiB ({(disk['used'] / disk['total']):.2f}%)\n"
+        disk_msg += f"  - {disk['name']}: {bytes_to_mib(disk['used']):,.2f} / {bytes_to_mib(disk['total']):,.2f} MiB ({(disk['used'] / disk['total'] * 100):.2f}%)\n"
     disk_msg = disk_msg.rstrip("\n")
     content = f"""    === 当前系统状态 ===
 - 系统: {platform.system()} {platform.version()} {platform.machine()}
 - CPU 使用率: {pt.cpu_percent(interval=0.1)}%
-- 内存消耗: {bytes_to_mib(mem.used):,.2f} / {bytes_to_mib(mem.total):,.2f} MiB ({(mem.used / mem.total):.2f}%)
+- 内存消耗: {bytes_to_mib(mem.used):,.2f} / {bytes_to_mib(mem.total):,.2f} MiB ({(mem.used / mem.total * 100):.2f}%)
 - 硬盘使用：
 {disk_msg}
 - 当前开机时长: {secs_to_ymdh(time.time() - pt.boot_time())}

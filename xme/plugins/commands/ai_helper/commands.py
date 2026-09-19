@@ -327,15 +327,15 @@ def adjust_credits(session, user, args=None):
     args = [a.strip() for a in (args or []) if a.strip()]
     if not args:
         return get_message("plugins", __plugin_name__, "credits_view",
-                           qq=user.id, extra=f"{credits.extra_credits(user):g}",
-                           total=f"{credits.ai_credits_left(user):g}")
+                           qq=str(user.id), extra=f"{credits.extra_credits(user):.2f}",
+                           total=f"{credits.ai_credits_left(user):.2f}")
     if not args[0].isdigit():
         return get_message("plugins", __plugin_name__, "credits_usage")
     target = u.try_load(int(args[0]))
     if len(args) == 1:
         return get_message("plugins", __plugin_name__, "credits_view",
-                           qq=target.id, extra=f"{credits.extra_credits(target):g}",
-                           total=f"{credits.ai_credits_left(target):g}")
+                           qq=str(target.id), extra=f"{credits.extra_credits(target):.2f}",
+                           total=f"{credits.ai_credits_left(target):.2f}")
     try:
         delta = float(args[1])
     except ValueError:
@@ -344,6 +344,6 @@ def adjust_credits(session, user, args=None):
               set_method=lambda v: (float(v) if v is not None else 0.0) + delta)
     target.save()
     return get_message("plugins", __plugin_name__, "credits_adjusted",
-                       qq=target.id, delta=f"{delta:g}",
-                       extra=f"{credits.extra_credits(target):g}",
-                       total=f"{credits.ai_credits_left(target):g}")
+                       qq=str(target.id), delta=f"{delta:.2f}",
+                       extra=f"{credits.extra_credits(target):.2f}",
+                       total=f"{credits.ai_credits_left(target):.2f}")

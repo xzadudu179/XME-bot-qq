@@ -212,7 +212,8 @@ class AISession:
         history.save_history(self.user_id, items, self.ai_session)
 
     def clear(self) -> tuple[int, int]:
-        """清空会话内容（历史文件 + 转存文件夹），返回 (删除的历史文件数, 删除的转存文件数)。"""
+        """清空会话内容（历史文件 + 转存文件夹 + reasoning 归档），返回 (删除的历史文件数, 删除的转存文件数)。"""
+        history.clear_reasoning(self.user_id, self.ai_session)
         return (history.clear_history(self.user_id, self.ai_session)[0],
                 history.clear_session_files(self.user_id, self.ai_session))
 
@@ -224,6 +225,7 @@ class AISession:
             raise ValueError("默认会话不可删除")
         is_current = AISession.current(self.user_id).ai_session == self.ai_session
         cleared = history.clear_history(self.user_id, self.ai_session)[1] + history.clear_session_files(self.user_id, self.ai_session)
+        history.clear_reasoning(self.user_id, self.ai_session)
         _remove_locked(self.user_id, self.ai_session)
         # 插入模式名单同步移除
         names = _read_insert_sessions(self.user_id)
@@ -254,6 +256,7 @@ class AISession:
                 self.json_path.rename(AISession(self.user_id, new_name).json_path)
             if self.dir_path.exists():
                 self.dir_path.rename(AISession(self.user_id, new_name).dir_path)
+            history.rename_reasoning(self.user_id, old_name, new_name)
         except OSError:
             return False
         # 锁随会话走：旧名解锁（若之前锁定），新名按需加锁

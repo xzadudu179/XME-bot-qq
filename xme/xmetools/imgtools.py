@@ -131,7 +131,8 @@ def make_circle_image(path_or_image: str | Image.Image) -> Image.Image:
 
 def detect_qrcode(path_or_image: str | Image.Image) -> tuple[bool, list[str]]:
     logger.info("正在检测二维码")
-    results = decode(limit_size(get_image(path_or_image), 800))
+    # RGBA（动图透明帧）转 RGB，避免 pyzbar 不支持透明通道
+    results = decode(limit_size(get_image(path_or_image), 800).convert("RGB"))
     if results:
         return True, [r.data.decode("utf-8") for r in results]
     return False, []
@@ -425,7 +426,7 @@ def compress_image_to_size(
     to_jpeg: bool,
     ignore_alpha: bool,
     original_bytes: bytes,
-    max_bytes: int = 2 * 1024 * 1024,
+    max_bytes: int = 5 * 1024 * 1024,
 ) -> bytes:
     if len(original_bytes) <= max_bytes:
         return original_bytes

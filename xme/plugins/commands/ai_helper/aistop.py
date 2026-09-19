@@ -13,6 +13,7 @@
 取消的收尾统一在 talk() 的 CancelledError 分支：清快照、清 temp、发送中断文案。
 """
 import asyncio
+import re
 
 import config
 from nonebot.log import logger
@@ -25,11 +26,40 @@ from xme.xmetools.texttools import get_images_from_message, hash_text
 from xme.xmetools.timetools import get_time_now
 
 from .constants import __plugin_name__, MAX_PENDING_INSERTS, COMMAND_ALIAS
+from . import received_files
 from . import share
 
 # 运行中的 AI 会话登记：key = (group_id, user_id)，value = {task, insert_key,
 # insert_enabled}。私聊 group_id 为 None；key 里查不到时本预处理器一律放行。
 _running_turns: dict[tuple, dict] = {}
+
+_FILE_CQ_RE = re.compile(r"\[CQ:file,[^\]]*\]")
+_FILE_NAME_RE = re.compile(r"name=([^,\]]+)")
+
+
+def strip_file_cq(user_id: int, text: str) -> str | None:
+    """把插入文本里的 [CQ:file] 段处理成适合进上下文的形式，返回处理后的文本。
+
+    bot 自己刚发给该用户的文件（用户点击预览时协议端会把它当作用户消息回显，
+    见 received_files 的登记表）直接移除；其余文件段替换为
+    [用户发来了文件 名字] 占位（模型可经 get_received_files 取用）。
+    处理后没有任何有效内容（无占位、无其余文本）返回 None——调用方不应
+    把这条消息入队。
+    """
+    notes: list[str] = []
+
+    def _sub(match: re.Match) -> str:
+        seg = match.group(0)
+        name_match = _FILE_NAME_RE.search(seg)
+        name = name_match.group(1) if name_match else "未知文件"
+        if received_files.is_bot_sent_file(user_id, name):
+            return ""
+        notes.append(name)
+        return ""
+
+    rest = _FILE_CQ_RE.sub(_sub, text).strip()
+    parts = [p for p in [rest] + [f"[用户发来了文件 {n}]" for n in notes] if p]
+    return " ".join(parts) if parts else None
 
 
 def register_turn(group_id, user_id, task: asyncio.Task, insert_key: str = None, insert_enabled: bool = False) -> None:
@@ -111,10 +141,18 @@ async def handle_running_turn_input(bot, event, plugin_manager):
         raise CanceledException(reason)
 
     async def enqueue_and_ack(ins_text: str):
-        """提取图片后把文本入插入队列，并按结果回执（/ai 分支与私聊普通文本共用）。"""
+        """提取图片、过滤文件段后把文本入插入队列，并按结果回执（/ai 分支与私聊普通文本共用）。"""
         image_objects, cq_matches = await get_images_from_message(bot, ins_text)
         for image_cq in cq_matches:
             ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+        # bot 发出文件被用户点击预览时，协议端会把该文件回显成一条来自用户的
+        # [CQ:file] 消息——命中登记表的移除，真实用户文件替换为占位说明
+        stripped = strip_file_cq(event.user_id, ins_text)
+        if stripped is None and not image_objects:
+            logger.info(f"忽略 {event.user_id} 的文件回显/空消息，未入插入队列")
+            await swallow("insert-file-echo")
+            return
+        ins_text = stripped if stripped is not None else ""
         enqueued = share.enqueue_insert(turn["insert_key"], share.Insert(
             user_id=event.user_id, text=ins_text,
             image_urls=tuple(x["file"] for x in image_objects),

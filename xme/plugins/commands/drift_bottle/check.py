@@ -3,13 +3,12 @@
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import permission
-from .tools.bottlecard import get_class_bottle_card_html
+from .tools.bottlecard import get_class_bottle_card_html, get_example_bottle, get_animated_bottle_card, has_animated_image
 from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.imgtools import get_html_image_async
 from character import get_message
 from xme.xmetools.randtools import messy_image
-from .tools.bottlecard import get_example_bottle
 import random
 # from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -73,13 +72,30 @@ async def _(session: CommandSession, user: u.User):
     if str(index) == "-179":
         # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
         suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
-    bottle_card = messy_image(await get_html_image_async(get_class_bottle_card_html(
-        bottle=bottle,
-        messy_rate=messy_rate,
-        messy_rate_str=messy_rate_string,
-        custom_tip=suffix,
-        skin_name=skin_name,
-        html_render=not index_is_int,
-    )), messy_rate / 2)
+    # 动图瓶子优先合成动态卡片（便于调试与检测实际动效）；
+    # 合成失败（槽位定位失败、体积超限）回退静态渲染并提示
+    animated_hint = ""
+    bottle_card = None
+    if has_animated_image(bottle):
+        bottle_card = await get_animated_bottle_card(
+            bottle=bottle,
+            messy_rate=messy_rate,
+            messy_rate_str=messy_rate_string,
+            suffix=suffix,
+            skin_name=skin_name,
+            html_render=not index_is_int,
+            image_messy_magni=0.5,
+        )
+        if bottle_card is None:
+            animated_hint = "（动图卡片合成失败，已回退静态卡片）"
+    if bottle_card is None:
+        bottle_card = messy_image(await get_html_image_async(get_class_bottle_card_html(
+            bottle=bottle,
+            messy_rate=messy_rate,
+            messy_rate_str=messy_rate_string,
+            custom_tip=suffix,
+            skin_name=skin_name,
+            html_render=not index_is_int,
+        )), messy_rate / 2)
     # await send_session_msg(session, bottle_card)
-    await send_session_msg(session, (await image_msg(bottle_card)) + ("这个瓶子已经碎掉了哦" if bottle.is_broken else ""), tips=True)
+    await send_session_msg(session, (await image_msg(bottle_card)) + animated_hint + ("这个瓶子已经碎掉了哦" if bottle.is_broken else ""), tips=True)

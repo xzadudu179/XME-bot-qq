@@ -18,12 +18,12 @@ from xme.xmetools.timetools import get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
 from xme.plugins.commands.xme_user.classes import user as u
 
-from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content
+from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content, estimate_context_tokens
 from .session import (AISession, allows_auto_model, current_storage, enable_normal_insert,
                       set_user_model, user_model, user_model_setting)
 from . import constants, share, aistop, credits
 from .credits import ai_credits_left
-from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, MAX_HISTORY_COUNT
+from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
 from .commands import adjust_credits, clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
 from .share_commands import (
     join_session,
@@ -344,10 +344,15 @@ async def _(session: CommandSession, user: u.User):
                 new_text = text
                 for image_cq in cq_matches:
                     new_text = new_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-                snap["messages"].append({"role": "user", "content": build_user_content(new_text, image_urls)})
-                snap["asks"] = (snap.get("asks") or []) + [
-                    {"user_id": user.id, "text": new_text, "image_urls": image_urls}]
-                resume_data = snap
+                # 文件段处理同插入通道：bot 发出文件的预览回显剔除，用户文件转占位
+                new_text = aistop.strip_file_cq(session.event.user_id, new_text)
+                if new_text is None and not image_urls:
+                    resume_data = snap  # 纯文件回显：原样恢复，不并入本条
+                else:
+                    snap["messages"].append({"role": "user", "content": build_user_content(new_text or "", image_urls)})
+                    snap["asks"] = (snap.get("asks") or []) + [
+                        {"user_id": user.id, "text": new_text or "", "image_urls": image_urls}]
+                    resume_data = snap
             elif choice.startswith("1"):
                 resume_data = snap  # 原样恢复，当前消息不带入
             else:
@@ -381,7 +386,13 @@ async def _(session: CommandSession, user: u.User):
         ins_text = text
         for image_cq in cq_matches:
             ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-        ins = share.Insert(user_id=session.event.user_id, text=ins_text,
+        # 文件段处理同 aistop 插入通道：预览回显剔除、用户文件转占位；
+        # 只剩回显（无文本无图）时按普通"忙"提示返回，不入队
+        ins_text = aistop.strip_file_cq(session.event.user_id, ins_text)
+        if ins_text is None and not image_urls:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})"))
+            return False
+        ins = share.Insert(user_id=session.event.user_id, text=ins_text or "",
                            image_urls=tuple(image_urls), time=get_time_now())
         if not share.enqueue_insert(share.shared_insert_key(shared_session.code), ins):
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_queue_full',
@@ -425,7 +436,9 @@ async def _(session: CommandSession, user: u.User):
         t = t.replace("[", "&#91;").replace("]", "&#93;")
         message += t
         user_history = storage.load_history()
-        *_, normals = history.split(user_history)
+        summary, _, normals = history.split(user_history)
+        context_limit = messages_dict.get("context_limit") or CONTEXT_LIMIT_DEFAULT
+        context_tokens = estimate_context_tokens(summary, normals)
         # 插入模式下全部用量在参与者间均摊，逐人结算（本周额度封顶 + 自存 credits 扣透支；超管跳过）
         # 结算已在 user_talk 内完成（settle_once，幂等）：这里只读余额展示
         lefts = tokens_use_dict.get("lefts") or {}
@@ -443,7 +456,7 @@ async def _(session: CommandSession, user: u.User):
             cached=f"{cached:,.2f}".rstrip('0').rstrip('.'),
             tokens=f"{total:,.2f}".rstrip('0').rstrip('.'),
             credits=f"{credits_use:,.2f}".rstrip('0').rstrip('.'),
-            history_used=f"{len(normals):,} / {MAX_HISTORY_COUNT}",
+            history_used=f"{context_tokens / context_limit:.2%}",
             prefix=prefix
         )
         # ai_logger.info(f"send msg {send_msg}")
@@ -516,8 +529,9 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
         "visual_design_artifact": "Generate art & visual-design artifacts as self-contained deliverables — SVG illustrations, icons, logos, cartoon scenes, SMIL loop animations, HTML/CSS visual pages, generative patterns — each verified by rendering. Use whenever the user asks to 画/设计/生成 anything visual, e.g. \"画一个……的 SVG 小动画\", \"设计一个 logo/图标/头像/海报/封面/banner\", \"来个循环动画/生成艺术/粒子效果\", or asks to fix or beautify an existing visual artifact (形状断开、云朵颠倒、配色乱、构图歪、比例怪 etc.). Even a bare \"帮我画个…\" counts. Document deliverables (docx/pptx/pdf) have their own skills, but the visual principles here still apply to their embedded graphics."
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
-    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, max_history_len=constants.MAX_HISTORY_COUNT)
     ai_helper = AIHelper(user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data, routing_allowed=routing_allowed)
+    context_budget = int((ai_helper.model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT) * COMPRESS_TRIGGER_RATIO)
+    role = read_from_path("./ai_configs.json")[__plugin_name__]["system"].format(docs=docs, glossary=glossary, tips=tips_str, time=get_time_now(), telia=telia, skills=skills_text, max_tool_call_times=MAX_TOOL_CALL_TIMES, context_budget=f"{context_budget:,}")
     # 新会话默认开启插入模式：只在会话尚未存在（= 此刻创建）时登记，
     # 用户事后 -c ins 关闭的不会被这里加回
     if shared is None:

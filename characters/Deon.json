@@ -1699,6 +1699,83 @@
         "{positive}你投出了 {counts} 个 {faces} 面的骰子，{faces_result_prefix}投到了 {faces_formula}！"
       ]
     },
+    "maimai": {
+      "desc": "舞萌DX 查分",
+      "introduction": "绑定水鱼查分器账号，查询舞萌DX B50 成绩、导入成绩 Token。\n\n{operations}",
+      "limited": [
+        "查分太频繁啦... {neutral}\n休息一下吧{positive_punc}",
+        "{negative} 查分次数达到上限了哦...\n过一会儿再来吧嗷呜",
+        "查分频率太快啦，稍后再查吧{positive_punc}"
+      ],
+      "no_sub": "没有 \"{sub}\" 这个操作哦... {neutral}\n直接发送 {cmd_sep}mai 查看帮助吧",
+      "not_bound": [
+        "你还没有绑定水鱼账号哦... {neutral}\n可以先 {cmd_sep}mai bind 绑定，再 {cmd_sep}mai b50 查分",
+        "查不到自己呢... {sad}\n先用 {cmd_sep}mai bind 绑定水鱼账号吧{positive_punc}"
+      ],
+      "b50": {
+        "desc": "查询 B50 成绩",
+        "introduction": "查询舞萌DX B50 成绩并生成查分卡。\n\n{cmd_sep}mai b50 查询自己，{cmd_sep}mai b50 用户名 查询指定玩家，{cmd_sep}mai b50 @某人 查询群友，-s 皮肤名 可临时更换查分卡皮肤。"
+      },
+      "bind": {
+        "desc": "绑定水鱼账号",
+        "introduction": "绑定水鱼查分器的用户名，用于查分。\n\n{cmd_sep}mai bind 用户名 进行绑定，{cmd_sep}mai bind 查看当前绑定。"
+      },
+      "update": {
+        "desc": "导入成绩 Token",
+        "introduction": "绑定水鱼查分器的成绩导入 Token，机台同步后成绩会经由水鱼自动导入。\n\n{cmd_sep}mai update 成绩导入Token 进行绑定。建议私聊 bot 操作哦。"
+      },
+      "unbind": {
+        "desc": "解绑舞萌账号",
+        "introduction": "清除绑定的水鱼用户名和成绩导入 Token。"
+      },
+      "b50_result": "这是 {name} 的 B50 查分卡{positive_punc}\n{html_image}",
+      "b50_fallback": "查分卡渲染失败了... {sad}\n这是 {name} (rating {rating}) 的文本版成绩：\n{summary}",
+      "privacy_error": [
+        "{negative} 对方开启了成绩隐私保护，查询不到呢...",
+        "对方把成绩设为隐私了哦... {neutral}\n让 ta 在水鱼查分器上关闭隐私保护吧",
+        "查询不到呢... {sad} 对方在水鱼查分器上开启了隐私保护"
+      ],
+      "not_found": [
+        "水鱼查分器上查不到 {ex} 呢... {neutral}\n检查一下用户名有没有写错吧",
+        "{negative} 找不到这个玩家... {ex}\n确认 ta 在水鱼查分器上注册过吗？",
+        "查无此人哦... {neutral}（{ex}）"
+      ],
+      "token_invalid": [
+        "{negative} 这个成绩导入 Token 好像无效呢...\n去水鱼查分器官网重新生成一个试试吧",
+        "Token 验证没有通过哦... {neutral}\n检查一下有没有复制完整呢（{ex}）"
+      ],
+      "api_error": [
+        "查询水鱼查分器失败了... {sad}\n{ex}",
+        "{negative} 水鱼查分器好像出问题了... 稍后再试试吧\n（{ex}）"
+      ],
+      "unknown_skin": "没有叫 \"{skin}\" 的皮肤哦... {neutral}\n可用皮肤：{skins}",
+      "current_binding": "当前绑定的水鱼用户名：{username}\n导入 Token：{token}",
+      "bind_usage": "请告诉我要绑定的水鱼用户名哦 {neutral}\n用法：{cmd_sep}mai bind <水鱼用户名>",
+      "bind_success": [
+        "成功绑定水鱼账号 \"{username}\"{positive_punc}\n现在可以用 {cmd_sep}mai b50 查分啦",
+        "成功绑定用户 \"{username}\"{positive_punc}\n用 {cmd_sep}mai b50 就能查分了{positive_punc}"
+      ],
+      "bind_duplicate": "你已经绑定了用户 \"{username}\" 啦{neutral}",
+      "bind_not_found": [
+        "水鱼查分器上找不到用户 \"{username}\" 呢...确认一下用户名有没有写错吧 {neutral}",
+        "没找到 \"{username}\" 这个账号哦...\n去水鱼查分器确认一下用户名吧 {neutral}"
+      ],
+      "update_usage": "请发送你的成绩导入 Token 哦{neutral}\n用法：{cmd_sep}mai update <成绩导入Token>\n获取教程见水鱼手册：https://maimai.diving-fish.com/manual/\n（建议私聊 bot 操作防止账号被盗哦）",
+      "no_scores": [
+        "用户 \"{username}\" 还没有任何成绩记录哦 {neutral}\n可以让机台成绩先同步到水鱼（{cmd_sep}mai update 绑定 Token 后同步）",
+        "水鱼上还没有 \"{username}\" 的成绩呢... {sad}\n绑定 {cmd_sep}mai update 的成绩导入 Token 并同步后再来吧{positive_punc}"
+      ],
+      "update_success": "成绩导入 Token 已更新{positive_punc}\nToken：{token}\n已从水鱼读取到 {count} 条成绩记录{positive_punc}\n记得不要把 Token 发给别人哦{negative}",
+      "update_invalid": [
+        "{negative} 这个成绩导入 Token 好像无效呢...\n去水鱼查分器官网重新生成一个试试吧",
+        "Token 验证没有通过哦... {neutral}\n检查一下有没有复制完整呢"
+      ],
+      "unbind_nothing": "你还没有绑定舞萌账号哦 {neutral}",
+      "unbind_success": [
+        "成功解绑舞萌账号啦 {neutral}",
+        "已经把你的舞萌绑定清除掉了哦 {neutral}"
+      ]
+    },
     "title": {
       "desc": "设置头衔",
       "introduction": "为一个群员设置指定的头衔（需要 bot 是群主哦）",
@@ -2332,7 +2409,7 @@
       "credits_denied": "{negative} 这个指令只有 SUPERUSER 能用哦",
       "credits_usage": "用法：/ai -c credits (qq) (±数值)，例如 \"/ai -c credits 123456 +1000000\"",
       "user_content_reply": "正在将你的回复发给 AI {positive}",
-      "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}，AI 最多等待 {timeout} 秒",
+      "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}（可以携带图片哦），AI 最多等待 {timeout} 秒",
       "reply_too_fast": "AI 正在问你问题哦 {neutral}，你发太快或者误发了，发送消息来回复 AI 吧！",
       "reply_is_illegal": "你的回复似乎违规 {negative}",
       "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
@@ -2353,7 +2430,7 @@
       "session_deleted": "已删除会话 \"{ai_session}\"（删除 {count} 个文件）{positive}",
       "session_delete_failed": "删除失败：会话 \"{ai_session}\" 没有可删除的内容",
       "session_clear_no_content": "没有历史记录可以清除哦{suffix} {neutral}",
-      "session_cleared": "历史记录清除成功（清空 {hist_count} 条历史记录，{file_count} 个转存文件）{positive}",
+      "session_cleared": "历史记录清除成功（共 {hist_count} 条历史记录，{file_count} 个转存文件）{positive}",
       "session_list_header": "—— 普通会话（{count}/{max_sessions}）——",
       "session_list_item": "{index}. {name}{marks} - {count} 条记录",
       "session_mark_default": "（默认）",
@@ -2410,6 +2487,7 @@
       "kick_done": "已把 {name}({user_id}) 踢出共享会话 {code} {positive}",
       "kick_notify": "你已被移出共享会话 {code}（{title}）",
       "history_empty": "当前会话还没有历史记录哦 {neutral}",
+      "history_too_long_group": "历史记录太长啦，到私聊里用 \"/ai -c history\" 看吧 {neutral}",
       "history_private_item": "【{time}】\n用户：{ask}\nAI：{ans}",
       "leave_done": "已退出共享会话 \"{title}\"（{code}）{neutral}\n之后也可用 \"/ai -c join {code}\" 重新申请加入哦",
       "leave_owner_denied": "群主不能退出自己创建的共享会话哦 {neutral}",

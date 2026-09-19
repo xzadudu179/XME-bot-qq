@@ -67,6 +67,10 @@ async def send_file(ref: str, new_name="", agent=None):
             file=str(to_container_path(send_path)),
             name=send_path.name
         )
+        # 登记已发送文件：用户点击预览时协议端会把该文件当作用户消息回显，
+        # 插入通道据此过滤（见 received_files.is_bot_sent_file）
+        from .. import received_files
+        received_files.record_sent_file(session.event.user_id, send_path.name)
     except Exception as ex:
         logger.exception(f"私聊发送文件失败: {send_path}")
         return {"result": f"[发送失败：{exception_detail(ex)}]",

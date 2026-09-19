@@ -2,6 +2,10 @@ from pathlib import Path
 import json
 import shutil
 
+from nonebot.log import logger
+
+from xme.xmetools.timetools import get_time_now
+
 # AI 上下文的独立存储目录：data/ai_historys/<用户id>/<会话>.json
 # 不再存放在用户的个人数据里，方便以后扩展多会话。
 # 会话管理（当前指针/列表/命名锁等）见 session.py 的 AISession 对象。
@@ -60,6 +64,48 @@ def save_history(user_id, history: list[dict], ai_session=DEFAULT_SESSION) -> No
     path = _session_path(user_id, ai_session)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(history, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _reasoning_path(user_id, ai_session=DEFAULT_SESSION) -> Path:
+    """某会话的 reasoning 归档文件（JSONL，逐行追加，与会话 JSON 同目录旁路存放）。"""
+    return user_dir(user_id) / f"{ai_session}.reasoning.jsonl"
+
+
+def append_reasoning(user_id, ai_session, phase: str, model: str, reasoning: str) -> None:
+    """把 AI 思考内容追加归档到会话旁路文件（长期保留，不参与上下文构建）。
+
+    phase: "round"（模型轮次产出）/ "fold"（上下文折叠丢弃前抢救）。
+    归档失败只记日志，绝不影响对话流程。
+    """
+    entry = {"time": get_time_now(), "phase": phase, "model": model, "reasoning": reasoning}
+    try:
+        path = _reasoning_path(user_id, ai_session)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        logger.exception(f"reasoning 归档失败: {user_id}/{ai_session}")
+
+
+def clear_reasoning(user_id, ai_session=DEFAULT_SESSION) -> bool:
+    """删除某会话的 reasoning 归档文件；文件不存在返回 False。"""
+    path = _reasoning_path(user_id, ai_session)
+    if not path.is_file():
+        return False
+    path.unlink()
+    return True
+
+
+def rename_reasoning(user_id, old_session, new_session) -> bool:
+    """会话改名时同步移动 reasoning 归档；原文件不存在返回 False。
+
+    目标已存在（残留）时直接覆盖——旧归档与新会话无关，覆盖即清理。
+    """
+    old = _reasoning_path(user_id, old_session)
+    if not old.is_file():
+        return False
+    old.replace(_reasoning_path(user_id, new_session))
+    return True
 
 
 def clear_history(user_id, ai_session=DEFAULT_SESSION) -> tuple[int, int]:

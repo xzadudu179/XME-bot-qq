@@ -21,6 +21,8 @@ from . import history, share
 from .commands import _session_by_index
 from .constants import (
     DEFAULT_SHARED_TITLE,
+    HISTORY_FORWARD_GROUP_NODES,
+    HISTORY_NODE_MAX_CHARS,
     JOIN_REQUEST_COOLDOWN,
     MAX_HISTORY_VIEW,
     MAX_JOINED_SHARED,
@@ -235,11 +237,21 @@ async def leave_shared_session(session, user, args=None):
     return _msg("leave_done", code=s.code, title=s.title)
 
 
+def _truncate(text: str, limit: int = HISTORY_NODE_MAX_CHARS) -> str:
+    """展示用截断：超长保留开头并注明原文长度（协议端对单条/单节点消息长度有限制）。"""
+    text = str(text or "")
+    if len(text) <= limit:
+        return text
+    return f"{text[:limit]}…（已截断，原文 {len(text):,} 字）"
+
+
 async def session_history(session, user, args=None):
     """查看当前会话历史：history（伪造聊天记录转发，提问=各提问者、回答=bot 自己）。
 
-    合并转发展示（群聊/私聊均可；插入模式的条目带多个提问节点）；转发失败时
-    降级为纯文本；只展示最近 MAX_HISTORY_VIEW 条。
+    节点内容超长先截断（避免合并转发因字数过多发送失败）；整包转发仍失败时
+    不降级文本，拆成多条小转发块（每块 HISTORY_FORWARD_GROUP_NODES 个节点，
+    带部分序号头）依次发送，单块失败只记日志不影响后续块；群聊需要分块时
+    提示改私聊查看、不发送分块（防刷屏）；只展示最近 MAX_HISTORY_VIEW 条。
     """
     storage = current_storage(user.id)
     entries = [it for it in storage.load_history() if not history.is_summary(it)][-MAX_HISTORY_VIEW:]
@@ -253,21 +265,33 @@ async def session_history(session, user, args=None):
             askers = it.get("asks") or [{"user_id": it.get("user_id", user.id), "text": it.get("ask", "")}]
             for asker in askers:
                 asker_id = asker.get("user_id", user.id)
-                ask_text = f"[{it.get('time', '未知时间')}]\n{asker.get('text', '')}"
+                ask_text = f"[{it.get('time', '未知时间')}]\n{_truncate(asker.get('text', ''))}"
                 nodes.append(change_group_message_content(
                     await _sender_dict(session, asker_id), ask_text, user_id=asker_id))
             nodes.append(change_group_message_content(
-                await _sender_dict(session, session.self_id), it.get("ans", ""),
+                await _sender_dict(session, session.self_id), _truncate(it.get("ans", "")),
                 user_id=session.self_id))
         await send_forward_msg(session.bot, event, nodes)
         return CMD_END
     except Exception as e:
-        logger.warning(f"历史记录转发发送失败，降级为文本: {e}")
-    return "\n\n".join(
-        _msg("history_private_item", time=it.get("time", "未知时间"),
-             ask=it.get("ask", ""), ans=it.get("ans", ""))
-        for it in entries
-    )
+        logger.warning(f"历史记录整包转发发送失败，拆分为多条小块转发: {e}")
+    if getattr(event, "group_id", None) is not None:
+        # 群聊里连发多条转发会刷屏：提醒改私聊查看，不发送分块
+        return _msg("history_too_long_group")
+    groups = [nodes[i:i + HISTORY_FORWARD_GROUP_NODES]
+              for i in range(0, len(nodes), HISTORY_FORWARD_GROUP_NODES)]
+    total = len(groups)
+    for idx, group in enumerate(groups, 1):
+        # 每块头部加一条 bot 自己的序号提示，用户能看出是多段历史
+        head = change_group_message_content(
+            await _sender_dict(session, session.self_id),
+            f"[历史记录 第 {idx}/{total} 部分]",
+            user_id=session.self_id)
+        try:
+            await send_forward_msg(session.bot, event, [head, *group])
+        except Exception as ex:
+            logger.warning(f"历史记录分块转发失败（{idx}/{total}）: {ex}")
+    return CMD_END
 
 
 def toggle_insert(session, user, args=None):

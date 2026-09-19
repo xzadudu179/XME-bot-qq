@@ -1,17 +1,20 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 """会话交互与杂项工具：追问用户、骰子、会话改名、中途汇报等。"""
 import random
+import re
 import time
 from pathlib import Path
 
 from nonebot.log import logger
 from xme.xmetools.msgtools import aget_arg_with_timeout, send_session_msg, is_text_can_send
+from xme.xmetools.texttools import hash_text
 from character import get_message
 from ..session import AISession
+from ._common import ImageToolResult
 
-async def ask_user(prompt: str, session, timeout: int = 120):
+async def ask_user(prompt: str, session, timeout: int = 120, agent=None):
     from ..agent import AISTOP
-    from .. import __plugin_name__, aistop
+    from .. import __plugin_name__, aistop, safe_get_images
     send_time = time.time()
     if timeout > 400:
         timeout = 400
@@ -29,13 +32,25 @@ async def ask_user(prompt: str, session, timeout: int = 120):
             reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
             if reply is None:
                 break   # 超时：不再反复提问
+            # 提取回复中的图片（reply 是含 CQ 码的字符串），文本部分换成占位符：
+            # 图片经 ImageToolResult 直注入视觉输入，风控只审剥图后的文本
+            image_objects, cq_matches = await safe_get_images(session.bot, reply)
+            reply_text = reply
+            for image_cq in cq_matches:
+                reply_text = reply_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
             reply_time = time.time()
             interval = reply_time - send_time
-            if interval < 3:
+            if interval < 3 and not image_objects:
+                # 秒回防护只针对纯文本（发图节奏快是正常行为）
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_too_fast"))
                 continue
-            # is_text_can_send 返回 dict，必须取 result 判断（原先当 bool 用导致风控与提示失效）
-            islegal = bool((await is_text_can_send(session, reply, 4)).get("result", False))
+            # 风控只审真实文本：剥掉全部 CQ 码（图片/at 等段不该按字面送审）；纯图回复跳过
+            audited_text = re.sub(r"\[CQ:[^\]]*\]", "", reply).strip()
+            if audited_text:
+                # is_text_can_send 返回 dict，必须取 result 判断（原先当 bool 用导致风控与提示失效）
+                islegal = bool((await is_text_can_send(session, audited_text, 4)).get("result", False))
+            else:
+                islegal = True
             if not islegal:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
                 continue
@@ -46,7 +61,10 @@ async def ask_user(prompt: str, session, timeout: int = 120):
     if reply == "aistop":
         return AISTOP
     await send_session_msg(session, get_message("plugins", __plugin_name__, "user_content_reply"))
-    return f"[用户回复] {reply}"
+    if image_objects:
+        parts = [{"type": "image_url", "image_url": {"url": x["file"]}} for x in image_objects]
+        return ImageToolResult(f"[用户回复] {reply_text}", parts)
+    return f"[用户回复] {reply_text}"
 
 def get_user_input_urls(agent):
     return agent.user_input_urls

@@ -26,10 +26,12 @@ from xme.xmetools.videotools.core import VideoExtractResult
 from .constants import (
     __plugin_name__,
     MAX_TOOL_CALL_TIMES,
-    MAX_HISTORY_COUNT,
-    COMPRESS_TRIGGER,
+    COMPRESS_TRIGGER_RATIO,
+    CONTEXT_TOKEN_CHARS,
     CONTEXT_KEEP_RECENT,
     COMPRESS_MAX_LENGTH,
+    THINKING_NOTE_MAX_LENGTH,
+    THINKING_NOTE_INPUT_CHARS,
     CONTEXT_LIMIT_DEFAULT,
     FOLD_HARD_RATIO,
     FOLD_KEEP_RECENT_ASSISTANTS,
@@ -79,15 +81,32 @@ def clear_snapshot(user_id) -> None:
     _snapshot_path(user_id).unlink(missing_ok=True)
 
 
-def _fold_early_context(messages: list, *, fold_tools: bool = False) -> int:
+def estimate_context_tokens(summary, normals: list[dict]) -> int:
+    """按字符长度估算会话历史的上下文 token 占用（压缩触发与占用展示共用的单点）。
+
+    只累计正文文本（摘要 + 每条问答），技能内容与工具标记不计——偏小估算由
+    轮内按真实 prompt_tokens 的折叠兜底。
+    """
+    total = len(summary or "")
+    for it in normals:
+        asks = it.get("asks") or []
+        ask_text = "".join(str(a.get("text", "")) for a in asks) if asks else str(it.get("ask", ""))
+        total += len(ask_text) + len(str(it.get("ans", "")))
+        total += len(str(it.get("thinking", "")))   # 思路笔记会注入上下文，一并计入
+    return int(total / CONTEXT_TOKEN_CHARS)
+
+
+def _fold_early_context(messages: list, *, fold_tools: bool = False) -> tuple[int, list[str]]:
     """轮内上下文折叠：删除最早若干轮 assistant 的 reasoning_content（保留 content/tool_calls，
     协议结构不变；等价于 GLM-4.5 之前的标准消息形态，API 仍接受，代价仅是那几轮的推理连贯性
     与缓存命中）；fold_tools=True 时再把早期 tool 消息的 content 替换为可重取的占位符
     （tool_call_id 必须保留——协议要求 tool 消息与 tool_call 一一对应）。
 
-    就地修改传入的 messages，返回折叠释放的估算字符量。幂等：无可折叠内容时返回 0。
+    就地修改传入的 messages，返回 (折叠释放的估算字符量, 被丢弃的 reasoning 列表)，
+    调用方负责把丢弃内容归档。幂等：无可折叠内容时返回 (0, [])。
     """
     freed = 0
+    dropped: list[str] = []
     assistant_idx = [i for i, m in enumerate(messages)
                      if isinstance(m, dict) and m.get("role") == "assistant"]
     for i in assistant_idx[:-FOLD_KEEP_RECENT_ASSISTANTS] if FOLD_KEEP_RECENT_ASSISTANTS else assistant_idx:
@@ -95,6 +114,7 @@ def _fold_early_context(messages: list, *, fold_tools: bool = False) -> int:
         if reasoning:
             messages[i].pop("reasoning_content", None)
             freed += len(str(reasoning))
+            dropped.append(str(reasoning))
     if fold_tools:
         tool_idx = [i for i, m in enumerate(messages)
                     if isinstance(m, dict) and m.get("role") == "tool"]
@@ -104,7 +124,7 @@ def _fold_early_context(messages: list, *, fold_tools: bool = False) -> int:
                 messages[i]["content"] = (f"[早期工具结果已折叠（原 {len(content)} 字）；"
                                           f"如需数据请重新调用该工具]")
                 freed += len(content)
-    return freed
+    return freed, dropped
 
 
 def build_user_content(text: str, image_urls: list[str] | None = None,
@@ -447,6 +467,7 @@ class AIHelper:
             for name in functions.__tools__
         }
         self.pending_messages = []
+        self.round_reasonings: list[str] = []   # 本轮各步思考原文（供轮末提炼思路笔记）
         # 插入模式：跨重启轮次的工具调用预算 + 本次对话的参与者（额度均摊）
         self.tool_call_times = 0
         self.participants = [user_id]
@@ -489,6 +510,34 @@ class AIHelper:
             self.tools = json.load(f)
         _validate_tools(self.tools)
 
+    def _archive_reasonings(self, dropped: list[str], phase: str) -> None:
+        """把被折叠丢弃的 reasoning 归档到会话旁路文件（长期保留，不回注上下文）。"""
+        for item in dropped:
+            history.append_reasoning(self.user_id, self.ai_session, phase=phase,
+                                     model=self.current_model, reasoning=item)
+
+    async def _distill_thinking(self) -> str:
+        """把本轮的思考过程提炼成短思路笔记（随条目存入历史，下轮随正文注入上下文）。
+
+        无思考内容 / 未配置提炼提示词 / 提炼失败时返回空串，绝不阻断对话。
+        """
+        if not self.round_reasonings:
+            return ""
+        try:
+            prompt = read_from_path("./ai_configs.json")[__plugin_name__].get("thinking") or ""
+            if not prompt:
+                return ""
+            prompt = prompt.format(max_length=THINKING_NOTE_MAX_LENGTH)
+            joined = "\n---\n".join(self.round_reasonings)
+            content = await self._glm_chat([
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": joined[-THINKING_NOTE_INPUT_CHARS:]},
+            ])
+            return (content or "").strip()[: THINKING_NOTE_MAX_LENGTH * 2]
+        except Exception as ex:
+            ai_logger.warning(f"思路笔记提炼失败（跳过）：{type(ex).__name__}: {ex}")
+            return ""
+
     async def run_agent(self, session, messages, model_entry):
         """单轮 agent 循环：反复调用模型并执行工具，直到模型不再请求工具。
 
@@ -518,8 +567,9 @@ class AIHelper:
                     raise
                 retry_times += 1
                 # 紧急折叠后再重试：若失败源于输入超长，重试才有机会成功
-                freed = _fold_early_context(messages, fold_tools=True)
+                freed, dropped = _fold_early_context(messages, fold_tools=True)
                 if freed:
+                    self._archive_reasonings(dropped, phase="fold")
                     ai_logger.warning(
                         f"模型调用失败（{ex.kind}），紧急折叠上下文后重试"
                         f"（第 {retry_times} 次，释放约 {freed:,} 字符）")
@@ -531,12 +581,17 @@ class AIHelper:
             limit = model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT
             if self.last_prompt_tokens > limit * FOLD_TRIGGER_RATIO:
                 fold_tools = self.last_prompt_tokens > limit * FOLD_HARD_RATIO
-                freed = _fold_early_context(messages, fold_tools=fold_tools)
+                freed, dropped = _fold_early_context(messages, fold_tools=fold_tools)
                 if freed:
+                    self._archive_reasonings(dropped, phase="fold")
                     ai_logger.info(
                         f"上下文折叠：输入 {self.last_prompt_tokens:,}/{limit:,} tokens，"
                         f"{'含工具结果' if fold_tools else '仅思考'}，释放约 {freed:,} 字符")
             if result.reasoning:
+                self.round_reasonings.append(result.reasoning)
+                history.append_reasoning(self.user_id, self.ai_session, phase="round",
+                                         model=result.model or self.current_model,
+                                         reasoning=result.reasoning)
                 ai_logger.info(
                     f"\n===== AI Reasoning {session.event.user_id} =====\n"
                     f"{result.reasoning}\n"
@@ -582,6 +637,18 @@ class AIHelper:
                 })
             # 图片直注入（ImageToolResult）：工具拿到的图片/视频/文件不再经独立视觉
             # 调用转述，而是合并为一条 user 消息附给本轮模型，让模型亲自查看
+            if injected_parts and not self.current_vision:
+                # 工具带图但当前模型不支持视觉（如 ask_user 收到用户图片）：切视觉模型，
+                # 与插入消息带图的切换行为一致；切换失败（无视觉模型配置）则放弃注入
+                try:
+                    model_entry = registry.vision_entry()
+                except LLMError as ex:
+                    ai_logger.warning(f"工具返回了图片但切换视觉模型失败，放弃注入：{ex}")
+                    injected_parts = []
+                else:
+                    self.current_model = model_entry["model"]
+                    self.current_vision = True
+                    ai_logger.info(f"工具返回图片，本轮切换视觉模型: {self.current_model}")
             if injected_parts and self.current_vision:
                 messages.append({"role": "user", "content": build_user_content(
                     _INJECT_MEDIA_NOTE, [], injected_parts)})
@@ -759,7 +826,9 @@ class AIHelper:
         session_obj = self.storage
         user_history = session_obj.load_history()
         summary, summary_skills, normals = history.split(user_history)
-        if len(normals) <= COMPRESS_TRIGGER:
+        # 条数不设上限（长期保留）：历史估算占用达模型上下文预算的比例才触发压缩
+        limit = self.model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT
+        if estimate_context_tokens(summary, normals) <= limit * COMPRESS_TRIGGER_RATIO:
             return 0
         await send_session_msg(session, get_message("plugins", __plugin_name__, "compress_context"))
         to_compress = normals[:len(normals) - CONTEXT_KEEP_RECENT]
@@ -998,6 +1067,7 @@ class AIHelper:
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
         self.pending_messages.clear()
+        self.round_reasonings.clear()
         prefix = ""
         if self.resume_messages is not None:
             # /ai --continue：以上次快照的完整上下文（用户输入/思考/工具结果/插入）重入循环
@@ -1046,8 +1116,8 @@ class AIHelper:
             asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
             self.asks = asks
         # 模型已确定（话题路由 / 媒体切换 / 快照恢复）→ 这时才提示用户在用哪个模型，
-        # 与压缩后补发的提示（_compress_context 内）保持一致
-        if self.resume_messages is None and len(self.storage.load_history()) <= COMPRESS_TRIGGER:
+        # 与压缩后补发的提示（_compress_context 内）保持一致；本轮刚压缩过则不再补发
+        if self.resume_messages is None and not compressed:
             await send_session_msg(session, get_message(
                 "plugins", __plugin_name__, "talking_to_ai",
                 model=real_entry["model"], ai_session=self.ai_session))
@@ -1140,16 +1210,22 @@ class AIHelper:
                 f"{self.cached_tokens}, "
                 f"减少 {credits_use} 个 tokens"
             )
+            messages_dict = {
+                "messages": self.pending_messages, "prefix": prefix,
+                "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value(),
+                "context_limit": self.model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT,
+            }
             if not (await is_text_can_send(session, ans, 4)):
-                return "这个话题好像不是很合适呢...我们换个话题聊吧。（本次对话不记录历史）", tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, 0
+                return "这个话题好像不是很合适呢...我们换个话题聊吧。（本次对话不记录历史）", tokens_use_dict, messages_dict, 0
             build_history(
                 user=user,
                 ask=asks[-1].get("text", text) if asks else text,
                 ans=ans,
                 agent=self,
                 asks=asks,
+                thinking_note=await self._distill_thinking(),
             )
-            return ans, tokens_use_dict, {"messages": self.pending_messages, "prefix": prefix, "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value()}, tool_call_times
+            return ans, tokens_use_dict, messages_dict, tool_call_times
         except AttributeError as ex:
             ai_logger.error(f"attribute 错误: {ex}")
             self.settle_once()   # 已发生的用量照常结算，避免漏记
@@ -1220,6 +1296,10 @@ async def get_history(user: u.User, session_obj):
         # 该轮实际用过的工具：以 [使用工具:…] 标记置于条目注入内容的开头
         used_tools = item.get("used_tools") or []
         tools_marker = f"[使用工具:{'、'.join(used_tools)}]" if used_tools else ""
+        # 思路笔记与工具标记同置 user 消息头（内部元信息，不进 assistant 正文，
+        # 防止模型把它当成自己说过的话而向用户复述）
+        thinking = str(item.get("thinking") or "")
+        thinking_marker = f"[思路笔记(你当时的内部思考，未展示给用户，勿提及)：{thinking}]" if thinking else ""
         build_dicts = []
         for ask_index, asker in enumerate(askers):
             asker_id = asker.get("user_id", user.id)
@@ -1231,7 +1311,7 @@ async def get_history(user: u.User, session_obj):
             ask_images = "、".join(asker.get("image_urls") or [])
             if ask_images:
                 asker_url_str += f"[附带图片:{ask_images}]"
-            marker = tools_marker if ask_index == 0 else ""
+            marker = (tools_marker + thinking_marker) if ask_index == 0 else ""
             build_dicts.append({
                 "role": "user",
                 "content": f"{marker}[历史记录-{item.get('time', '未知时间')}][{asker_name}(qq{asker_id})]{asker_url_str} {asker.get('text', '')}",
@@ -1286,7 +1366,7 @@ async def get_history(user: u.User, session_obj):
     return build_list, build_str
 
 
-def build_history(user: u.User, ask, ans, agent, asks: list | None = None):
+def build_history(user: u.User, ask, ans, agent, asks: list | None = None, thinking_note: str = ""):
     session_obj = agent.storage
     user_history = session_obj.load_history()
     summary, summary_skills, normals = history.split(user_history)
@@ -1298,6 +1378,9 @@ def build_history(user: u.User, ask, ans, agent, asks: list | None = None):
         "urls": agent.user_input_urls,
         "activate_skills":  agent.activate_skills,
     }
+    # 本轮思路笔记（轮末由 reasoning 提炼）：下轮随正文重建进上下文
+    if thinking_note:
+        entry["thinking"] = thinking_note
     # 共享会话插入模式：一次回答对应多个提问者时，额外记录结构化的 asks 列表
     if asks and len(asks) > 1:
         entry["asks"] = asks
@@ -1305,6 +1388,4 @@ def build_history(user: u.User, ask, ans, agent, asks: list | None = None):
     if agent.used_tools:
         entry["used_tools"] = list(dict.fromkeys(agent.used_tools))
     normals.append(entry)
-    if len(normals) > MAX_HISTORY_COUNT:
-        normals = normals[-MAX_HISTORY_COUNT:]
     session_obj.save_history(history.merge(summary, normals, skills=summary_skills))

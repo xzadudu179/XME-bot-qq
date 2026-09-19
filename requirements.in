@@ -32,3 +32,4 @@ ddgs
 yt_dlp
 openpyxl
 aiosmtplib
+py7zr  # maimai 资源包自动同步解压

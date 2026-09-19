@@ -186,3 +186,8 @@ AGENT_DEV_RULES.md
 
 .zcode
 .watchdog.lock
+# maimai 官方资源包（体积大，由 bot 启动时自动下载，勿提交）
+static/maimai/resource/
+b50_sample.html
+gen_b50_sample_tmp.py
+b50_debug.html

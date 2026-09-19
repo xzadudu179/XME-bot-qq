@@ -14,9 +14,12 @@ from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
 import asyncio
+import base64
 import traceback
+from io import BytesIO
 from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
+from xme.xmetools.animtools import is_animated
 from character import get_message
 from logging.handlers import TimedRotatingFileHandler
 import logging
@@ -266,7 +269,8 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     """获得可以直接发送的图片消息
 
     Args:
-        path_or_image (str): 图片路径或图片
+        path_or_image (str | Image | bytes): 图片路径、图片或已编码图片 bytes
+            （bytes 为动图时直接 base64 透传，避免重编码丢动画）
         max_size (int): 图片最大大小，超过会被重新缩放. Defaults to 0.
         to_jpeg (bool): 是否转换为 Jpeg 格式
         summary (str): 图片消息预览
@@ -274,11 +278,18 @@ async def image_msg(path_or_image, max_size=0, to_jpeg=True, summary=get_message
     Returns:
         MessageSegment: 消息段
     """
-    image = await asyncio.to_thread(_open_image_sync, path_or_image)
-    if image is None:
-        # 本地路径打不开：按 url 下载（异步下载路径不变）
-        image = await get_url_image(path_or_image)
-    b64 = await asyncio.to_thread(_encode_image_sync, image, max_size, to_jpeg)
+    if isinstance(path_or_image, (bytes, bytearray)):
+        image = Image.open(BytesIO(path_or_image))
+        if is_animated(image):
+            b64 = base64.b64encode(path_or_image).decode()
+        else:
+            b64 = await asyncio.to_thread(_encode_image_sync, image, max_size, to_jpeg)
+    else:
+        image = await asyncio.to_thread(_open_image_sync, path_or_image)
+        if image is None:
+            # 本地路径打不开：按 url 下载（异步下载路径不变）
+            image = await get_url_image(path_or_image)
+        b64 = await asyncio.to_thread(_encode_image_sync, image, max_size, to_jpeg)
     debug_msg("b64 success")
     try:
         # 将消息发送的同步方法放到后台线程执行
@@ -379,7 +390,7 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
         return
     SEND_LOGGER.info(f'Sending message: {message}')
     debug_prefix = "" if not debug else "[DEBUG] "
-    msg_id = await bot.send(event, debug_prefix + (f"[CQ:at,qq={event.user_id}] " if at and event.user_id else "") + message, **kwargs)
+    msg_id = await bot.send(event, debug_prefix + message, at_sender=at, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
     from xme.plugins.commands.xme_user.classes.user import User, try_load
     u: User = try_load(event.user_id)

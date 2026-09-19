@@ -4,17 +4,26 @@ __plugin_name__ = "ai_helper"
 COMMAND_ALIAS = ["ai"]
 
 MAX_CHECK_TIMES = 1400
-MAX_HISTORY_COUNT = 80
 MAX_TOOL_CALL_TIMES = 1000
+# /ai -c history 展示：转发单节点截断长度与整包失败后分块转发的每块节点数
+HISTORY_NODE_MAX_CHARS = 2500
+HISTORY_FORWARD_GROUP_NODES = 35
 # AI 免费 credits 额度（每自然周，周一 00:00 GMT+8 重置；超出部分从自存 credits 扣）
 TOKENS_LIMIT_WEEKLY = 12_000_000
 
-# 长上下文：普通历史记录超过 COMPRESS_TRIGGER 条时，触发压缩最旧部分为摘要
-COMPRESS_TRIGGER = 79
+# 长上下文：历史条数不设上限（长期保留），历史估算占用达模型上下文预算
+# （context_limit）的该比例时，把最旧部分压缩成摘要
+COMPRESS_TRIGGER_RATIO = 0.75
+# 字符 → token 估算系数（中文约 1 token / 1.5~2 字，取偏小值防低估占用）
+CONTEXT_TOKEN_CHARS = 1.6
 # 压缩时保留的最新的记录条数（其余压缩进摘要）
 CONTEXT_KEEP_RECENT = 20
 # 摘要最大长度（传给 ai_configs 里 memory 提示词的 {max_length}）
 COMPRESS_MAX_LENGTH = 4000
+
+# 思路笔记：轮末把本轮 reasoning 提炼成短笔记随条目入历史、下轮注入上下文
+THINKING_NOTE_MAX_LENGTH = 150        # 笔记字数上限（传给 ai_configs 里 thinking 提示词）
+THINKING_NOTE_INPUT_CHARS = 8000      # 参与提炼的 reasoning 输入上限（超长取尾部）
 
 # 单会话 history 文件夹（AI 转存文件）的资源上限
 HISTORY_MAX_FILES = 256                 # 最多 256 个文件
@@ -227,6 +236,7 @@ THINKING_PARAMS = {
 MODEL_CONTEXT_LIMITS = {
     "glm-5.3": 1_000_000,
     "glm-5.3-flash": 1_000_000,
+    "glm-5.3-flashx": 1_000_000,
 }
 CONTEXT_LIMIT_DEFAULT = 1_000_000        # 未知模型的兜底上限
 FOLD_TRIGGER_RATIO = 0.75                # 真实输入达上限 75% → 一级折叠（删最早 reasoning）

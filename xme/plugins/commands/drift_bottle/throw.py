@@ -15,6 +15,17 @@ from . import DriftBottle
 from . import BOTTLE_IMAGES_PATH
 from xme.xmetools.texttools import get_images_from_message, remove_invisible, is_url
 from xme.xmetools.imgtools import get_url_image, is_images_can_send, limit_size, detect_qrcode
+from xme.xmetools.animtools import (
+    ANIM_STORE_MARGIN,
+    GIF_OUTPUT_MAX_BYTES,
+    QR_SAMPLE_FRAMES,
+    AnimSequence,
+    compress_anim_sequence,
+    is_animated,
+    load_anim_sequence,
+    sample_frames,
+    save_anim_sequence,
+)
 from traceback import format_exc
 import config
 import re
@@ -56,17 +67,40 @@ async def _(session: CommandSession, user):
         image_urls = [x["file"] for x in image_objects]
         image_names = [x["file_name"] for x in image_objects]
         logger.info(f"urls {image_urls}")
-        images = [limit_size((await get_url_image(image)), 700) for image in image_urls]
-        if not (await is_images_can_send(session.bot, session.event, images, session)):
+        # 动图读取帧序列（帧数预算内按时长补偿均匀抽帧，长度不变），
+        # 静图与单帧动图统一按静图缩放存储 WEBP；
+        # sequences 与 images 按下标一一对应，动图槽位为帧序列、静图槽位为 None
+        sequences: list[AnimSequence | None] = []
+        images = []
+        for image_url in image_urls:
+            image = await get_url_image(image_url)
+            sequence = load_anim_sequence(image) if is_animated(image) else None
+            if sequence is not None and len(sequence.frames) > 1:
+                sequences.append(sequence)
+                images.append(sequence.frames[0])
+            else:
+                sequences.append(None)
+                images.append(limit_size(sequence.frames[0] if sequence else image, 700))
+        # 动图抽首/中/尾帧送审，防止违规内容藏在后续帧
+        if len(images) > 0:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "check_image"))
+        moderation_images = []
+        for image, sequence in zip(images, sequences):
+            moderation_images.extend(sample_frames(sequence, 3) if sequence is not None else [image])
+        if not (await is_images_can_send(session.bot, session.event, moderation_images, session)):
             await send_session_msg(session, get_message("plugins", __plugin_name__, "image_has_risk"))
             return False
-        for image in images:
-            # logger.info(f"")
-            if await is_image_has_qr(image):
-                logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
-                await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
-                return False
-        image_filenames = [os.path.splitext(os.path.basename(name))[0] + ".WEBP" for name in image_names]
+        # 二维码检测逐帧抽样，防止二维码藏在动图后续帧
+        for image, sequence in zip(images, sequences):
+            for frame in (sample_frames(sequence, QR_SAMPLE_FRAMES) if sequence is not None else [image]):
+                if await is_image_has_qr(frame):
+                    logger.warning(f"用户 {session.event.user_id} 在 {session.event.group_id} 投掷的漂流瓶包含二维码")
+                    await send_session_msg(session, get_message("plugins", __plugin_name__, "content_has_qr_code"))
+                    return False
+        image_filenames = [
+            os.path.splitext(os.path.basename(name))[0] + (".GIF" if sequence is not None else ".WEBP")
+            for name, sequence in zip(image_names, sequences)
+        ]
     except Exception as ex:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "throw_error", ex=ex))
         logger.exception(format_exc())
@@ -140,8 +174,17 @@ async def _(session: CommandSession, user):
 
     # 处理图片
     total_height = 0
-    if len(images) > 0:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, "check_image"))
+
+    # 动图入库压缩阶梯：透明裁边 → 缩放 → 降色 → 抽帧（时长补偿不裁长度），
+    # 预算按动图数量均分并预留留言增长余量；超预算时拾取端仍有循环抽帧兜底
+    store_plans = {}
+    anim_indexes = [i for i, s in enumerate(sequences) if s is not None]
+    if anim_indexes:
+        budget = int(GIF_OUTPUT_MAX_BYTES * ANIM_STORE_MARGIN) // len(anim_indexes)
+        for i in anim_indexes:
+            store_seq, scale_pct, colors = compress_anim_sequence(sequences[i], budget)
+            store_plans[i] = (store_seq, colors)
+            logger.info(f"动图入库压缩：缩放 {scale_pct}% / {colors} 色 / {len(store_seq.frames)} 帧")
     for i, image in enumerate(images):
         total_height += image.height
         if total_height > 800:
@@ -154,8 +197,12 @@ async def _(session: CommandSession, user):
             # debug_msg("查重图片：", check_image)
             logger.info("查重图片：" + str(check_image))
             return False
-        # 存储图片
-        image.save(path)
+        # 存储图片：动图按压缩阶梯处理后存 GIF（保留动画与长度），静图/单帧动图存 WEBP
+        if sequences[i] is not None:
+            store_seq, colors = store_plans[i]
+            save_anim_sequence(store_seq, path, colors=colors)
+        else:
+            image.save(path)
 
     bottle.images = image_filenames
     bottle.save()

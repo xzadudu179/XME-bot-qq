@@ -1,11 +1,22 @@
+import asyncio
+
+import numpy as np
+import PIL.Image
+from PIL.Image import Image
 from xme.xmetools.texttools import limit_str_len
 from xme.xmetools.randtools import html_messy_string, messy_string, messy_image
 from character import get_message
-from xme.xmetools.imgtools import get_html_image_async
+from xme.xmetools.imgtools import get_html_image_async, get_image
+from xme.xmetools.animtools import (
+    assemble_composited_gif_within_size,
+    find_slot_boxes,
+    is_animated,
+    load_anim_sequence,
+)
 from xme.plugins.commands.drift_bottle.tools.cards import CARD_SKINS
-from xme.plugins.commands.drift_bottle import DriftBottle
+from xme.plugins.commands.drift_bottle import BOTTLE_IMAGES_PATH, DriftBottle
 from keys import BOTTLE_IMAGE_KEY
-# from nonebot.log import logger
+from nonebot.log import logger
 from xme.xmetools.debugtools import debug_msg
 
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
@@ -69,28 +80,128 @@ def get_comment_html(messy_rate: int | float, messy_rate_str: str, comment_list:
         # break
     return "\n".join(comment_htmls)
 
-async def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认卡片", image_messy_magni=0.5, view_minus = 0):
+def has_animated_image(bottle: DriftBottle) -> bool:
+    """判断瓶子是否包含动图图片"""
+    return bool(bottle.images) and any(is_animated(get_image(BOTTLE_IMAGES_PATH + i)) for i in bottle.images)
+
+async def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="默认卡片", image_messy_magni=0.5, view_minus=0) -> 'Image | bytes':
+    """拾取卡片唯一入口：含动图的瓶子返回卡片 GIF bytes，否则返回静态卡片图
+
+    动图在入库前已按体积预算校准抽帧，此处一般一次合成即可；
+    若留言增长导致超预算，合成内部仍会循环抽帧兜底
+    """
     from .. import __plugin_name__, get_messy_rate
     if str(bottle.bottle_id) == "-179" and not suffix:
         # bottle_card += "\n" + get_message("plugins", __plugin_name__, "response_prompt_broken")
         suffix = f'<p style="color: #D40"> -{get_message("plugins", __plugin_name__, "response_prompt_broken")}- </p>'
     messy_rate, messy_rate_string = get_messy_rate(bottle, view_minus)
+    skin = skin_name if not bottle.skin else bottle.skin
+    html_render = (not bottle.bottle_id.isdecimal() and "PURE " not in bottle.bottle_id) or bottle.bottle_id == "-179"
+    if has_animated_image(bottle):
+        # 动图卡片合成失败（如槽位定位失败、体积超限）时回退静态卡片
+        gif_bytes = await get_animated_bottle_card(
+            bottle=bottle,
+            messy_rate=messy_rate,
+            messy_rate_str=messy_rate_string,
+            suffix=suffix,
+            skin_name=skin,
+            html_render=html_render,
+            image_messy_magni=image_messy_magni,
+        )
+        if gif_bytes is not None:
+            return gif_bytes
     bottle_card = messy_image(await get_html_image_async(get_class_bottle_card_html(
         bottle=bottle,
         messy_rate=messy_rate,
         messy_rate_str=messy_rate_string,
         custom_tip=suffix,
-        skin_name=skin_name if not bottle.skin else bottle.skin,
-        html_render=(not bottle.bottle_id.isdecimal() and "PURE " not in bottle.bottle_id) or bottle.bottle_id == "-179",
+        skin_name=skin,
+        html_render=html_render,
     )), messy_rate * image_messy_magni)
     return bottle_card
+
+async def get_animated_bottle_card(bottle: DriftBottle, messy_rate, messy_rate_str, suffix="", skin_name="默认卡片", html_render=False, image_messy_magni=0.5) -> bytes | None:
+    """合成含动图槽位的漂流瓶卡片 GIF（独立入口，供其他功能复用）
+
+    卡片壳静态渲染一次并做整卡混乱处理，动图槽位以总时长最长的序列为主轴
+    逐帧贴图，槽位区域每帧单独做混乱扰动（rate>=100 时为逐帧全噪声）；
+    体积超限时循环抽帧并比对（时长补偿，长度不变），压不进预算返回 None
+    （调用方回退静态卡片）
+    """
+    sequences = []
+    for name in bottle.images:
+        image = get_image(BOTTLE_IMAGES_PATH + name)
+        if is_animated(image):
+            sequences.append(load_anim_sequence(image))
+    if not sequences:
+        return None
+    shell = await get_html_image_async(get_class_bottle_card_html(
+        bottle=bottle,
+        messy_rate=messy_rate,
+        messy_rate_str=messy_rate_str,
+        custom_tip=suffix,
+        skin_name=skin_name,
+        html_render=html_render,
+        animated_placeholder=True,
+    ))
+    return await asyncio.to_thread(
+        _compose_animated_card, shell, sequences, messy_rate, image_messy_magni)
+
+def _cover_slot_colors(shell: Image, boxes: list[tuple[int, int, int, int]]) -> None:
+    """把占位色块连同抗锯齿过渡边缘一起用局部背景色覆盖（就地修改）
+
+    占位块渲染边缘有 1~2px 与背景混合的过渡像素，仅按定位框覆盖会残留
+    紫色描边（混乱搬移后尤其明显），因此向外扩 2px 填充，颜色取占位块
+    周边外圈像素的中位色以贴合渐变皮肤；填充随后被逐帧贴图覆盖大部分区域
+    """
+    arr = np.asarray(shell.convert("RGB"))
+    height, width = arr.shape[:2]
+    for x1, y1, x2, y2 in boxes:
+        px1, py1, px2, py2 = max(0, x1 - 2), max(0, y1 - 2), min(width, x2 + 2), min(height, y2 + 2)
+        ox1, oy1, ox2, oy2 = max(0, x1 - 8), max(0, y1 - 8), min(width, x2 + 8), min(height, y2 + 8)
+        ix1, iy1, ix2, iy2 = max(0, x1 - 2), max(0, y1 - 2), min(width, x2 + 2), min(height, y2 + 2)
+        strips = [arr[oy1:iy1, ox1:ox2], arr[iy2:oy2, ox1:ox2],
+                  arr[iy1:iy2, ox1:ix1], arr[iy1:iy2, ix2:ox2]]
+        ring = np.concatenate([s.reshape(-1, 3) for s in strips if s.size])
+        fill = tuple(int(v) for v in np.median(ring, axis=0)) if len(ring) else (32, 34, 40)
+        shell.paste(PIL.Image.new("RGB", (px2 - px1, py2 - py1), fill), (px1, py1))
+
+def _compose_animated_card(shell: Image, sequences, messy_rate, image_messy_magni) -> bytes | None:
+    """同步合成动图卡片：槽位定位、整卡混乱一次、逐帧贴图扰动与编码
+
+    CPU 密集（逐帧量化编码），必须经后台线程执行
+    """
+    try:
+        boxes = find_slot_boxes(shell, len(sequences))
+    except ValueError as e:
+        logger.warning(f"动图卡片槽位定位失败：{e}")
+        return None
+    _cover_slot_colors(shell, boxes)
+    # 壳乱一次：与静态卡片同一参数，文字部分的混乱观感保持一致
+    shell = messy_image(shell, messy_rate * image_messy_magni)
+
+    def frame_messy(frame, frame_boxes):
+        for box in frame_boxes:
+            region = frame.crop(box)
+            messy_region = messy_image(region, messy_rate, max_messy_break=True)
+            # 带 alpha 蒙版回贴，透明底动图的透明区域保持透出卡片背景
+            frame.paste(messy_region, box[:2], messy_region)
+        return frame
+
+    result = assemble_composited_gif_within_size(base_card=shell, paste_boxes=boxes,
+                                                 sequences=sequences, frame_messy=frame_messy)
+    if result is None:
+        logger.warning("动图卡片体积超限，回退静态卡片")
+        return None
+    return result[0]
 
 def get_example_bottle(skin_name="默认卡片"):
     # from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE
     from xme.plugins.commands.drift_bottle import create_example_bottles
     return get_class_bottle_card_html(create_example_bottles()["EXAMPLE_BOTTLE"], skin_name=skin_name)
 
-def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片", html_render=False):
+def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_str=None, custom_tip="", skin_name="默认卡片", html_render=False, animated_placeholder=False):
+    """构造瓶子卡片的完整 HTML；animated_placeholder 仅动态卡片合成时开启"""
     if messy_rate is None:
         messy_rate = min(100, max(0, bottle.views * 2 - bottle.likes * 3))
     if messy_rate_str is None:
@@ -100,7 +211,7 @@ def get_class_bottle_card_html(bottle: DriftBottle, messy_rate=None, messy_rate_
         messy_rate_str=messy_rate_str,
         messy_rate=messy_rate,
         date=bottle.send_time,
-        content=bottle.get_formatted_content(messy_rate_str, messy_rate),
+        content=bottle.get_formatted_content(messy_rate_str, messy_rate, animated_placeholder),
         sender=bottle.sender,
         group=bottle.from_group,
         views=bottle.views,

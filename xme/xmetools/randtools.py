@@ -79,16 +79,17 @@ def html_messy_string(string_input, temperature: float=50, resample_times=0, htm
 def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True, max_messy_break=False):
     """
     messy_rate: 0~100
-    混乱图片，建议图片小一点
+    混乱图片，建议图片小一点。返回扰动后的新图，不修改入参
     """
     from .imgtools import get_image
     img = get_image(path_or_image)
+    if img.mode not in ("RGB", "RGBA"):
+        img = img.convert("RGBA")
     w, h = img.size
-    pixels = img.load()
 
     # 根据强度计算次数与块最大尺寸
     boxsize = (w + h) / 2
-    max_block_size = int(min(max((messy_rate / 50) * (boxsize / 4), boxsize / 50), boxsize / 5))
+    max_block_size = max(1, int(min(max((messy_rate / 50) * (boxsize / 4), boxsize / 50), boxsize / 5)))
     region_count = int((messy_rate) * (boxsize / max_block_size / 8))
     # 最大的
     if messy_rate >= 100 and max_messy_break:
@@ -101,41 +102,29 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
                 [noise, np.full((h, w, 1), 255, dtype=np.uint8)], axis=2)
         return Image.fromarray(noise, "RGBA" if img.mode == "RGBA" else "RGB")
 
+    arr = np.asarray(img).copy()
+
+    def random_color():
+        color = np.random.randint(0, 256, size=3, dtype=np.uint8)
+        if img.mode == "RGBA":
+            color = np.append(color, 255)
+        return color
+
     for _ in range(region_count):
         block_size = random.randint(1, max_block_size)
 
         x1, y1 = random.randint(0, w - block_size), random.randint(0, h - block_size)
         x2, y2 = random.randint(0, w - block_size), random.randint(0, h - block_size)
 
-        block1 = [
-            [pixels[x1 + dx, y1 + dy] for dx in range(block_size)]
-            for dy in range(block_size)
-        ]
-        block2 = [
-            [pixels[x2 + dx, y2 + dy] for dx in range(block_size)]
-            for dy in range(block_size)
-        ]
-        random_color = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255)
-        )
-        random_color1 = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255)
-        )
-        for dy in range(block_size):
-            is_rand_color = random.random() < 0.1 if rand_color else False
-            for dx in range(block_size):
-                # 随机颜色
-                if is_rand_color:
-                    pixels[x1 + dx, y1 + dy] = random_color
-                    pixels[x2 + dx, y2 + dy] = random_color1
-                    continue
-                pixels[x1 + dx, y1 + dy] = block2[dy][dx]
-                pixels[x2 + dx, y2 + dy] = block1[dy][dx]
-    return img
+        if rand_color and random.random() < 0.1:
+            # 随机颜色
+            arr[y1:y1 + block_size, x1:x1 + block_size] = random_color()
+            arr[y2:y2 + block_size, x2:x2 + block_size] = random_color()
+            continue
+        block1 = arr[y1:y1 + block_size, x1:x1 + block_size].copy()
+        arr[y1:y1 + block_size, x1:x1 + block_size] = arr[y2:y2 + block_size, x2:x2 + block_size]
+        arr[y2:y2 + block_size, x2:x2 + block_size] = block1
+    return Image.fromarray(arr)
 
 
 def messy_string(string_input, temperature: float=50, resample_times=0, t:int = 1):

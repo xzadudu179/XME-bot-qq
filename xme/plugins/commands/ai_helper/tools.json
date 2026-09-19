@@ -583,13 +583,13 @@
         "type": "function",
         "function": {
             "name": "ask_user",
-            "description": "主动向用户询问内容",
+            "description": "主动向用户询问内容。用户回复中的文字和图片都会返回给你：图片会直接作为你的视觉输入（无需再调用其他查看工具），需要截图、照片等视觉信息时可以直接向用户索要。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "prompt": {
                         "type": "string",
-                        "description": "你告诉用户的内容"
+                        "description": "你告诉用户的内容（需要图片时可以直接向用户索要，如\"请发一张截图\"）"
                     },
                     "timeout": {
                         "type": "integer",

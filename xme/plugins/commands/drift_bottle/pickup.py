@@ -8,7 +8,7 @@ from . import get_messy_rate, get_random_broken_bottle
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.bottools import get_stranger_name, get_group_name
-from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card
+from .tools.bottlecard import get_class_bottle_card_html, get_pickedup_bottle_card, has_animated_image
 from xme.xmetools.imgtools import get_html_image_async
 from xme.xmetools.msgtools import image_msg
 # from xme.xmetools.dicttools import set_value, get_value
@@ -125,9 +125,11 @@ async def report(session, bottle: DriftBottle, user_id, message_prefix="举报�
     content = get_message("plugins", __plugin_name__, "reported")
     messy_rate = max(0, min(100, bottle.views * 2 - bottle.likes * 3))
     card = await image_msg(await get_html_image_async(get_class_bottle_card_html(bottle, 0, f"{messy_rate}%"), 1200, 700))
+    # 举报卡片是首帧静态渲染，含动图时向超管标注，避免误判动图问题
+    anim_tag = "（含动图，上图为首帧静态预览）" if has_animated_image(bottle) else ""
     for superuser in config.SUPERUSERS:
         reporter = await get_stranger_name(user_id=user_id)
-        await session.bot.send_private_msg(user_id=superuser,message=f"{escape_cq(reporter)} ({user_id}) {escape_cq(message_prefix)}，瓶子信息如下：{card}id: {bottle.bottle_id}\n发送者: {escape_cq(bottle.sender)} ({bottle.sender_id})\n来自群：{escape_cq(bottle.from_group)} ({bottle.group_id})\n（如果是举报）举报原因：{escape_cq(report_content)}")
+        await session.bot.send_private_msg(user_id=superuser,message=f"{escape_cq(reporter)} ({user_id}) {escape_cq(message_prefix)}，瓶子信息如下{anim_tag}：{card}id: {bottle.bottle_id}\n发送者: {escape_cq(bottle.sender)} ({bottle.sender_id})\n来自群：{escape_cq(bottle.from_group)} ({bottle.group_id})\n（如果是举报）举报原因：{escape_cq(report_content)}")
     if send_success_message:
         await send_session_msg(session, content)
 

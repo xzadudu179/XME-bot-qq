@@ -4,6 +4,7 @@ from xme.xmetools.texttools import limit_str_len, hash_text
 from xme.xmetools.filetools import has_file
 import matplotlib.pyplot as plt
 import matplotlib as mpt
+import matplotlib.ticker
 from matplotlib import font_manager
 import numpy as np
 from xme.xmetools.debugtools import debug_msg
@@ -197,8 +198,8 @@ def generate_command_trend_chart(
     Returns:
         tuple[str, bool]: (图片路径, 是否使用缓存)
     """
-    # 计算 hash 用于缓存
-    data_str = str(data_list) + title + xlabel + ylabel
+    # 计算 hash 用于缓存（末尾标记用于区分 Y 轴刻度方案，改刻度后旧缓存自动失效）
+    data_str = str(data_list) + title + xlabel + ylabel + "ylog2"
     image_name = hash_text(data_str) + ".png"
     image_path = image_folder + image_name
     if has_file(image_path):
@@ -243,7 +244,11 @@ def generate_command_trend_chart(
     plt.ylabel(ylabel, fontsize=FONT_SIZE, color=FONT_COLOR)
     plt.title(title, fontsize=FONT_SIZE, color=FONT_COLOR)
     ax = plt.gca()
-    ax.set_yscale('log')
+    # Y 轴对数刻度按 2 的幂分度，标签显示 2^n（原先按 10 的幂）
+    ax.set_yscale('log', base=2)
+    ax.yaxis.set_major_locator(mpt.ticker.LogLocator(base=2))
+    ax.yaxis.set_major_formatter(mpt.ticker.FuncFormatter(
+        lambda v, _: f"$2^{{{int(round(float(np.log2(v))))}}}$" if v > 0 else ""))
     ax.set_facecolor(BG_COLOR)
     ax.tick_params(axis='x', colors=FONT_COLOR)
     ax.tick_params(axis='y', colors=FONT_COLOR)

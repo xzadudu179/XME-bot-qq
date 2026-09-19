@@ -2,6 +2,7 @@ __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
 from xme.xmetools.doctools import PluginDoc
 from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
+from xme.xmetools.animtools import is_animated, slot_placeholder_base64
 from xme.xmetools.randtools import messy_image
 from xme.xmetools.texttools import replace_formatted
 from character import get_message
@@ -35,8 +36,26 @@ class DriftBottle:
         # 存储图片文件名
         self.images: list = images if images is not None else []
 
-    def get_formatted_content(self, messy_rate_str, messy_rate):
+    def get_formatted_content(self, messy_rate_str, messy_rate, animated_placeholder=False):
+        """瓶子内容格式化：图片占位符替换为内嵌 HTML
+
+        animated_placeholder 为 True 时动图渲染为定位用纯色占位块（供动态卡片
+        合成截图时定位槽位），否则动图/静图统一渲染为混乱后的首帧 base64 PNG
+        """
         try:
+            embeds = {}
+            anim_slot = 0
+            for i in self.images:
+                image = get_image(BOTTLE_IMAGES_PATH + i)
+                key = '.'.join(i.split(".")[:-1])
+                if animated_placeholder and is_animated(image):
+                    embeds[key] = (
+                        f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{slot_placeholder_base64(anim_slot)}" '
+                        f'width="{image.size[0]}" height="{image.size[1]}" class="img">\n')
+                    anim_slot += 1
+                else:
+                    embeds[key] = (f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,'
+                                   f'{image_to_base64(messy_image(image, messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n')
             return replace_formatted(
                 self.content,
                 views=self.views,
@@ -45,10 +64,7 @@ class DriftBottle:
                 sender=self.sender,
                 group=self.from_group,
                 id=self.bottle_id,
-                **{
-                    '.'.join(i.split(".")[:-1])
-                    :
-                    f'\n<img alt="{BOTTLE_IMAGE_KEY}" src="data:image/png;base64,{image_to_base64(messy_image(get_image(BOTTLE_IMAGES_PATH + i), messy_rate=messy_rate, max_messy_break=True))}" alt class="img">\n' for i in self.images},
+                **embeds,
             )
         except Exception:
             print_exc()

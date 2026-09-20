@@ -168,7 +168,7 @@ LLM_MODELS = {
 # 能力配置：各项能力用哪个 provider/模型；api 标识实现方式
 # （"chat" 走对话协议；glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
 LLM_CAPABILITIES = {
-    "vision": {"provider": "glm", "model": "glm-5.3-flash", "api": "chat"},
+    "vision": {"provider": "deepseek", "model": "deepseek-flash", "api": "chat"},
     "ocr": {"provider": "glm", "model": "glm-ocr", "api": "glm_layout_parsing"},
     "image_gen": {"provider": "glm", "model": "glm-image", "api": "glm_images"},
     "web_reader": {"provider": "glm", "model": "", "api": "glm_reader"},
@@ -262,3 +262,11 @@ SEARCH_COOLDOWN_UNKNOWN = 600.0       # 未分类错误：10 分钟冷却
 RECEIVED_FILES_KEEP_PER_USER = 50     # 每个用户最多缓存的文件条数
 RECEIVED_FILES_KEEP_TOTAL = 500       # 全局最多缓存的文件条数（防内存/磁盘膨胀）
 RECEIVED_FILES_DEDUPE_WINDOW = 60.0   # 同文件双路上报（消息段+notice）的判重窗口（秒）
+
+# ---- 浏览器工具（browsertools.py：元素监听 / 页面录制）----
+BROWSER_NAV_WAIT_MS = 2000            # 页面加载完成后的额外等待（渲染/动画起步）
+MONITOR_MAX_DURATION = 60             # 元素监听的最长采样时长（秒）
+MONITOR_MAX_INTERVAL = 30             # 元素监听的采样间隔上限（秒）
+RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
+RECORD_MAX_WIDTH = 1920               # 录制画面宽度上限
+RECORD_MIN_WIDTH = 400                # 录制画面宽度下限

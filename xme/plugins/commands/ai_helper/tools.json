@@ -649,6 +649,130 @@
     {
         "type": "function",
         "function": {
+            "name": "monitor_element",
+            "description": "监听网页某个元素在一段时间内的取值变化（每 interval 秒采样一次），返回变化时间线。适合观察倒计时、轮播文本、状态标记、异步加载结果等动态内容。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要监听的网页地址（http/https）"
+                    },
+                    "selector": {
+                        "type": "string",
+                        "description": "目标元素的 CSS 选择器（如 #countdown、.status）"
+                    },
+                    "duration": {
+                        "type": "integer",
+                        "description": "监听时长（秒），1~60，默认 20"
+                    },
+                    "interval": {
+                        "type": "integer",
+                        "description": "采样间隔（秒），1~30，默认 2"
+                    },
+                    "attr": {
+                        "type": "string",
+                        "description": "要读取的属性名（如 value/href/class），留空取元素可见文本"
+                    }
+                },
+                "required": [
+                    "url",
+                    "selector"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "record_page",
+            "description": "录制网页一段时间并合成视频文件（可选鼠标/键盘宏回放与虚拟光标）。视频默认注入给你亲自查看（可检查自己写的动效/交互效果），也可选择以私聊文件发给用户。视频只存本轮 temp，对话结束自动清理，不能长期保存。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "要录制的网页地址（http/https）"
+                    },
+                    "duration": {
+                        "type": "integer",
+                        "description": "录制时长（秒），3~60，默认 20"
+                    },
+                    "script": {
+                        "type": "array",
+                        "description": "鼠标/键盘宏时间轴（可选）。元素为动作对象，t 为相对录制开始的秒数：{\"t\":0.5,\"type\":\"move\",\"selector\":\"#btn\",\"dur\":1.0} 连续平滑移动（目标用 selector 或坐标 x/y，dur 为移动时长）；{\"t\":2,\"type\":\"jump\",\"x\":100,\"y\":200} 瞬移；{\"t\":3,\"type\":\"click\",\"selector\":\"#btn\"} 点击；{\"t\":4,\"type\":\"type\",\"text\":\"你好\"} 逐字符输入（需先点击输入框聚焦）；{\"t\":6,\"type\":\"key\",\"key\":\"Enter\"} 按键（Enter/Backspace/Tab/Escape/ArrowLeft 等）",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "t": {
+                                    "type": "number",
+                                    "description": "动作触发时刻（秒，相对录制开始）"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "动作类型：move/jump/click/type/key"
+                                },
+                                "selector": {
+                                    "type": "string",
+                                    "description": "目标元素的 CSS 选择器（与 x/y 二选一）"
+                                },
+                                "x": {
+                                    "type": "number",
+                                    "description": "目标横坐标（页面像素）"
+                                },
+                                "y": {
+                                    "type": "number",
+                                    "description": "目标纵坐标（页面像素）"
+                                },
+                                "dur": {
+                                    "type": "number",
+                                    "description": "move 的平滑移动时长（秒），默认 0.8"
+                                },
+                                "text": {
+                                    "type": "string",
+                                    "description": "type 动作要输入的文本"
+                                },
+                                "key": {
+                                    "type": "string",
+                                    "description": "key 动作的键名（Enter/Backspace/Tab/Escape/ArrowLeft/ArrowUp/ArrowRight/ArrowDown/Space/Delete/Home/End）"
+                                }
+                            },
+                            "required": [
+                                "t",
+                                "type"
+                            ]
+                        }
+                    },
+                    "width": {
+                        "type": "integer",
+                        "description": "录制画面宽度（400~1920），默认 1280，高度按 16:9"
+                    },
+                    "show_cursor": {
+                        "type": "boolean",
+                        "description": "是否显示虚拟鼠标光标（默认 true）；录纯页面动画（html/CSS 动画本身）可设为 false"
+                    },
+                    "send_to_agent": {
+                        "type": "boolean",
+                        "description": "录制完成后是否把视频注入给你自己查看（默认 true，可检查动效效果）"
+                    },
+                    "send_to_user": {
+                        "type": "boolean",
+                        "description": "是否把视频以私聊文件发给用户（默认 false）"
+                    },
+                    "new_name": {
+                        "type": "string",
+                        "description": "发给用户时的视频文件名（如 页面演示.mp4），仅在 send_to_user=true 时有效"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "edit_file",
             "description": "用精确文本匹配改写文件：把文件中的 old_string 原样替换为 new_string。old_string 必须与文件内容逐字符一致（含缩进与换行），取自最近一次读取的内容；找不到匹配会提示文件可能已变化需重新读取；匹配到多处时要求加长 old_string 使其唯一，或置 replace_all=true 全部替换。new_string 为空串即删除该段；追加内容请以文件结尾的唯一文本作 old_string 锚点（new_string=锚点+新内容）。单次只描述一处修改，多处不同修改请分多次调用。",
             "parameters": {

@@ -8,6 +8,7 @@
 - media.py      图片生成与 OCR
 - worldview.py  世界观状态与技能文档
 - misc.py       会话交互与杂项（追问、骰子、会话改名、中途汇报）
+- browser.py    页面元素监听与页面录制（宏回放，录制成视频）
 - _common.py    跨分类共享的常量与私有 helper（不对外暴露工具）
 
 agent 通过本包命名空间查找工具：__tools__ 列出工具名，且每个名字必须能
@@ -44,6 +45,8 @@ __tools__ = [
     "get_user_input_urls",
     "download",
     "get_received_files",
+    "monitor_element",
+    "record_page",
     "send_file",
     "edit_file",
     "syntax_check",
@@ -76,6 +79,7 @@ from .files import (
     zip_files,
 )
 from .codeexec import run_python
+from .browser import monitor_element, record_page
 from .media import gen_image, insert_image, ocr_image
 from .misc import ask_user, dice, get_user_input_urls, inprocess_report, name_session
 from .web import (

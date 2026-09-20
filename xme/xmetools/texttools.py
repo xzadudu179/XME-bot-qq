@@ -16,8 +16,22 @@ from nonebot.log import logger
 import cn2an
 d = enchant.Dict("en_US")
 
+def strip_cq(text: str) -> str:
+    """去掉文本里的 CQ 码段（图片/文件/表情/at 等），只留纯文本。
+
+    风控只应分析真实文本：CQ 段（尤其 base64 内联图）对文本风控没有意义，
+    还会让请求体积暴涨（超长文本会被切成几十个分块）导致风控返回空结果。
+    """
+    return re.sub(r"\[CQ:[^\]]*\]", "", text or "")
+
+
 async def text_moderations(text: str):
     from xme.xmetools.reqtools import glm_api_request
+    text = strip_cq(text)
+    if not text.strip():
+        # 剥离 CQ 段后没有可送审的文本（纯图片/表情消息）：不发请求，
+        # 返回空结果集，由 analyze_risk 按「未被标记」放行
+        return {"result_list": []}
     new_objects = []
     if len(text) > 2000:
         # raise ValueError("文本长度不能大于 2000")

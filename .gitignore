@@ -191,3 +191,6 @@ static/maimai/resource/
 b50_sample.html
 gen_b50_sample_tmp.py
 b50_debug.html
+
+*tmp.py
+KNOWN_ISSUES.md

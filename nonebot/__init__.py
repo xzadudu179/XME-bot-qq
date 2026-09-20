@@ -9,6 +9,10 @@ from aiocqhttp import CQHttp
 
 from .log import logger
 from .sched import Scheduler
+from .onebot_compat import install_onebot_compat
+
+# 事件解析层的兼容补丁要先于任何事件到达装上（NapCat 等的 message_sent 上报）
+install_onebot_compat()
 
 if Scheduler:
     scheduler = Scheduler()

@@ -7,7 +7,8 @@ import secrets
 # 需与协议端（NapCat 等）配置的 Access Token 一致，协议端请求头带
 # Authorization: Bearer <该值> 或 access_token 参数
 ACCESS_TOKEN = ""
-
+# AWMC 用于同步 maimai 用户数据的 token
+AWMC_TOKEN = ""
 SMTP_HOST = "smtp.example.com"
 MAIL_USERNAME = "mail@example.com"
 MAIL_PASSWORD = ""

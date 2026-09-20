@@ -1707,22 +1707,27 @@
         "{negative} 查分次数达到上限了哦...\n过一会儿再来吧嗷呜",
         "查分频率太快啦，稍后再查吧{positive_punc}"
       ],
-      "no_sub": "没有 \"{sub}\" 这个操作哦... {neutral}\n直接发送 {cmd_sep}mai 查看帮助吧",
-      "not_bound": [
-        "你还没有绑定水鱼账号哦... {neutral}\n可以先 {cmd_sep}mai bind 绑定，再 {cmd_sep}mai b50 查分",
-        "查不到自己呢... {sad}\n先用 {cmd_sep}mai bind 绑定水鱼账号吧{positive_punc}"
+      "private_only": [
+        "为了防止 token 泄露，这个操作要在私聊里进行哦... {neutral}",
+        "{negative} 为防止 token 泄露，请私聊执行这个操作哦"
       ],
+      "sync_limited": [
+        "操作太频繁啦... {neutral} 过一会儿再试吧",
+        "{negative} 你短时间内尝试太多次了哦 过几分钟再来吧"
+      ],
+      "no_sub": "没有 \"{sub}\" 这个操作哦... {neutral}\n发送 {cmd_sep}mai 查看帮助吧",
+      "not_bound": "你还没有绑定水鱼账号哦... {neutral}\n用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查分啦",
       "b50": {
         "desc": "查询 B50 成绩",
-        "introduction": "查询舞萌DX B50 成绩并生成查分卡。\n\n{cmd_sep}mai b50 查询自己，{cmd_sep}mai b50 用户名 查询指定玩家，{cmd_sep}mai b50 @某人 查询群友，-s 皮肤名 可临时更换查分卡皮肤。"
+        "introduction": "查询舞萌DX B50 成绩并生成查分卡。\n\n{cmd_sep}mai b50 查自己的成绩，{cmd_sep}mai b50 @某人 查询群友，\n{cmd_sep}mai b50 用户名 查询任意公开玩家，-s 皮肤名 可临时更换皮肤。"
       },
       "bind": {
-        "desc": "绑定水鱼账号",
-        "introduction": "绑定水鱼查分器的用户名，用于查分。\n\n{cmd_sep}mai bind 用户名 进行绑定，{cmd_sep}mai bind 查看当前绑定。"
+        "desc": "(私聊) 绑定水鱼 Token",
+        "introduction": "绑定水鱼查分器的成绩导入 Token，绑定后即可查分。\n\n{cmd_sep}mai bind 成绩导入Token 进行绑定，{cmd_sep}mai bind 查看当前绑定。"
       },
       "update": {
-        "desc": "导入成绩 Token",
-        "introduction": "绑定水鱼查分器的成绩导入 Token，机台同步后成绩会经由水鱼自动导入。\n\n{cmd_sep}mai update 成绩导入Token 进行绑定。建议私聊 bot 操作哦。"
+        "desc": "更新数据 (暂时停用)",
+        "introduction": "该指令暂时停用，绑定 Token 请使用 {cmd_sep}mai bind。"
       },
       "unbind": {
         "desc": "解绑舞萌账号",
@@ -1749,8 +1754,8 @@
         "{negative} 水鱼查分器好像出问题了... 稍后再试试吧\n（{ex}）"
       ],
       "unknown_skin": "没有叫 \"{skin}\" 的皮肤哦... {neutral}\n可用皮肤：{skins}",
-      "current_binding": "当前绑定的水鱼用户名：{username}\n导入 Token：{token}",
-      "bind_usage": "请告诉我要绑定的水鱼用户名哦 {neutral}\n用法：{cmd_sep}mai bind <水鱼用户名>",
+      "current_binding": "你已经绑定水鱼账号啦{positive_punc}\nToken：{token}\n想换一个的话，再发一次 {cmd_sep}mai bind <新Token> 就行",
+      "bind_usage": "请把你的水鱼成绩导入 Token 发给我哦{neutral}\n用法：{cmd_sep}mai bind <成绩导入Token>\n获取方式见水鱼手册：https://maimai.diving-fish.com/manual/\n（Token 是敏感凭证，只能在私聊里发给我哦）",
       "bind_success": [
         "成功绑定水鱼账号 \"{username}\"{positive_punc}\n现在可以用 {cmd_sep}mai b50 查分啦",
         "成功绑定用户 \"{username}\"{positive_punc}\n用 {cmd_sep}mai b50 就能查分了{positive_punc}"
@@ -1765,7 +1770,7 @@
         "用户 \"{username}\" 还没有任何成绩记录哦 {neutral}\n可以让机台成绩先同步到水鱼（{cmd_sep}mai update 绑定 Token 后同步）",
         "水鱼上还没有 \"{username}\" 的成绩呢... {sad}\n绑定 {cmd_sep}mai update 的成绩导入 Token 并同步后再来吧{positive_punc}"
       ],
-      "update_success": "成绩导入 Token 已更新{positive_punc}\nToken：{token}\n已从水鱼读取到 {count} 条成绩记录{positive_punc}\n记得不要把 Token 发给别人哦{negative}",
+      "update_success": "水鱼账号绑定成功{positive_punc}\nToken：{token}\n已读取到 {count} 条成绩记录{positive_punc}\n现在用 {cmd_sep}mai b50 就能查分啦\n记得不要把 Token 发给别人哦 {neutral}",
       "update_invalid": [
         "{negative} 这个成绩导入 Token 好像无效呢...\n去水鱼查分器官网重新生成一个试试吧",
         "Token 验证没有通过哦... {neutral}\n检查一下有没有复制完整呢"
@@ -1774,7 +1779,9 @@
       "unbind_success": [
         "成功解绑舞萌账号啦 {neutral}",
         "已经把你的舞萌绑定清除掉了哦 {neutral}"
-      ]
+      ],
+      "update_disabled": "mai update 暂时停用啦... {neutral}\n绑定水鱼 Token 请用：{cmd_sep}mai bind <成绩导入Token>",
+      "at_not_bound": "对方还没有绑定水鱼 Token 呢... {neutral}\n让 ta 用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查啦"
     },
     "title": {
       "desc": "设置头衔",
@@ -2496,6 +2503,7 @@
       "shared_deleted": "已删除共享会话 {title}（{code}），清理了 {file_count} 个文件 {positive}",
       "shared_deleted_notify": "你所在/申请加入的共享会话 {title}（{code}）已被群主删除 {negative}",
       "shared_insert_accepted": "成功插入消息{positive_punc} AI 将会开始一起处理这些消息 {positive}",
+      "session_other_chat": "你的 AI 对话不在这个聊天里哦{positive_punc}\n它正在 {place} 进行中，要插话或中断请回到那边（中断在那边发送 \"aistop\"）{neutral}",
       "no_shared_insert": "AI 正在思考中{positive_punc}\n想要插入消息的话 发送 \"/ai 插入内容\" 就好啦 {neutral}",
       "shared_insert_queue_full": "{negative} 插入队列已满（{max_pending} 条）",
       "shared_insert_hint": "\n如果要插入消息，可让会话主使用 \"/ai -c ins\" 启用对话插入哦{positive_punc}",

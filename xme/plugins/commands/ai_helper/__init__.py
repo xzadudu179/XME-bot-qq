@@ -21,7 +21,7 @@ from xme.plugins.commands.xme_user.classes import user as u
 from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content, estimate_context_tokens
 from .session import (AISession, allows_auto_model, current_storage, enable_normal_insert,
                       set_user_model, user_model, user_model_setting)
-from . import constants, share, aistop, credits
+from . import constants, share, aistop, credits, window
 from .credits import ai_credits_left
 from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
 from .commands import adjust_credits, clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
@@ -37,8 +37,7 @@ from .share_commands import (
 )
 
 
-# 用户: stats
-curr_sessions = {}
+# 运行中会话的登记表见 window 模块（含发起窗口、是否为共享会话与插入信息）
 
 # 用户可用指令（通过 /ai -c <指令> 使用）
 cmds = {
@@ -219,24 +218,26 @@ def extract_text(raw: str) -> str:
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, shell_like=True, permission=lambda _: True)
 @u.using_user(save_data=False)
 async def _(session: CommandSession, user: u.User):
-    global curr_sessions
     superuser_mode = False
 
     # 每周免费额度 + 自存 credits 双余额：总余额 ≤0 且非超管才拒绝
     if ai_credits_left(user) <= 0 and user.id not in config.SUPERUSERS:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'limited'))
         return False
-    # 如果有 session 在运行
-    running_turn = curr_sessions.get(user.id)
-    if running_turn:
+    # 如果有 session 在运行（登记含发起窗口，见 window 模块）
+    running_turn = window.get(user.id)
+    if running_turn is not None:
         if session.current_arg_text.strip() in ("stop", "aistop"):
-            aistop.request_stop(session.event.group_id, user.id)
+            if not aistop.request_stop(session.event.group_id, user.id):
+                # 对话不在当前窗口：无法从这里中断，给出定位信息
+                await send_session_msg(session, await window.other_window_reply(
+                    shared=running_turn.shared, group_id=running_turn.group_id))
             return False
-        if not isinstance(running_turn, dict):
-            # 该对话未开启插入模式：维持原有拒绝
+        if not (running_turn.ready and running_turn.insert_enabled):
+            # 会话刚登记未就绪 / 未开启插入模式：维持原有拒绝
             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
             return False
-        # 进行中的对话开启了插入模式：本条消息将并入其上下文（moderation 之后入队）
+        # 进行中的对话开启了插入模式：本条消息将并入其上下文（窗口校验在插入判定处）
         pending_insert = running_turn
     else:
         pending_insert = None
@@ -295,23 +296,15 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=MAX_LENGTH))
         return False
 
-    # 自己进行中的对话开启了插入模式：本条消息入队，打断并并入其上下文
+    # 自己进行中的对话开启了插入模式：仅发起该对话的窗口可插入，跨窗口一律拒绝
     if pending_insert is not None:
-        if session.event.group_id == pending_insert.get("group_id"):
-            # 与首次调用同源：nonebot1 会把该消息经会话 arg 通道交给运行中的 agent 插入，
-            # 指令路径不再入队，避免同一句话被插入两次（nonebot1 双投递规避）
+        if not window.same_chat(pending_insert.group_id, session.event.group_id):
+            # 别的聊天发来的消息不属于那段对话的上下文：不入队，按会话类型给提示
+            await send_session_msg(session, await window.other_window_reply(
+                shared=pending_insert.shared, group_id=pending_insert.group_id))
             return False
-        image_objects, cq_matches = await safe_get_images(session.bot, text)
-        image_urls = [x["file"] for x in image_objects]
-        ins_text = text
-        for image_cq in cq_matches:
-            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-        if not share.enqueue_insert(pending_insert["key"], share.Insert(
-                user_id=session.event.user_id, text=ins_text,
-                image_urls=tuple(image_urls), time=get_time_now())):
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_queue_full', max_pending=constants.MAX_PENDING_INSERTS))
-            return False
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_insert_accepted', code=pending_insert["display"]))
+        # 与首次调用同源：nonebot1 会把该消息经会话 arg 通道交给运行中的 agent 插入，
+        # 指令路径不再入队，避免同一句话被插入两次（nonebot1 双投递规避）
         return False
 
     # 指定 -m 为临时使用（不落库）；未指定则用该用户的默认模型
@@ -373,13 +366,14 @@ async def _(session: CommandSession, user: u.User):
         shared_session = storage if isinstance(storage, share.SharedSession) else None
     if shared_session is not None and not share.acquire_busy(
             shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
-        # 对话进行中：开启插入模式时成员消息入队（打断并插入），否则提示开启方式
+        # 对话进行中：先判窗口——只有在该共享会话的发起窗口里才能插话
+        if not share.insert_context_allowed(shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
+            await send_session_msg(session, await window.other_window_reply(
+                shared=True, group_id=share.busy_group_id(shared_session.code)))
+            return False
+        # 窗口内：开启插入模式时成员消息入队（打断并插入），否则提示开启方式
         if not shared_session.insert_enabled:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})") + get_message("plugins", __plugin_name__, 'shared_insert_hint'))
-            return False
-        # 插入消息必须与首次调用者同源（同群，或同一人的私聊），否则看不到 AI 的回答
-        if not share.insert_context_allowed(shared_session.code, group_id=session.event.group_id, user_id=session.event.user_id):
-            await send_session_msg(session, get_message("plugins", __plugin_name__, 'shared_busy', title=f"{shared_session.title}({shared_session.code})"))
             return False
         image_objects, cq_matches = await safe_get_images(session.bot, text)
         image_urls = [x["file"] for x in image_objects]
@@ -485,17 +479,16 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("config", "unknown_error", ex=brief))
         return False
     finally:
-        turn = curr_sessions[user.id]
-        curr_sessions[user.id] = False
+        turn = window.clear(user.id)
         # 共享会话忙锁在所有退出路径（正常/异常/取消）都要释放；残留的插入消息
         # 已无法并入，随释放一并取出并向插入者致歉。普通会话无忙锁，只做插入清点
         if shared_session is not None:
             lost_inserts = share.release_busy(shared_session.code)
-            display = (turn.get("display") if isinstance(turn, dict) else None) \
+            display = (turn.display if turn is not None else None) \
                 or f"{shared_session.title}({shared_session.code})"
-        elif isinstance(turn, dict) and turn.get("key"):
-            lost_inserts = share.consume_inserts(turn["key"])
-            display = turn.get("display")
+        elif turn is not None and turn.insert_key:
+            lost_inserts = share.consume_inserts(turn.insert_key)
+            display = turn.display
         else:
             lost_inserts = []
             display = None
@@ -510,8 +503,7 @@ async def _(session: CommandSession, user: u.User):
 
 
 async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAULT_SESSION, shared=None, resume_data=None, routing_allowed: bool = False):
-    global curr_sessions
-    curr_sessions[user.id] = True
+    window.mark_running(user.id)
     with open("./static/glossary.md") as gl:
         glossary = gl.read()
     with open("./static/telia.txt") as tel:
@@ -538,11 +530,17 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
         new_st = AISession(user.id, ai_session)
         if not new_st.exists():
             enable_normal_insert(user.id, ai_session)
-    # 进行中的对话登记：开启插入模式时记录插入队列键与展示名（供入口并入与结束清理）
-    if ai_helper.insert_enabled:
-        display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session
-        curr_sessions[user.id] = {"key": ai_helper.insert_key, "display": display,
-                                  "group_id": session.event.group_id}
+    # 进行中的对话登记：无论是否开启插入模式都要记下发起窗口与共享标识
+    # （窗口判定依赖它；插入队列键与展示名仅在开启插入模式时有效）
+    display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session
+    window.register(
+        user.id,
+        group_id=session.event.group_id,
+        shared=ai_helper.shared is not None,
+        display=display,
+        insert_key=ai_helper.insert_key if ai_helper.insert_enabled else "",
+        insert_enabled=ai_helper.insert_enabled,
+    )
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     # aistop 登记：预处理器 / /ai stop 可随时取消本任务（长工具执行中也即时生效）

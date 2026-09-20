@@ -20,6 +20,9 @@ called_deon = {
 
 @message_preprocessor
 async def call_deon(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+    if event.user_id == event.self_id:
+        # bot 自己发出的内容（含名字/重复子串）不该被自己呼叫，否则会来回刷
+        return
     character_name = get_message("bot_info", "name")
     msg = remove_punctuation(str(event.raw_message))
     last_time = get_value(event.user_id, "last_time", default=0, search_dict=called_deon)

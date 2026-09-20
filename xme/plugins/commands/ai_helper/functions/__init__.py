@@ -18,6 +18,7 @@ getattr(functions, name) 取到；tools.json 中的 schema 名单须与之一致
 __tools__ = [
     "get_telia_clock_state",
     "gen_image",
+    "insert_image",
     "get_skill_md",
     "check_file",
     "list_files",
@@ -75,7 +76,7 @@ from .files import (
     zip_files,
 )
 from .codeexec import run_python
-from .media import gen_image, ocr_image
+from .media import gen_image, insert_image, ocr_image
 from .misc import ask_user, dice, get_user_input_urls, inprocess_report, name_session
 from .web import (
     download,

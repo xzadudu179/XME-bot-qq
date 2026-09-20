@@ -74,8 +74,23 @@ class CanceledException(Exception):
         self.reason = reason
 
 
+def _is_self_message(event: CQEvent) -> bool:
+    """判断是否为 bot 自己发出的消息（含协议端上报的自身消息）。
+
+    ``message_sent`` 事件在解析阶段（``onebot_compat``）已被归一化为普通消息事件，
+    并把 ``user_id`` 置为 ``self_id``，所以这里能复用同一个判定。
+    """
+    user_id = event.get('user_id')
+    return user_id is not None and user_id == event.get('self_id')
+
+
 async def handle_message(bot: NoneBot, event: CQEvent) -> None:
     """INTERNAL API"""
+    if _is_self_message(event) and \
+            not getattr(bot.config, 'REPORT_SELF_MESSAGE', True):
+        # 开关关闭时完全无视自身消息，效果与协议端未开启上报一致
+        return
+
     _log_message(event)
 
     assert isinstance(event.message, Message)
@@ -97,6 +112,13 @@ async def handle_message(bot: NoneBot, event: CQEvent) -> None:
         except CanceledException as e:
             logger.info(f'Message {event["message_id"]} is ignored: {e.reason}')
             return
+
+    if _is_self_message(event):
+        # 自身消息只交给 preprocessor（接龙打断、撤回自身刷屏、自身消息过滤），
+        # 不做指令与自然语言分发，避免 bot 被自己的输出触发
+        logger.debug(f'Self message {event["message_id"]} '
+                     f'skipped command dispatch')
+        return
 
     while True:
         try:

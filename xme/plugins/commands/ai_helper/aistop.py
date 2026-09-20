@@ -199,12 +199,18 @@ async def handle_running_turn_input(bot, event, plugin_manager):
         await swallow("other-cmd", reply=get_message("plugins", __plugin_name__, "ai_sending"))
         return
     # 私聊普通文本：开了插入模式 → 作为插入消息入队并回执（私聊下最自然的插入方式）；
-    # 未开 → 提示如何开启。群聊维持静默（避免群内闲聊被误吞/误插）。
-    if event.get("group_id") is None and (turn.get("insert_key") or "").startswith("user:"):
+    # 未开 → 提示如何开启。共享会话的插入键不是 user: 前缀，回执提示用 /ai 插入，
+    # 不能像群聊那样静默吞掉（否则消息无声消失）。
+    if event.get("group_id") is None:
+        if not (turn.get("insert_key") or "").startswith("user:"):
+            await swallow("plain-text-shared", reply=get_message(
+                "plugins", __plugin_name__, "no_shared_insert"))
+            return
         if not _insert_enabled_now(turn):
             await swallow("plain-text-no-insert", reply=get_message(
                 "plugins", __plugin_name__, "normal_insert_off"))
             return
         await enqueue_and_ack(text)
         return
+    # 群聊维持静默（避免群内闲聊被误吞/误插）。
     await swallow("plain-text")

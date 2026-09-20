@@ -104,14 +104,14 @@ async def username_exists(username: str) -> bool:
         raise
 
 
-async def fetch_records(token: str) -> list[dict]:
-    """用水鱼成绩导入 Token 读取账号的全量成绩记录（同时用于验证 Token 有效性）。
+async def fetch_records_payload(token: str) -> dict:
+    """用成绩导入 Token 读取账号完整数据（records + username/rating 等）。
 
     Args:
         token (str): 水鱼官网生成的成绩导入 Token
 
     Returns:
-        list[dict]: 全量成绩记录列表
+        dict: 查分器原始响应（含 records 列表等字段）
 
     Raises:
         MaimaiAPIError: Token 无效或网络异常（reason=invalid_token）
@@ -126,10 +126,24 @@ async def fetch_records(token: str) -> list[dict]:
     except Exception as ex:
         logger.warning(f"导入 Token 读取成绩失败: {ex}")
         raise MaimaiAPIError(REASON_INVALID_TOKEN, str(ex)) from ex
-    records = data.get("records") if isinstance(data, dict) else None
-    if not isinstance(records, list):
+    if not isinstance(data, dict) or not isinstance(data.get("records"), list):
         raise MaimaiAPIError(REASON_INVALID_TOKEN, "响应缺少 records 字段")
-    return records
+    return data
+
+
+async def fetch_records(token: str) -> list[dict]:
+    """用成绩导入 Token 读取账号的全量成绩记录（同时用于验证 Token 有效性）。
+
+    Args:
+        token (str): 水鱼官网生成的成绩导入 Token
+
+    Returns:
+        list[dict]: 全量成绩记录列表
+
+    Raises:
+        MaimaiAPIError: Token 无效或网络异常（reason=invalid_token）
+    """
+    return (await fetch_records_payload(token))["records"]
 
 
 class MusicLibrary:

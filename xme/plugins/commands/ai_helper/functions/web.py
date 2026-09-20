@@ -94,6 +94,10 @@ async def download(url: str, agent):
         if ex.status in (401, 403):
             return (f"[下载失败：HTTP {ex.status}——目标站点拒绝访问（可能反爬或需要登录）；"
                     "可尝试换源，或用 read_webpage 查看页面内容]")
+        if ex.status == 400:
+            return ("[下载失败：HTTP 400——目标站点拒绝了该请求：部分站点的图片/文件只允许在网页内访问"
+                    "（防盗链），或缩略图只接受固定尺寸参数。请换一个直链或换一个来源，"
+                    "也可用 read_webpage 打开页面找可用的链接]")
         return f"[下载失败：HTTP {ex.status} {ex.message}——目标站点返回错误，可确认链接后重试]"
     except Exception as ex:
         logger.exception(f"下载 {url} 失败")

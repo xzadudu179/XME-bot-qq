@@ -9,6 +9,9 @@ from nonebot.log import logger
 @message_preprocessor
 async def read_msg(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     try:
+        if event.user_id == event.self_id:
+            # 自身消息没必要标已读
+            return
         if event.group_id is None:
             debug_msg("私聊消息不读")
             return

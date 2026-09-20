@@ -4,13 +4,14 @@ import os
 from xme.xmetools import filetools
 # import asyncio
 import asyncio
+import aiohttp
 from config import IMAGE_TEMP_PATH
 # from aiocqhttp import MessageSegment
 from io import BytesIO
 from PIL import Image, ImageChops, ImageDraw
 import imagehash
 # from collections import defaultdict
-from xme.xmetools.reqtools import fetch_data
+from xme.xmetools.reqtools import PROXY_URL, fetch_data, fetch_file_stream
 import traceback
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
@@ -260,30 +261,87 @@ def                                                                             
         # img = Image.frombytes("RGB", screenshot.size, screenshot.rgb)
         return img, state
 
-async def get_url_image(url, headers={}):
-    response = await fetch_data(url, "byte", headers=headers)
+def decode_image_bytes(data: bytes, source: str = "") -> Image.Image:
+    """把图片字节解码为 PIL 图片（整图解码校验）；不可识别时抛 ValueError。
 
-    if not isinstance(response, (bytes, bytearray)):
-        raise TypeError(
-            f"fetch_data 返回类型错误: {type(response)!r}"
-        )
-
-    if len(response) == 0:
-        raise ValueError("下载到的图片数据为空")
-
+    source 只用于错误文案（URL 或文件路径），不参与读取逻辑。
+    """
+    if not isinstance(data, (bytes, bytearray)):
+        raise TypeError(f"图片数据不是字节: {type(data)!r}")
+    if len(data) == 0:
+        raise ValueError(f"图片数据为空（来源 {source or '未知'}）")
     try:
-        image = Image.open(BytesIO(response))
-
+        image = Image.open(BytesIO(data))
         # 确认整个图片文件确实可被 PIL 解码
         image.load()
-
         return image
-
     except Exception as e:
         raise ValueError(
-            f"无法识别图片，URL={url!r}, "
-            f"数据大小={len(response)} bytes"
+            f"无法识别图片，来源={source or '未知'}, "
+            f"数据大小={len(data)} bytes"
         ) from e
+
+
+async def get_url_image(url, headers={}):
+    response = await fetch_data(url, "byte", headers=headers)
+    return decode_image_bytes(response, source=f"URL={url!r}")
+
+
+# 公网图片单次下载的墙钟超时（秒）；失败重试一次，最坏耗时约两倍
+IMAGE_FETCH_TIMEOUT = 45.0
+# 直链取图失败时的兜底建议：先落到本地再插入，绕开站点的直链访问限制
+IMAGE_FETCH_FALLBACK_HINT = "可改用 download 下载到本地后传 ref 插入，或换一个图片直链"
+
+
+def _image_http_error_text(status: int) -> str:
+    """把图片下载的 HTTP 错误码转成可操作的中文说明（含兜底建议）。"""
+    if status == 400:
+        return (f"目标站点拒绝了该请求（HTTP 400）——链接可能不被允许直接访问"
+                f"（部分站点的缩略图只接受固定尺寸参数），{IMAGE_FETCH_FALLBACK_HINT}")
+    if status in (401, 403):
+        return (f"目标站点拒绝访问（HTTP {status}）——可能需要特定请求头/来源或登录，"
+                f"{IMAGE_FETCH_FALLBACK_HINT}")
+    if status == 404:
+        return f"图片不存在（HTTP 404）——链接可能已失效，{IMAGE_FETCH_FALLBACK_HINT}"
+    return f"目标站点返回 HTTP {status}，{IMAGE_FETCH_FALLBACK_HINT}"
+
+
+async def get_public_url_image(url, *, max_bytes: int, headers: dict | None = None,
+                               proxy: str | None = PROXY_URL, retries: int = 1) -> Image.Image:
+    """下载公网 URL 的图片并解码，返回 PIL 图片（失败抛 ValueError）。
+
+    面向"接受外部传入 URL"的调用方：经 fetch_file_stream 下载，自带 SSRF 校验
+    （DNS 逐 IP 检查 + 钉扎解析 + 重定向逐跳复检）、大小上限与超时，
+    并按配置走代理（proxy 缺省取 keys/config 决定的 PROXY_URL，与 download /
+    view_image 等取图路径一致；显式传 None 强制直连）。需要访问协议端本地地址的
+    调用方请继续使用 get_url_image（它不做公网校验）。
+    失败会重试至多 retries 次：仅瞬时故障（超时/连接错误/5xx）重试，
+    4xx、超限、SSRF 拒绝等确定性失败立即抛出，避免把等待时间翻倍。
+    """
+    attempts = max(1, int(retries) + 1)
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            data, _content_type = await fetch_file_stream(
+                url, max_size=max_bytes, headers=headers, proxy=proxy,
+                timeout=IMAGE_FETCH_TIMEOUT)
+            return decode_image_bytes(data, source=f"URL={url!r}")
+        except ValueError:
+            # SSRF 拒绝/协议不符/大小超限/无法解码：重试无意义，保留原始说明
+            raise
+        except aiohttp.ClientResponseError as ex:
+            if ex.status >= 500 and attempt + 1 < attempts:
+                last_error = ex
+                continue
+            raise ValueError(_image_http_error_text(ex.status)) from ex
+        except (asyncio.TimeoutError, aiohttp.ClientError, OSError) as ex:
+            if attempt + 1 < attempts:
+                last_error = ex
+                continue
+            raise ValueError(f"下载图片失败（{type(ex).__name__}），"
+                             f"{IMAGE_FETCH_FALLBACK_HINT}") from ex
+    raise ValueError(f"下载图片失败（{type(last_error).__name__}），"
+                     f"{IMAGE_FETCH_FALLBACK_HINT}") from last_error
 
 def hash_image(img):
     buffer = BytesIO()

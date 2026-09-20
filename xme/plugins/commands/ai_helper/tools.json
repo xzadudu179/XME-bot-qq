@@ -41,6 +41,27 @@
     {
         "type": "function",
         "function": {
+            "name": "insert_image",
+            "description": "把一张图片插入到你要发送给用户的消息里（图片会附在本轮最终回复中，用户能直接看到，不需要再用 send_file）。url 与 ref 二选一：url 为公网图片地址（http/https），ref 为本会话 temp/history 里的文件引用。想让用户看到某张图（例如搜索结果里的图、你下载/保存的图）时用这个，不要只把链接丢给用户。若 url 报错（站点拒绝直链：400/403、404、超时等），说明该站不允许直接取图，先用 download 把图存到 temp/history，再用 ref 参数插入即可，不要反复用同一个 url 重试。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "公网图片地址（http:// 或 https:// 开头；不支持内网/本机地址）。与 ref 二选一。"
+                    },
+                    "ref": {
+                        "type": "string",
+                        "description": "本会话 temp/history 的图片文件引用（如 file_1、history_2、笔记.md）。与 url 二选一，本地文件不联网。"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_skill_md",
             "description": "获取内部的 skill md文件的内容。name 只能是技能文档名（中英文/数字/_-.，不含任何路径符号）。",
             "parameters": {

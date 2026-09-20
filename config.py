@@ -19,6 +19,10 @@ SESSION_RUNNING_EXPRESSION = character.get_message('config', 'busy')
 DEFAULT_COMMAND_PERMISSION = lambda _: True  # noqa: E731
 # 用户自定义 config
 SELF_ID = 3893933165
+# 接收自身消息上报（post_type 为 message_sent 的扩展事件）。
+# 需要在协议端同时开启对应开关（NapCat / SnowLuma / LLOneBot 的 reportSelfMessage），
+# 关掉这里可让 bot 完全无视自身消息（用于回滚排查）
+REPORT_SELF_MESSAGE = True
 # 测试群
 GROUPS_WHITELIST = [
     727949269,
@@ -45,7 +49,7 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.14.2-preview'
+VERSION = '1.15.2-preview'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"

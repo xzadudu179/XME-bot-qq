@@ -66,6 +66,9 @@ MAX_HISTORY_VIEW = 30
 # 生成图片 credits 用量
 IMAGE_GEN_CREDITS = 80000
 
+# 插入消息的图片大小上限（insert_image / gen_image 共用；url 下载与本地文件同一上限）
+MAX_INSERT_IMAGE_SIZE = 10 * 1024 * 1024
+
 # url 下载文件最大大小
 MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
 

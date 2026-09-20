@@ -11,6 +11,9 @@ from character import get_message
 
 @message_preprocessor
 async def _(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+    if event.user_id == event.self_id:
+        # bot 自己发出的内容不该换来“正在寻宝不能用指令”的提示
+        return
     if not cmdtools.is_command(event.raw_message):
         return
     global seeking_players

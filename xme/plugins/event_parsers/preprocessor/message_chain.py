@@ -76,7 +76,8 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Pl
     #     print("忽略指令")
     #     return
     logger.debug(sending_msgs)
-    # NOTE：当前架构（nonebot1）似乎对于部分 onebot 实现（napcat/snowluma）不兼容“上报自身消息”，bot无法得到自身消息，所以永远不会出现打断。
+    # NOTE：自身消息由 nonebot/onebot_compat.py 把 message_sent 归一化后送来
+    # （协议端需开启 reportSelfMessage），break_chain 判定 groups_messages[0] 是否为 bot 自己发出
     if send and break_chain and not sending_msgs.get(chain_msg, False):
         logger.info(f"打断 \"{chain_msg}\"")
         sending_msgs[chain_msg] = True

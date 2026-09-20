@@ -19,7 +19,7 @@ from xme.xmetools.msgtools import image_msg
 from xme.xmetools.texttools import get_at_id
 from xme.xmetools.timetools import TimeUnit
 
-from . import api, binding, constants, render
+from . import api, binding, constants, records, render
 from .covers import (
     BADGES,
     COVERS,
@@ -65,25 +65,30 @@ def _split_skin(arg: str) -> tuple[str | None, str]:
 
 
 def _resolve_target(session: CommandSession, user: User, arg: str) -> tuple[str, str, int | None] | None:
-    """解析查分目标：参数用户名 → @提及者（需已绑定）→ 自己（需已绑定）。
+    """解析查分目标，Token 优先（Token 只能读到它对应账号的成绩，故可用于代查）。
 
-    未绑定时不回退 QQ 查询，返回 None 由调用方提醒绑定。
+    优先级：@提及者（其 Token，回退其用户名）→ 指定用户名（公开接口）→
+    自己（自己的 Token，回退自己的用户名）。均无绑定时返回 None，由调用方提示绑定。
 
     Returns:
-        tuple[str, str, int | None] | None: ("username", 用户名, 已知 QQ 或 None)；
-        自己/@ 目标未绑定时返回 None。
+        tuple[str, str, int | None] | None: (查询方式, Token或用户名, 用于头像的 QQ)；
+        查询方式为 "token"（本地算 b50）或 "username"（走公开接口）。
     """
     if arg.startswith("[CQ:at,qq="):
         at_id = get_at_id(arg)
         at_binding = binding.get_binding(try_load(at_id))
+        if at_binding[binding.TOKEN_KEY]:
+            return "token", at_binding[binding.TOKEN_KEY], at_id
         if at_binding[binding.USERNAME_KEY]:
             return "username", at_binding[binding.USERNAME_KEY], at_id
         return None
     if arg:
         return "username", arg, None
-    own = binding.get_binding(user)[binding.USERNAME_KEY]
-    if own:
-        return "username", own, session.event.user_id
+    own = binding.get_binding(user)
+    if own[binding.TOKEN_KEY]:
+        return "token", own[binding.TOKEN_KEY], session.event.user_id
+    if own[binding.USERNAME_KEY]:
+        return "username", own[binding.USERNAME_KEY], session.event.user_id
     return None
 
 
@@ -101,39 +106,8 @@ def _prune_render_cache() -> None:
         p.unlink(missing_ok=True)
 
 
-async def handle(session: CommandSession, user: User, arg: str) -> str:
-    """处理 b50 查分，返回拼好的回复消息（可能含图片消息段）。"""
-    skin, target_arg = _split_skin(arg)
-    resolved = _resolve_target(session, user, target_arg.strip())
-    if resolved is None:
-        # 自己没有绑定用户名，也不便通过 QQ 号查询
-        return get_message("plugins", __plugin_name__, 'not_bound')
-    target_type, target, known_qq = resolved
-    if detect_limit(
-        user=user,
-        name=constants.B50_LIMIT_NAME,
-        interval=constants.B50_LIMIT_INTERVAL,
-        count_limit=constants.B50_LIMIT_COUNT,
-        unit=TimeUnit.MINUTE,
-    ):
-        return get_message("plugins", __plugin_name__, 'limited')
-    try:
-        if target_type == "username":
-            raw = await api.query_player_b50(username=target)
-        else:
-            raw = await api.query_player_b50(qq=target)
-    except api.MaimaiAPIError as ex:
-        return _error_text(ex)
-    # 曲目表用于联表物量计算 DX 星级；失败仅影响星星展示
-    try:
-        music = await api.fetch_music_data()
-    except api.MaimaiAPIError as ex:
-        logger.warning(f"曲目表拉取失败，跳过 DX 星级计算: {ex}")
-        music = None
-    data = render.build_b50_card_data(raw, music)
-    if not data.dx and not data.sd:
-        # 该玩家还没有任何成绩记录，无需渲染卡片
-        return get_message("plugins", __plugin_name__, 'no_scores', username=data.username)
+async def _build_card_message(session: CommandSession, data, skin: str, known_qq: int | None) -> str:
+    """补齐资源（曲绘/徽章/框图/UI 小件）并渲染出图，返回最终消息（不限频、不落库）。"""
     # 渲染前补齐曲绘/徽章/框图：本地缓存优先，缺失才下载（受限并发），失败回退远程 URL
     song_ids = [s.song_id for s in data.dx + data.sd]
     data.covers = await COVERS.get_uris(song_ids)
@@ -205,8 +179,71 @@ async def handle(session: CommandSession, user: User, arg: str) -> str:
             name=data.username, rating=data.rating,
             summary=render.b50_text_summary(data),
         )
-    limit_count_tick(user, constants.B50_LIMIT_NAME)
-    user.save()
     if skin_tip:
         message = skin_tip + "\n" + message
+    return message
+
+
+async def _query_by_token(session: CommandSession, token: str, skin: str, known_qq: int | None = None) -> str:
+    """用成绩导入 Token 拉全量成绩并本地算 b50（Token 只能读到对应账号，可安全代查）。"""
+    try:
+        payload = await api.fetch_records_payload(token)
+    except api.MaimaiAPIError as ex:
+        return _error_text(ex)
+    # 曲目表用于判定新旧曲分组与补齐等级/定数，缺失时无法给出正确 b50
+    try:
+        music = await api.fetch_music_data()
+    except api.MaimaiAPIError as ex:
+        logger.warning(f"曲目表拉取失败，无法本地计算 b50: {ex}")
+        return get_message("plugins", __plugin_name__, 'api_error', ex=ex.message)
+    data = records.b50_from_records(payload, music)
+    if not data.dx and not data.sd:
+        return get_message("plugins", __plugin_name__, 'no_scores', username=data.username)
+    return await _build_card_message(session, data, skin, known_qq)
+
+
+async def handle(session: CommandSession, user: User, arg: str) -> str:
+    """处理 b50 查分：有 Token 时（自己的或 @ 提及者的）本地算 b50，否则走公开接口。"""
+    skin, target_arg = _split_skin(arg)
+    target = target_arg.strip()
+    if detect_limit(
+        user=user,
+        name=constants.B50_LIMIT_NAME,
+        interval=constants.B50_LIMIT_INTERVAL,
+        count_limit=constants.B50_LIMIT_COUNT,
+        unit=TimeUnit.MINUTE,
+    ):
+        return get_message("plugins", __plugin_name__, 'limited')
+
+    resolved = _resolve_target(session, user, target)
+    if resolved is None:
+        # @ 他人时对方没绑，与自己没绑要分开提示
+        key = 'at_not_bound' if target.startswith("[CQ:at,qq=") else 'not_bound'
+        return get_message("plugins", __plugin_name__, key)
+    target_type, target_value, known_qq = resolved
+
+    # 已绑 Token（自己的或 @ 提及者的）：拉全量成绩本地算 best50
+    if target_type == "token":
+        message = await _query_by_token(session, target_value, skin, known_qq)
+        limit_count_tick(user, constants.B50_LIMIT_NAME)
+        user.save()
+        return message
+
+    # 指定用户名 / 老数据里只绑了用户名：走水鱼公开接口
+    try:
+        raw = await api.query_player_b50(username=target_value)
+    except api.MaimaiAPIError as ex:
+        return _error_text(ex)
+    # 曲目表用于联表物量计算 DX 星级；失败仅影响星星展示
+    try:
+        music = await api.fetch_music_data()
+    except api.MaimaiAPIError as ex:
+        logger.warning(f"曲目表拉取失败，跳过 DX 星级计算: {ex}")
+        music = None
+    data = render.build_b50_card_data(raw, music)
+    if not data.dx and not data.sd:
+        return get_message("plugins", __plugin_name__, 'no_scores', username=data.username)
+    message = await _build_card_message(session, data, skin, known_qq)
+    limit_count_tick(user, constants.B50_LIMIT_NAME)
+    user.save()
     return message

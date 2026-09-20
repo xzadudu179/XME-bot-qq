@@ -1215,7 +1215,8 @@ class AIHelper:
                 "history_compressed": compressed, "talk_secs": self.spent_secs.get_timer_value(),
                 "context_limit": self.model_entry.get("context_limit") or CONTEXT_LIMIT_DEFAULT,
             }
-            if not (await is_text_can_send(session, ans, 4)):
+            # 回复风控（strictness=4：只有 REJECT/HIGH 级别会被拦下；返回 dict，取 result 判断）
+            if not (await is_text_can_send(session, ans, 4))["result"]:
                 return "这个话题好像不是很合适呢...我们换个话题聊吧。（本次对话不记录历史）", tokens_use_dict, messages_dict, 0
             build_history(
                 user=user,

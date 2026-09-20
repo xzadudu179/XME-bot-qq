@@ -75,6 +75,11 @@ B50_LIMIT_NAME = 'mai_b50'
 B50_LIMIT_INTERVAL = 1
 B50_LIMIT_COUNT = 10
 
+# Token 绑定 / 扫码同步限频（都要打外部接口，防刷）
+SYNC_LIMIT_NAME = 'mai_sync'
+SYNC_LIMIT_INTERVAL = 5
+SYNC_LIMIT_COUNT = 3
+
 # 默认查分卡皮肤名（official = 官方素材流式排版）
 DEFAULT_SKIN = 'official'
 

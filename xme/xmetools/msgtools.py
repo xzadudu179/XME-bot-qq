@@ -25,10 +25,13 @@ from logging.handlers import TimedRotatingFileHandler
 import logging
 import os
 
-# TODO: 图片风控适配
-
 async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = False, session=None, strictness = 3):
-    for result in results:
+    """分析风控返回的记录，返回 {"result": 是否放行, "reason": 原因}。
+
+    本函数必定返回 dict：没有任何可判定记录时（风控返回空 result_list，或风险等级
+    是未知值）按「未被标记」放行并记 warning。调用方直接取 ["result"] 即可。
+    """
+    for result in (results or []):
         risk = result['risk_level']
         level = {
             "PASS": "无危害",
@@ -72,6 +75,11 @@ async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = Fal
                 if risk_send_to_superusers:
                     await send_to_superusers(bot, risk_text)
                 return {"result": strictness > 5, "reason": "有高危内容"}
+    # 风控没有给出任何可判定的记录：按未被标记放行。
+    # 这里必须有兜底 return——缺了它会让 None 流到调用方（如 /ai 回复风控处的
+    # moderation_result["result"]），在风控返回空 result_list 时直接 TypeError
+    logger.warning(f"风控没有返回可判定的记录，按放行处理：{str(results)[:200]}")
+    return {"result": True, "reason": ""}
 
 async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
     try:

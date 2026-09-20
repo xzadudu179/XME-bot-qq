@@ -26,6 +26,7 @@ from xme.xmetools import jsontools
 from xme.xmetools.timetools import get_time_now
 
 from . import history
+from . import window
 from .constants import (
     DEFAULT_SHARED_TITLE,
     JOINED_FILE,
@@ -153,18 +154,25 @@ def acquire_busy(code: str, group_id=None, user_id=None) -> bool:
     return True
 
 
-def insert_context_allowed(code: str, group_id, user_id) -> bool:
-    """插入消息与首次调用者是否同源：同群，或同一人的私聊。
+def busy_group_id(code: str):
+    """该共享会话当前对话的发起窗口（群号，私聊为 None）；无占用返回 None。"""
+    info = _busy_codes.get(code)
+    return info.get("group_id") if info else None
 
-    首次调用发生在群聊 → 插入必须来自同一个群；发生在私聊 → 仅同一人的
-    私聊消息可插入（私聊本就只有一个人，跨私聊的插入看不到 AI 的回答）。
+
+def insert_context_allowed(code: str, group_id, user_id) -> bool:
+    """插入消息是否来自该共享会话的发起窗口。
+
+    群聊发起的对话只接受同一个群里的插入（同群成员可插话）；私聊发起的对话
+    只接受同一人的私聊插入——群里发来的消息不在这里的上下文里，看不到 AI
+    的回答，一律拒绝。
     """
     info = _busy_codes.get(code)
     if not info:
         return False
-    if info.get("group_id") is not None:
-        return group_id == info.get("group_id")
-    return user_id == info.get("user_id")
+    if info.get("group_id") is None and user_id != info.get("user_id"):
+        return False
+    return window.same_chat(info.get("group_id"), group_id)
 
 
 def release_busy(code: str) -> list[Insert]:

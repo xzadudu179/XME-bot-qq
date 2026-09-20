@@ -39,7 +39,7 @@ usage = {
     "name": cmd_name,
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction'),
-    "usage": '[用户名 | @某人] [-s 皮肤名]',
+    "usage": '<用户名 | @某人> [-s 皮肤名]',
     "permissions": [],
     "alias": alias,
 }

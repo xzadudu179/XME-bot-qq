@@ -113,11 +113,13 @@ def detect_file_type(path: str | Path) -> FileType:
         return FileType.BINARY
     return FileType.TEXT
 
-def get_local_file_url(path: str):
-    """将本地文件变为限时 url 链接（TTL 30s）
+def get_local_file_url(path: str, ttl: float | None = None):
+    """将本地文件变为限时 url 链接（TTL 缺省 30s，可用 ttl 指定）
 
     Args:
         path (str): 本地文件路径
+        ttl (float | None): 链接有效期（秒）；视频这类大文件要给模型服务端留足
+            拉取时间，传更长的值
 
     Raises:
         ValueError: 文件层级低于项目层级
@@ -129,8 +131,7 @@ def get_local_file_url(path: str):
     root = Path(".").absolute()
     if not path.is_relative_to(root):
         raise ValueError(f"文件 {path} 层级不能低于项目层级 {root}")
-    token = generate_file_token(path)
-    # 有 30秒的过期时间
+    token = generate_file_token(path, ttl)
     url = f"http://{DOMAIN}/file/{token}"
     return url
 

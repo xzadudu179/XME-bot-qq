@@ -188,9 +188,17 @@ def phash_compare(target_image: str | Image.Image, compare_image: str| Image.Ima
 
 
 def get_image(path_or_image: str | Image.Image) -> Image.Image:
+    """把「路径或图片对象」统一成 PIL 图片；其他类型直接拒绝。
+
+    协议端 get_image 之类的返回是 dict，误传给图片工具时在此立刻报错，
+    否则会在深处的 img.size 处抛难以定位的 AttributeError。
+    """
     if isinstance(path_or_image, str):
         return read_image(path_or_image)
-    return path_or_image
+    if isinstance(path_or_image, Image.Image):
+        return path_or_image
+    raise TypeError(f"get_image 只接受路径或 PIL 图片，收到 {type(path_or_image).__name__}"
+                    f"（协议端的图片响应请先经 get_url_image 取成图片）")
 
 def read_image(path):
     image = Image.open(path)

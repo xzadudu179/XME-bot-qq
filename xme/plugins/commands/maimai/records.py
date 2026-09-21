@@ -2,11 +2,13 @@
 
 水鱼官方的 b50 定义：新版本单曲 rating 最高的 15 张 + 旧版本单曲 rating 最高的 35 张。
 新旧曲用曲目表 basic_info.is_new 判定（"歌曲是否为当前版本的新歌"），ra 取自记录本身。
+宴谱（song_id >= UTAGE_SONG_ID_BASE）有成绩但不参与定数，直接排除。
 本模块为纯逻辑：依赖全部由参数传入，可脱离 bot 单独测试。
 """
 
 from nonebot.log import logger
 
+from .constants import UTAGE_SONG_ID_BASE
 from .render import B50CardData, B50SongScore, dx_star_count
 
 # 难度名：水鱼成绩记录与曲目表都不含难度名，按 level_index 固定映射
@@ -81,6 +83,9 @@ def b50_from_records(payload: dict, music_list: list[dict]) -> B50CardData:
     for record in payload.get("records") or []:
         music = music_map.get(str(record.get("song_id")))
         score = _to_score(record, music)
+        # 宴谱成绩存在但不参与定数，不能进 b50
+        if score.song_id >= UTAGE_SONG_ID_BASE:
+            continue
         if not score.ra:
             missing_ra += 1
         is_new = bool((music or {}).get("basic_info", {}).get("is_new"))

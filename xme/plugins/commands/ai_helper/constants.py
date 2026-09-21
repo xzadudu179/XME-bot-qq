@@ -122,6 +122,7 @@ LLM_MODELS = {
         "provider": "glm",
         "model": "glm-5.3-flash",
         "vision": True,              # 是否支持图片/视觉输入（决定图片直注入与带图切换）
+        "video": True,               # 是否接受 video_url 段（决定视频直注入与带视频切换）
         "context_limit": 1_000_000,  # 输入上下文上限（tokens，触发轮内折叠）
         "credit_multiplier": 1,      # credits 计费倍率
         "cache_credit_ratio": 0.25,  # 缓存命中的 tokens 按该比例计费（GLM 口径）
@@ -131,6 +132,7 @@ LLM_MODELS = {
         "provider": "glm",
         "model": "glm-5.3",
         "vision": False,
+        "video": False,
         "context_limit": 1_000_000,
         "credit_multiplier": 10,
         "cache_credit_ratio": 0.25,
@@ -140,6 +142,7 @@ LLM_MODELS = {
         "provider": "deepseek",
         "model": "deepseek-flash",
         "vision": True,
+        "video": False,              # DeepSeek 端点在 JSON 层拒绝 video_url 段（实测 http 422）
         "context_limit": 1_000_000,
         "credit_multiplier": 1.2,
         "cache_credit_ratio": 0.02,  # DeepSeek 缓存折扣很低（命中仅按 2% 计）
@@ -169,11 +172,18 @@ LLM_MODELS = {
 # （"chat" 走对话协议；glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
 LLM_CAPABILITIES = {
     "vision": {"provider": "deepseek", "model": "deepseek-flash", "api": "chat"},
+    # 视频单独一项能力：video_url 段只有 GLM 端点接受（DeepSeek 等 OpenAI 兼容端点
+    # 会在 JSON 层直接拒绝该段，实测 http 422 unknown variant 'video_url'）
+    "video": {"provider": "glm", "model": "glm-5.3-flash", "api": "chat"},
     "ocr": {"provider": "glm", "model": "glm-ocr", "api": "glm_layout_parsing"},
     "image_gen": {"provider": "glm", "model": "glm-image", "api": "glm_images"},
     "web_reader": {"provider": "glm", "model": "", "api": "glm_reader"},
     "moderation": {"provider": "glm", "model": "", "api": "glm_moderations"},
 }
+
+# 视频限时链接的有效期（秒）：模型服务端要拉取数 MB 视频，默认 30s 太紧，
+# 抓取超时就会变成 1210「媒体加载失败」→ 模型看不到视频
+VIDEO_URL_TTL = 300
 
 # 半流式日志：把模型的增量输出（思考/回复/工具调用）逐块写进 ai_helper 调试日志，
 # 便于后台排查模型输出问题；最终回复形态与计费完全不受影响
@@ -257,6 +267,12 @@ SEARCH_COOLDOWN_QUOTA = 6 * 3600.0    # 额度用完（tavily 432 / brave 月配
 SEARCH_COOLDOWN_AUTH = float("inf")   # key 无效：本进程内不再使用该引擎（重启才重试）
 SEARCH_COOLDOWN_RETRYABLE = 60.0      # 限流/超时/网络抖动：短冷却后重试
 SEARCH_COOLDOWN_UNKNOWN = 600.0       # 未分类错误：10 分钟冷却
+# ddgs（duckduckgo 引擎）的后端名单，逗号分隔、按序尝试，只允许 ddgs 在 text 类
+# 真实注册的名字：brave / duckduckgo / google / grokipedia / mojeek / startpage /
+# wikipedia / yahoo（写错名字时 ddgs 会静默退回 "auto"，又会轮番去撞被墙的站点）。
+# 默认取 2026-09 实测能返回结果的 yahoo + 廉价的 duckduckgo；可用
+# keys.SEARCH_PROVIDERS 的 duckduckgo.backend 按部署环境覆盖
+SEARCH_DDGS_BACKENDS = "yahoo,duckduckgo"
 
 # ---- 用户私聊文件缓存（received_files.py：get_received_files 工具的数据源）----
 RECEIVED_FILES_KEEP_PER_USER = 50     # 每个用户最多缓存的文件条数
@@ -271,20 +287,13 @@ RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
 RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
 RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限
 # 录制质量档位：output_width 是输出视频宽度（由档位单点定义，工具不再单独收 width 参数）。
-# every_nth：采集端隔帧数（1=全收变化帧）。帧率上限由合成端 fps_cap 降采样执行；
-# 采集端不再跳帧——跳帧在低变化页面会连首帧一起跳过导致 0 帧。
-# supersample = 设备缩放倍数（>1 为真超采样：布局视口不变、物理像素翻倍，合成时缩回输出宽）。
+# 录制机制为 Xvfb 虚拟显示 + ffmpeg x11grab 直录——fps 与 crf 完全独立，互不牵制。
 # x264_params 的 aq-mode=3 加强自适应量化，抑制 yuv420p 渐变色带（颜色分层）。
-# jpeg_quality 是采集端 screencast 帧的 JPEG 质量（合成前的源头质量）。
 RECORD_QUALITY_PRESETS = {
-    "low": {"output_width": 640, "crf": 32, "fps_cap": 8, "preset": "veryfast",
-            "supersample": 1, "jpeg_quality": 50, "x264_params": "", "every_nth": 1},
-    "medium": {"output_width": 1280, "crf": 25, "fps_cap": 10, "preset": "veryfast",
-               "supersample": 1, "jpeg_quality": 60, "x264_params": "", "every_nth": 1},
-    "high": {"output_width": 1920, "crf": 10, "fps_cap": 30, "preset": "faster",
-             "supersample": 1, "jpeg_quality": 80, "x264_params": "aq-mode=3:aq-strength=1.0",
-             "every_nth": 1},
-    # "max": {"output_width": 1920, "crf": 4, "fps_cap": 60, "preset": "medium",
-    #         "supersample": 2, "jpeg_quality": 85, "x264_params": "aq-mode=3:aq-strength=1.2",
-    #         "every_nth": 1},
+    "low": {"output_width": 640, "fps": 10, "crf": 32, "preset": "veryfast"},
+    "medium": {"output_width": 1280, "fps": 15, "crf": 25, "preset": "veryfast"},
+    "high": {"output_width": 1920, "fps": 30, "crf": 10, "preset": "faster",
+             "x264_params": "aq-mode=3:aq-strength=1.0"},
+    "max": {"output_width": 1920, "fps": 60, "crf": 4, "preset": "medium",
+            "x264_params": "aq-mode=3:aq-strength=1.2"},
 }

@@ -1723,11 +1723,11 @@
       },
       "bind": {
         "desc": "(私聊) 绑定水鱼 Token",
-        "introduction": "绑定水鱼查分器的成绩导入 Token，绑定后即可查分。\n\n{cmd_sep}mai bind 成绩导入Token 进行绑定，{cmd_sep}mai bind 查看当前绑定。"
+        "introduction": "绑定水鱼查分器的成绩导入 Token，绑定后即可查分与扫码同步成绩。\n\n{cmd_sep}mai bind 成绩导入Token 进行绑定，{cmd_sep}mai bind 查看当前绑定。"
       },
       "update": {
-        "desc": "更新数据 (暂时停用)",
-        "introduction": "该指令暂时停用，绑定 Token 请使用 {cmd_sep}mai bind。"
+        "desc": "(私聊) 扫码同步成绩",
+        "introduction": "用机台二维码把最新成绩同步到水鱼查分器。\n\n{cmd_sep}mai update 机台二维码（也可以直接发二维码图片）。\n需要先用 {cmd_sep}mai bind 绑定水鱼 Token。"
       },
       "unbind": {
         "desc": "解绑舞萌账号",
@@ -1754,7 +1754,7 @@
         "{negative} 水鱼查分器好像出问题了... 稍后再试试吧\n（{ex}）"
       ],
       "unknown_skin": "没有叫 \"{skin}\" 的皮肤哦... {neutral}\n可用皮肤：{skins}",
-      "current_binding": "你已经绑定水鱼账号啦{positive_punc}\nToken：{token}\n想换一个的话，再发一次 {cmd_sep}mai bind <新Token> 就行",
+      "current_binding": "你已经绑定水鱼账号啦{positive_punc}\nToken：{token}\n想换一个的话，再发一次 {cmd_sep}mai bind (新Token) 就行",
       "bind_usage": "请把你的水鱼成绩导入 Token 发给我哦{neutral}\n用法：{cmd_sep}mai bind <成绩导入Token>\n获取方式见水鱼手册：https://maimai.diving-fish.com/manual/\n（Token 是敏感凭证，只能在私聊里发给我哦）",
       "bind_success": [
         "成功绑定水鱼账号 \"{username}\"{positive_punc}\n现在可以用 {cmd_sep}mai b50 查分啦",
@@ -1765,12 +1765,18 @@
         "水鱼查分器上找不到用户 \"{username}\" 呢...确认一下用户名有没有写错吧 {neutral}",
         "没找到 \"{username}\" 这个账号哦...\n去水鱼查分器确认一下用户名吧 {neutral}"
       ],
-      "update_usage": "请发送你的成绩导入 Token 哦{neutral}\n用法：{cmd_sep}mai update <成绩导入Token>\n获取教程见水鱼手册：https://maimai.diving-fish.com/manual/\n（建议私聊 bot 操作防止账号被盗哦）",
+      "update_usage": [
+        "把机台的二维码发给我哦 {neutral}\n用法：{cmd_sep}mai update (机台二维码)（也可以直接发二维码图片）",
+        "唔... 没看到二维码呢{neutral}\n发 {cmd_sep}mai update 加二维码内容，或者直接把二维码图片发我"
+      ],
       "no_scores": [
         "用户 \"{username}\" 还没有任何成绩记录哦 {neutral}\n可以让机台成绩先同步到水鱼（{cmd_sep}mai update 绑定 Token 后同步）",
         "水鱼上还没有 \"{username}\" 的成绩呢... {sad}\n绑定 {cmd_sep}mai update 的成绩导入 Token 并同步后再来吧{positive_punc}"
       ],
-      "update_success": "水鱼账号绑定成功{positive_punc}\nToken：{token}\n已读取到 {count} 条成绩记录{positive_punc}\n现在用 {cmd_sep}mai b50 就能查分啦\n记得不要把 Token 发给别人哦 {neutral}",
+      "update_success": [
+        "同步完成啦{positive_punc}\n机台成绩 {count} 条 {positive}",
+        "同步完成{positive_punc} 机台 {count} 条成绩已经同步到水鱼啦"
+      ],
       "update_invalid": [
         "{negative} 这个成绩导入 Token 好像无效呢...\n去水鱼查分器官网重新生成一个试试吧",
         "Token 验证没有通过哦... {neutral}\n检查一下有没有复制完整呢"
@@ -1780,8 +1786,32 @@
         "成功解绑舞萌账号啦 {neutral}",
         "已经把你的舞萌绑定清除掉了哦 {neutral}"
       ],
-      "update_disabled": "mai update 暂时停用啦... {neutral}\n绑定水鱼 Token 请用：{cmd_sep}mai bind <成绩导入Token>",
-      "at_not_bound": "对方还没有绑定水鱼 Token 呢... {neutral}\n让 ta 用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查啦"
+      "at_not_bound": "对方还没有绑定水鱼 Token 呢... {neutral}\n让 ta 用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查啦",
+      "update_running": [
+        "正在同步中... {neutral}\n要拉一遍全量成绩，稍等我一下下",
+        "同步中... {neutral} 稍等片刻哦"
+      ],
+      "update_no_token": [
+        "你还没有绑定水鱼 Token 哦... {neutral}\n先 {cmd_sep}mai bind <成绩导入Token> 绑定一个，我才能把成绩同步过去",
+        "{negative} 得先绑定水鱼 Token 才能同步呢\n用 {cmd_sep}mai bind 绑定一下吧"
+      ],
+      "arcade_sgid_expired": [
+        "二维码过期啦... {neutral}\n去公众号重新获取一个（有效期大概 10 分钟）",
+        "{negative} 这个二维码已经过期了哦\n重新扫一个再发我吧"
+      ],
+      "arcade_sgid_format": "这个二维码好像不太对呢{negative}\n确认一下是不是完整的机台二维码内容吧{positive_punc}",
+      "arcade_already_logged_in": "账号还在登录状态哦... {neutral}\n上一次的会话没释放，等大概 15 分钟再试（别一直重试，会被限制的）",
+      "arcade_bad_token": "水鱼 Token 好像失效了 {negative}\n去查分器官网重新生成一个，再用 {cmd_sep}mai bind 绑一下",
+      "arcade_upload_failed": "上传到水鱼的时候被拒绝了... {neutral}\n先去水鱼网页看看是不是已经写进去一部分了",
+      "arcade_unmappable": "机台的成绩没能匹配上曲目... {sad}\n过一会儿再试试，或者找九九看看",
+      "arcade_blocked": "机台接口没给响应呢... {neutral}\n可能是出口网络被限制了，过几小时再试试吧",
+      "arcade_timeout": "同步超时了... {sad}\n网络有点慢，稍后再试一次吧",
+      "arcade_network_failed": "网络不太顺畅... {neutral}\n稍后再试试吧",
+      "arcade_param_failed": "同步参数有点问题呢{neutral}\n检查一下二维码有没有发完整？",
+      "arcade_business_failed": "同步失败了... {sad}\n稍后再试试，或者看看水鱼那边是不是正常",
+      "arcade_tool_missing": "扫码同步功能还没部署好呢... {neutral}\n（可以让九九把 mai-arcade 工具放到配置的路径）",
+      "arcade_bad_output": "同步工具返回了看不懂的内容... {sad}\n找我主人看看日志吧",
+      "arcade_failed": "同步失败了... {sad}\n稍后再试试吧"
     },
     "title": {
       "desc": "设置头衔",
@@ -2402,6 +2432,7 @@
       "no_arg": "你好像没有写内容哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
       "talking_to_ai": "[{ai_session}] 正在使用 \"{model}\" 模型询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦。",
       "model_change_prefix": "[BOT] 注意：{model} 模型没有多模态，自动转为 {vision_model}\n",
+      "video_model_change_prefix": "[BOT] 注意：{model} 模型不支持视频输入，自动转为 {video_model}（视频只有部分模型能看）\n",
       "error_model": "没有称为 \"{model}\" 的模型哦，只能指定为 {models} 中的任意一个呢",
       "talk_result": "{prefix}{positive}， AI 说：\"{talk}\"\n=======================\n对话消耗 {talk_time}\nAI 使用了 {tool_call_times} 次 tools，tokens 消耗 {tokens} ({cached} 已缓存)\n减少 {credits} credits。\n你本周还剩下 {tokens_left_now} 个 credits 哦 {neutral}\n上下文已使用 {history_used}。使用 \"/ai -c clear\" 可以删除历史对话记录\nAI 可能会说错或者说假话，记得辨别哦 {neutral}",
       "compress_context": "{neutral} 正在压缩上下文...",

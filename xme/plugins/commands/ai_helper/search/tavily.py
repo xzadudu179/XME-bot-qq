@@ -8,6 +8,7 @@ import asyncio
 
 from tavily import AsyncTavilyClient
 
+from .base import looks_like_network_error, looks_like_timeout_error
 from .types import (SearchError, SearchErrorKind, SearchResponse, SearchResult,
                     normalize_time_range)
 
@@ -26,12 +27,18 @@ def map_tavily_error(ex: Exception, engine: str = "tavily") -> SearchError:
         return SearchError(SearchErrorKind.TIMEOUT, str(ex), engine=engine)
     if TavilyTimeoutError and isinstance(ex, TavilyTimeoutError):
         return SearchError(SearchErrorKind.TIMEOUT, str(ex), engine=engine)
+    if looks_like_timeout_error(ex):
+        # SDK 底层的 httpx.ReadTimeout 等：超时语义（与网络类同属短冷却）
+        return SearchError(SearchErrorKind.TIMEOUT, f"{type(ex).__name__}: {ex}", engine=engine)
     if isinstance(ex, (InvalidAPIKeyError, MissingAPIKeyError)):
         return SearchError(SearchErrorKind.AUTH, str(ex), engine=engine)
     if isinstance(ex, ForbiddenError):   # 403/432/433：额度用完或账号被禁，长冷却后重试探路
         return SearchError(SearchErrorKind.QUOTA, str(ex), engine=engine)
     if isinstance(ex, UsageLimitExceededError):  # 429：瞬时限流，短冷却
         return SearchError(SearchErrorKind.RATE_LIMIT, str(ex), engine=engine)
+    if looks_like_network_error(ex):
+        # SDK 底层的 httpx 连接失败（ConnectError/ReadTimeout 等）：网络抖动，短冷却重试
+        return SearchError(SearchErrorKind.NETWORK, f"{type(ex).__name__}: {ex}", engine=engine)
     return SearchError(SearchErrorKind.UNKNOWN, f"{type(ex).__name__}: {ex}", engine=engine)
 
 

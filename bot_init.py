@@ -208,19 +208,19 @@ def colorize_console_log():
 
 
 def setup_lib_log():
-    """接管 root logger 的库日志（aiocqhttp/Quart 的事件行等）
+    """接管 root logger 的库日志（aiocqhttp/Quart/APScheduler 等）
 
-    心跳事件行降级为 DEBUG 不再刷控制台，事件行紧凑上色显示；全部库日志
-    落 ./logs/events.log（DEBUG 级，含心跳）；nonebot/send logger 关闭
-    传播避免经 root 重复打印。需在 nonebot.init 前调用，以抢占 Quart 懒
-    加载的默认 stderr handler。
+    心跳、定时任务例行执行等高频 INFO 行降级为 DEBUG 不再刷控制台，事件
+    行紧凑上色显示；全部库日志落 ./logs/events.log（DEBUG 级，含降级行）；
+    nonebot/send logger 关闭传播避免经 root 重复打印。需在 nonebot.init
+    前调用，以抢占 Quart 懒加载的默认 stderr handler。
     """
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-    root.addFilter(logtools.MetaEventDemoteFilter())
 
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
+    console.addFilter(logtools.RoutineLogDemoteFilter(drop=True))
     console.setFormatter(logtools.EventLogFormatter(
         "[%(asctime)s] [%(levelname)s] %(message)s"))
     root.addHandler(console)
@@ -230,6 +230,7 @@ def setup_lib_log():
         backupCount=30, encoding="utf-8", delay=True)
     events_handler.suffix = "%Y-%m-%d"
     events_handler.setLevel(logging.DEBUG)
+    events_handler.addFilter(logtools.RoutineLogDemoteFilter())
     events_handler.setFormatter(logging.Formatter(
         '[%(asctime)s] [%(levelname)s] %(message)s'))
     root.addHandler(events_handler)

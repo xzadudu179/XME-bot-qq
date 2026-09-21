@@ -73,11 +73,14 @@ LLM_PROVIDERS = {
 # 文件里没有该配置时自动回落 tavily-only（用上面的 TAVILY_API_KEY）
 SEARCH_PROVIDERS = {
     "tavily": {"api_key": TAVILY_API_KEY},
-    # "duckduckgo": {"proxy": True},
+    # backend 可覆盖默认的 ddgs 后端名单（缺省见 constants.SEARCH_DDGS_BACKENDS；
+    # 只能填 ddgs 在 text 类真实注册的名字：brave/duckduckgo/google/grokipedia/mojeek/
+    # startpage/wikipedia/yahoo，写错会静默退回 auto）
+    # "duckduckgo": {"proxy": True, "backend": "yahoo,duckduckgo"},
     # "brave": {"api_key": "", "proxy": True},
 }
 
-def generate_file_token(path: str) -> str:
+def generate_file_token(path: str, ttl: float | None = None) -> str:
     # 发放前清掉过期项：访问端只在 token 被再次访问时才惰性删除，
     # 从未被再次访问的过期 token 会常驻内存
     now = time.time()
@@ -86,7 +89,8 @@ def generate_file_token(path: str) -> str:
     token = secrets.token_urlsafe(32)
     FILE_TOKENS[token] = {
         "path": path,
-        "expires_at": now + TOKEN_TTL,
+        # ttl 缺省用 TOKEN_TTL；视频这类大文件要留给模型服务端更长的拉取时间
+        "expires_at": now + (TOKEN_TTL if ttl is None else ttl),
     }
     return token
 

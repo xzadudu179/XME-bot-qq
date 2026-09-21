@@ -23,6 +23,10 @@ QUERY_PLAYER_PATH = '/query/player'
 PLAYER_RECORDS_PATH = '/player/records'
 MUSIC_DATA_PATH = '/music_data'
 
+# 宴谱的 song_id 起点。宴谱有成绩但不参与定数，所以不进 b50——
+# records 里每条都带 ra，宴谱定数又高（12~14.7），不排除会顶掉真正的 b50 条目。
+UTAGE_SONG_ID_BASE = 100000
+
 # 曲绘：主源为水鱼官方 covers（png，id 补零 5 位，10001~11000 减 10000，见 covers.cover_divingfish_url）；
 # 备源为落雪资产站 jacket（水鱼 id 换算见 covers.jacket_lxns_id）
 COVER_DIVINGFISH_URL = 'https://www.diving-fish.com/covers/{}.png'
@@ -79,6 +83,38 @@ B50_LIMIT_COUNT = 10
 SYNC_LIMIT_NAME = 'mai_sync'
 SYNC_LIMIT_INTERVAL = 5
 SYNC_LIMIT_COUNT = 3
+
+# 机台协议工具（mai-arcade）调用参数。二维码经 stdin 传入，绝不放命令行参数。
+ARCADE_SYNC_COMMAND = 'sync'
+ARCADE_TIMEOUT = 180  # 秒：拉全曲库 + 全量成绩 + 上传水鱼
+
+# 外部工具的失败文案：优先按 error.code 精确匹配，未命中时按退出码兜底。
+# 退出码语义由工具约定：0 成功 / 1 业务失败 / 2 网络或阻断 / 3 参数错。
+ARCADE_CODE_KEYS = {
+    'sgid_format': 'arcade_sgid_format',
+    'sgid_expired': 'arcade_sgid_expired',
+    'already_logged_in': 'arcade_already_logged_in',
+    'site_credential_invalid': 'arcade_bad_token',
+    'site_upload_failed': 'arcade_upload_failed',
+    'site_unexpected_status': 'arcade_upload_failed',
+    'site_scores_unmappable': 'arcade_unmappable',
+    'site_chart_index_unavailable': 'arcade_network_failed',
+    'empty_response': 'arcade_blocked',
+    'timeout': 'arcade_timeout',
+    'network': 'arcade_network_failed',
+    'aime_unavailable': 'arcade_network_failed',
+    'usage': 'arcade_param_failed',
+    'param': 'arcade_param_failed',
+    # 工具本身没能给出结果（bot 侧判定，见 arcade.py 的 TOOL_* 常量）
+    'tool_missing': 'arcade_tool_missing',
+    'bad_output': 'arcade_bad_output',
+}
+ARCADE_EXIT_KEYS = {
+    1: 'arcade_business_failed',
+    2: 'arcade_network_failed',
+    3: 'arcade_param_failed',
+}
+ARCADE_FALLBACK_KEY = 'arcade_failed'
 
 # 默认查分卡皮肤名（official = 官方素材流式排版）
 DEFAULT_SKIN = 'official'

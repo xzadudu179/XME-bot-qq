@@ -170,25 +170,43 @@ def model_by_name(name: str) -> dict | None:
     return None
 
 
-def vision_entry() -> dict:
-    """取"视觉模型"目录项：能力配置 vision 优先，否则目录里第一个 vision=True 的项。
+def _capability_entry(capability: str, flag: str) -> dict:
+    """按能力配置（LLM_CAPABILITIES）取模型目录项；缺配置时回落目录里第一个具备该能力的项。
 
-    用于带图轮切换模型（替代原先硬编码的 FLASH_MODEL 判据）。
+    flag 是该能力在目录项里的布尔字段名（vision / video）。
     """
-    cap = get_capability("vision")
+    cap = get_capability(capability)
     if cap.get("provider") and cap.get("model"):
         entry = model_by_name(cap["model"])
         if entry is not None:
             return entry
         return {"alias": f"{cap['provider']}/{cap['model']}", "provider": cap["provider"],
-                "model": cap["model"], "vision": True,
+                "model": cap["model"], flag: True,
                 "context_limit": _default_context_limit(), "credit_multiplier": 1}
     for alias, entry in _model_table().items():
-        if entry.get("vision"):
+        if entry.get(flag):
             found = dict(entry)
             found.setdefault("alias", alias)
             return found
-    raise LLMError(LLMErrorKind.BAD_REQUEST, "模型目录里没有可用的视觉模型（LLM_MODELS / LLM_CAPABILITIES）")
+    raise LLMError(LLMErrorKind.BAD_REQUEST,
+                   f"模型目录里没有可用的「{capability}」模型（LLM_MODELS / LLM_CAPABILITIES）")
+
+
+def vision_entry() -> dict:
+    """取"视觉模型"目录项：能力配置 vision 优先，否则目录里第一个 vision=True 的项。
+
+    用于带图轮切换模型（替代原先硬编码的 FLASH_MODEL 判据）。
+    """
+    return _capability_entry("vision", "vision")
+
+
+def video_entry() -> dict:
+    """取"视频模型"目录项：能力配置 video 优先，否则目录里第一个 video=True 的项。
+
+    视频段（video_url）只有 GLM 端点接受，DeepSeek 等 OpenAI 兼容端点会在 JSON 层
+    直接拒绝该段，因此带视频的轮次不能沿用 vision 判据。
+    """
+    return _capability_entry("video", "video")
 
 
 def _default_context_limit() -> int:

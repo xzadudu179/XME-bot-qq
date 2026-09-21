@@ -68,19 +68,35 @@ class ColoredFormatter(logging.Formatter):
         return result
 
 
-class MetaEventDemoteFilter(logging.Filter):
-    """把 aiocqhttp 的心跳/生命周期事件行降级为 DEBUG
+class RoutineLogDemoteFilter(logging.Filter):
+    """把第三方库的高频例行 INFO 行降级为 DEBUG
 
-    必须挂在 logger 上而不是 handler 上：logger 级 filter 在各 handler
-    的级别判断之前生效，控制台（INFO）不再显示心跳，文件 handler（DEBUG）
-    仍完整记录。
+    覆盖 aiocqhttp 心跳/生命周期事件行、APScheduler 例行任务执行行
+    （Running job / executed successfully）；任务异常是 ERROR 级不受影响。
+    应挂在 handler 上：logger 级 filter 只对直接发自该 logger 的记录生效，
+    子 logger 传播来的记录不会经过。
+
+    drop=False（默认）：把例行行降级为 DEBUG 后放行，供文件 handler 归档；
+    drop=True：直接丢弃例行行，供控制台 handler 降噪。
     """
+    DEMOTE_PATTERNS = (
+        "received event: meta event",
+        'Running job "',
+        '" executed successfully',
+    )
+
+    def __init__(self, drop=False):
+        super().__init__()
+        self.drop = drop
 
     def filter(self, record):
-        if record.levelno <= logging.INFO and \
-                "received event: meta event" in record.getMessage():
-            record.levelno = logging.DEBUG
-            record.levelname = "DEBUG"
+        if record.levelno <= logging.INFO:
+            message = record.getMessage()
+            if any(pattern in message for pattern in self.DEMOTE_PATTERNS):
+                record.levelno = logging.DEBUG
+                record.levelname = "DEBUG"
+                if self.drop:
+                    return False
         return True
 
 

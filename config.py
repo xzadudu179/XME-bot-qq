@@ -49,12 +49,14 @@ PEEK_GROUP = [
 ]
 
 NICKNAME = character.get_character_item('bot_info', 'nickname', default=['XME', 'xme'])
-VERSION = '1.15.2-preview'
+VERSION = '1.15.3'
 
 USER_PATH = "./data/users.json"
 BOT_SETTINGS_PATH = "./data/_botsettings.json"
 IMAGE_TEMP_PATH = "./data/images/temp/"
 CONTAINER_BOT_PATH = "/xmebot"
+# 舞萌机台协议工具（独立 Go 项目 mai-arcade）的二进制路径，供 /mai update 调用
+MAI_ARCADE_PATH = "./bin/mai-arcade"
 DEBUG = False
 
 USE_PROXY = True

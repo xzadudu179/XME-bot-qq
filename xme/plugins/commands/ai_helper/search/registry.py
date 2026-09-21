@@ -95,7 +95,8 @@ def get_engine(name: str):
     if name == "tavily":
         engine = cls(api_key=str(cfg.get("api_key") or ""))
     elif name == "duckduckgo":
-        engine = cls(proxy=_proxy_of(cfg), timeout=timeout)
+        # backend 可按部署覆盖 ddgs 后端名单（缺省用 constants.SEARCH_DDGS_BACKENDS）
+        engine = cls(proxy=_proxy_of(cfg), timeout=timeout, backend=cfg.get("backend"))
     elif name == "brave":
         engine = cls(api_key=str(cfg.get("api_key") or ""), proxy=_proxy_of(cfg), timeout=timeout)
     else:

@@ -25,7 +25,7 @@ from xme.xmetools.msgtools import create_image_message
 from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
 from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image
 from xme.xmetools.bottools import bot_call_action
-from ..constants import MAX_DOWNLOAD_FILE_SIZE
+from ..constants import MAX_DOWNLOAD_FILE_SIZE, VIDEO_URL_TTL
 from xme.plugins.commands.ai_helper.llm import registry
 from config import IMAGE_TEMP_PATH, CONTAINER_BOT_PATH
 from ._common import exception_detail, ImageToolResult
@@ -243,8 +243,13 @@ async def get_received_files(max_count: int = 5, within_hours: float = 24.0,
 
 async def web_search(query: str, max_results: int = 10, time_range: str = ""):
     """联网搜索薄壳：多引擎抽象层按配置顺序自动回退（keys.SEARCH_PROVIDERS）。"""
-    from ..search import search_with_fallback
-    resp = await search_with_fallback(query, max_results=max_results, time_range=time_range)
+    from ..search import SearchError, search_with_fallback
+    try:
+        resp = await search_with_fallback(query, max_results=max_results, time_range=time_range)
+    except SearchError as ex:
+        # 所有引擎都失败：明确告诉模型下一步怎么办，别让它反复重试同一个搜索
+        return {"result": f"[搜索失败：{ex.message}。可改用 read_webpage 直接读取已知站点页面，"
+                          f"或稍后再试；不要用同样的关键词反复重试]", "no_compress": True}
     return {
         "query": resp.query,
         "engine": resp.engine,
@@ -277,7 +282,8 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", force_use_a
         if not result.ok or not result.file_paths:
             return f"[查看视频错误：视频下载失败（{result.error}）]"
         agent.temp_file_paths += result.file_paths  # 对话结束随 temp 清理
-        url = get_local_file_url(str(result.file_paths[0]))  # 合集只分析第一个视频
+        # 视频链接用更长的有效期：模型服务端要拉取数 MB 视频，30s 太紧
+        url = get_local_file_url(str(result.file_paths[0]), ttl=VIDEO_URL_TTL)  # 合集只分析第一个视频
         return await view_item(url=url, prompt=prompt, item_type="video_url", force_use_agent=force_use_agent, agent=agent)
     path_or_url = agent.resolve_ref(ref) if ref else url
     dur = await get_video_duration(path_or_url)
@@ -393,8 +399,12 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         case _:
             raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
     part = {"type": item_type, item_type: {name: url}}
-    # 视觉轮直注入：省一次独立调用与重复计费，模型在原对话里直接看
-    if agent is not None and getattr(agent, "current_vision", False) and not force_use_agent:
+    # 直注入：省一次独立调用与重复计费，模型在原对话里直接看。
+    # 能力按媒体类型判：视频段（video_url）只有 GLM 之类的端点接受，
+    # 只支持图片的端点收下会 422，因此不能用同一个 vision 判据
+    can_inject = agent is not None and not force_use_agent \
+        and getattr(agent, "supports_media", lambda _t: False)(item_type)
+    if can_inject:
         type_names = {"file": "文件", "image_url": "图片", "video_url": "视频"}
         label = type_names.get(item_type, item_type)
         # 注入前探测：解析不了的媒体绝不谎称"已附上"，显式报告给模型
@@ -421,8 +431,9 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         ]},
     ]
     try:
-        # 视觉分析走统一 provider（能力配置 vision：默认 GLM flash，可改为其他兼容端点）
-        entry = registry.vision_entry()
+        # 独立分析按媒体类型选模型：图片走 vision 能力，视频走 video 能力
+        # （video_url 段只有 GLM 之类端点接受，用只支持图片的端点会直接 422）
+        entry = registry.video_entry() if item_type == "video_url" else registry.vision_entry()
         provider = registry.get_provider(entry["provider"])
         if provider is None:
             return f"[查看文件失败：provider {entry['provider']} 未配置]"
@@ -537,8 +548,8 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
             ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
         return (f"截图完成（{width}x{height}），已保存到 temp（引用 {ref}）。\n"
                 f"需要分析内容时可用 view_image 传入该引用。")
-    # 视觉轮直注入：截图直接进当前对话，不再单独调 view_item 分析
-    if agent is not None and getattr(agent, "current_vision", False):
+    # 直注入：截图直接进当前对话，不再单独调 view_item 分析
+    if agent is not None and getattr(agent, "supports_media", lambda _t: False)("image_url"):
         return ImageToolResult(
             f"截图完成（{width}x{height}），截图已直接附在输入中。请针对该截图完成：{prompt}",
             [{"type": "image_url", "image_url": {"url": file_url}}])

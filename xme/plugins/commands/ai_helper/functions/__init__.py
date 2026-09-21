@@ -47,6 +47,7 @@ __tools__ = [
     "get_received_files",
     "monitor_element",
     "record_page",
+    "record_page_hd",
     "send_file",
     "edit_file",
     "syntax_check",
@@ -79,7 +80,7 @@ from .files import (
     zip_files,
 )
 from .codeexec import run_python
-from .browser import monitor_element, record_page
+from .browser import monitor_element, record_page, record_page_hd
 from .media import gen_image, insert_image, ocr_image
 from .misc import ask_user, dice, get_user_input_urls, inprocess_report, name_session
 from .web import (

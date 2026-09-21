@@ -449,6 +449,8 @@ class AIHelper:
         # 是否走图片直注入（ImageToolResult）；每轮由 run_agent 刷新
         self.current_model = self.model
         self.current_vision = bool(self.model_entry.get("vision"))
+        # 视频段（video_url）是否受支持与图片分开判定：DeepSeek 等端点只吃图片
+        self.current_video = bool(self.model_entry.get("video"))
         self.cached_tokens = 0
         self.session = session
         self.user_id = user_id
@@ -543,10 +545,11 @@ class AIHelper:
 
         model_entry 为模型目录项（provider/真实模型名/视觉能力等），由 user_talk 解析。
         """
-        # 本轮真实模型与视觉能力：工具（view_item/screenshot_page 等）据此决定
-        # 是否走图片直注入（ImageToolResult）
+        # 本轮真实模型与媒体能力：工具（view_item/screenshot_page 等）据此决定
+        # 是否走媒体直注入（ImageToolResult）；视频单独一位（端点未必支持 video_url）
         self.current_model = model_entry["model"]
         self.current_vision = bool(model_entry.get("vision"))
+        self.current_video = bool(model_entry.get("video"))
         MAX_RETRY_TIMES = 5
         retry_times = 0
         while True:
@@ -635,21 +638,27 @@ class AIHelper:
                     "content": result_text,
                     "tool_call_id": tool_call.id
                 })
-            # 图片直注入（ImageToolResult）：工具拿到的图片/视频/文件不再经独立视觉
-            # 调用转述，而是合并为一条 user 消息附给本轮模型，让模型亲自查看
-            if injected_parts and not self.current_vision:
-                # 工具带图但当前模型不支持视觉（如 ask_user 收到用户图片）：切视觉模型，
-                # 与插入消息带图的切换行为一致；切换失败（无视觉模型配置）则放弃注入
+            # 图片/视频直注入（ImageToolResult）：工具拿到的媒体不再经独立视觉调用转述，
+            # 而是合并为一条 user 消息附给本轮模型，让模型亲自查看
+            has_video = any(isinstance(p, dict) and p.get("type") == "video_url"
+                            for p in injected_parts)
+            if injected_parts and not self.supports_media("video_url" if has_video else "image_url"):
+                # 当前模型收不了这些媒体（如带图轮用了无多模态模型、或视频遇上只支持图片的
+                # 端点）：切到对应能力模型；切换失败（无可用配置）则放弃注入，不谎称已附上
                 try:
-                    model_entry = registry.vision_entry()
+                    model_entry = (registry.video_entry() if has_video
+                                   else registry.vision_entry())
                 except LLMError as ex:
-                    ai_logger.warning(f"工具返回了图片但切换视觉模型失败，放弃注入：{ex}")
+                    ai_logger.warning(f"工具返回了媒体但切换模型失败，放弃注入：{ex}")
                     injected_parts = []
                 else:
                     self.current_model = model_entry["model"]
-                    self.current_vision = True
-                    ai_logger.info(f"工具返回图片，本轮切换视觉模型: {self.current_model}")
-            if injected_parts and self.current_vision:
+                    self.current_vision = bool(model_entry.get("vision"))
+                    self.current_video = bool(model_entry.get("video"))
+                    ai_logger.info(
+                        f"工具返回{'视频' if has_video else '图片'}，本轮切换模型: {self.current_model}")
+            if injected_parts and self.supports_media(
+                    "video_url" if has_video else "image_url"):
                 messages.append({"role": "user", "content": build_user_content(
                     _INJECT_MEDIA_NOTE, [], injected_parts)})
 
@@ -890,7 +899,10 @@ class AIHelper:
                     new_text = new_text[:link.start] + info_text + new_text[link.end:]
                     for f in r.file_paths:
                         pths.append(f)
-                        video_dicts.append({"type": "video_url", "video_url": {"url": get_local_file_url(str(f))}})
+                        # 视频链接给模型服务端留足拉取时间（默认 30s 太短，抓取超时会变成
+                        # 1210「媒体加载失败」即模型看不到视频）
+                        video_dicts.append({"type": "video_url", "video_url": {
+                            "url": get_local_file_url(str(f), ttl=constants.VIDEO_URL_TTL)}})
             except Exception as ex:
                 return f"[解析视频出现异常: {ex}]" + new_text, [], []
         # 媒体直链：LLM 已持有可用直链，直接原样附入（不下载、不暴露额外链接）
@@ -901,19 +913,28 @@ class AIHelper:
         new_text = _DIRECT_VIDEO_RE.sub(_direct_repl, new_text)
         return new_text, video_dicts, pths
 
-    def entry_for_media(self) -> tuple[dict, str]:
+    def entry_for_media(self, has_video: bool = False) -> tuple[dict, str]:
         """带媒体（图片/视频）的轮次用哪个模型。
 
-        当前模型自身具备视觉能力 → 直接用它（不切换、无提示）；
-        否则切到配置的视觉模型（LLM_CAPABILITIES.vision）。
+        当前模型自身支持该媒体类型 → 直接用它（不切换、无提示）；否则切到对应能力
+        配置的模型：图片看 vision，视频看 video（video_url 段只有 GLM 端点接受，
+        DeepSeek 等 OpenAI 兼容端点会在 JSON 层拒绝，所以视频不能沿用 vision 判据）。
         返回 (模型目录项, 切换提示文案；无切换时为空串)。
         """
-        if self.model_entry.get("vision"):
+        need = "video" if has_video else "vision"
+        if self.model_entry.get(need):
             return self.model_entry, ""
-        entry = registry.vision_entry()
-        prefix = get_message("plugins", __plugin_name__, "model_change_prefix",
-                             model=self.model, vision_model=entry["model"])
+        entry = registry.video_entry() if has_video else registry.vision_entry()
+        message_key = "video_model_change_prefix" if has_video else "model_change_prefix"
+        prefix = get_message("plugins", __plugin_name__, message_key,
+                            model=self.model, vision_model=entry["model"], video_model=entry["model"])
         return entry, prefix
+
+    def supports_media(self, item_type: str) -> bool:
+        """本轮模型能否直接收下这类媒体段（图/文件看 vision，视频看 video）。"""
+        if item_type == "video_url":
+            return bool(getattr(self, "current_video", False))
+        return bool(getattr(self, "current_vision", False))
 
     @staticmethod
     def recent_context_text(history: list) -> str:
@@ -1107,7 +1128,7 @@ class AIHelper:
                 {"role": "user","content": build_user_content(f"{curr_text}\n{text}", [], url_dicts)},
             ]
             if url_dicts:
-                real_entry, prefix = self.entry_for_media()
+                real_entry, prefix = self.entry_for_media(has_video=bool(video_dicts))
             else:
                 # 无媒体的普通对话：按话题动态挑模型（带上最近对话，识别开场设定的人设/角色扮演）
                 real_entry = await self.route_model_entry(

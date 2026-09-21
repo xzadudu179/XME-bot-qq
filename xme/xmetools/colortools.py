@@ -27,7 +27,18 @@ def rgb_text(text, f=(255, 255, 255), b=(0, 0, 0), background=False):
     return return_content
 
 def hex_text(text, f="#FFFFFF", b="#000000", background=False):
-    rgb_text(text=text , f=hex_to_rgb(f), b=hex_to_rgb(b))
+    """给文字上十六进制颜色
+
+    Args:
+        text (str): 文字内容
+        f (str): 前景颜色，"#RRGGBB"
+        b (str): 背景颜色，"#RRGGBB"
+        background (bool): 是否启用背景颜色
+
+    Returns:
+        str: 上色的文字
+    """
+    return rgb_text(text, f=hex_to_rgb(f), b=hex_to_rgb(b), background=background)
 
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB."""

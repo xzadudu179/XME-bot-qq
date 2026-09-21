@@ -12,7 +12,7 @@ import character
 async def connect(event: aiocqhttp.Event):
     global self_id
     # bot = nonebot.get_bot()
-    print(c.gradient_text("#dda3f8","#66afff" ,text=f"{character.get_message('bot_info', 'name')} 准备好啦~"))
+    print(c.gradient_text("#a8ffc5","#66c7ff" ,text=f"{character.get_message('bot_info', 'name')} 准备好啦~"))
     vars = read_from_path("data/bot_vars.json")
     vars["self_id"] = event.self_id
     save_to_path("data/bot_vars.json", vars)

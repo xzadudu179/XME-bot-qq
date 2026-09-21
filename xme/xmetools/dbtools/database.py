@@ -7,6 +7,7 @@ from typing import Type
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.dbtools.adapter import adapt_value, build_where, validate_identifier
 from xme.xmetools.dbtools.connection import database_connect
+from xme.xmetools.dbtools.expressions import ColumnExpr
 from xme.xmetools.dbtools.protocol import T_DbReadWriteable
 from xme.xmetools.dbtools.schema import ensure_table_schema
 
@@ -87,7 +88,9 @@ class XmeDatabase:
         Args:
             obj (T_DbReadWriteable): 模型实例（仅用于确定表名）
             id (int): 行主键
-            **kwargs: 列名 -> 新值（值需已可入库）
+            **kwargs: 列名 -> 新值（值需已可入库），或 ColumnExpr 表示相对当前行的
+                表达式更新（如 add(100) → col = col + 100、merge_patch({...}) →
+                json_patch(col, ?) 局部更新，见 dbtools.expressions）
 
         Returns:
             int: 受影响行数
@@ -104,8 +107,14 @@ class XmeDatabase:
         placeholders = []
         values = []
         for k, v in kwargs.items():
-            placeholders.append(f"{validate_identifier(k)} = ?")
-            values.append(v)
+            column = validate_identifier(k)
+            if isinstance(v, ColumnExpr):
+                # 表达式只由 expressions 模块的构造函数产出，列名已过白名单校验
+                placeholders.append(f"{column} = {v.render(column)}")
+                values.extend(v.params)
+            else:
+                placeholders.append(f"{column} = ?")
+                values.append(v)
         placeholders_msg = ", ".join(placeholders)
         values.append(id)
         sql = f"UPDATE {table_name} SET {placeholders_msg} WHERE id = ?"
@@ -159,7 +168,14 @@ class XmeDatabase:
         d = self._load_from_db(select_keys=select_keys, table_name=cl.get_table_name(), query=query)
         if d is None:
             return None
-        return cl.form_dict(d)
+        instance = cl.form_dict(d)
+        # 记录加载时的原始行值（JSON 列即原始字符串）：模型据此只写变化的部分
+        # （见 User.flush），无需再查库或深拷贝快照
+        try:
+            instance._loaded_row = d
+        except AttributeError:
+            pass
+        return instance
 
     @database_connect
     def _load_from_db(self, cursor, select_keys: tuple, table_name: str,

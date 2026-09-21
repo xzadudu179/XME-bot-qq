@@ -268,5 +268,23 @@ BROWSER_NAV_WAIT_MS = 2000            # 页面加载完成后的额外等待（�
 MONITOR_MAX_DURATION = 60             # 元素监听的最长采样时长（秒）
 MONITOR_MAX_INTERVAL = 30             # 元素监听的采样间隔上限（秒）
 RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
-RECORD_MAX_WIDTH = 1920               # 录制画面宽度上限
-RECORD_MIN_WIDTH = 400                # 录制画面宽度下限
+RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
+RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限
+# 录制质量档位：output_width 是输出视频宽度（由档位单点定义，工具不再单独收 width 参数）。
+# every_nth：采集端隔帧数（1=全收变化帧）。帧率上限由合成端 fps_cap 降采样执行；
+# 采集端不再跳帧——跳帧在低变化页面会连首帧一起跳过导致 0 帧。
+# supersample = 设备缩放倍数（>1 为真超采样：布局视口不变、物理像素翻倍，合成时缩回输出宽）。
+# x264_params 的 aq-mode=3 加强自适应量化，抑制 yuv420p 渐变色带（颜色分层）。
+# jpeg_quality 是采集端 screencast 帧的 JPEG 质量（合成前的源头质量）。
+RECORD_QUALITY_PRESETS = {
+    "low": {"output_width": 640, "crf": 32, "fps_cap": 8, "preset": "veryfast",
+            "supersample": 1, "jpeg_quality": 50, "x264_params": "", "every_nth": 1},
+    "medium": {"output_width": 1280, "crf": 25, "fps_cap": 10, "preset": "veryfast",
+               "supersample": 1, "jpeg_quality": 60, "x264_params": "", "every_nth": 1},
+    "high": {"output_width": 1920, "crf": 10, "fps_cap": 30, "preset": "faster",
+             "supersample": 1, "jpeg_quality": 80, "x264_params": "aq-mode=3:aq-strength=1.0",
+             "every_nth": 1},
+    # "max": {"output_width": 1920, "crf": 4, "fps_cap": 60, "preset": "medium",
+    #         "supersample": 2, "jpeg_quality": 85, "x264_params": "aq-mode=3:aq-strength=1.2",
+    #         "every_nth": 1},
+}

@@ -10,6 +10,7 @@ from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.dicttools import set_value
+from xme.xmetools.logtools import ColoredFormatter
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
@@ -124,9 +125,11 @@ def setup_logger(name: str, filename: str):
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    # 控制台输出
+    # 控制台输出（文件日志保持纯文本）
     console = logging.StreamHandler()
-    console.setFormatter(formatter)
+    console.setFormatter(ColoredFormatter(
+        "[%(asctime)s] [%(levelname)s] %(message)s"
+    ))
     logger.addHandler(console)
     return logger
 

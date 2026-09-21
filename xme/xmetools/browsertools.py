@@ -90,9 +90,12 @@ class CDPBrowser:
     退出时保证 chrome 进程被杀、临时 profile 被清。
     """
 
-    def __init__(self, width: int = 1280, height: int = 720):
+    def __init__(self, width: int = 1280, height: int = 720, scale_factor: float = 1.0):
         self.width = int(width)
         self.height = int(height)
+        # 设备缩放因子：>1 时布局视口仍是 width×height，但物理渲染像素翻倍
+        # （真超采样：帧尺寸 = CSS 尺寸 × factor，合成时缩回，布局不错乱）
+        self.scale_factor = max(1.0, float(scale_factor))
         self._proc = None
         self._profile = None
         self._http = None
@@ -107,13 +110,18 @@ class CDPBrowser:
     async def __aenter__(self) -> "CDPBrowser":
         self._profile = tempfile.mkdtemp(prefix="xme_cdp_")
         port_file = Path(self._profile) / "DevToolsActivePort"
-        self._proc = await asyncio.create_subprocess_exec(
+        launch_args = [
             "google-chrome",
             "--headless=new", "--disable-gpu", "--hide-scrollbars", "--mute-audio",
             "--no-first-run", "--disable-extensions", "--no-default-browser-check",
             "--remote-debugging-port=0", f"--user-data-dir={self._profile}",
             f"--window-size={self.width},{self.height}",
-            "about:blank",
+        ]
+        if self.scale_factor > 1.0:
+            launch_args.append(f"--force-device-scale-factor={self.scale_factor}")
+        launch_args.append("about:blank")
+        self._proc = await asyncio.create_subprocess_exec(
+            *launch_args,
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
         )
         deadline = time.monotonic() + _CDP_START_TIMEOUT
@@ -200,7 +208,12 @@ class CDPBrowser:
                             fut.set_result(data.get("result") or {})
                 elif data.get("method") == "Page.screencastFrame" and self._frame_cb:
                     params = data.get("params") or {}
-                    asyncio.create_task(self._ack_screencast(params.get("sessionId")))
+                    # ack 在接收循环内直发（纯写缓冲不等响应）：chrome 收到 ack 才推
+                    # 下一帧，任何调度延迟都会直接吃掉采集帧率
+                    self._msg_id += 1
+                    await self._ws.send_str(json.dumps({
+                        "id": self._msg_id, "method": "Page.screencastFrameAck",
+                        "params": {"sessionId": params.get("sessionId")}}))
                     try:
                         jpeg = base64.b64decode(params.get("data") or "")
                         ts = float((params.get("metadata") or {}).get("timestamp") or 0)
@@ -211,12 +224,6 @@ class CDPBrowser:
             raise
         except Exception as ex:
             logger.warning(f"CDP 接收循环结束: {type(ex).__name__}: {ex}")
-
-    async def _ack_screencast(self, session_id) -> None:
-        try:
-            await self._command("Page.screencastFrameAck", {"sessionId": session_id}, timeout=5)
-        except Exception:
-            pass
 
     async def _command(self, method: str, params: dict, timeout: float = _CMD_TIMEOUT) -> dict:
         if self._ws is None or self._ws.closed:
@@ -294,13 +301,16 @@ class CDPBrowser:
 
     # ---------- 屏幕录制 ----------
 
-    async def start_screencast(self, on_frame, quality: int = 60) -> None:
-        """开始录屏；on_frame(jpeg_bytes, timestamp) 在每帧到达时被同步调用。"""
+    async def start_screencast(self, on_frame, quality: int = 60, every_nth: int = 1) -> None:
+        """开始录屏；on_frame(jpeg_bytes, timestamp) 在每帧到达时被同步调用。
+
+        every_nth：chrome 每渲染 N 帧采集 1 帧（控制推帧量，防帧洪峰挤占 CDP 通道）。
+        """
         self._frame_cb = on_frame
         await self._command("Page.startScreencast", {
             "format": "jpeg", "quality": int(quality),
-            "maxWidth": self.width, "maxLength": self.height,
-            "everyNthFrame": 1,
+            # 不限制帧尺寸：scale_factor>1 时帧保持物理分辨率（超采样由合成端缩回）
+            "everyNthFrame": max(1, int(every_nth)),
         })
 
     async def stop_screencast(self) -> None:
@@ -337,49 +347,81 @@ async def _target_center(browser: CDPBrowser, action: dict):
     return float(action.get("x", 0) or 0), float(action.get("y", 0) or 0)
 
 
-async def _move_smoothly(browser: CDPBrowser, pos: list, tx: float, ty: float,
-                         dur: float, show_cursor: bool) -> None:
-    """连续移动：40ms 步进派发 mouseMoved 并同步虚拟光标。"""
-    steps = max(1, min(int(dur / 0.04), 200))
-    for i in range(1, steps + 1):
-        x = pos[0] + (tx - pos[0]) * i / steps
-        y = pos[1] + (ty - pos[1]) * i / steps
-        await browser.dispatch_mouse("mouseMoved", x, y)
+_MACRO_STEP_SECS = 0.04      # move 步进周期（秒）：每步重取元素位置并派发 mouseMoved
+_MACRO_ARRIVE_TOL = 3.0      # 到达判定：距目标中心 ≤3px 视为已到达
+_MACRO_DEFAULT_SPEED = 600.0  # move 默认移动速度（CSS 像素/秒）
+
+
+async def _move_tracked(browser: CDPBrowser, action: dict, pos: list,
+                        show_cursor: bool, notes: list) -> None:
+    """以 speed 像素/秒朝目标移动；selector 目标每步重取位置（悬停移位/动画元素也跟得上）。
+
+    timeout 秒内未到达则瞬移到元素当前位置并继续（保证后续 click 能命中），
+    记一条备注。pos 就地更新为最终鼠标位置。
+    """
+    speed = max(50.0, float(action.get("speed", _MACRO_DEFAULT_SPEED) or _MACRO_DEFAULT_SPEED))
+    timeout = max(0.5, float(action.get("timeout", 16.0) or 16.0))
+    deadline = time.monotonic() + timeout
+    step_secs = _MACRO_STEP_SECS
+    target_desc = action.get("selector") or f"{action.get('x')},{action.get('y')}"
+    label = f"move({target_desc})"
+    while True:
+        target = await _target_center(browser, action)
+        if target is None:
+            notes.append(f"move：未找到元素 {action.get('selector')}，已跳过")
+            return
+        dist = ((target[0] - pos[0]) ** 2 + (target[1] - pos[1]) ** 2) ** 0.5
+        if dist <= _MACRO_ARRIVE_TOL:
+            # 已到达：补一次精确 mouseMoved，光标贴到元素中心
+            pos[0], pos[1] = target
+            await browser.dispatch_mouse("mouseMoved", target[0], target[1])
+            if show_cursor:
+                await browser.evaluate(
+                    f"window.__cursor.moveTo({round(target[0],1)},{round(target[1],1)},true)")
+            return
+        if time.monotonic() >= deadline:
+            # 超时兜底：瞬移到元素当前位置（后续 click 仍能命中），不中断序列
+            pos[0], pos[1] = target
+            await browser.dispatch_mouse("mouseMoved", target[0], target[1])
+            if show_cursor:
+                await browser.evaluate(
+                    f"window.__cursor.moveTo({round(target[0],1)},{round(target[1],1)},true)")
+            notes.append(f"move 追踪 {label} 超时（{timeout:g}s），已瞬移到元素当前位置并继续")
+            return
+        step = min(speed * step_secs, dist)
+        ux, uy = (target[0] - pos[0]) / dist, (target[1] - pos[1]) / dist
+        nx, ny = pos[0] + ux * step, pos[1] + uy * step
+        await browser.dispatch_mouse("mouseMoved", nx, ny)
         if show_cursor:
-            await browser.evaluate(f"window.__cursor.moveTo({round(x,1)},{round(y,1)},false)")
-        await asyncio.sleep(dur / steps)
-    pos[0], pos[1] = tx, ty
+            await browser.evaluate(f"window.__cursor.moveTo({round(nx,1)},{round(ny,1)},false)")
+        pos[0], pos[1] = nx, ny
+        await asyncio.sleep(step_secs)
 
 
 async def _run_action(browser: CDPBrowser, action: dict, pos: list,
                       show_cursor: bool, notes: list) -> None:
     a_type = str(action.get("type") or "").lower()
     if a_type in ("move", "jump"):
-        target = await _target_center(browser, action)
-        if target is None:
-            notes.append(f"t={action.get('t')} 的 {a_type}：未找到元素 {action.get('selector')}，已跳过")
-            return
-        if a_type == "move":
-            await _move_smoothly(browser, pos, target[0], target[1],
-                                 float(action.get("dur", 0.8) or 0.8), show_cursor)
-        else:
+        if a_type == "jump":
+            target = await _target_center(browser, action)
+            if target is None:
+                notes.append(f"jump：未找到元素 {action.get('selector')}，已跳过")
+                return
             pos[0], pos[1] = target
             await browser.dispatch_mouse("mouseMoved", target[0], target[1])
             if show_cursor:
                 await browser.evaluate(
                     f"window.__cursor.moveTo({round(target[0],1)},{round(target[1],1)},true)")
+            return
+        await _move_tracked(browser, action, pos, show_cursor, notes)
         return
     if a_type == "click":
-        target = await _target_center(browser, action)
-        if target is None:
-            notes.append(f"t={action.get('t')} 的 click：未找到元素 {action.get('selector')}，已跳过")
-            return
-        if abs(target[0] - pos[0]) > 1 or abs(target[1] - pos[1]) > 1:
-            await _move_smoothly(browser, pos, target[0], target[1], 0.25, show_cursor)
-        await browser.dispatch_mouse("mousePressed", target[0], target[1], clicked=True)
+        # 在鼠标当前位置点击（移动由 move/jump 负责）
+        x, y = pos
+        await browser.dispatch_mouse("mousePressed", x, y, clicked=True)
         if show_cursor:
-            await browser.evaluate(f"window.__cursor.clickFx({round(target[0],1)},{round(target[1],1)})")
-        await browser.dispatch_mouse("mouseReleased", target[0], target[1], clicked=True)
+            await browser.evaluate(f"window.__cursor.clickFx({round(x, 1)},{round(y, 1)})")
+        await browser.dispatch_mouse("mouseReleased", x, y, clicked=True)
         return
     if a_type == "type":
         text = str(action.get("text") or "")
@@ -387,45 +429,65 @@ async def _run_action(browser: CDPBrowser, action: dict, pos: list,
             await browser.dispatch_char(ch)
             await asyncio.sleep(0.03)
         if not text:
-            notes.append(f"t={action.get('t')} 的 type：text 为空，已跳过")
+            notes.append("type：text 为空，已跳过")
+        return
+    if a_type == "wait":
+        # 原地等待（录制照常进行，页面动画/悬停效果自然呈现）
+        await asyncio.sleep(max(0.0, float(action.get("secs", 1) or 1)))
         return
     if a_type == "key":
         await browser.dispatch_key(action.get("key") or "")
         return
-    notes.append(f"t={action.get('t')} 的未知动作类型 {a_type!r}，已跳过")
+    notes.append(f"未知动作类型 {a_type!r}，已跳过")
 
 
-async def run_macro(browser: CDPBrowser, script: list, duration: float,
-                    show_cursor: bool = True) -> list[str]:
-    """按时间轴回放宏（t 为相对此刻的秒数），返回执行备注（跳过/失败的动作）。
+async def run_macro(browser: CDPBrowser, script: list, duration: float | None,
+                    show_cursor: bool = True, notes: list | None = None) -> list[str]:
+    """顺序回放宏，返回执行备注（传入 notes 列表则就地填充，宏被取消时已记录内容不丢）。
 
-    t 超出 duration 的动作忽略；动作抛错不中断整个宏（记 notes 继续）。
+    每个动作的 t 是"距上一个动作完成后"的秒数（+t 增量，第一个动作相对录制开始）。
+    move 以 speed 追踪 selector 位置（悬停移位也跟得上），超时自动瞬移兜底。
+    duration 非 None 时为硬窗：累计耗时达到即停止（后续动作合并为一条总结备注）；
+    duration 为 None 时不限窗，宏自然跑完（录制长度由宏决定）。
+    单动作失败不中断整个宏。
     """
-    notes: list[str] = []
+    if notes is None:
+        notes = []
+    limited = duration is not None
     actions = [a for a in (script or []) if isinstance(a, dict)]
-    overdue = [a for a in actions if float(a.get("t", 0) or 0) > duration]
-    if overdue:
-        notes.append(f"{len(overdue)} 个动作的 t 超出录制时长 {duration}s，已忽略")
     pos = [6.0, 6.0]
-    t0 = time.monotonic()
-    for action in sorted((a for a in actions
-                          if float(a.get("t", 0) or 0) <= duration),
-                         key=lambda a: float(a.get("t", 0) or 0)):
-        delay = float(action.get("t", 0) or 0) - (time.monotonic() - t0)
-        if delay > 0:
-            await asyncio.sleep(delay)
+    start = time.monotonic()
+    for index, action in enumerate(actions):
+        if limited:
+            remaining = duration - (time.monotonic() - start)
+            if remaining <= 0:
+                notes.append(f"累计耗时超出录制时长 {duration:g}s，"
+                             f"剩余 {len(actions) - index} 个动作已忽略")
+                break
+        interval = max(0.0, float(action.get("t", 0) or 0))
+        if interval > 0:
+            # 睡眠钳到剩余窗内：AI 误把绝对时间点写成大 t 值时不会把录制拖长
+            await asyncio.sleep(min(interval, remaining) if limited else interval)
+        if limited and time.monotonic() - start > duration:
+            notes.append(f"累计耗时超出录制时长 {duration:g}s，"
+                         f"剩余 {len(actions) - index} 个动作已忽略")
+            break
         try:
             await _run_action(browser, action, pos, show_cursor, notes)
         except Exception as ex:
-            notes.append(f"t={action.get('t')} 的 {action.get('type')} 动作失败: {ex}")
+            notes.append(f"{action.get('type')} 动作失败: {ex}")
     return notes
 
 
 async def frames_to_mp4(frames: list[tuple[bytes, float]], out_path: Path,
-                        width: int, fps_cap: float = 10.0) -> None:
+                        width: int, fps_cap: float = 10.0, crf: int = 28,
+                        preset: str = "veryfast", x264_params: str = "",
+                        span: float | None = None) -> None:
     """把 screencast 帧（jpeg 字节, epoch 时间戳）按时间戳合成 mp4（H.264 yuv420p）。
 
-    帧间距即 concat duration（上限 2s，下限 1/fps_cap 防闪帧）；无帧时抛 CDPError。
+    帧按 fps_cap 降采样后以固定帧率合成（时长精确 = 帧数/fps_cap）；无帧时抛 CDPError。
+    span 传录制实际总跨度（秒）：末帧定格补齐到录制结束——wait/静止段没有新帧，
+    但视频时长应覆盖这段（画面定格是正确行为）。
     """
     if not frames:
         raise CDPError("录制期间没有收到任何画面帧")
@@ -433,40 +495,42 @@ async def frames_to_mp4(frames: list[tuple[bytes, float]], out_path: Path,
     # 高帧率降采样：间隔小于 1/fps_cap 的帧直接丢弃（而不是拉长显示时长，
     # 否则动画页面每秒几十帧会把 8s 录制撑成几十秒的视频）
     t0 = frames[0][1]
-    kept: list[tuple[bytes, float]] = []   # (jpeg, 相对首帧的秒数)
+    kept: list[bytes] = []
     last_ts = None
     for jpeg, ts in frames:
         if last_ts is not None and ts - last_ts < 1.0 / fps_cap:
             continue
-        kept.append((jpeg, ts - t0))
+        kept.append(jpeg)
         last_ts = ts
-    n = len(kept)
     tmp = Path(tempfile.mkdtemp(prefix="xme_frames_"))
     try:
-        lines = ["ffconcat version 1.0"]
-        for i, (jpeg, rel_ts) in enumerate(kept):
-            frame_file = tmp / f"f{i:05}.jpg"
-            frame_file.write_bytes(jpeg)
-            if i + 1 < n:
-                dur = kept[i + 1][1] - rel_ts
-            else:
-                dur = (kept[-1][1] - kept[-2][1]) if n >= 2 else 1.0 / fps_cap
-            dur = min(max(dur, 0.05), 2.0)
-            lines.append(f"file '{frame_file.resolve()}'")
-            lines.append(f"duration {dur:.3f}")
-        # concat demuxer 的最后一帧 duration 不生效：末帧条目重复一次
-        lines.append(f"file '{(tmp / f'f{n-1:05}.jpg').resolve()}'")
-        list_file = tmp / "list.txt"
-        list_file.write_text("\n".join(lines), encoding="utf-8")
+        # 帧序列按 fps_cap 等间隔合成：wait/静止段没有新帧，用末帧定格补齐
+        # （image2 序列输入，时长 = 帧数/fps_cap，精确可靠——concat demuxer 的
+        # duration/重复帧在 ffmpeg 4.2 下行为不稳定，弃用）
+        seq_dir = tmp / "seq"
+        seq_dir.mkdir()
+        count = 0
+        for jpeg in kept:
+            (seq_dir / f"{count:06}.jpg").write_bytes(jpeg)
+            count += 1
+        if span is not None:
+            hold_frames = max(0, min(int(round(span * fps_cap)) - count, 60 * int(fps_cap)))
+            for k in range(hold_frames):
+                (seq_dir / f"{count + k:06}.jpg").write_bytes(kept[-1])
+            count += hold_frames
         even_w = int(width) + (int(width) % 2)
         out_path = Path(out_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         cmd = [
-            "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_file),
+            "ffmpeg", "-y", "-framerate", str(int(fps_cap)),
+            "-i", str(seq_dir / "%06d.jpg"),
+            "-frames:v", str(count),
             "-vf", f"scale={even_w}:-2,format=yuv420p",
-            "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
-            "-movflags", "+faststart", "-an", str(out_path),
+            "-c:v", "libx264", "-preset", preset, "-crf", str(int(crf)),
         ]
+        if x264_params:
+            cmd += ["-x264-params", x264_params]
+        cmd += ["-movflags", "+faststart", "-an", str(out_path)]
         proc = await asyncio.create_subprocess_exec(
             cmd[0], *cmd[1:],
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)

@@ -6,6 +6,7 @@ import os
 import select
 import logging
 from xme.xmetools.filetools import backup_data_dir
+from xme.xmetools.logtools import ColoredFormatter
 from logging.handlers import TimedRotatingFileHandler
 
 TARGET_SCRIPT = "bot.py"
@@ -40,9 +41,11 @@ def setup_logger():
 
     logger.addHandler(handler)
 
-    # 控制台输出
+    # 控制台输出（文件日志保持纯文本）
     console = logging.StreamHandler()
-    console.setFormatter(formatter)
+    console.setFormatter(ColoredFormatter(
+        "[%(asctime)s] [%(levelname)s] %(message)s"
+    ))
     logger.addHandler(console)
 
     return logger

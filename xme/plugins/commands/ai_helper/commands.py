@@ -342,7 +342,7 @@ def adjust_credits(session, user, args=None):
         return get_message("plugins", __plugin_name__, "credits_usage")
     set_value(__plugin_name__, "credits", search_dict=target.plugin_datas,
               set_method=lambda v: (float(v) if v is not None else 0.0) + delta)
-    target.save()
+    target.flush()
     return get_message("plugins", __plugin_name__, "credits_adjusted",
                        qq=str(target.id), delta=f"{delta:.2f}",
                        extra=f"{credits.extra_credits(target):.2f}",

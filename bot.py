@@ -34,6 +34,8 @@ if __name__ == '__main__':
     random.seed()
     print("正在启动...")
     bot_init.saving_log(logger)
+    bot_init.colorize_console_log()
+    bot_init.setup_lib_log()
     nonebot.init(config)
     load_plugins_list(
         [path.join(path.dirname(__file__), 'xme', 'plugins', 'commands'), 'xme.plugins.commands'],
@@ -50,7 +52,7 @@ if __name__ == '__main__':
 
     # print("数据已备份至", backup_data_dir())
     bot_variables.currentpid = os.getpid()
-    print(c.gradient_text("#dda3f8", "#66afff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))
+    print(c.gradient_text("#a8ffc5","#66c7ff", text=f"当前 bot 运行进程 PID：{bot_variables.currentpid}"))
     loop = asyncio.get_event_loop()
     # loop.set_exception_handler(handle_exception)
     nonebot.run(loop=loop)

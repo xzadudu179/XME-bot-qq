@@ -72,7 +72,8 @@ def update_stats(user, coins_earned: int = 0, coins_lost: int = 0, depth: int = 
         }
 
     set_value(__plugin_name__, SEEK_DATAS_KEY, STATS_KEY, search_dict=user.plugin_datas, set_method=merge)
-    user.update("plugin_datas")
+    # 只写 $.seek 下变化的子路径，别整列覆盖 plugin_datas（会盖掉并发写入的其它插件数据）
+    user.flush()
 
 
 def get_inventory(user) -> list:
@@ -103,7 +104,8 @@ def save_inventory(user, items) -> bool:
     if any(not isinstance(item_id, str) or get_item(item_id) is None for item_id in items):
         return False
     set_value(__plugin_name__, SEEK_DATAS_KEY, INVENTORY_KEY, search_dict=user.plugin_datas, set_method=lambda _: list(items))
-    user.update("plugin_datas")
+    # 只写变化的子路径，别整列覆盖 plugin_datas（会盖掉并发写入的其它插件数据）
+    user.flush()
     return True
 
 
@@ -135,7 +137,8 @@ def drop_inventory_items(user, index: int, count: int = 1) -> tuple[int, str]:
         remaining.append(item_id)
     if removed > 0:
         set_value(__plugin_name__, SEEK_DATAS_KEY, INVENTORY_KEY, search_dict=user.plugin_datas, set_method=lambda _: remaining)
-        user.update("plugin_datas")
+        # 只写变化的子路径，别整列覆盖 plugin_datas（会盖掉并发写入的其它插件数据）
+        user.flush()
     return (removed, item["name"])
 
 

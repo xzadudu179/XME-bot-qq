@@ -30,7 +30,7 @@ async def _(session: RequestSession):
             target = (await bot.api.get_stranger_info(user_id=session.event.self_id))
             target = target['nickname']
         debug_msg(session.event)
-        print(c.gradient_text("#dda3f8","#66afff" ,text=f"[{(await get_group_name(session.event.group_id)) if session.event.group_id else '私聊'}] {operator} {session.event.get('action', '戳了戳')} {target} {session.event.get('suffix', '')}"))
+        print(c.gradient_text("#a8ffc5","#66c7ff",text=f"[{(await get_group_name(session.event.group_id)) if session.event.group_id else '私聊'}] {operator} {session.event.get('action', '戳了戳')} {target} {session.event.get('suffix', '')}"))
     if session.event.sub_type == 'poke' and session.event['target_id'] == session.self_id:
         if random_percent(20):
             debug_msg("不戳")

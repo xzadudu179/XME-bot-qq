@@ -3,6 +3,7 @@
 内部结构：
 - protocol.py   DbReadWriteable 模型协议（鸭子类型，无需显式继承）
 - adapter.py    值适配与 SQL 标识符白名单校验（纯函数）
+- expressions.py UPDATE 的列值表达式（相对当前行求值，并发写不互相覆盖）
 - connection.py 连接生命周期装饰器（连接-提交-回滚-关闭）
 - schema.py     建表、表结构检查与自动迁移
 - database.py   XmeDatabase 类与 DATABASE 单例
@@ -17,6 +18,11 @@
 - DATABASE.load_class(select_keys, query, cl)      查询单个模型实例
 - DATABASE.create_class_table(obj)                 建表/自动迁移，返回表名
 - DATABASE.remove(table_name, conditions)          按结构化条件安全删除，返回删除行数
+
+update_db 的字段值可以是表达式（相对当前行求值，并发写不互相覆盖）：
+    update_db(obj, id, coins=add(100))                       # coins = coins + 100
+    update_db(obj, id, plugin_datas=merge_patch({"k": v}))   # json_patch 局部更新（null 为删除）
+    update_db(obj, id, achievements=append_many([dump(x)]))  # 数组末尾追加
 """
 from xme.xmetools.dbtools.adapter import (
     adapt_value,
@@ -26,19 +32,33 @@ from xme.xmetools.dbtools.adapter import (
 )
 from xme.xmetools.dbtools.connection import database_connect
 from xme.xmetools.dbtools.database import DATABASE, XmeDatabase
+from xme.xmetools.dbtools.expressions import (
+    ColumnExpr,
+    add,
+    append_many,
+    diff_json,
+    dump,
+    merge_patch,
+)
 from xme.xmetools.dbtools.protocol import T_DbReadWriteable, DbReadWriteable
 from xme.xmetools.dbtools.schema import ensure_table_schema, get_table_columns, migrate_table
 
 __all__ = [
     "DATABASE",
+    "ColumnExpr",
     "DbReadWriteable",
     "T_DbReadWriteable",
     "XmeDatabase",
     "adapt_value",
+    "add",
+    "append_many",
     "build_where",
     "database_connect",
+    "diff_json",
+    "dump",
     "ensure_table_schema",
     "get_table_columns",
+    "merge_patch",
     "migrate_table",
     "validate_identifier",
     "value_to_sql_type",

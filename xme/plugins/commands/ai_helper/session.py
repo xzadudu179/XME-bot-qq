@@ -413,7 +413,8 @@ def set_user_model(user, spec: str) -> None:
     """设置并持久化用户的默认模型（/ai -m <模型> 不带对话内容时调用）。"""
     set_value(__plugin_name__, "model", search_dict=user.plugin_datas,
               set_method=lambda _: spec)
-    user.save()
+    # 只写变化的那条子路径（user 是命令入口读的，整行 save 会盖掉期间的并发写入）
+    user.flush()
 
 
 def allows_auto_model(user) -> bool:

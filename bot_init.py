@@ -9,6 +9,7 @@ import logging
 import traceback
 from config import BOT_SETTINGS_PATH
 from xme.xmetools import colortools as c
+from xme.xmetools import logtools
 # from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.xmetools.texttools import lazy_pinyin
 from datetime import datetime
@@ -199,6 +200,46 @@ def init_all_databases():
     logger.info(f"数据库启动检查完成：{checked}/{len(models)} 张表通过")
 
 
+def colorize_console_log():
+    """将 nonebot 默认控制台 handler 换成彩色 Formatter（文件日志不受影响）"""
+    from nonebot.log import default_handler
+    default_handler.setFormatter(logtools.ColoredFormatter(
+        '[%(asctime)s %(name)s] %(levelname)s: %(message)s'))
+
+
+def setup_lib_log():
+    """接管 root logger 的库日志（aiocqhttp/Quart 的事件行等）
+
+    心跳事件行降级为 DEBUG 不再刷控制台，事件行紧凑上色显示；全部库日志
+    落 ./logs/events.log（DEBUG 级，含心跳）；nonebot/send logger 关闭
+    传播避免经 root 重复打印。需在 nonebot.init 前调用，以抢占 Quart 懒
+    加载的默认 stderr handler。
+    """
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addFilter(logtools.MetaEventDemoteFilter())
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(logtools.EventLogFormatter(
+        "[%(asctime)s] [%(levelname)s] %(message)s"))
+    root.addHandler(console)
+
+    events_handler = TimedRotatingFileHandler(
+        './logs/events.log', when="midnight", interval=1,
+        backupCount=30, encoding="utf-8", delay=True)
+    events_handler.suffix = "%Y-%m-%d"
+    events_handler.setLevel(logging.DEBUG)
+    events_handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] [%(levelname)s] %(message)s'))
+    root.addHandler(events_handler)
+
+    for name in ("nonebot", "send"):
+        logging.getLogger(name).propagate = False
+    print(c.gradient_text("#a8ffc5", "#66c7ff",
+                          text="已接管库日志：事件将记录到 ./logs/events.log"))
+
+
 def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
     # 设置日志的格式；backupCount 缺省 0 会永久保留每天的轮转文件（无界增长）
     log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1,
@@ -209,7 +250,7 @@ def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
     )
     log_handler.setFormatter(formatter)
     # 添加文件处理器到 logger
-    print(c.gradient_text("#dda3f8","#66afff" ,text=f"当前日志将会被记录到文件 \"{filepath}\" 中。"))
+    print(c.gradient_text("#a8ffc5","#66c7ff" ,text=f"当前日志将会被记录到文件 \"{filepath}\" 中。"))
     logger.addHandler(log_handler)
 
 

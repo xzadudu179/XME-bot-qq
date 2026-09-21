@@ -25,7 +25,26 @@ from .inventory import Inventory # noqa: E402
 from xme.xmetools.debugtools import debug_msg # noqa: E402
 from nonebot.log import logger # noqa: E402
 # from .xme_map import get_galaxymap # noqa: E402
-from xme.xmetools.dbtools import DATABASE # noqa: E402
+from xme.xmetools.dbtools import DATABASE, adapt_value, add, diff_json # noqa: E402
+
+
+# flush() 里的「无变化」哨兵：与合法值 None 区分开
+_UNCHANGED = object()
+
+
+def _parsed(raw):
+    """把库里的原始值解析成 Python 结构用于比较（JSON 列是字符串；解析失败原样返回）。"""
+    if isinstance(raw, str):
+        try:
+            return json.loads(raw)
+        except ValueError:
+            return raw
+    return raw
+
+
+def _is_number(value) -> bool:
+    """是否为可参与增减的数值（bool 排除在外，它入库后是 int 但不该按增量处理）。"""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
 # def is_galaxy_loaded():
@@ -37,6 +56,11 @@ from xme.xmetools.dbtools import DATABASE # noqa: E402
 #     return galaxy_initing
 
 class User:
+    # 增量语义的数值列：flush 写回的是「本对象相对加载时的净变化」（col = col + ?），
+    # 并发下各自的金币/好感度增减会正确叠加；其余列一律绝对写，
+    # 「绝对赋值」的意图（如管理员把金币清零）由调用方用 replace_field 声明
+    _DELTA_COLUMNS = ("coins", "xme_favorability")
+
     def form_dict(data: dict):
         return load_from_dict(data, id=data["user_id"])
 
@@ -101,6 +125,8 @@ class User:
         ):
         self.db_id: int = db_id
         self.id: int = user_id
+        # 加载时的原始行值（由 DATABASE.load_class 注入）：flush 据此只写变化的部分
+        self._loaded_row: dict = {}
         self.desc: str = desc
         self.afdian_id: str = afdian_id
         # avoid shared mutable defaults
@@ -310,7 +336,71 @@ class User:
         return c
 
     def save(self):
+        """整行写入（INSERT OR REPLACE，包含全部列）——会把并发写入的列一起盖掉。
+
+        只在「新建用户」或确实要整行覆盖时使用；日常收尾请用 flush()。
+        """
         self.db_id = DATABASE.save_to_db(obj=self)
+
+    def replace_field(self, *columns) -> None:
+        """声明这些列要按绝对值写回（覆盖并发写入），供「绝对赋值」语义使用。
+
+        例：管理员把金币清零（把金币设成 0 而不是「减去当前值」）时，光改内存值
+        无法与增量区分，需显式声明为整列替换。
+        """
+        if self.db_id == -1:
+            return
+        current = self.to_dict()
+        updates = {c: adapt_value(current[c]) for c in columns if c in current}
+        if updates:
+            DATABASE.update_db(obj=self, id=self.db_id, **updates)
+            self._loaded_row.update(updates)
+
+    def flush(self) -> int:
+        """把本对象相对加载时的改动写回数据库：只写变化的列、JSON 列只写变化的子路径。
+
+        与 save() 的区别（save 是整行 INSERT OR REPLACE，会把并发写入盖掉）：
+        - 未变化的列完全不写；
+        - 数值增量列（_DELTA_COLUMNS）写 ``col = col + 净变化``，并发增减各自生效
+          （本对象读到时是 100、别人加到 200，本对象 +100 → 结果 300）；
+        - JSON 列按最小变化子路径用 json_set / json_remove / json_insert 局部更新，
+          plugin_datas 下各插件的数据、counters 下各计数器的键互不覆盖；
+        - 其余列变化时整列绝对写。
+
+        未入库（db_id 为 -1，如新建用户）或没有加载基线（手工构造）的对象回落到
+        save()；返回本次写入的列数。
+        """
+        if self.db_id == -1 or not self._loaded_row:
+            self.save()
+            return 1
+        updates: dict = {}
+        baseline = dict(self._loaded_row)
+        for column, current in self.to_dict().items():
+            if column in ("id", "user_id") or column not in self._loaded_row:
+                continue
+            current_raw = adapt_value(current)
+            value = self._column_update(column, self._loaded_row[column], current_raw)
+            if value is _UNCHANGED:
+                continue
+            updates[column] = value
+            # 基线跟着更新：下一次 flush 只写「这次之后」的新变化，
+            # 增量列也不会把同一笔变化重复写第二遍
+            baseline[column] = current_raw
+        if updates:
+            DATABASE.update_db(obj=self, id=self.db_id, **updates)
+            self._loaded_row = baseline
+        return len(updates)
+
+    def _column_update(self, column: str, loaded_raw, current_raw):
+        """算出单列的更新内容：_UNCHANGED / ColumnExpr（表达式）/ 绝对值。"""
+        loaded, current = _parsed(loaded_raw), _parsed(current_raw)
+        if loaded == current:
+            return _UNCHANGED
+        if column in self._DELTA_COLUMNS and _is_number(loaded) and _is_number(current):
+            return add(current - loaded)
+        # JSON 结构尽量只写变化的子路径；无法局部化（类型变了等）则整列绝对写
+        expr = diff_json(loaded, current)
+        return expr if expr is not None else current_raw
 
 
 def try_load(id):
@@ -323,7 +413,7 @@ def try_load(id):
 def verify_counters(user: User, name: str):
     if name not in user.counters or not isinstance(user.counters[name], dict):
         user.counters[name] = {}
-        user.save()
+        user.flush()
     user.counters[name].setdefault("time", 0)
     user.counters[name].setdefault("count", 0)
 
@@ -459,7 +549,9 @@ def limit(limit_name: str,
                 debug_msg("保存用户数据, 增加计数")
                 debug_msg("coins", user.coins)
                 limit_count_tick(user, limit_name)
-                user.save()
+                # 只写 counters 下该计数器的子路径（整行 save 会盖掉期间的并发写入，
+                # 例如 AI 结算的 credits / 其它指令的金币）
+                user.flush()
             if isinstance(result, str):
                 await send_session_msg(session, result)
             return result
@@ -495,7 +587,8 @@ def custom_limit(limit_name: str | FunctionType,
             def count_tick(count=1):
                 debug_msg("保存用户数据, 增加计数")
                 limit_count_tick(user, name, count)
-                user.save()
+                # 同 custom_limit 收尾：只写变化的计数器子路径
+                user.flush()
             def check_invalid():
                 if detect_limit(user=user, name=name, interval=interval, count_limit=count_limit, unit=unit,
                               floor_float=floor_float):
@@ -578,7 +671,8 @@ def using_user(save_data=False, id=0):
             # debug_msg(f"result: {result}")
             if save_data and result:
                 debug_msg("保存用户数据中")
-                user.save()
+                # 只写本命令真正改动的列/子路径，避免整行覆盖并发写入
+                user.flush()
             return result
 
         return wrapper

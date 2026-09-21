@@ -31,7 +31,8 @@ __plugin_usage__ = PluginDoc(
     usages=[f"{prop['name']} {prop['usage']}" for prop in commands.values()],
     permissions=[prop['permissions'] for prop in commands.values()],
     alias_list=[prop['alias'] for prop in commands.values()],
-    simple_output=True
+    simple_output=True,
+    sub_docs=[CommandDoc(**prop) for prop in commands.values()]
 )
 # print(__plugin_usage__)
 
@@ -55,7 +56,6 @@ async def _(session: CommandSession):
     return True
 
 def get_userhelp(cmd_name: str):
-    message = str(CommandDoc(
-        **commands[cmd_name]
-    ))
-    return message
+    """某条用户功能指令的纯文本帮助；指令名不存在时返回 None。"""
+    prop = commands.get(cmd_name)
+    return str(CommandDoc(**prop)) if prop else None

@@ -9,7 +9,7 @@ from nonebot import CommandSession
 from traceback import format_exc
 from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc, shell_like_usage
+from xme.xmetools.doctools import CommandDoc, shell_like_usage, read_doc_md
 from xme.xmetools.bottools import XmeArgumentParser
 from xme.xmetools.msgtools import CMD_END, aget_arg, is_text_can_send, send_session_msg, send_to_user
 from xme.xmetools.texttools import get_images_from_message, hash_text
@@ -508,8 +508,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
         glossary = gl.read()
     with open("./static/telia.txt") as tel:
         telia = tel.read()
-    with open("./docs.md") as do:
-        docs = do.read()
+    docs = read_doc_md() or ""
     tips = get_character_item("bot_info", "tips", default="无提示")
     if isinstance(tips, list):
         tips = [character_format(t) for t in tips]

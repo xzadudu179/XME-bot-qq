@@ -117,6 +117,7 @@ def character_format(message, **kwargs):
             coin_name=get_character_item("user", "coin_name"),
             coin_pronoun=get_character_item("user", "coin_pronoun"),
             bot_name=get_character_item("bot_info", "name"),
+            author_nick=get_character_item("bot_info", "author_nick"),
             cmd_sep=config.COMMAND_START[0]
         )
     except KeyError as ex:

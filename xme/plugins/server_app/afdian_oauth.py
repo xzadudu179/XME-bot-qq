@@ -1,12 +1,11 @@
 """爱发电 OAuth 回调 API：/afdian/oauth 校验 state、兑换 code 并绑定 afdian_id。
 
-返回 JSON 而非页面，展示层由独立前端项目完成；前端跨域调用时依赖
-keys.AFDIAN_OAUTH_FRONTEND_ORIGIN 的 CORS 头。
+返回 JSON 而非页面，展示层由独立前端项目完成；跨域头由 server_app 的 CORS 策略统一加
+（白名单见 cors.py）。
 """
 import nonebot
 from nonebot.log import logger
 from quart import jsonify, request
-from keys import AFDIAN_OAUTH_FRONTEND_ORIGIN
 from xme.plugins.commands.xme_user.classes.user import User, try_load
 from xme.xmetools.afdiantools import AFDIAN_CLIENT, AfdianApiError
 from xme.xmetools.mailtools import send_bot_email
@@ -15,10 +14,8 @@ bot = nonebot.get_bot()  # 在此之前必须已经 init
 
 
 def _json_result(ok: bool, title: str, reason: str):
-    """统一的 JSON 结果体，附带 CORS 头供前端项目跨域调用。"""
-    resp = jsonify({"success": ok, "title": title, "reason": reason})
-    resp.headers["Access-Control-Allow-Origin"] = AFDIAN_OAUTH_FRONTEND_ORIGIN
-    return resp
+    """统一的 JSON 结果体，跨域头由 cors 模块按白名单补上。"""
+    return jsonify({"success": ok, "title": title, "reason": reason})
 
 
 @bot.server_app.route('/afdian/oauth')

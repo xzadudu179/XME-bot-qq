@@ -16,7 +16,7 @@ from .evaluator import CalcResult, evaluate_formula
 from .func import builtins, funcs
 
 alias = ['计算', 'cc']
-permissions = ["是 SUPERUSER"]
+permissions = []
 __plugin_name__ = 'calc'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,

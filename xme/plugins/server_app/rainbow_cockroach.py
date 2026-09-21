@@ -1,16 +1,12 @@
 import nonebot
-import config
-from nonebot import log
-from quart import request, jsonify
+from quart import request
+from xme.plugins.server_app.client_info import log_visit
 
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 
 @bot.server_app.route('/cockroach')
 async def cockroach():
-    client_ip = request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', request.remote_addr))
-    if client_ip and ',' in client_ip:
-        client_ip = client_ip.split(',')[0].strip()
-    log.logger.info(f"bot cockroach 被访问了，访问者 IP: {client_ip}")
+    log_visit("cockroach", request)
     response = r"""
 <!DOCTYPE html>
 <html lang="en">

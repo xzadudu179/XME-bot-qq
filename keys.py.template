@@ -30,17 +30,19 @@ AFDIAN_OAUTH_STATE_SECRET = ""
 # 官方 webhook 不携带 sign 字段，凭 URL 密钥鉴权，
 # 爱发电后台的通知地址需配置为 .../afdian/webhook/<该值>
 AFDIAN_WEBHOOK_TOKEN = ""
-# cf 配置 在  /etc/cloudflared/config.yml
+# cf 配置 在  deploy/cloudflared/config.yml（bot 启动时会自动同步到 /etc/cloudflared/config.yml）
 # OAuth 回调地址：需要与爱发电后台登记的可信域名一致，
 # 并在公网入口（反代/隧道）把该地址转发到 bot 的 Quart 端口
 AFDIAN_OAUTH_REDIRECT_URI = "https://oauth.xzadudu179.top/afdian/oauth"
-# OAuth 绑定接口（JSON API）的 CORS 允许来源：前端项目部署后改成它的域名
-# （如 https://afd.example.vercel.app），"*" 表示允许任意来源
-AFDIAN_OAUTH_FRONTEND_ORIGIN = "*"
+# 额外允许跨域的来源（可选）：常规白名单在 server_app/cors.py 的 ALLOWED_ORIGIN_PATTERNS，
+# 只有要把公开接口给白名单之外的站点用时才在这里填域名（如 afd.example.vercel.app），留空表示不额外放行
+AFDIAN_OAUTH_FRONTEND_ORIGIN = ""
 TOKEN_TTL = 0
 FILE_TOKENS = {}
 # BOT severapp 使用域名
 DOMAIN = "api.example.com"
+# 给文档站增加搜索索引用的 Deploy Hook
+VERCEL_DOCS_DEPLOY_HOOK = ""
 
 # ---- 多 Provider LLM 配置（密钥与端点；模型目录见 ai_helper/constants.py 的 LLM_MODELS）----
 # 协议：OpenAI Chat Completions（/chat/completions）。新增供应商只需在此加一项，

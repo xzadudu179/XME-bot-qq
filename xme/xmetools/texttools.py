@@ -17,6 +17,14 @@ from nonebot.log import logger
 import cn2an
 d = enchant.Dict("en_US")
 
+def pinyin_sort_key(text: str) -> str:
+    """拼音排序键：中文转拼音，其余字符（英文字母/数字/符号）原样保留，统一转小写。
+
+    用于把指令名、插件名这类中英混排的字符串按「字母序、大小写同级」排序。
+    """
+    return "".join(lazy_pinyin(text)).lower()
+
+
 def strip_cq(text: str) -> str:
     """去掉文本里的 CQ 码段（图片/文件/表情/at 等），只留纯文本。
 

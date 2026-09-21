@@ -12,7 +12,7 @@ aiocqhttp
 aiocache
 imagehash
 PyAutoGUI
-"nonebot[scheduler]"
+nonebot[scheduler]
 mss
 html2image
 numpy
@@ -33,3 +33,4 @@ yt_dlp
 openpyxl
 aiosmtplib
 py7zr  # maimai 资源包自动同步解压
+markdown-it-py  # /docs 页面把指令文档渲染成 HTML（与文档站的 markdown-it 同源）

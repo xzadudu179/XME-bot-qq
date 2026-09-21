@@ -2,6 +2,7 @@
   "bot_info": {
     "name": "漠月",
     "author": "xzadudu179",
+    "author_nick": "九九",
     "nickname": [
       "Deon",
       "deon",
@@ -63,13 +64,13 @@
       "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
       "使用 \"/stats\" 指令可以查看{bot_name}的状态哦",
       "1049755354 是漠月 BOT 的交流群与群主群哦！有什么想聊的或者问的都可以去聊聊呢",
-      "在 https://docs.xme.179.life/#/help 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
+      "在 https://docs.xmebot.com/ 可以看到比 \"/help\" 指令更加详细的帮助~ 包括术语表之类的",
       "你们要不要帮我想几个 tips（）我觉得很需要",
       "可以在 https://afdian.com/a/xzadudu179 给九镹投喂！可以加快{bot_name}的开发进度哦",
       "如果喜欢{bot_name}，在 https://afdian.com/a/xzadudu179 可以给九镹投喂哦~",
-      "九九木有钱钱，饭饭（bushi",
+      "{author_nick}木有钱钱，饭饭（bushi",
       "https://www.xzadudu179.top 是九九的个人主页 / 赛博名片哦！",
-      "虽然是{bot_name}的 tips 但是发送的人是九九呢",
+      "虽然是{bot_name}的 tips 但是发送的人是{author_nick}呢",
       "使用 \"/s\" 来签到~",
       "很欢迎把{bot_name}拉到大家的群哦~ 大家可以多多宣传{bot_name}（？）",
       "我是 550W。",
@@ -106,10 +107,10 @@
       "如果在漂流瓶发现违规信息，可以在捡到瓶子后发送 \"-rep\" 来举报哦！",
       "大家可以多捡多扔漂流瓶（）",
       "拉{bot_name}进群前一定要和群里的管理/群主沟通好~",
-      "和{bot_name}说话某种意义上相当于和九九说话（？）（仅限私聊）",
+      "和{bot_name}说话某种意义上相当于和{author_nick}说话（？）（仅限私聊）",
       "使用 \"/h 指令或功能名\" 来查看指令/功能的完整帮助~",
       "不要把{bot_name}当成（完全的）机器哦，{bot_name}有设子",
-      "你们可以帮九九想点 tips~ 想好了就发过来（？）",
+      "你们可以帮{author_nick}想点 tips~ 想好了就发过来（？）",
       "使用 \"/lot xxx\" 指令抽取的{coin_name}是{bot_name}发给你的哦！会从{bot_name}的{coin_name}数里扣除或增加，每天统计一次。",
       "help 里被 \"<>\" 括起来的参数是可选参数哦~ 使用时也不需要加上括号",
       "help 里被 \"()\" 括起来的参数是必要参数哦，但是使用的时候不需要加上括号呢",
@@ -122,16 +123,16 @@
       "如果发现{bot_name}有 bug，可以私聊漠月或者到交流群 1049755354 反馈哦！",
       "漂流瓶的皮肤可以在商店购买哦~ 使用 \"/shop\" 浏览商店。",
       "你可以自定义漂流瓶的样式哦~ 在 \"/shop\" 里购买后在 \"/cus bottle\" 里设置就好了~",
-      "如果你们有不错的漂流瓶卡片设计或者概念，可以发给九九或者{bot_name}哦~",
+      "如果你们有不错的漂流瓶卡片设计或者概念，可以发给{author_nick}或者{bot_name}哦~",
       "漠月 BOT 并不是真正的漠月呢...",
       "若不想使用报时功能，就用 \"/stime\" 来关闭吧~ 如果想用，也可以用这个指令打开~",
       "使用 \"/lot all\" 指令可以直接投入自己可以投入的最大值{coin_name}进行抽奖！",
       "一想到永远都有人不知道 \"/setu\" 指令里面是什么这回事...",
       "使用 \"/kk99\" 来看看九九（？",
-      "其实九九一直在视奸你们……",
+      "其实{author_nick}一直在视奸你们……",
       "\"/ai\" 不会发送怪东西，如果它发送了怪东西，建议使用 \"/ai -c clear\" 清除它的记忆（？",
       "小心不要被 \"/ai\" 忽悠了，它会编造一些奇怪的话，试图达到{bot_name}的功能...",
-      "你说 tips 算不算某种意义上（只属于九九）的漂流瓶呢...",
+      "你说 tips 算不算某种意义上（只属于{author_nick}）的漂流瓶呢...",
       "记得早八",
       "𝐚𝐧𝐝 𝐢𝐧 𝐭𝐡𝐚𝐭 𝐥𝐢𝐠𝐡𝐭, 𝐈 𝐟𝐢𝐧𝐝 𝐝𝐞𝐥𝐢𝐯𝐞𝐫𝐚𝐧𝐜𝐞.",
       "不要往大海里扔重复或类似内容的瓶子哦，会被{bot_name}捞出来（？",
@@ -155,10 +156,11 @@
       "如果对九九的个人生活好奇的话，可以去 https://blog.xzadudu179.top/ 查看九九的个人博客~",
       "如果你不知道漠月的一些功能怎么用，可以试试用 \"/ai 问题\" 来询问 AI-Helper 哦！",
       "漠月喜欢吃饼干...而且漠月虽然是小狗，但是可以吃巧克力！",
-      "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xme.179.life/glossary 看看，说不定会帮上忙~",
+      "如果你不太懂漠月帮助里一些术语的意思，可以去 https://docs.xmebot.com/glossary 看看，说不定会帮上忙~",
       "你让 \"/ai\" 生成图片的时候，假如你刻意让他生成非常华丽或者复杂细节丰富的图片，又或者是提供很长的提示词，他可能会超常发挥哦（？）",
       "\"/ai\" 默认会使用 flash 模型，如果你想用 pro 模型，可以使用 \"/ai -m pro xxx\" 来使用 pro 模型问 AI xxx",
-      "tip:"
+      "tip:",
+      "如果有什么问题/BUG或者建议，可以使用 \"/rep 建议内容\" 指令来汇报给{author_nick}哦~"
     ]
   },
   "apis": {
@@ -236,7 +238,7 @@
       "你达成了一个隐藏成就 \"{achievement}\"！{positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦",
       "{positive} 你达成了一个隐藏成就 \"{achievement}\"！给你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦"
     ],
-    "anno_temp_suffix": "私聊我以将你的消息发送给九九（开发者）哦{positive_punc}",
+    "anno_temp_suffix": "私聊我以将你的消息发送给{author_nick}（开发者）哦{positive_punc}",
     "refresh_reports": "服务器有还没上传的错误报告 {neutral}，我来上传一下...",
     "message_time": "发送这条消息消耗了 {secs} 秒 {neutral}"
   },
@@ -1167,7 +1169,7 @@
     },
     "jrrp": {
       "desc": "今日人品相关指令",
-      "introduction": "查看当前 qq 号今日的人品或群友人品排名{positive_punc}\n\n参数只能填写整数或 avg，正数为人品最高排名，负数为最低。填写 avg 为群员平均值。",
+      "introduction": "查看当前 qq 号今日的人品或群友人品排名\n\n参数只能填写整数或 avg，正数为人品最高排名，负数为最低。填写 avg 为群员平均值。",
       "avg_message": [
         "今日群员人品的平均值是 {avg} {reaction}",
         "今日大家的平均人品值是 {avg} {reaction}",
@@ -1318,7 +1320,7 @@
       "desc": "各种小游戏",
       "introduction": "游玩一个小游戏，游戏参数格式为：参数名=参数值（以逗号分隔）\n\n以下是目前有的所有游戏：\n\n{games}",
       "game_help": "游戏名称：{name}\n介绍：{introduction}\n参数列表：\n{args}",
-      "help_not_found": "找不到游戏 \"{args.info}\" 的帮助诶",
+      "help_not_found": "找不到游戏 \"{game}\" 的帮助诶",
       "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
       "option_help_desc": "查看帮助",
       "option_args_desc": "指定小游戏的参数，示例：/game -a (小游戏参数列表)",
@@ -1427,7 +1429,7 @@
           "正在探险中，不能执行指令哦 {neutral}\n发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。",
           "你还在探险中哦，不能执行指令 {neutral}\n发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
         ],
-        "error_msg": "{negative} 运行出现错误：{ex}\n可以尝试重新探险，或者将错误内容发送给九九 {neutral}",
+        "error_msg": "{negative} 运行出现错误：{ex}\n可以尝试重新探险，或者将错误内容发送给{author_nick} {neutral}",
         "stop_seeking": "探险结束啦{positive_punc}\n----------当前属性----------\n{player_attr}\n----------收益统计----------\n{gain}",
         "continue_step_tip": [
           "发送 \"s 1~{max_seek_steps}\"以继续探险{positive_punc} 数字为步数, 或发送 \"b 1~{max_back_steps}\" 往岸边返回 {neutral}\n也可以发送 \"quit\" 放弃并结算这次探险。"
@@ -1803,13 +1805,13 @@
       "arcade_already_logged_in": "账号还在登录状态哦... {neutral}\n上一次的会话没释放，等大概 15 分钟再试（别一直重试，会被限制的）",
       "arcade_bad_token": "水鱼 Token 好像失效了 {negative}\n去查分器官网重新生成一个，再用 {cmd_sep}mai bind 绑一下",
       "arcade_upload_failed": "上传到水鱼的时候被拒绝了... {neutral}\n先去水鱼网页看看是不是已经写进去一部分了",
-      "arcade_unmappable": "机台的成绩没能匹配上曲目... {sad}\n过一会儿再试试，或者找九九看看",
+      "arcade_unmappable": "机台的成绩没能匹配上曲目... {sad}\n过一会儿再试试，或者找{author_nick}看看",
       "arcade_blocked": "机台接口没给响应呢... {neutral}\n可能是出口网络被限制了，过几小时再试试吧",
       "arcade_timeout": "同步超时了... {sad}\n网络有点慢，稍后再试一次吧",
       "arcade_network_failed": "网络不太顺畅... {neutral}\n稍后再试试吧",
       "arcade_param_failed": "同步参数有点问题呢{neutral}\n检查一下二维码有没有发完整？",
       "arcade_business_failed": "同步失败了... {sad}\n稍后再试试，或者看看水鱼那边是不是正常",
-      "arcade_tool_missing": "扫码同步功能还没部署好呢... {neutral}\n（可以让九九把 mai-arcade 工具放到配置的路径）",
+      "arcade_tool_missing": "扫码同步功能还没部署好呢... {neutral}\n（可以让{author_nick}把 mai-arcade 工具放到配置的路径）",
       "arcade_bad_output": "同步工具返回了看不懂的内容... {sad}\n找我主人看看日志吧",
       "arcade_failed": "同步失败了... {sad}\n稍后再试试吧"
     },
@@ -2186,7 +2188,7 @@
       ],
       "todo_prefix": [
         "以下是待办列表{positive_punc}",
-        "以下是九九的待办事项列表{positive_punc}",
+        "以下是{author_nick}的待办事项列表{positive_punc}",
         "以下是 179 的待办列表{positive_punc}"
       ],
       "no_todo": [
@@ -2214,21 +2216,20 @@
         "解析参数出了点问题...或是没法截取特定屏幕，给你看看 179 的默认屏幕的状态吧 {neutral}"
       ],
       "successful": [
-        "这是 179 的屏幕状态{positive_punc}",
-        "这是九九的屏幕状态哦{positive_punc}",
-        "这是九九的屏幕状态哦 {neutral}"
+        "这是 {author_nick} 的屏幕状态{positive_punc}",
+        "这是{author_nick}的屏幕状态哦{positive_punc}",
+        "这是{author_nick}的屏幕状态哦 {neutral}"
       ],
       "successful_all": [
-        "这是九九全部屏幕的状态 {neutral}",
-        "这是 179 全部屏幕的状态哦 {neutral}",
-        "这是九九全部屏幕的状态哦 {neutral}"
+        "这是{author_nick}全部屏幕的状态 {neutral}",
+        "这是{author_nick}全部屏幕的状态哦 {neutral}"
       ],
       "not_in_peek_group": [
-        "你不在可视奸 179 的群里哦 {neutral}"
+        "你不在可视奸 {author_nick} 的群里哦 {neutral}"
       ],
       "is_private": [
-        "九九现在的窗口焦点 \"{title}\" 是不允许查看的哦...",
-        "九九现在的窗口焦点 \"{title}\" 是不可以看的哦 {neutral}"
+        "{author_nick}现在的窗口焦点 \"{title}\" 是不允许查看的哦...",
+        "{author_nick}现在的窗口焦点 \"{title}\" 是不可以看的哦 {neutral}"
       ]
     },
     "ping": {
@@ -2300,7 +2301,7 @@
       "desc": "群发消息",
       "introduction": "在群内发这个指令并且填写消息，{bot_name}会给群内所有成员发消息。",
       "parsing": "正在给 {count} 个群友发送消息{positive_punc}",
-      "message_send": "{positive} 九九公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
+      "message_send": "{positive} {author_nick}公告了一条消息：\"{message}\"\n如果不想收到消息可以发送 \"/mute\" 指令哦",
       "success": "{positive} 消息全部尝试发送啦{positive_punc} 成功率为 {percent}%",
       "muted": "静音成功啦 {neutral}"
     },
@@ -2644,10 +2645,10 @@
     },
     "report": {
       "desc": "汇报",
-      "introduction": "上报 BUG 或者建议 给九九",
+      "introduction": "上报 BUG 或者建议 给{author_nick}",
       "no_msg": "你好像没有写任何有效的消息内容哦 {neutral}",
       "report": "{positive} 用户 \"{uname}\"({qq}) 汇报了一条消息：{msg}",
-      "success": "成功汇报消息给九九啦{positive_punc}",
+      "success": "成功汇报消息给{author_nick}啦{positive_punc}",
       "limited": "汇报太快啦 {negative}，稍等一会再来吧...",
       "blocked": "{negative}，这条消息不适合说出去呢..."
     }

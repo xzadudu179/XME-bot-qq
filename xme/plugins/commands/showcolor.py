@@ -15,11 +15,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 # alias = ['系统状态', 'stats']
 __plugin_name__ = '色号显示'
-__plugin_usage__ = str(SpecialDoc(
+__plugin_usage__ = SpecialDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),
     introduction=get_message("plugins", __plugin_name__, 'introduction'),
-))
+    usage="#XXXXXX"
+)
 
 @message_preprocessor
 async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):

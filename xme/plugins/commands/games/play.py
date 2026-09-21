@@ -82,7 +82,7 @@ async def _(session: CommandSession, user: user.User):
     if args.info:
         info = get_game_help(text)
         if not info:
-            return await send_session_msg(session, get_message("plugins", cmd_name, 'help_not_found'))
+            return await send_session_msg(session, get_message("plugins", cmd_name, 'help_not_found', game=text))
         return await send_session_msg(session, info)
 
     game_to_play = games.games.get(text, False)

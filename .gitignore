@@ -184,6 +184,9 @@ guild1.db-wal
 # 本地 AI 开发规范（仅本机使用，勿提交）
 AGENT_DEV_RULES.md
 
+# cloudflared 同步前的线上配置副本（本机状态，勿提交）
+deploy/cloudflared/config.before-sync.yml
+
 .zcode
 .watchdog.lock
 # maimai 官方资源包（体积大，由 bot 启动时自动下载，勿提交）

@@ -11,9 +11,12 @@ from config import BOT_SETTINGS_PATH
 from xme.xmetools import colortools as c
 from xme.xmetools import logtools
 # from xme.xmetools.cmdtools import get_cmd_by_alias
-from xme.xmetools.texttools import lazy_pinyin
+from xme.xmetools.doctools import DOC_MD_PATH, build_docs_md, doc_to_markdown
+from cloudflared_sync import OK_STATUSES, sync_cloudflared_config
 from datetime import datetime
-from xme.plugins.commands.xme_user import get_userhelp
+
+from xme.xmetools.reqtools import fetch_data_post
+from xme.xmetools.texttools import hash_text
 # import config
 
 WIFE_INFO = {
@@ -52,74 +55,44 @@ BOT_SETTINGS = {
     "ignore_member_count_groups": [],
 }
 
-# TODO: 更换为解析 Document 类 而非字符串处理
+hook_need_update = False
 def gen_doc_md():
+    """生成 docs.md：把各插件的 __plugin_usage__（Doc 对象）渲染成指令文档。
+
+    文档同时是 /docs 页面（server_app.docs）与 AI 助手的系统提示词来源，排序与分栏规则
+    都在 doctools.build_docs_md 里；某个插件字段写坏了只影响它自己，不阻塞其余文档。
+    """
+    global hook_need_update
     plugins = list(filter(lambda p: p.name, nonebot.get_loaded_plugins()))
-    plugins.sort(key=lambda p: lazy_pinyin(p.name))
-    # print([p.name for p in plugins])
     logger.info("正在生成文档文件")
-    usages = []
+    docs = []
     for pl in plugins:
         try:
-            usage = str(pl.usage).replace("/////OUTER/////", "")
-            pl_type = usage.split("]")[0].split("[")[1]
-            if pl_type == "指令":
-                # print(pl.name, "是指令")
-                md_usage = parse_command_doc(usage)
-            elif pl.name.lower() in "xme 宇宙":
-                md_usage = parse_user_doc(usage)
-            elif pl_type == "插件":
-                # print(pl.name, "是插件")
-                # print(pl.usage)
-                md_usage = parse_plugin_doc(usage)
-            else:
-                # print(pl.name, "是特殊插件，不处理")
-                ...
-            usages.append(md_usage.replace("\"", "`"))
+            docs.append(doc_to_markdown(pl.usage))
         except Exception:
             logger.error("处理", pl.name, "插件出错:", traceback.format_exc())
-            # lotraceback.print_exc()
             continue
-    with open("docs.md", 'w', encoding='utf-8') as file:
-        file.write("\n\n".join(usages))
+    new_docs_text = build_docs_md(docs)
+    new_docs = hash_text(new_docs_text)
+    try:
+        with open(DOC_MD_PATH, 'r', encoding='utf-8') as file:
+            old_docs = hash_text(file.read())
+    except OSError:
+        old_docs = ""
+    # 更新 hook
+    hook_need_update = new_docs != old_docs
+    if hook_need_update:
+        logger.info("文档站需要重建")
+    with open(DOC_MD_PATH, 'w', encoding='utf-8') as file:
+        file.write(new_docs_text)
 
-def parse_command_doc(doc_str, header_level=3):
-    header = "#" * header_level + " " + doc_str.split("\n")[0]
-    desc = "- **作用**\n\n  " + "\n  ".join((doc_str.split("作用：")[1].split("\n##用法##：")[0]).split("\n"))
-    usage = "- **用法**\n\n``` Text\n" + (doc_str.split("##用法##：")[1].split("\n权限/可用范围：")[0]).strip() + "\n```"
-    perms = "- **权限/可用范围**\n\n  " + doc_str.split("\n权限/可用范围：")[1].split("\n别名：")[0]
-    alias = "- **别名**\n\n  " + "、 ".join([f"`{item}`" for item in doc_str.split("别名：")[1].split("\n########")[0].split(", ")])
-    return "\n\n".join([header, desc, usage, perms, alias]) + "\n\n---"
+def is_hook_need_update():
+    global hook_need_update
+    return hook_need_update
 
-def parse_user_doc(doc_str):
-    header = "### " + doc_str.split("\n")[0]
-    desc = "- **作用**\n\n  " + "\n  ".join((doc_str.split("作用：")[1].split("\n##内容##：")[0]).split("\n"))
-    content = "- **指令列表：**\n\n"
-    cmds = [item.strip().split(" ")[0].replace(":", "") for item in doc_str.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n") if item]
-    md_cmds = []
-    for cmd in cmds:
-        cmd_info = parse_command_doc(get_userhelp(cmd), 4)
-        md_cmds.append("\n  ".join(cmd_info.split("\n")))
-    return f'{header}\n\n{desc}\n\n{content}  ' + "\n  ".join(md_cmds)
-
-
-def parse_plugin_doc(doc_str):
-    header = "### " + doc_str.split("\n")[0]
-    desc = "- **作用**\n\n  " + "\n  ".join((doc_str.split("作用：")[1].split("\n##内容##：")[0]).split("\n"))
-    content = "- **指令列表：**\n\n  "
-    cmds = {item.strip().split(" ")[0].replace(":", ""): item.strip().split(": ")[1] for item in doc_str.split("##内容##：")[1].split("##所有指令用法##：")[0].split("\n") if item}
-    usages = {item.strip()[1:].split(" ")[0].replace(":", ""): item.strip() for item in doc_str.split("##所有指令用法##：")[1].split("##权限/可用范围##：")[0].split("\n") if item}
-    perms = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(" & ") for item in doc_str.split("##权限/可用范围##：")[1].split("##别名##：")[0].split("\n") if item}
-    alias = {item.strip().split(" ")[0].replace(":", ""): item.split(": ")[1].split(", ") for item in doc_str.split("##别名##：")[1].split("\n########")[0].split("\n") if item}
-    # print(alias)
-    md_cmds = []
-    for cmd, u in cmds.items():
-        perm_lines = "\n    ".join(f"{i}. **{perm}**" for i, perm in enumerate(perms[cmd]))
-        md_cmds.append(f'  #### {cmd}\n\n  - **作用**\n\n    {u}\n\n  - **用法**\n\n  ```Text\n  {usages[cmd]}\n  ```\n\n  - **权限/可用范围**\n\n    {perm_lines}\n\n  - **别名**\n\n    {"、 ".join([f"`{a}`" for a in alias[cmd]])}。\n\n  ---\n')
-    return f'{header}\n\n{desc}\n\n{content}' + "\n".join(md_cmds)
-
-def parse_special_doc(doc_str):
-    ...
+def reset_hook():
+    global hook_need_update
+    hook_need_update = False
 
 def init_json(path, data):
     if os.path.exists(path):
@@ -166,8 +139,23 @@ def bot_init():
 
     gen_doc_md()
 
+    sync_cloudflared_ingress()
+
     # 启动时显式检测并迁移所有数据库表结构（字段减少/增加自动重建表）
     init_all_databases()
+
+
+def sync_cloudflared_ingress():
+    """把仓库里的 cloudflared 配置同步到线上（deploy/cloudflared/config.yml 为唯一来源）。
+
+    内容一致时不产生任何副作用；校验不通过或没授权只告警，不阻塞启动。
+    """
+    status, detail = sync_cloudflared_config()
+    message = f"cloudflared 配置：{status.value}（{detail}）"
+    if status in OK_STATUSES:
+        logger.info(message)
+    else:
+        logger.warning(message)
 
 
 def init_all_databases():
@@ -211,7 +199,7 @@ def setup_lib_log():
     """接管 root logger 的库日志（aiocqhttp/Quart/APScheduler 等）
 
     心跳、定时任务例行执行等高频 INFO 行降级为 DEBUG 不再刷控制台，事件
-    行紧凑上色显示；全部库日志落 ./logs/events.log（DEBUG 级，含降级行）；
+    行紧凑上色显示；全部库日志落 ./logs/event/events.log（DEBUG 级，含降级行）；
     nonebot/send logger 关闭传播避免经 root 重复打印。需在 nonebot.init
     前调用，以抢占 Quart 懒加载的默认 stderr handler。
     """
@@ -225,11 +213,13 @@ def setup_lib_log():
         "[%(asctime)s] [%(levelname)s] %(message)s"))
     root.addHandler(console)
 
+    events_path = './logs/event/events.log'
+    os.makedirs(os.path.dirname(events_path), exist_ok=True)
     events_handler = TimedRotatingFileHandler(
-        './logs/events.log', when="midnight", interval=1,
+        events_path, when="midnight", interval=1,
         backupCount=30, encoding="utf-8", delay=True)
     events_handler.suffix = "%Y-%m-%d"
-    events_handler.setLevel(logging.DEBUG)
+    events_handler.setLevel(logging.INFO)
     events_handler.addFilter(logtools.RoutineLogDemoteFilter())
     events_handler.setFormatter(logging.Formatter(
         '[%(asctime)s] [%(levelname)s] %(message)s'))
@@ -238,11 +228,13 @@ def setup_lib_log():
     for name in ("nonebot", "send"):
         logging.getLogger(name).propagate = False
     print(c.gradient_text("#a8ffc5", "#66c7ff",
-                          text="已接管库日志：事件将记录到 ./logs/events.log"))
+                          text=f"已接管库日志：事件将记录到 {events_path}"))
 
 
-def saving_log(logger: logging.Logger, filepath='./logs/nonebot.log'):
+def saving_log(logger: logging.Logger, filepath='./logs/nonebot/nonebot.log'):
     # 设置日志的格式；backupCount 缺省 0 会永久保留每天的轮转文件（无界增长）
+    # 本函数在 bot_init() 之前跑，日志目录得自己建（与 msgtools/watchdog 的做法一致）
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     log_handler = TimedRotatingFileHandler(filepath, when="midnight", interval=1,
                                            backupCount=120, encoding="utf-8")
     log_handler.suffix = "%Y-%m-%d"  # 按年-月-日格式保存日志文件

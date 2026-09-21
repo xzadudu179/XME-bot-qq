@@ -165,12 +165,21 @@ class CDPBrowser:
         launch_args = [
             "google-chrome", "--disable-gpu", "--hide-scrollbars", "--mute-audio",
             "--no-first-run", "--disable-extensions", "--no-default-browser-check",
+            # 抑制各类弹窗/提示条（更新气泡、翻译条、崩溃恢复等），避免录进画面
+            "--noerrdialogs", "--disable-infobars", "--disable-sync",
+            "--disable-component-update", "--disable-background-networking",
+            "--disable-session-crashed-bubble", "--hide-crash-restore-bubble",
+            "--disable-features=Translate,TranslateUI,AcceptCHFrame,MediaRouter,"
+            "OptimizationHints,ChromeWhatsNewUI,CalculateNativeWinOcclusion",
             "--remote-debugging-port=0", f"--user-data-dir={self._profile}",
             f"--window-size={self.width},{self.height}",
         ]
         if self.display is None:
             launch_args.insert(1, "--headless=new")
         else:
+            # 有头模式（Xvfb 录屏）：kiosk 全屏——画面里没有标签栏/地址栏等浏览器 UI，
+            # 视口即整个虚拟屏（录制画面纯净，视口高度也不再被浏览器 UI 挤占）
+            launch_args.insert(1, "--kiosk")
             launch_args.append(f"--display={self.display}")
         launch_args.append("about:blank")
         self._proc = await asyncio.create_subprocess_exec(
@@ -386,6 +395,7 @@ async def _move_tracked(browser: CDPBrowser, action: dict, pos: list,
     step_secs = _MACRO_STEP_SECS
     target_desc = action.get("selector") or f"{action.get('x')},{action.get('y')}"
     label = f"move({target_desc})"
+    last_step = time.monotonic()
     while True:
         target = await _target_center(browser, action)
         if target is None:
@@ -409,7 +419,11 @@ async def _move_tracked(browser: CDPBrowser, action: dict, pos: list,
                     f"window.__cursor.moveTo({round(target[0],1)},{round(target[1],1)},true)")
             notes.append(f"move 追踪 {label} 超时（{timeout:g}s），已瞬移到元素当前位置并继续")
             return
-        step = min(speed * step_secs, dist)
+        # 按真实经过时间推进（每步有两次 CDP 往返，固定步长会让实际速度明显偏慢、
+        # 长距离移动撞 timeout 变瞬移）；速度以配置值为准，帧间位移自然平滑
+        now = time.monotonic()
+        step = min(speed * max(now - last_step, 1e-3), dist)
+        last_step = now
         ux, uy = (target[0] - pos[0]) / dist, (target[1] - pos[1]) / dist
         nx, ny = pos[0] + ux * step, pos[1] + uy * step
         await browser.dispatch_mouse("mouseMoved", nx, ny)

@@ -54,7 +54,7 @@ async def _(session: CommandSession, user):
     parts = arg_text.split(None, 1)
     sub = parts[0].lower() if parts else ''
     rest = parts[1].strip() if len(parts) > 1 else ''
-    if not sub:
+    if not sub or sub.lower() == "help":
         # 无操作时输出帮助
         await send_session_msg(session, str(__plugin_usage__), at=False)
         return True

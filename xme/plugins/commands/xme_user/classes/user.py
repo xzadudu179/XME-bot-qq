@@ -25,7 +25,7 @@ from .inventory import Inventory # noqa: E402
 from xme.xmetools.debugtools import debug_msg # noqa: E402
 from nonebot.log import logger # noqa: E402
 # from .xme_map import get_galaxymap # noqa: E402
-from xme.xmetools.dbtools import DATABASE, adapt_value, add, diff_json # noqa: E402
+from xme.xmetools.dbtools import DATABASE, adapt_value, add, diff_json, merge_patch # noqa: E402
 
 
 # flush() 里的「无变化」哨兵：与合法值 None 区分开
@@ -127,6 +127,9 @@ class User:
         self.id: int = user_id
         # 加载时的原始行值（由 DATABASE.load_class 注入）：flush 据此只写变化的部分
         self._loaded_row: dict = {}
+        # 执行中的限流占位（try_use_limit 登记、命令结束时注销）：命令内部读
+        # get_limit_info 要把它扣掉，剩余次数的口径才与占位之前一致
+        self._limit_pending: dict = {}
         self.desc: str = desc
         self.afdian_id: str = afdian_id
         # avoid shared mutable defaults
@@ -339,8 +342,11 @@ class User:
         """整行写入（INSERT OR REPLACE，包含全部列）——会把并发写入的列一起盖掉。
 
         只在「新建用户」或确实要整行覆盖时使用；日常收尾请用 flush()。
+        写完把加载基线一并刷新成刚写入的行，否则后续 flush() 会拿「加载时的旧值」
+        当参照：增量列（coins 等）被重复叠加，值为旧值的 JSON 子路径被漏写。
         """
         self.db_id = DATABASE.save_to_db(obj=self)
+        self._loaded_row = {k: adapt_value(v) for k, v in self.to_dict().items()}
 
     def replace_field(self, *columns) -> None:
         """声明这些列要按绝对值写回（覆盖并发写入），供「绝对赋值」语义使用。
@@ -410,87 +416,154 @@ def try_load(id):
         u = User(id)
     return u
 
-def verify_counters(user: User, name: str):
-    if name not in user.counters or not isinstance(user.counters[name], dict):
-        user.counters[name] = {}
-        user.flush()
-    user.counters[name].setdefault("time", 0)
-    user.counters[name].setdefault("count", 0)
+def _read_counter(user: User, name: str) -> dict:
+    """从库里读某计数器的最新值，没有该计数器时返回空 dict。
+
+    限流判定必须基于库里的最新值：同一用户的两次调用各自持有独立的 User 对象，
+    对象里的 counters 只是加载时的快照，拿快照判定会让并发调用双双通过。
+    """
+    rows = User.exec_query(
+        f"SELECT counters FROM {User.get_table_name()} WHERE user_id = ?",
+        (user.id,), dict_data=True)
+    for row in rows:
+        counters = _parsed(row.get("counters"))
+        counter = counters.get(name) if isinstance(counters, dict) else None
+        if isinstance(counter, dict):
+            return counter
+    return {}
+
+
+def _limit_decision(counter: dict, interval: float | int, count_limit: int,
+                    unit: timetools.TimeUnit, floor_float: bool) -> tuple[bool, dict | None]:
+    """判定某计数器的限流状态（纯函数，不写库）。
+
+    Args:
+        counter (dict): 计数器当前值 {"time": 上次计时, "count": 已用次数}
+
+    Returns:
+        tuple[bool, dict | None]: (是否已达上限, 时间已过期时该重置成的计数器；否则 None)
+    """
+    time_now = timetools.get_valuetime(timetools.timenow(), unit)
+    if floor_float:
+        time_now = math.floor(time_now)
+    stored_time = counter.get("time", 0) or 0
+    count = counter.get("count", 0) or 0
+    if time_now - timetools.get_valuetime(stored_time, unit) < interval:
+        debug_msg("时间受限制")
+        return count >= count_limit, None
+    debug_msg("时间过了 刷新")
+    reset_time = timetools.timenow()
+    return False, {"time": math.floor(reset_time) if floor_float else reset_time, "count": 0}
+
+
+def _write_counter(user: User, name: str, counter: dict) -> None:
+    """把某计数器写回库，并同步到内存对象。
+
+    限流状态不等命令收尾的 flush：中途的整行 save() 会带着旧计数把它盖掉。
+    只写这一个子键（merge-patch），同一列里其它计数器不受影响。
+    """
+    user.counters[name] = dict(counter)
+    if user.db_id == -1:
+        # 尚未入库（新用户）：随收尾的 save()/flush() 一起落库
+        return
+    DATABASE.update_db(obj=user, id=user.db_id,
+                       counters=merge_patch({name: dict(counter)}))
+    if user._loaded_row:
+        # 差异基线跟着这次写库走：该计数器在收尾 flush 里不再算「有变化」，
+        # 免得被内存快照以绝对值覆盖回去
+        baseline = _parsed(user._loaded_row.get("counters"))
+        if isinstance(baseline, dict):
+            baseline[name] = dict(counter)
+            user._loaded_row["counters"] = adapt_value(baseline)
+
+
+def _mark_limit_pending(user: User, name: str, delta: int = 1) -> None:
+    """登记 / 注销本对象上某计数器的「执行中占位」（delta 为 -1 即注销）"""
+    pending = user._limit_pending.get(name, 0) + delta
+    if pending > 0:
+        user._limit_pending[name] = pending
+    else:
+        user._limit_pending.pop(name, None)
 
 
 def reset_limit(user: User, name: str, floor_float: bool = True,
                 count_add=False):
-    """重置限制时间和数量
+    """重置计数器：计时归位、计数清零（count_add 为真时清零后再计一次），并写回库。
 
     Args:
         user (User): 用户
         name (str): 时间限制名
-        unit (time_tools.TimeUnit, optional): 时间单位. Defaults to time_tools.TimeUnit.DAY.
         floor_float (bool, optional): 是否向下取整. Defaults to True.
+        count_add (bool, optional): 清零后是否再计一次. Defaults to False.
     """
     time_now = timetools.timenow()
     time_now = time_now if not floor_float else math.floor(time_now)
-    user.counters[name]["time"] = time_now
-    if user.counters[name]["count"] != 0:
-        user.counters[name]["count"] = 0
-    if count_add:
-        user.counters[name]["count"] += 1
-    # user.save()
+    _write_counter(user, name, {"time": time_now, "count": 1 if count_add else 0})
 
 
 def limit_count_tick(user: User, name: str, count=1):
-    """增加默认1次计数器计数
+    """给计数器加计数并写回库（count 可为小数，按库里最新值累加）
 
     Args:
         user (User): 用户
         name (str): 时间限制名
         count (int): 次数. Defaults to 1.
     """
-    if get_value(name, "count", search_dict=user.counters) is None:
-        user.counters[name] = {}
-        user.counters[name]["count"] = 0
-    user.counters[name]["count"] += count
-    # user.save()
+    counter = _read_counter(user, name)
+    counter["count"] = (counter.get("count", 0) or 0) + count
+    _write_counter(user, name, counter)
+
 
 def detect_limit(user: User, name: str, interval: float | int, count_limit: int = 1,
-                   unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True) -> tuple[bool, bool]:
-    """是否在时间 / 数量限制内，如果找不到时间限制名则创建
+                   unit: timetools.TimeUnit = timetools.TimeUnit.DAY, floor_float: bool = True) -> bool:
+    """是否已达限制；时间过期时顺手把计数器重置写回
 
     Args:
         user (User): 用户
         name (str): 时间限制名
-        limit (float | int): 限制时间
+        interval (float | int): 限制时间
         count_limit: 限制时间内限制次数 Defaults to 1.
         unit (date_tools.TimeUnit, optional): 时间单位. Defaults to date_tools.TimeUnit.DAY.
         floor_float (bool, optional): 是否向下取整. Defaults to True.
 
     Returns:
-        bool: 是否在限制内
+        bool: 是否已受限（True 表示应拦截）
     """
-    verify_counters(user, name)
+    counter = _read_counter(user, name)
+    blocked, reset_value = _limit_decision(counter, interval, count_limit, unit, floor_float)
+    if reset_value is not None:
+        _write_counter(user, name, reset_value)
+    return blocked
 
-    time_now = timetools.get_valuetime(timetools.timenow(), unit)
-    time_now = time_now if not floor_float else math.floor(time_now)
-    # True 禁止继续使用指令 因为已受到限制
-    time_limit, c_limit = False, False
-    if time_now - timetools.get_valuetime(user.counters[name]["time"], unit) < interval:
-        debug_msg("时间受限制")
-        time_limit = True
-    else:
-        debug_msg("时间过了 刷新")
-        reset_limit(user, name, floor_float)
-        return False
-        # return (True, True)
-    if user.counters[name]["count"] >= count_limit:
-        debug_msg("次数受限制")
-        c_limit = True
-    if time_limit and c_limit:
-        # reset_limit(user, name, unit, floor_float)
-        return True
 
-    else:
-        return False
-    #     reset_limit(user, name, unit, floor_float)
+def try_use_limit(user: User, name: str, interval: float | int, count_limit: int = 1,
+                  unit: timetools.TimeUnit = timetools.TimeUnit.DAY,
+                  floor_float: bool = True) -> dict | None:
+    """占用一次配额：成功返回占用前的计数器快照（供 release_limit 回滚），已达上限返回 None。
+
+    判定与写库在同步代码里一口气做完（其间不 await），同一进程内同一用户的并发调用
+    因此不会双双通过；配额在命令执行前就占住，命令失败的场景由调用方回滚。
+    """
+    counter = _read_counter(user, name)
+    blocked, reset_value = _limit_decision(counter, interval, count_limit, unit, floor_float)
+    if blocked:
+        return None
+    base = reset_value if reset_value is not None else counter
+    _write_counter(user, name, {
+        "time": base.get("time", 0) or 0,
+        "count": (base.get("count", 0) or 0) + 1,
+    })
+    _mark_limit_pending(user, name)
+    return counter
+
+
+def release_limit(user: User, name: str, snapshot: dict) -> None:
+    """回滚一次配额占用（命令未成功时不消耗次数）。snapshot 为 try_use_limit 的返回值。"""
+    _write_counter(user, name, {
+        "time": snapshot.get("time", 0) or 0,
+        "count": snapshot.get("count", 0) or 0,
+    })
+    _mark_limit_pending(user, name, -1)
 
 
 def get_limit_info(user, name):
@@ -502,10 +575,12 @@ def get_limit_info(user, name):
 
     Returns:
         tuple(int | float, int): (当前记录时间, 当前记录次数)
+        次数已扣掉本命令执行中的占位，取值与命令开始前一模一样（lottery、
+        guess_num 都按「限流器还没给本次计数」的口径算剩余次数）。
     """
     return (
         get_value(name, "time", search_dict=user.counters, default=0),
-        get_value(name, "count", search_dict=user.counters, default=0)
+        get_value(name, "count", search_dict=user.counters, default=0) - user._limit_pending.get(name, 0)
     )
     # return (user.counters[name]["time"], user.counters[name]["count"])
 
@@ -535,8 +610,10 @@ def limit(limit_name: str,
         @wraps(func)
         async def wrapper(session, user: User, *args, **kwargs):
             # debug_msg(user.counters)
-            if detect_limit(user=user, name=limit_name, interval=interval, count_limit=count_limit, unit=unit,
-                              floor_float=floor_float):
+            # 配额在命令执行前占住：判定与占用都在同步代码内完成，并发调用不会双双通过
+            snapshot = try_use_limit(user=user, name=limit_name, interval=interval,
+                                     count_limit=count_limit, unit=unit, floor_float=floor_float)
+            if snapshot is None:
                 if not limit_func:
                     return await send_session_msg(session, limit_message)
                 # 有自定义函数传入情况
@@ -544,14 +621,24 @@ def limit(limit_name: str,
                     return await limit_func(func, session, user, *args, **kwargs)
                 else:
                     return limit_func(func, session, user, *args, **kwargs)
-            result = await func(session, user, *args, **kwargs)
+            try:
+                result = await func(session, user, *args, **kwargs)
+            except Exception:
+                # 命令抛异常同样不消耗配额
+                release_limit(user, limit_name, snapshot)
+                raise
             if not fails(result):
                 debug_msg("保存用户数据, 增加计数")
                 debug_msg("coins", user.coins)
-                limit_count_tick(user, limit_name)
-                # 只写 counters 下该计数器的子路径（整行 save 会盖掉期间的并发写入，
-                # 例如 AI 结算的 credits / 其它指令的金币）
+                # 计数器已随占用写库，这里落的是命令本身对用户的改动：
+                # flush 只写变化的列 / JSON 子路径，不做整行覆盖（整行 save 会盖掉
+                # 期间的并发写入，例如 AI 结算的 credits / 其它指令的金币）
                 user.flush()
+                # 命令结束，注销占位标记（之后 get_limit_info 才把本次计入）
+                _mark_limit_pending(user, limit_name, -1)
+            else:
+                # 命令没成功，把占住的配额还回去
+                release_limit(user, limit_name, snapshot)
             if isinstance(result, str):
                 await send_session_msg(session, result)
             return result

@@ -139,10 +139,13 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
                 await browser.navigate(source, wait_ms=BROWSER_NAV_WAIT_MS)
                 if show_cursor:
                     await browser.inject_cursor()
-                # ffmpeg x11grab 直录（后台）：画面直接进编码器，无截帧/推流环节
+                # ffmpeg x11grab 直录（后台）：画面直接进编码器，无截帧/推流环节。
+                # draw_mouse=0：不录 X11 真实指针（Xvfb 上停在屏幕中心），
+                # 鼠标轨迹由注入的 DOM 虚拟光标表现（show_cursor 控制）
                 ffmpeg_args = [
                     "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                    "-f", "x11grab", "-framerate", str(int(preset["fps"])),
+                    "-f", "x11grab", "-draw_mouse", "0",
+                    "-framerate", str(int(preset["fps"])),
                     "-video_size", f"{render_width}x{render_height}",
                     "-i", f"{xvfb.display}.0+0,0",
                 ]
@@ -179,12 +182,22 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
                             pass
                 finally:
                     stop_epoch = time.time()
-                    # SIGINT 优雅停止 ffmpeg（写 mp4 收尾索引）；迟滞则强杀
-                    ffmpeg_proc.send_signal(signal.SIGINT)
-                    try:
-                        await asyncio.wait_for(ffmpeg_proc.communicate(), 15)
-                    except asyncio.TimeoutError:
-                        ffmpeg_proc.kill()
+                    # 硬窗模式 ffmpeg 带 -t 会自行退出（进程可能已回收）；
+                    # 仅当仍在运行时才 SIGINT 优雅停止（写 mp4 收尾索引），迟滞则强杀
+                    if ffmpeg_proc.returncode is None:
+                        try:
+                            ffmpeg_proc.send_signal(signal.SIGINT)
+                        except ProcessLookupError:
+                            pass
+                        try:
+                            await asyncio.wait_for(ffmpeg_proc.communicate(), 15)
+                        except asyncio.TimeoutError:
+                            try:
+                                ffmpeg_proc.kill()
+                            except ProcessLookupError:
+                                pass
+                            await ffmpeg_proc.communicate()
+                    else:
                         await ffmpeg_proc.communicate()
     except TimeoutError:
         return out_path, out_ref, notes, "[录制失败：浏览器会话超时]"

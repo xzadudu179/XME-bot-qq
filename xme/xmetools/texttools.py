@@ -1,6 +1,7 @@
 import re
 import traceback
 from pypinyin import lazy_pinyin
+from pypinyin.constants import PINYIN_DICT
 import itertools
 import base64
 from nonebot import Message
@@ -23,6 +24,26 @@ def strip_cq(text: str) -> str:
     还会让请求体积暴涨（超长文本会被切成几十个分块）导致风控返回空结果。
     """
     return re.sub(r"\[CQ:[^\]]*\]", "", text or "")
+
+
+# 内容型 CQ 段（转发时保留）：图片与各类表情（face/emoji 为传统表情，
+# marketface 商城表情、bface/sface 原创/小表情）
+CQ_CONTENT_TYPES = ("image", "face", "emoji", "marketface", "bface", "sface")
+
+
+def to_forwardable_message(text: str) -> str:
+    """把消息整理成可直接转发/发给别人的形式：只保留图片、表情与纯文本。
+
+    依赖原会话上下文的段（reply 引用、at 提及、file/forward/gift 等）一律去掉——
+    转发后它们要么失去意义、要么误触他人（如 at 会打扰被提及者）。
+    采用"白名单保留"而非"黑名单删除"：未知/新出现的 CQ 段默认被丢弃，
+    避免将来新增的类型带着上下文信息漏进转发消息（要保留新类型只需加进
+    CQ_CONTENT_TYPES）。
+    注意：结果可能为空（原消息只有 reply/at 等段）——调用方需自行判断能否发送。
+    """
+    keep = "|".join(CQ_CONTENT_TYPES)
+    # 段名后必须紧跟 , 或 ] 才算命中保留类型，避免 image 误配 image_xxx 之类
+    return re.sub(rf"\[CQ:(?!(?:{keep})[,\]])[^\]]*\]", "", text or "")
 
 
 async def text_moderations(text: str):
@@ -95,6 +116,35 @@ def has_url(text: str) -> bool:
 
 def is_valid_english_word(word: str) -> bool:
     return d.check(word)
+
+# 无音调拼音音节表：中文语境下用户会把 ai / en / hao 这类拼音当词打出来，
+# 判定「普通词」时它们要算进去。表从 pypinyin 自带字典推导，不用手工维护。
+PINYIN_SYLLABLES = frozenset(
+    "".join(c for c in unicodedata.normalize("NFD", syllable.strip())
+            if not unicodedata.combining(c))
+    for pinyins in PINYIN_DICT.values() for syllable in pinyins.split(",")
+)
+
+def is_common_word(text: str) -> bool:
+    """判断一个词是不是中英文里的普通词
+
+    英文查 enchant 词典；中文查 jieba 词典（词典未收录、但分词后仍是一个词的
+    中文串，如「色图」也算）；能当拼音打的拉丁串（ai / en / hao）算中文词。
+
+    Args:
+        text (str): 待判断的词（只判第一个词时由调用方自己切）
+
+    Returns:
+        bool: 是否是普通词
+    """
+    text = (text or "").strip()
+    if not text:
+        return False
+    if is_valid_english_word(text) or text.lower() in PINYIN_SYLLABLES:
+        return True
+    return jieba.get_FREQ(text) is not None or (
+        len(text) >= 2 and all(is_chinese(c) for c in text) and len(jieba.lcut(text)) == 1
+    )
 
 async def get_image_files_from_message(bot, msg):
     images = [(await bot.get_image(file=image))["file"] for image in re.findall(r"\[CQ:image,(?![^\]]*emoji_id=)[^\]]*?file=([^,]+),", msg)]

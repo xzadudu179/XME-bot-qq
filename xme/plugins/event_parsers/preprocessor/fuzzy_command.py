@@ -2,9 +2,12 @@
 
 预处理器在 nonebot 命令分发之前运行，只接管两类消息（其余一律放行给原有流程）：
 
-- 漏了开头字符（如「天气 南京」）或指令名打错（如「/weathr 南京」）：
+- 漏了开头字符（如「kklp」）、或指令名打错（如「/weathr 南京」）：
   发一条确认提示，并把纠正后的指令记入待确认表；
 - 该用户紧接着在本聊天回复 `y`：按纠正后的指令替他执行，并吞掉这条 `y`。
+
+漏前缀的那一类只认「不像日常用词」的指令名/别名：中英文普通词（天气 / wife / ai）
+本来就是群里正常说话的内容，不打扰。
 
 待确认表按 `(group_id, user_id)` 隔离（私聊 `group_id` 为 `None`，与 aistop
 的运行中会话同形状），带 `CONFIRM_TIMEOUT` 秒过期时间，用户回复别的内容即作废。
@@ -20,8 +23,8 @@ from nonebot.message import CanceledException
 from nonebot.plugin import PluginManager
 
 from xme.xmetools import cmdtools
-from xme.xmetools.msgtools import send_event_msg
-from xme.xmetools.texttools import fuzzy_search, strip_cq
+from xme.xmetools.msgtools import aget_arg_with_timeout, send_event_msg
+from xme.xmetools.texttools import fuzzy_search, is_common_word, remove_punctuation, strip_cq
 
 # 等待用户回 `y` 的有效期（秒），超时即作废
 CONFIRM_TIMEOUT = 60
@@ -93,8 +96,10 @@ def correction_target(text: str) -> Optional[str]:
             return None
         return f"{config.COMMAND_START[0]}{matched}" + (f" {args}" if args else "")
     first = text.split(" ")[0]
-    # 首词命中指令名/别名就够了：能走到这里说明它不是合法指令
     if len(first) < 2 or not cmdtools.get_cmd_by_alias(first, need_cmd_start=False):
+        return None
+    if is_common_word(first):
+        # 中英文普通词（天气 / wife / ai）像日常说话，不像漏了前缀的指令
         return None
     return f"{config.COMMAND_START[0]}{text}"
 
@@ -111,7 +116,7 @@ async def fuzzy_cmd(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plugin
     text = strip_self_at(text, event.self_id)
     key = (event.get("group_id"), event.user_id)
 
-    if strip_cq(text).strip().lower() == "y":
+    if remove_punctuation(strip_cq(text).strip().lower()) in ["y", "Y"]:
         command = confirms.pop(key)
         if command is not None:
             await cmdtools.event_send_cmd(command, bot, event)

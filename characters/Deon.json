@@ -2636,9 +2636,20 @@
       "too_small_number": "成员数不能小于 1 哦 {neutral}"
     },
     "execute": {
+      "desc": "执行 python",
+      "introduction": "(SUPERUSER) 执行 python 代码",
       "execute_error": [
         "好像执行出错了呢...\n完整错误如下：{ex}\n{trace}"
       ]
+    },
+    "report": {
+      "desc": "汇报",
+      "introduction": "上报 BUG 或者建议 给九九",
+      "no_msg": "你好像没有写任何有效的消息内容哦 {neutral}",
+      "report": "{positive} 用户 \"{uname}\"({qq}) 汇报了一条消息：{msg}",
+      "success": "成功汇报消息给九九啦{positive_punc}",
+      "limited": "汇报太快啦 {negative}，稍等一会再来吧...",
+      "blocked": "{negative}，这条消息不适合说出去呢..."
     }
   }
 }

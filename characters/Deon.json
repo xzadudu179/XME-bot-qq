@@ -924,7 +924,7 @@
         "no_record": "绑定的账号还没有发电记录哦，去爱发电看看 https://afdian.com/a/xzadudu179 吧{positive_punc}",
         "success": "======※我的发电状态※======\n昵称：{name}\n本月发电：{month_amount} 元（{month_count} 笔）\n最近{recent_days}天：{recent_amount} 元（{recent_count} 笔）\n累计发电：{total_amount} 元\n首次发电：{first_time}\n最近发电：{last_time}\n当前方案：{plan}\n=========="
       },
-      "stat": {
+      "stats": {
         "desc": "发电统计（仅开发者）",
         "introduction": "查看爱发电经营统计（本月/累计收入等），仅开发者可用",
         "success": "======※爱发电统计※======\n{year}年{month}月发电：{month_amount} 元（{month_count} 笔 / {month_sponsors} 人）\n累计发电：{total_amount} 元（{total_count} 笔）\n总发电人数：{sponsor_count} 人\n=========="
@@ -1703,7 +1703,7 @@
     },
     "maimai": {
       "desc": "舞萌DX 查分",
-      "introduction": "绑定水鱼查分器账号，查询舞萌DX B50 成绩、导入成绩 Token。\n\n{operations}",
+      "introduction": "绑定水鱼查分器账号，查询舞萌DX B50 成绩、导入成绩 Token。\n可用操作：\n{operations}",
       "limited": [
         "查分太频繁啦... {neutral}\n休息一下吧{positive_punc}",
         "{negative} 查分次数达到上限了哦...\n过一会儿再来吧嗷呜",
@@ -2415,7 +2415,7 @@
         "你需要在参数里输入要检测的文字哦 {neutral}"
       ]
     },
-    "今日鉴毛": {
+    "jrjm": {
       "desc": "查看今日鉴毛",
       "introduction": "随机返回一张《今日鉴毛》图片",
       "error": "无法获取今日鉴毛图片... {negative}\n错误：{error}",

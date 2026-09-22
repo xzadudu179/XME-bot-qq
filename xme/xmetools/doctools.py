@@ -12,7 +12,7 @@ PERMISSION_SEPARATOR = " & "
 ALIAS_SEPARATOR = "、 "
 
 # 只有 SUPERUSER 能用的指令（权限逐项就是这个字符串），docs.md 里单独归到文末一栏
-SUPERUSER_PERMISSION = "是 SUPERUSER"
+SUPERUSER_PERMISSION = ["是 SUPERUSER"]
 DOCS_SUPERUSER_HEADING = "## SUPERUSERS 可用指令"
 
 # 文档标题级别：插件条目为 MD_TITLE_LEVEL，其子指令用下一级；子指令块整体缩进
@@ -51,7 +51,7 @@ def is_superuser_only(permissions: Iterable[str] = ()) -> bool:
     逐条精确比对：写成「是管理 或 是群主 或 是 SUPERUSER」这种复合条件不算仅超管可用。
     """
     perms = [p.strip() for p in permissions or () if p and p.strip()]
-    return bool(perms) and all(p == SUPERUSER_PERMISSION for p in perms)
+    return bool(perms) and all(p in SUPERUSER_PERMISSION for p in perms)
 
 
 def check_can_show(perms):

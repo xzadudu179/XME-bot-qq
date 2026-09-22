@@ -20,3 +20,8 @@ def get_module_funcs(key, value, name):
     funcs = {k: v for k, v in funcs.items() if k is not None and v is not None}
     # print(funcs)
     return funcs
+
+def format_operation(module) -> str:
+    """把单个操作的名称、参数提示与简介拼成一行清单文案。"""
+    name = " ".join(filter(None, (module.cmd_name, module.usage.get("usage", ""))))
+    return f"- {name}：{module.usage['desc']}"

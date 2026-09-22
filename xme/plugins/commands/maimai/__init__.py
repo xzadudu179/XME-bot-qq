@@ -5,6 +5,8 @@
 update（导入 Token）/ unbind（解绑）。
 """
 __plugin_name__ = 'maimai'
+from xme.xmetools.moduletools import format_operation
+
 from .constants import CMD_MAI, MAI_ALIAS  # noqa: E402
 
 cmd_name = CMD_MAI
@@ -29,10 +31,7 @@ for module in sub_modules:
 
 
 # 操作清单（名称、参数提示、简介来自各子模块的 usage），填入文档的 {operations}
-def format_operation(module) -> str:
-    """把单个操作的名称、参数提示与简介拼成一行清单文案。"""
-    name = " ".join(filter(None, (module.cmd_name, module.usage.get("usage", ""))))
-    return f"{name}：{module.usage['desc']}"
+
 
 
 operations = "\n".join(format_operation(module) for module in sub_modules)

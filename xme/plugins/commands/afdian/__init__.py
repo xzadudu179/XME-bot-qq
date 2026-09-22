@@ -9,6 +9,8 @@ cmd_name = 'afdian'
 alias = ['afd', '爱发电', '发电']
 
 # 子模块依赖上面的 __plugin_name__，需在 import 前定义
+from xme.xmetools.moduletools import format_operation
+
 from . import constants, login, me, rank, stat, unbind  # noqa: F401,E402
 from nonebot import CommandSession  # noqa: E402
 from xme.xmetools.plugintools import on_command  # noqa: E402
@@ -24,11 +26,6 @@ for module in sub_modules:
     for a in module.usage.get("alias", []):
         alias_map[a] = module
 
-# 操作清单（名称、参数提示、简介来自各子模块的 usage），填入文档的 {operations}
-def format_operation(module) -> str:
-    """把单个操作的名称、参数提示与简介拼成一行清单文案。"""
-    name = " ".join(filter(None, (module.cmd_name, module.usage.get("usage", ""))))
-    return f"{name}：{module.usage['desc']}"
 
 
 operations = "\n".join(format_operation(module) for module in sub_modules)

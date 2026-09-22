@@ -200,3 +200,5 @@ KNOWN_ISSUES.md
 
 # 构建产物 / 外部工具二进制（mai-arcade 由 Go 项目 make release 产出）
 bin/
+
+deploy/cloudflared/config.yml

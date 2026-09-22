@@ -13,8 +13,8 @@ from xme.xmetools.msgtools import image_msg
 API_URL="https://mrjm.fur-bot.com"
 # API_URL="http://furgon.yjwmidc.com:8000"
 
-alias = ['鉴毛', 'jianmao', 'jrjm']
-__plugin_name__ = '今日鉴毛'
+alias = ['鉴毛', 'jianmao', '今日鉴毛']
+__plugin_name__ = 'jrjm'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),

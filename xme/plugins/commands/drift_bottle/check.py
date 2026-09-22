@@ -3,6 +3,7 @@
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from xme.plugins.commands.xme_user.classes import user as u
 from xme.xmetools.bottools import permission
+from xme.xmetools.doctools import SUPERUSER_PERMISSION
 from .tools.bottlecard import get_class_bottle_card_html, get_example_bottle, get_animated_bottle_card, has_animated_image
 from xme.plugins.commands.drift_bottle.tools.cards import CUSTOM_CARD_NAMES
 from xme.xmetools.msgtools import image_msg
@@ -23,7 +24,7 @@ TIMES_LIMIT = 1
 BOTTLE_PATH = './data/drift_bottles.json'
 
 @on_command(command_name, aliases=check_alias, only_to_me=False, permission=lambda _: True)
-@permission(lambda sender: sender.is_superuser, permission_help="是 SUPERUSER")
+@permission(lambda sender: sender.is_superuser, permission_help=SUPERUSER_PERMISSION[0])
 @u.using_user(save_data=False)
 async def _(session: CommandSession, user: u.User):
     random.seed()

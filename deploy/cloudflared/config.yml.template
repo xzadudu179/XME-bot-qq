@@ -1,0 +1,34 @@
+# cloudflared 配置 —— 这份文件是 /etc/cloudflared/config.yml 的唯一来源
+#
+# bot 启动时会自动同步到 /etc/cloudflared/config.yml，有变化才重启 cloudflared
+# （一次性授权见同目录 README.md）。要放行新的公开接口，改这里就行，不用再手动编辑 /etc。
+#
+# 注意：path 是正则，写反斜杠时不要用 YAML 双引号（会报 unknown escape character）；
+# 白名单以外一律 404，新增规则前先想清楚这个路径该不该公开。
+tunnel: xmebot
+credentials-file: /home/user/.cloudflared/example.json
+protocol: http2          # 国内家宽 QUIC/UDP 常被干扰，直接用 http2 稳妥
+ingress:
+  - hostname: oauth.example.com
+    path: /afdian
+    service: http://localhost:18980
+  - hostname: oauth.example.com
+    service: http_status:404
+  # API 域名：无端口访问 bot 的公开接口，白名单之外一律 404
+  # （/ws、/api、/status 等 CQHTTP 接口绝不暴露）
+  - hostname: api.example.com
+    path: ^/afdian(/|$)
+    service: http://localhost:18980
+  - hostname: api.example.com
+    path: ^/file/
+    service: http://localhost:18980
+  - hostname: api.example.com
+    path: ^/info/?$
+    service: http://localhost:18980
+  # 指令文档：/docs 是给人看的 HTML 页面，/docs.md 给文档站构建时抓取
+  - hostname: api.example.com
+    path: ^/docs(\.md|/|$)
+    service: http://localhost:18980
+  - hostname: api.example.com
+    service: http_status:404
+  - service: http_status:404

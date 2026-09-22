@@ -6,7 +6,7 @@ from nonebot import CommandSession
 from nonebot.log import logger
 
 from xme.xmetools.bottools import permission
-from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.doctools import SUPERUSER_PERMISSION, CommandDoc
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.sandboxexec import run_code_in_workspace
@@ -26,7 +26,7 @@ RUN_PYTHON_MAX_FILE_SIZE = 10 * 1024 * 1024    # 产出单文件大小上限
 
 alias = ['沙箱']
 __plugin_name__ = 'sandbox'
-permissions = ["是 SUPERUSER"]
+permissions = SUPERUSER_PERMISSION
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,
     desc=get_message("plugins", __plugin_name__, 'desc'),

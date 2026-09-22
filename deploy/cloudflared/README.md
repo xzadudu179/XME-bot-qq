@@ -43,7 +43,7 @@ sudo systemctl restart cloudflared
   裸写或单引号都行。改完可以先本地验一遍，`--config` 要放在子命令前面：
   ```bash
   cloudflared --config deploy/cloudflared/config.yml tunnel ingress validate
-  cloudflared --config deploy/cloudflared/config.yml tunnel ingress rule https://xme-api.xzadudu179.top/docs.md
+  cloudflared --config deploy/cloudflared/config.yml tunnel ingress rule https://api.example.com/docs.md
   ```
 - 这里就是公网暴露面的白名单，默认拒绝：没写进来的路径一律 404。**不要**改成"按 bot 已注册路由自动生成"——
   同一个 Quart app 上还挂着 `/ws`、`/api`、`/status`、`/static/*`，自动生成会把它们一起放上公网，

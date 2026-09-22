@@ -1,14 +1,14 @@
 from nonebot import CommandSession
 from nonebot.message import Message
 from xme.xmetools.plugintools import on_command
-from xme.xmetools.doctools import CommandDoc
+from xme.xmetools.doctools import SUPERUSER_PERMISSION, CommandDoc
 from xme.xmetools.msgtools import send_session_msg, get_message
 from xme.xmetools.bottools import permission
 from xme.xmetools.typetools import try_parse
 import traceback
 
 alias = ['exec']
-permissions = ["是 SUPERUSER"]
+permissions = SUPERUSER_PERMISSION
 __plugin_name__ = 'execute'
 __plugin_usage__ = CommandDoc(
     name=__plugin_name__,

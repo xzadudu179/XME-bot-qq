@@ -176,7 +176,7 @@
         "type": "function",
         "function": {
             "name": "view_document_file",
-            "description": "使用视觉模型查看指定 url 或者 ref 里的文档文件（例如 pdf pptx docx xlsx），并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
+            "description": "使用视觉模型查看指定 url 或者 ref 里的文档文件（例如 pdf pptx docx xlsx），并按你给的 prompt 解析回答。内容默认交给独立视觉模型分析后以文本返回（中立第三方视角，避免自查自证偏差）。只有当你要看的是「别人的东西」（用户发来的、网上找的、别人的页面）时才传 attach=true 把内容直接附进当前对话自己看；【验证你自己产出或写的东西】（生成的图表、你写的 SVG/HTML 截图、你编辑过的文件效果）一律不要 attach，让独立模型替你挑毛病，否则你容易因为「这是我做的」而看漏问题。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -192,9 +192,9 @@
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
                     },
-                    "force_use_agent": {
+                    "attach": {
                         "type": "boolean",
-                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
+                        "description": "是否把内容直接附进当前对话让自己看（默认 false = 交给独立视觉模型分析后返回文本）。仅当你确认看的是「别人的东西」时传 true；验证自己产出/自己写的东西时保持 false。"
                     }
                 },
                 "required": [
@@ -207,7 +207,7 @@
         "type": "function",
         "function": {
             "name": "view_image",
-            "description": "使用视觉模型(或者你自己)查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
+            "description": "使用视觉模型查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。内容默认交给独立视觉模型分析后以文本返回（中立第三方视角，避免自查自证偏差）。只有当你要看的是「别人的东西」（用户发来的、网上找的、别人的页面）时才传 attach=true 把内容直接附进当前对话自己看；【验证你自己产出或写的东西】（生成的图表、你写的 SVG/HTML 截图、你编辑过的文件效果）一律不要 attach，让独立模型替你挑毛病，否则你容易因为「这是我做的」而看漏问题。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -223,9 +223,9 @@
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
                     },
-                    "force_use_agent": {
+                    "attach": {
                         "type": "boolean",
-                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
+                        "description": "是否把内容直接附进当前对话让自己看（默认 false = 交给独立视觉模型分析后返回文本）。仅当你确认看的是「别人的东西」时传 true；验证自己产出/自己写的东西时保持 false。"
                     }
                 },
                 "required": [
@@ -238,7 +238,7 @@
         "type": "function",
         "function": {
             "name": "view_video",
-            "description": "使用视觉模型查看指定 url 或者 ref 里的视频，并按你给的 prompt 解析回答。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
+            "description": "使用视觉模型查看指定 url 或者 ref 里的视频，并按你给的 prompt 解析回答。内容默认交给独立视觉模型分析后以文本返回（中立第三方视角，避免自查自证偏差）。只有当你要看的是「别人的东西」（用户发来的、网上找的、别人的页面）时才传 attach=true 把内容直接附进当前对话自己看；【验证你自己产出或写的东西】（生成的图表、你写的 SVG/HTML 截图、你编辑过的文件效果）一律不要 attach，让独立模型替你挑毛病，否则你容易因为「这是我做的」而看漏问题。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -254,9 +254,9 @@
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
                     },
-                    "force_use_agent": {
+                    "attach": {
                         "type": "boolean",
-                        "description": "强制使用 agent 查看（否则若你是 flash 模型会直接输入给你看）"
+                        "description": "是否把内容直接附进当前对话让自己看（默认 false = 交给独立视觉模型分析后返回文本）。仅当你确认看的是「别人的东西」时传 true；验证自己产出/自己写的东西时保持 false。"
                     }
                 },
                 "required": [
@@ -899,7 +899,7 @@
         "type": "function",
         "function": {
             "name": "screenshot_page",
-            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用。\nprompt 非空时截图直接附入当前对话由你亲自查看并按要求分析；\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
+            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用。\nprompt 非空时截图默认交给独立视觉模型分析并返回文本；只有看图「别人的页面」时才传 attach=true 直接附入当前对话自己看，【验收你自己写的 SVG/HTML 效果】不要 attach，让独立模型挑问题。\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -926,6 +926,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "分析要求；填写后截图直接交给视觉模型分析并返回文本结果"
+                    },
+                    "attach": {
+                        "type": "boolean",
+                        "description": "是否把内容直接附进当前对话让自己看（默认 false = 交给独立视觉模型分析后返回文本）。仅当你确认看的是「别人的东西」时传 true；验证自己产出/自己写的东西时保持 false。"
                     }
                 },
                 "required": []

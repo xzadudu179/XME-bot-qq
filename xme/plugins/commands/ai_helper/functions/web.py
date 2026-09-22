@@ -264,10 +264,10 @@ async def web_search(query: str, max_results: int = 10, time_range: str = ""):
         ],
     }
 
-async def view_document_file(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
-    return await view_item(ref, url, prompt, item_type="file", force_use_agent=force_use_agent, agent=agent)
+async def view_document_file(ref: str = "", url: str = "", prompt: str = "", attach=False, agent=None):
+    return await view_item(ref, url, prompt, item_type="file", attach=attach, agent=agent)
 
-async def view_video(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
+async def view_video(ref: str = "", url: str = "", prompt: str = "", attach=False, agent=None):
     # 平台页面链接（B站/YouTube 等）：yt-dlp 解析时长 + 下载到本地后以限时链接交给模型
     # （GLM 的 video_url 只认媒体直链，页面 URL 会报格式解析错误）；
     # 直链媒体文件/本地文件：ffprobe 校验时长后原样处理
@@ -284,23 +284,27 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", force_use_a
         agent.temp_file_paths += result.file_paths  # 对话结束随 temp 清理
         # 视频链接用更长的有效期：模型服务端要拉取数 MB 视频，30s 太紧
         url = get_local_file_url(str(result.file_paths[0]), ttl=VIDEO_URL_TTL)  # 合集只分析第一个视频
-        return await view_item(url=url, prompt=prompt, item_type="video_url", force_use_agent=force_use_agent, agent=agent)
+        return await view_item(url=url, prompt=prompt, item_type="video_url", attach=attach, agent=agent)
     path_or_url = agent.resolve_ref(ref) if ref else url
     dur = await get_video_duration(path_or_url)
     if not dur:
         return "[查看视频错误：无法解析视频文件时长]"
     if dur > 600:
         return "[查看视频错误：视频时长过长 (>10分钟)]"
-    return await view_item(ref, url, prompt, item_type="video_url", agent=agent)
+    return await view_item(ref, url, prompt, item_type="video_url", attach=attach, agent=agent)
 
-async def view_image(ref: str = "", url: str = "", prompt: str = "", force_use_agent=False, agent=None):
-    return await view_item(ref, url, prompt, item_type="image_url", force_use_agent=force_use_agent, agent=agent)
+async def view_image(ref: str = "", url: str = "", prompt: str = "", attach=False, agent=None):
+    return await view_item(ref, url, prompt, item_type="image_url", attach=attach, agent=agent)
 
 
 # ---- 媒体可解析性探测（注入前校验，避免"声称已附上但模型实际加载失败"的误判）----
 
 _MEDIA_PROBE_MAX_SIZE = 4 * 1024 * 1024  # 探测下载上限；超限属"无法判定"，按放行处理
 _MEDIA_PROBE_HEAD = 64 * 1024            # 本地文件只读头部即可判定格式
+
+# 独立模型分析结果的来源标注：告诉模型这是第三方结论、自己没亲眼看，
+# 避免把别人的描述当成"我看过"（自查自己产出时尤其容易因此放过问题）
+INDEPENDENT_ANALYSIS_NOTE = "（以下为独立视觉模型的分析结论，你本人并未直接查看该内容）\n"
 
 # 视频容器文件头（mp4/mov 的 ftyp 在偏移 4 处，单独判断）
 _VIDEO_MAGICS = (
@@ -376,7 +380,12 @@ async def _media_probe(url: str, item_type: str) -> str | None:
         return None
     return _check_media_bytes(data, item_type)
 
-async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", force_use_agent: bool = False, agent=None):
+async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", attach: bool = False, agent=None):
+    """查看 url/ref 里的媒体内容并按 prompt 解析。
+
+    默认交给独立模型分析（返回文本，中立第三方视角）；attach=True 时若本轮模型
+    支持该媒体类型，则把内容直接附进当前对话由模型自己看（仅适合看别人的东西）。
+    """
     """查看 url 里的内容（图片/视频/文件），按 prompt 让模型解读并返回结果。
 
     作为 AI 可调用 tool 使用：当前轮模型本身是视觉模型（flash）时不再发起独立
@@ -399,10 +408,12 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         case _:
             raise ValueError(f"无法识别的输入类型 \"{item_type}\"")
     part = {"type": item_type, item_type: {name: url}}
-    # 直注入：省一次独立调用与重复计费，模型在原对话里直接看。
+    # 默认交给独立模型分析（中立第三方），而不是直接附进当前对话自己看：
+    # 自己看自己产出的东西容易带自证偏差（觉得没问题就没细看），
+    # 只有明确要看"别人的东西"时才由调用方传 attach=True 直注入。
     # 能力按媒体类型判：视频段（video_url）只有 GLM 之类的端点接受，
     # 只支持图片的端点收下会 422，因此不能用同一个 vision 判据
-    can_inject = agent is not None and not force_use_agent \
+    can_inject = agent is not None and attach \
         and getattr(agent, "supports_media", lambda _t: False)(item_type)
     if can_inject:
         type_names = {"file": "文件", "image_url": "图片", "video_url": "视频"}
@@ -441,7 +452,9 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         # 计费 tokens 到 credits（带外调用，跟随会话模型倍率折算）
         if agent is not None:
             agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
-        return result.text or "[没有识别到内容]"
+        # 标注来源：让模型知道这是第三方分析结论、自己并未亲眼看过，
+        # 避免它把别人的描述当成"我看过"（尤其自查自己产出时）
+        return INDEPENDENT_ANALYSIS_NOTE + (result.text or "[没有识别到内容]")
     except Exception as ex:
         logger.exception(f"查看 url 内容失败: {ex}")
         return f"[查看文件失败: {ex}]"
@@ -494,12 +507,13 @@ async def read_webpage(
         return f"[网页阅读失败: {ex}]"
 
 
-async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800, wait_ms: int = 1000, prompt: str = "", agent=None):
+async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800, wait_ms: int = 1000, prompt: str = "", attach: bool = False, agent=None):
     """对网页/SVG/HTML 做内部预览截图：存入 data/images/temp 并返回限时 url 给 AI。
 
     url 与 ref 二选一（url 为公网地址，ref 为已下载的 svg/html 引用）；
-    wait_ms 控制动态内容的等待时间。prompt 非空时截图会直接交给 GLM 视觉模型
-    按 prompt 分析并返回分析文本（等价于截图后自行调用 view_image）。
+    wait_ms 控制动态内容的等待时间。prompt 非空时截图默认交给独立视觉模型按
+    prompt 分析并返回文本（中立视角）；attach=True 且本轮模型支持图片输入时，
+    才把截图直接附进当前对话自己看（适合看别人的页面，不适合验收自己的产出）。
     """
     if bool(url) == bool(ref):
         return "[截图失败：url 与 ref 二选一]"
@@ -548,8 +562,9 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
             ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
         return (f"截图完成（{width}x{height}），已保存到 temp（引用 {ref}）。\n"
                 f"需要分析内容时可用 view_image 传入该引用。")
-    # 直注入：截图直接进当前对话，不再单独调 view_item 分析
-    if agent is not None and getattr(agent, "supports_media", lambda _t: False)("image_url"):
+    # 默认交给独立模型分析（中立视角，避免自查自证偏差）；attach=True 且本轮模型支持
+    # 图片输入时，才把截图直接附进当前对话由模型自己看（适合看别人的页面）
+    if attach and agent is not None and getattr(agent, "supports_media", lambda _t: False)("image_url"):
         return ImageToolResult(
             f"截图完成（{width}x{height}），截图已直接附在输入中。请针对该截图完成：{prompt}",
             [{"type": "image_url", "image_url": {"url": file_url}}])

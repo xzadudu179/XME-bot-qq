@@ -1,6 +1,6 @@
 __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
-from xme.xmetools.doctools import PluginDoc
+from xme.xmetools.doctools import SUPERUSER_PERMISSION, PluginDoc
 from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
 from xme.xmetools.animtools import is_animated, slot_placeholder_base64
 from xme.xmetools.randtools import messy_image
@@ -240,13 +240,13 @@ command_properties = [
         'name': 'cthulhu',
         'introduction': get_message("plugins", __plugin_name__, 'cthulhu_introduction'),
         'usage': '(瓶子id 以空格分隔)',
-        'permission': ['是 SUPERUSER']
+        'permission': SUPERUSER_PERMISSION
     },
     {
         'name': 'check',
         'introduction': get_message("plugins", __plugin_name__, 'check_introduction'),
         'usage': '(瓶子id)',
-        'permission': ['是 SUPERUSER']
+        'permission': SUPERUSER_PERMISSION
     },
     {
         'name': 'seek',

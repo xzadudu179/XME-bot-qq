@@ -12,6 +12,7 @@ from xme.xmetools.afdiantools import (
     get_month_stats,
     get_total_stats,
 )
+from xme.xmetools.doctools import SUPERUSER_PERMISSION
 
 cmd_name = CMD_STAT
 alias = ['统计']
@@ -20,7 +21,7 @@ usage = {
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc'),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction'),
     "usage": '<年份> <月份>',
-    "permissions": ["是 SUPERUSER"],
+    "permissions": SUPERUSER_PERMISSION,
     "alias": alias
 }
 

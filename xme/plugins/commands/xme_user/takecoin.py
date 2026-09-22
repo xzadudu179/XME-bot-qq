@@ -1,5 +1,6 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
+from xme.xmetools.doctools import SUPERUSER_PERMISSION
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.bottools import permission
 from xme.xmetools.msgtools import send_session_msg
@@ -17,12 +18,12 @@ usage = {
     "desc": get_message("plugins", __plugin_name__, cmd_name, 'desc', ),
     "introduction": get_message("plugins", __plugin_name__, cmd_name, 'introduction', ),
     "usage": f'(at目标用户) ({coin_name}数量 以空格分隔)',
-    "permissions": ["在群聊内 且是 SUPERUSER 或 是 bot 自己"],
+    "permissions": ["在群聊内"] + SUPERUSER_PERMISSION,
     "alias": alias
 }
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=True)
-@permission(lambda sender: sender.is_groupchat and (sender.is_superuser or sender.sent_by(3961418307)), permission_help=" & ".join(usage["permissions"]))
+@permission(lambda sender: sender.is_groupchat and (sender.is_superuser), permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     message = ''
     arg_text = session.current_arg.strip() if session.current_arg else ""

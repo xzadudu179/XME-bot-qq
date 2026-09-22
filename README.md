@@ -110,7 +110,7 @@ sudo bash deploy/cloudflared/install.sh   # 一次性 sudoers 授权（只放行
 # 编辑 deploy/cloudflared/config.yml 增删放行路径，重启 bot 后自动同步生效
 ```
 
-白名单机制与回滚方法详见 [deploy/cloudflared/README.md](deploy/cloudflared/README.md)。
+白名单机制与回滚方法详见 deploy/cloudflared 中的 README。
 
 ### 7. 构建 mai-arcade（可选，`/mai` 指令需要）
 

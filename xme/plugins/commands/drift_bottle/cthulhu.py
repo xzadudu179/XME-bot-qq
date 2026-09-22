@@ -1,6 +1,7 @@
 # from xme.xmetools.timetools import *
 # from xme.xmetools import jsontools
 from character import get_message
+from xme.xmetools.doctools import SUPERUSER_PERMISSION
 from xme.xmetools.msgtools import send_session_msg
 from xme.plugins.commands.drift_bottle import __plugin_name__
 from nonebot import CommandSession
@@ -11,7 +12,7 @@ from . import DriftBottle
 cthulhu_alias = ["毁坏瓶子", "break", "break_bottle"]
 command_name = 'cthulhu'
 @on_command(command_name, aliases=cthulhu_alias, only_to_me=False, permission=lambda x: True)
-@permission(lambda sender: sender.is_superuser, permission_help="是 SUPERUSER")
+@permission(lambda sender: sender.is_superuser, permission_help=SUPERUSER_PERMISSION[0])
 async def _(session: CommandSession):
     message = ''
     arg_text = session.current_arg_text.strip()

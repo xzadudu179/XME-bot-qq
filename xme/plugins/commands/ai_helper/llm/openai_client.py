@@ -202,7 +202,7 @@ class OpenAICompatProvider:
         on_tick：流式读块期间周期性回调（每若干块一次），供上层检查
         "是否有插入消息/是否需要中断"——回调抛出的异常会原样穿透，用于打断当前生成。
         """
-        self._silent = bool(silent)   # silent=True：本次调用不写流式日志（分类等内部短调用）
+        self._silent = bool(silent)   # silent=True：本次调用不写流式日志
         self._stats = stats           # 调用方容器：流式过程中累计已产出字符（中断时估算用量）
         use_stream = self.stream
         self._reset_stream_buffers()

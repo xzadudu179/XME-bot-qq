@@ -1718,7 +1718,7 @@
         "{negative} 你短时间内尝试太多次了哦 过几分钟再来吧"
       ],
       "no_sub": "没有 \"{sub}\" 这个操作哦... {neutral}\n发送 {cmd_sep}mai 查看帮助吧",
-      "not_bound": "你还没有绑定水鱼账号哦... {neutral}\n用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查分啦",
+      "not_bound": "你还没有绑定水鱼账号哦... {neutral}\n在私聊用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查分啦",
       "b50": {
         "desc": "查询 B50 成绩",
         "introduction": "查询舞萌DX B50 成绩并生成查分卡。\n\n{cmd_sep}mai b50 查自己的成绩，{cmd_sep}mai b50 @某人 查询群友，\n{cmd_sep}mai b50 用户名 查询任意公开玩家，-s 皮肤名 可临时更换皮肤。"
@@ -1790,8 +1790,8 @@
       ],
       "at_not_bound": "对方还没有绑定水鱼 Token 呢... {neutral}\n让 ta 用 {cmd_sep}mai bind <成绩导入Token> 绑定后就能查啦",
       "update_running": [
-        "正在同步中... {neutral}\n要拉一遍全量成绩，稍等我一下下",
-        "同步中... {neutral} 稍等片刻哦"
+        "正在同步中... {neutral}",
+        "同步成绩中... {neutral}"
       ],
       "update_no_token": [
         "你还没有绑定水鱼 Token 哦... {neutral}\n先 {cmd_sep}mai bind <成绩导入Token> 绑定一个，我才能把成绩同步过去",

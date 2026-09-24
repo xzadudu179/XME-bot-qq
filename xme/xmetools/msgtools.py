@@ -131,6 +131,9 @@ def setup_logger(name: str, filename: str):
         "[%(asctime)s] [%(levelname)s] %(message)s"
     ))
     logger.addHandler(console)
+    # 自带 handler 的 logger 不再向 root 传播：否则 root 上的库日志接管 handler
+    # 会把同一条消息再打一遍，还会重复写进 events.log
+    logger.propagate = False
     return logger
 
 def setup_send_logger():

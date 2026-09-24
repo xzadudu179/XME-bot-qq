@@ -3,7 +3,7 @@ __plugin_name__ = "ai_helper"
 # /ai 指令的别名（agent 内识别同聊天追加消息是否为 ai 指令时复用）
 COMMAND_ALIAS = ["ai"]
 
-MAX_CHECK_TIMES = 1400
+# MAX_CHECK_TIMES = 1400
 MAX_TOOL_CALL_TIMES = 1000
 # /ai -c history 展示：转发单节点截断长度与整包失败后分块转发的每块节点数
 HISTORY_NODE_MAX_CHARS = 2500
@@ -190,7 +190,7 @@ VIDEO_URL_TTL = 300
 LLM_STREAM_LOG = True
 
 # 单次对话调用超时（秒）
-LLM_TIMEOUT = 300.0
+LLM_TIMEOUT = 1200.0
 
 # 缓存 tokens 的默认计费倍率（未在模型目录里单独配置时使用；0.25 = GLM 口径）
 DEFAULT_CACHE_CREDIT_RATIO = 0.25
@@ -229,7 +229,7 @@ LLM_TOPIC_CONTEXT_ITEMS = 3   # 取最近 N 轮历史（用户+AI）
 LLM_TOPIC_CONTEXT_CHARS = 600  # 上下文总长度上限（超出截断，控制 tokens 与延迟）
 LLM_TOPIC_TIMEOUT = 8.0      # 单个候选模型的超时；超时/失败换下一个，全失败用兜底类别
 LLM_TOPIC_FAIL_STREAK = 3    # 整条候选链都失败达该次数 → 熔断
-LLM_TOPIC_COOLDOWN = 120.0   # 熔断时长（秒）；期间不发起分类请求，直接用兜底类别
+LLM_TOPIC_COOLDOWN = 20.0   # 熔断时长（秒）；期间不发起分类请求，直接用兜底类别
 
 # 共享会话插入模式：待插入消息队列上限（对话进行中其他成员的消息）
 MAX_PENDING_INSERTS = 5
@@ -257,8 +257,8 @@ FOLD_HARD_RATIO = 0.90                   # 达 90% → 二级折叠（早期工�
 FOLD_KEEP_RECENT_ASSISTANTS = 10         # 最近 N 条 assistant 保持原样（含完整思考）
 FOLD_KEEP_RECENT_TOOLS = 10              # 最近 N 条 tool 消息保持原样
 
-MAX_HISTORY_FILE_COUNTS = 100
-MAX_HISTORY_FILES_SIZE = 100 * 1024 * 1024
+MAX_HISTORY_FILE_COUNTS = 256
+MAX_HISTORY_FILES_SIZE = 155 * 1024 * 1024
 
 # ---- 网络搜索（search/ 包：多引擎抽象 + 按序回退）----
 # 引擎名单与顺序在 keys.SEARCH_PROVIDERS（dict 书写顺序即回退优先级，删项即禁用）
@@ -287,13 +287,13 @@ RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
 RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
 RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限
 # 录制质量档位：output_width 是输出视频宽度（由档位单点定义，工具不再单独收 width 参数）。
-# 录制机制为 Xvfb 虚拟显示 + ffmpeg x11grab 直录——fps 与 crf 完全独立，互不牵制。
+# 录制机制为 headless + GPU 渲染 + CDP 画面采集，再按时间戳重采样成恒定帧率编码。
 # x264_params 的 aq-mode=3 加强自适应量化，抑制 yuv420p 渐变色带（颜色分层）。
 RECORD_QUALITY_PRESETS = {
     "low": {"output_width": 640, "fps": 10, "crf": 32, "preset": "veryfast"},
     "medium": {"output_width": 1280, "fps": 15, "crf": 25, "preset": "veryfast"},
     "high": {"output_width": 1920, "fps": 30, "crf": 10, "preset": "faster",
              "x264_params": "aq-mode=3:aq-strength=1.0"},
-    "max": {"output_width": 1920, "fps": 60, "crf": 4, "preset": "medium",
+    "max": {"output_width": 1920, "fps": 30, "crf": 4, "preset": "medium",
             "x264_params": "aq-mode=3:aq-strength=1.2"},
 }

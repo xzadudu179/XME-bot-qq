@@ -22,7 +22,7 @@ ALLOWED_ORIGIN_PATTERNS = ("*.xme.179.life", "*.xmebot.com", "*.xzadudu179.top")
 ALLOWED_METHODS = "GET, POST, OPTIONS"
 PREFLIGHT_MAX_AGE = 600
 # 调试开关：设了它就放行任意来源
-ALLOW_ALL_ENV = True
+ALLOW_ALL_ENV = False
 
 
 def _load_patterns() -> tuple[str, ...]:

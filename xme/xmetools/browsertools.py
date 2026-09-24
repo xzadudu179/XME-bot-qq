@@ -1,16 +1,21 @@
-"""最小 CDP（Chrome DevTools Protocol）直连 + Xvfb 录屏：一次性浏览器会话。
+"""最小 CDP（Chrome DevTools Protocol）直连 + 页面录制：一次性浏览器会话。
 
 用 aiohttp 自带的 ws 客户端直连 --remote-debugging-port，零额外依赖。
 每次调用启动一个独立 chrome 进程（随机调试端口），用完即杀，无常驻状态。
 
-- CDPBrowser：async 上下文管理器，提供导航 / JS 求值 / 真实输入注入；
-  display 传 X display 字符串时以"有头"模式跑在对应 X server 上（供录屏）；
-- XvfbDisplay：虚拟显示生命周期管理（配合 CDPBrowser 的有头模式与 ffmpeg x11grab 直录）；
+- CDPBrowser：async 上下文管理器，提供导航 / JS 求值 / 真实输入注入 / 画面采集；
 - run_macro：按时间轴回放鼠标/键盘宏（move 连续追踪移动 / jump 瞬移 / click / type / key），
-  可选虚拟光标（注入 DOM 的箭头 div，入镜可见，带点击涟漪）。
+  可选虚拟光标（注入 DOM 的箭头 div，入镜可见，带点击涟漪）；
+- frames_to_mp4：把采集到的帧按时间戳重采样成恒定帧率的 H.264 视频。
+
+录制走 headless + GPU 加速（--use-gl=angle --use-angle=gl-egl）+ Page.startScreencast 抓帧：
+虚拟显示（Xvfb）报告刷新率为 0Hz 时 chrome 会把出帧节拍锁在 30fps；headless 用独立
+时钟并按 GPU 能力出帧，同一重特效页面实测从 26 帧/秒提升到 59 帧/秒（画面内容口径）。
 """
 import asyncio
+import base64
 import json
+import os
 import shutil
 import tempfile
 import time
@@ -81,57 +86,6 @@ _CURSOR_JS = """
 """
 
 
-class XvfbDisplay:
-    """Xvfb 虚拟显示（async 上下文）：在空闲的 display 号上启动 Xvfb。
-
-    async with XvfbDisplay(1920, 1080) as xvfb:
-        # xvfb.display 形如 ":101"，供 chrome（--display）与 ffmpeg（x11grab）使用
-        ...
-    退出时终止 Xvfb 进程。
-    """
-
-    def __init__(self, width: int = 1920, height: int = 1080):
-        self.screen = f"{int(width)}x{int(height)}x24"
-        self.display = None
-        self._proc = None
-
-    async def __aenter__(self) -> "XvfbDisplay":
-        for num in range(99, 150):
-            if Path(f"/tmp/.X{num}-lock").exists():
-                continue
-            self._proc = await asyncio.create_subprocess_exec(
-                "Xvfb", f":{num}", "-screen", "0", self.screen, "-nolisten", "tcp",
-                stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
-            # 等 X11 socket 就绪（/tmp/.X11-unix/X{num} 出现即监听中）
-            sock = Path(f"/tmp/.X11-unix/X{num}")
-            deadline = time.monotonic() + 5
-            while time.monotonic() < deadline and not sock.exists():
-                if self._proc.returncode is not None:
-                    break
-                await asyncio.sleep(0.05)
-            if sock.exists() and self._proc.returncode is None:
-                self.display = f":{num}"
-                return self
-            if self._proc is not None and self._proc.returncode is None:
-                self._proc.terminate()
-                await asyncio.wait_for(self._proc.wait(), 3)
-            self._proc = None
-        raise CDPError("没有可用的 display 号（Xvfb 启动全部失败）")
-
-    async def __aexit__(self, *exc) -> None:
-        if self._proc is not None and self._proc.returncode is None:
-            try:
-                self._proc.terminate()
-                await asyncio.wait_for(self._proc.wait(), 3)
-            except Exception:
-                try:
-                    self._proc.kill()
-                except Exception:
-                    pass
-        self._proc = None
-        self.display = None
-
-
 class CDPBrowser:
     """一次性 headless chrome（--remote-debugging-port=0）+ 单 page 的 CDP 会话。
 
@@ -141,13 +95,11 @@ class CDPBrowser:
     退出时保证 chrome 进程被杀、临时 profile 被清。
     """
 
-    def __init__(self, width: int = 1280, height: int = 720,
-                 display: str | None = None):
+    def __init__(self, width: int = 1280, height: int = 720):
         self.width = int(width)
         self.height = int(height)
-        # display 非 None 时以"有头"模式在该 X display 上运行（Xvfb 录屏用），
-        # None 为传统 headless 模式
-        self.display = display
+        self._msg_id = 0
+        self._frame_cb = None    # 录制中的帧回调 on_frame(jpeg_bytes, timestamp)
         self._proc = None
         self._profile = None
         self._http = None
@@ -158,14 +110,37 @@ class CDPBrowser:
 
     # ---------- 生命周期 ----------
 
+    def _write_profile_prefs(self) -> None:
+        """写最小 Preferences，关掉会在录制画面里出现的气泡。
+
+        翻译气泡在 Chrome 138 上不再受 --disable-translate / --disable-features=Translate
+        控制（实测仍会弹出），只能在 profile 偏好里关掉翻译功能本身；
+        accept_languages 与常见页面语言一致，进一步避免"是否翻译"的提示。
+        """
+        prefs = {
+            "translate": {"enabled": False},
+            "translate_offer": {"enabled": False},
+            "intl": {"accept_languages": "zh-CN,zh,en"},
+        }
+        try:
+            default_dir = Path(self._profile) / "Default"
+            default_dir.mkdir(parents=True, exist_ok=True)
+            (default_dir / "Preferences").write_text(
+                json.dumps(prefs), encoding="utf-8")
+        except Exception:
+            logger.exception("写入 chrome Preferences 失败（不影响录制，仅可能仍出现气泡）")
+
     async def __aenter__(self) -> "CDPBrowser":
         self._profile = tempfile.mkdtemp(prefix="xme_cdp_")
         port_file = Path(self._profile) / "DevToolsActivePort"
+        self._write_profile_prefs()
         import os
         launch_args = [
-            "google-chrome", "--disable-gpu", "--hide-scrollbars", "--mute-audio",
+            "google-chrome", "--hide-scrollbars", "--mute-audio",
             "--no-first-run", "--disable-extensions", "--no-default-browser-check",
-            # 抑制各类弹窗/提示条（更新气泡、翻译条、崩溃恢复等），避免录进画面
+            # 抑制各类弹窗/提示条（更新气泡、崩溃恢复等），避免录进画面。
+            # 翻译气泡靠 self._write_profile_prefs() 的 Preferences 关掉——新版 chrome
+            # 已忽略 --disable-translate / --disable-features=Translate
             "--noerrdialogs", "--disable-infobars", "--disable-sync",
             "--disable-component-update", "--disable-background-networking",
             "--disable-session-crashed-bubble", "--hide-crash-restore-bubble",
@@ -174,13 +149,10 @@ class CDPBrowser:
             "--remote-debugging-port=0", f"--user-data-dir={self._profile}",
             f"--window-size={self.width},{self.height}",
         ]
-        if self.display is None:
-            launch_args.insert(1, "--headless=new")
-        else:
-            # 有头模式（Xvfb 录屏）：kiosk 全屏——画面里没有标签栏/地址栏等浏览器 UI，
-            # 视口即整个虚拟屏（录制画面纯净，视口高度也不再被浏览器 UI 挤占）
-            launch_args.insert(1, "--kiosk")
-            launch_args.append(f"--display={self.display}")
+        # headless + GPU：用 GPU 光栅化/合成（blur、blend 等特效在 CPU 上极贵），
+        # 无独显时 chrome 自动回退 SwiftShader，功能不受影响
+        launch_args.insert(1, "--headless=new")
+        launch_args += ["--use-gl=angle", "--use-angle=gl-egl"]
         launch_args.append("about:blank")
         self._proc = await asyncio.create_subprocess_exec(
             *launch_args,
@@ -268,6 +240,20 @@ class CDPBrowser:
                                 f"{data['error'].get('message', 'CDP 错误')}"))
                         else:
                             fut.set_result(data.get("result") or {})
+                elif data.get("method") == "Page.screencastFrame" and self._frame_cb:
+                    params = data.get("params") or {}
+                    # ack 直发不等响应：chrome 收到 ack 才推下一帧，
+                    # 每帧注册 future 等 RTT 会拖低采集帧率
+                    self._msg_id += 1
+                    await self._ws.send_str(json.dumps({
+                        "id": self._msg_id, "method": "Page.screencastFrameAck",
+                        "params": {"sessionId": params.get("sessionId")}}))
+                    try:
+                        jpeg = base64.b64decode(params.get("data") or "")
+                        ts = float((params.get("metadata") or {}).get("timestamp") or 0)
+                        self._frame_cb(jpeg, ts)
+                    except Exception:
+                        logger.exception("处理采集帧失败")
         except asyncio.CancelledError:
             raise
         except Exception as ex:
@@ -355,6 +341,25 @@ class CDPBrowser:
         result = await self.evaluate(_CURSOR_JS)
         if result != "ok":
             logger.debug("虚拟光标已存在，跳过注入")
+
+
+    # ---------- 画面采集 ----------
+
+    async def start_capture(self, on_frame, quality: int = 95) -> None:
+        """开始采集画面：on_frame(jpeg_bytes, 时间戳秒) 在每帧到达时同步调用。
+
+        不限制帧尺寸（按视口原始像素采集），quality 为采集端 JPEG 质量。
+        """
+        self._frame_cb = on_frame
+        await self._command("Page.startScreencast", {
+            "format": "jpeg", "quality": int(quality), "everyNthFrame": 1,
+        })
+
+    async def stop_capture(self) -> None:
+        try:
+            await self._command("Page.stopScreencast", {})
+        finally:
+            self._frame_cb = None
 
 
 def _js_str(value) -> str:
@@ -512,3 +517,58 @@ async def run_macro(browser: CDPBrowser, script: list, duration: float | None,
         except Exception as ex:
             notes.append(f"{action.get('type')} 动作失败: {ex}")
     return notes
+
+
+async def frames_to_mp4(frames: list[tuple[bytes, float]], out_path: Path,
+                        width: int, fps: float, span: float,
+                        crf: int = 23, preset: str = "veryfast",
+                        x264_params: str = "") -> None:
+    """把采集帧按时间戳重采样成恒定帧率的 mp4（H.264 yuv420p）。
+
+    采集帧率与目标帧率不会严格相等（GPU 出帧有波动，实测 59.3 vs 60），
+    直接按帧数编码会让时长漂移、运动不均匀；这里按时间戳重采样：
+    每个输出时隙取"该时刻之前最近的一帧"，缺帧处复用上一帧（时长严格 = span）。
+    重复帧用硬链接复用同一份 JPEG，不重复占磁盘。
+    """
+    if not frames:
+        raise CDPError("录制期间没有采集到任何画面帧")
+    frames = sorted(frames, key=lambda f: f[1])
+    t0 = frames[0][1]
+    slots = max(1, int(round(float(span) * fps)))
+    tmp = Path(tempfile.mkdtemp(prefix="xme_frames_"))
+    try:
+        seq = tmp / "seq"
+        seq.mkdir()
+        written: dict[int, str] = {}   # 源帧下标 → 已写文件名
+        cursor = 0
+        for k in range(slots):
+            target = t0 + k / fps
+            while cursor + 1 < len(frames) and frames[cursor + 1][1] <= target:
+                cursor += 1
+            if cursor not in written:
+                name = f"{len(written):05}.jpg"
+                (seq / name).write_bytes(frames[cursor][0])
+                written[cursor] = name
+            # 硬链接复用：不复制 JPEG 数据，只多一个目录项
+            link = seq / f"{k:06}.jpg"
+            if not link.exists():
+                os.link(seq / written[cursor], link)
+        even_w = int(width) + (int(width) % 2)
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+               "-framerate", str(fps), "-i", str(seq / "%06d.jpg"),
+               "-frames:v", str(slots),
+               "-vf", f"scale={even_w}:-2,format=yuv420p",
+               "-c:v", "libx264", "-preset", preset, "-crf", str(int(crf))]
+        if x264_params:
+            cmd += ["-x264-params", x264_params]
+        cmd += ["-movflags", "+faststart", "-an", str(out_path)]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)
+        _, err = await asyncio.wait_for(proc.communicate(), 240)
+        if proc.returncode != 0 or not out_path.is_file():
+            detail = (err or b"")[-400:].decode("utf-8", "replace")
+            raise CDPError(f"ffmpeg 编码失败（code={proc.returncode}）：{detail}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)

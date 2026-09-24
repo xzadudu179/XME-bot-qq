@@ -198,10 +198,10 @@ def colorize_console_log():
 def setup_lib_log():
     """接管 root logger 的库日志（aiocqhttp/Quart/APScheduler 等）
 
-    心跳、定时任务例行执行等高频 INFO 行降级为 DEBUG 不再刷控制台，事件
-    行紧凑上色显示；全部库日志落 ./logs/event/events.log（DEBUG 级，含降级行）；
-    nonebot/send logger 关闭传播避免经 root 重复打印。需在 nonebot.init
-    前调用，以抢占 Quart 懒加载的默认 stderr handler。
+    心跳、定时任务例行执行等高频 INFO 行降级为 DEBUG，不再出现在控制台与
+    events.log；事件行紧凑上色显示，其余库日志落 ./logs/event/events.log。
+    nonebot logger 关闭传播避免经 root 重复打印。需在 nonebot.init 前调用，
+    以抢占 Quart 懒加载的默认 stderr handler。
     """
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -225,8 +225,10 @@ def setup_lib_log():
         '[%(asctime)s] [%(levelname)s] %(message)s'))
     root.addHandler(events_handler)
 
-    for name in ("nonebot", "send"):
-        logging.getLogger(name).propagate = False
+    # 自带 handler 的 logger 不能再向 root 传播，否则会被这里的接管 handler 再
+    # 打一遍。nonebot 的 logger 由框架创建、不经过 msgtools，所以在这里关；
+    # msgtools.setup_logger 建的那些（send、aihelper 等）在那边就关了传播
+    logging.getLogger("nonebot").propagate = False
     print(c.gradient_text("#a8ffc5", "#66c7ff",
                           text=f"已接管库日志：事件将记录到 {events_path}"))
 

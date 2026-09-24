@@ -125,7 +125,7 @@ async def classify_topic(text: str, context: str = "", agent=None) -> str:
         model = cand.get("model") or ""
         try:
             result = await asyncio.wait_for(
-                provider.chat(messages, model=model, temperature=0.0, silent=True),
+                provider.chat(messages, model=model, temperature=0.0, silent=False),
                 timeout=timeout)
         except asyncio.TimeoutError:
             logger.info(f"话题分类：{model} 超时（>{timeout:g}s），尝试下一个候选")

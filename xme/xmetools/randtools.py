@@ -5,6 +5,8 @@ import numpy as np
 from functools import wraps
 random.seed()
 
+_RANDOM_ROW_RATE = 0.1  # messy_image 中单行变成随机色条的概率
+
 def random_percent(percent : float) -> bool:
     """指定百分比概率返回True
 
@@ -80,6 +82,10 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
     """
     messy_rate: 0~100
     混乱图片，建议图片小一点。返回扰动后的新图，不修改入参
+
+    rand_color 的随机色逐行随机出现：块内每一行独立以 _RANDOM_ROW_RATE 的概率
+    变成随机色条（该行整行同色，两个块的同一行各用各的色），其余行照常与另一块
+    交换。即随机色条零散出现在块里，不会把整块填满。
     """
     from .imgtools import get_image
     img = get_image(path_or_image)
@@ -103,12 +109,15 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
         return Image.fromarray(noise, "RGBA" if img.mode == "RGBA" else "RGB")
 
     arr = np.asarray(img).copy()
+    channels = arr.shape[2]
 
-    def random_color():
-        color = np.random.randint(0, 256, size=3, dtype=np.uint8)
-        if img.mode == "RGBA":
-            color = np.append(color, 255)
-        return color
+    def random_row_colors(count: int) -> np.ndarray:
+        """随机色条"""
+        colors = np.random.randint(0, 256, size=(count, 3), dtype=np.uint8)
+        if channels == 4:
+            colors = np.concatenate(
+                [colors, np.full((count, 1), 255, dtype=np.uint8)], axis=1)
+        return colors
 
     for _ in range(region_count):
         block_size = random.randint(1, max_block_size)
@@ -116,14 +125,19 @@ def messy_image(path_or_image: str | Image.Image, messy_rate=50, rand_color=True
         x1, y1 = random.randint(0, w - block_size), random.randint(0, h - block_size)
         x2, y2 = random.randint(0, w - block_size), random.randint(0, h - block_size)
 
-        if rand_color and random.random() < 0.1:
-            # 随机颜色
-            arr[y1:y1 + block_size, x1:x1 + block_size] = random_color()
-            arr[y2:y2 + block_size, x2:x2 + block_size] = random_color()
+        rows1, rows2 = slice(y1, y1 + block_size), slice(y2, y2 + block_size)
+        cols1, cols2 = slice(x1, x1 + block_size), slice(x2, x2 + block_size)
+        block1 = arr[rows1, cols1].copy()
+        arr[rows1, cols1] = arr[rows2, cols2]
+        arr[rows2, cols2] = block1
+        if not rand_color:
             continue
-        block1 = arr[y1:y1 + block_size, x1:x1 + block_size].copy()
-        arr[y1:y1 + block_size, x1:x1 + block_size] = arr[y2:y2 + block_size, x2:x2 + block_size]
-        arr[y2:y2 + block_size, x2:x2 + block_size] = block1
+        # 逐行独立决定这一行是否变成随机色条，只覆盖决定出现的行
+        random_rows = np.flatnonzero(np.random.random(block_size) < _RANDOM_ROW_RATE)
+        if random_rows.size == 0:
+            continue
+        for y, cols in ((y1, cols1), (y2, cols2)):
+            arr[y + random_rows, cols] = random_row_colors(random_rows.size)[:, None, :]
     return Image.fromarray(arr)
 
 

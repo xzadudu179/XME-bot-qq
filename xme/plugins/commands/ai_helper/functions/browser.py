@@ -3,7 +3,6 @@
 """浏览器类工具：页面元素监听与页面录制（宏回放，录制成视频）。"""
 import asyncio
 import json
-import signal
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -12,8 +11,8 @@ from nonebot.log import logger
 from xme.xmetools.filetools import _create_file_ref, is_safe_custom_name
 from xme.xmetools.reqtools import assert_public_http_url
 from xme.xmetools import browsertools
-from xme.xmetools.browsertools import CDPBrowser, CDPError, run_macro
-from xme.xmetools.browsertools import XvfbDisplay
+from xme.xmetools.browsertools import (CDPBrowser, CDPError, run_macro,
+                                        frames_to_mp4)
 
 from ..constants import (BROWSER_NAV_WAIT_MS, MONITOR_MAX_DURATION, MONITOR_MAX_INTERVAL,
                          RECORD_MAX_DURATION, RECORD_DEFAULT_RENDER_WIDTH,
@@ -108,17 +107,15 @@ async def monitor_element(url: str = "", selector: str = "", duration: int = 20,
 async def _record_core(source: str, duration: int | None, script: list, show_cursor: bool,
                        render_width: int, preset: dict, agent,
                        make_ref: bool = True) -> tuple[Path, str, list[str], str | None]:
-    """两个录制工具共享的录制核心：Xvfb + 有头 chrome 回放宏，ffmpeg x11grab 直录。
+    """两个录制工具共享的录制核心：headless+GPU 渲染页面，CDP 采集画面后编码成 mp4。
 
-    录屏与宏回放并行：chrome 全速渲染，ffmpeg 直接抓屏编码 H.264——帧率与质量
-    完全独立（无截帧/推流环节），静止段自然包含在连续录制里。
-    duration 为 None 时不限窗（宏决定时长，录制在宏完成后结束）；
+    宏回放与画面采集并行。duration 为 None 时不限窗（宏决定时长，宏完成即停录）；
     为数值时为硬窗（宏超窗部分截断/忽略）。make_ref=False 时不登记 temp 引用
-    （即发即删的交付档用——AI 不应拿到可保存的引用）。宏的元素定位按布局视口计算，
-    输出缩放不影响命中。
+    （即发即删的交付档用——AI 不应拿到可保存的引用）。宏的元素定位按布局视口计算。
     返回 (视频文件路径, temp 引用, 宏执行备注, 错误文案——成功为 None)。
     """
     notes: list[str] = []
+    fps = float(preset["fps"])
     width = int(preset["output_width"])            # 输出宽度由档位单点定义
     render_width = int(render_width or 0) or RECORD_DEFAULT_RENDER_WIDTH
     render_width = max(width, min(render_width, RECORD_LAYOUT_MAX_WIDTH))
@@ -131,46 +128,27 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
         out_ref = ""
         out_path = agent.get_temp_path() / video_name
 
+    frames: list[tuple[bytes, float]] = []
     try:
         async with asyncio.timeout(duration + 120 if duration else RECORD_MAX_DURATION + 120):
-            async with XvfbDisplay(render_width, render_height) as xvfb, \
-                    CDPBrowser(render_width, render_height,
-                               display=xvfb.display) as browser:
+            async with CDPBrowser(render_width, render_height) as browser:
                 await browser.navigate(source, wait_ms=BROWSER_NAV_WAIT_MS)
                 if show_cursor:
                     await browser.inject_cursor()
-                # ffmpeg x11grab 直录（后台）：画面直接进编码器，无截帧/推流环节。
-                # draw_mouse=0：不录 X11 真实指针（Xvfb 上停在屏幕中心），
-                # 鼠标轨迹由注入的 DOM 虚拟光标表现（show_cursor 控制）
-                ffmpeg_args = [
-                    "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                    "-f", "x11grab", "-draw_mouse", "0",
-                    "-framerate", str(int(preset["fps"])),
-                    "-video_size", f"{render_width}x{render_height}",
-                    "-i", f"{xvfb.display}.0+0,0",
-                ]
-                if duration is not None:
-                    ffmpeg_args += ["-t", str(duration)]
-                ffmpeg_args += [
-                    "-vf", f"scale={width + (width % 2)}:-2,format=yuv420p",
-                    "-c:v", "libx264", "-preset", str(preset.get("preset", "veryfast")),
-                    "-crf", str(int(preset["crf"])),
-                ]
-                if preset.get("x264_params"):
-                    ffmpeg_args += ["-x264-params", str(preset["x264_params"])]
-                ffmpeg_args += ["-movflags", "+faststart", "-an", str(out_path)]
-                ffmpeg_proc = await asyncio.create_subprocess_exec(
-                    *ffmpeg_args,
-                    stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)
+                await browser.start_capture(
+                    lambda jpeg, ts: frames.append((jpeg, ts)),
+                    quality=int(preset.get("jpeg_quality", 95)))
+                started = time.monotonic()
                 try:
-                    # notes 传引用：宏超窗被取消时，已记录的备注不丢
                     macro_task = asyncio.create_task(
                         run_macro(browser, script, duration, show_cursor, notes=notes))
                     if duration is None:
                         # 宏决定时长：宏跑完（自守窗）即停录
                         await macro_task
+                        span = time.monotonic() - started
                     else:
                         await asyncio.sleep(duration)
+                        span = float(duration)
                         try:
                             # 硬性录制窗：宏自守窗后最多再宽限 8s（收尾动作），
                             # 仍不结束则取消——视频时长必须忠于 duration
@@ -181,30 +159,19 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
                         except asyncio.CancelledError:
                             pass
                 finally:
-                    stop_epoch = time.time()
-                    # 硬窗模式 ffmpeg 带 -t 会自行退出（进程可能已回收）；
-                    # 仅当仍在运行时才 SIGINT 优雅停止（写 mp4 收尾索引），迟滞则强杀
-                    if ffmpeg_proc.returncode is None:
-                        try:
-                            ffmpeg_proc.send_signal(signal.SIGINT)
-                        except ProcessLookupError:
-                            pass
-                        try:
-                            await asyncio.wait_for(ffmpeg_proc.communicate(), 15)
-                        except asyncio.TimeoutError:
-                            try:
-                                ffmpeg_proc.kill()
-                            except ProcessLookupError:
-                                pass
-                            await ffmpeg_proc.communicate()
-                    else:
-                        await ffmpeg_proc.communicate()
+                    await browser.stop_capture()
+        if not frames:
+            return out_path, out_ref, notes, "[录制失败：未采集到任何画面帧]"
+        await frames_to_mp4(frames, out_path, width, fps=fps, span=span,
+                            crf=int(preset["crf"]),
+                            preset=str(preset.get("preset", "veryfast")),
+                            x264_params=str(preset.get("x264_params", "")))
     except TimeoutError:
         return out_path, out_ref, notes, "[录制失败：浏览器会话超时]"
     except CDPError as ex:
         return out_path, out_ref, notes, f"[录制失败：{exception_detail(ex)}]"
     if not out_path.is_file() or out_path.stat().st_size <= 0:
-        return out_path, out_ref, notes, "[录制失败：ffmpeg 未产出有效视频]"
+        return out_path, out_ref, notes, "[录制失败：未产出有效视频]"
     return out_path, out_ref, notes, None
 
 
@@ -251,7 +218,9 @@ async def record_page(url: str = "", duration: int = 0, script=None,
     if error:
         return {"result": error, "no_compress": True}
     size_mb = out_path.stat().st_size / 1048576
-    summary = (f"已录制页面 {ref or url}（输出 1280x720，{size_mb:.1f} MiB，medium 质量），"
+    out_w = int(preset["output_width"])
+    summary = (f"已录制页面 {ref or url}（输出 {out_w}x{out_w * 9 // 16}"
+               f"@{preset['fps']}fps，{size_mb:.1f} MiB，medium 质量），"
                f"temp 引用 {out_ref}（对话结束自动清理）。")
     if notes:
         summary += "\n宏执行备注：\n- " + "\n- ".join(notes)
@@ -294,7 +263,7 @@ async def record_page_hd(url: str = "", duration: int = 0, script=None,
     if auto_duration and not has_script:
         return {"result": ("[录制失败：未指定 duration 时需要 script 宏来决定录制长度"
                            "（或显式传 duration 3~60 录固定时长）]"), "no_compress": True}
-    preset = RECORD_QUALITY_PRESETS["high"]
+    preset = RECORD_QUALITY_PRESETS["max"]
     source, source_error = _resolve_source(url, ref, agent)
     if source_error:
         return {"result": source_error, "no_compress": True}
@@ -311,8 +280,9 @@ async def record_page_hd(url: str = "", duration: int = 0, script=None,
         return {"result": error, "no_compress": True}
     size_mb = out_path.stat().st_size / 1048576
     dur_text = "宏决定" if auto_duration else f"{run_duration}s"
-    summary = (f"已录制页面 {ref or url}（输出 1920x{1920 * 9 // 16}，{dur_text}，"
-               f"{size_mb:.1f} MiB，高质量），")
+    out_w = int(preset["output_width"])
+    summary = (f"已录制页面 {ref or url}（输出 {out_w}x{out_w * 9 // 16}"
+               f"@{preset['fps']}fps，{dur_text}，{size_mb:.1f} MiB，高质量），")
     if notes:
         summary += "\n宏执行备注：\n- " + "\n- ".join(notes)
 

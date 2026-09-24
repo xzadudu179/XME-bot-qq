@@ -13,7 +13,8 @@ from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
 from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join, TooManyFilesError, DirectoryTooLargeError
-from xme.xmetools.texttools import get_images_from_message, hash_text
+from xme.xmetools.texttools import (IMAGE_PLACEHOLDER_RE, get_images_from_message,
+                                        image_placeholder)
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.msgtools import is_text_can_send, send_session_msg, setup_logger
 from xme.xmetools.bottools import get_user_name
@@ -144,6 +145,40 @@ _INJECT_MEDIA_NOTE = "[以上工具返回的图片/附件已附在本消息中�
 # 媒体加载失败时给模型看的显式说明（避免其误以为看到了内容）
 _MEDIA_LOAD_FAILED_NOTE = ("[注意：本次工具附带的媒体无法被模型加载，已从输入中移除，"
                            "请勿据此作答或声称已看到内容]")
+
+
+def replace_media_markers(text: str, markers: list[str], urls: list[str]) -> str:
+    """把文本里的媒体标记（CQ 码或占位符）按顺序替换成对应直链。
+
+    给"看不了媒体的模型"保留原文用：模型可以拿这些直链去调 view_image / view_video。
+    标记数与链接数不一致说明对应关系不可靠，此时原样返回（宁可保留标记也不错配链接）。
+    """
+    if len(markers) != len(urls):
+        ai_logger.warning(f"媒体标记数({len(markers)})与直链数({len(urls)})不一致，跳过替换")
+        return text
+    for marker, url in zip(markers, urls):
+        text = text.replace(marker, url)
+    return text
+
+
+def build_insert_content(ins_label: str, ins, can_see_image: bool) -> list:
+    """组装一条插入消息的 user content。
+
+    模型能看图 → 图片仍作为段附入（文本保留占位符）；看不了 → 占位符按顺序换成
+    已解析的直链、不附段，并附一条工具提示（模型可自己调 view_image 查看）。
+    """
+    ins_text = f"{ins_label}{ins.text}"
+    if can_see_image or not ins.image_urls:
+        return build_user_content(ins_text, list(ins.image_urls))
+    ins_text = replace_media_markers(
+        ins_text, IMAGE_PLACEHOLDER_RE.findall(ins_text), list(ins.image_urls))
+    return build_user_content(f"{ins_text}\n{media_hint(['view_image'])}", [])
+
+
+def media_hint(tools: list[str]) -> str:
+    """模型看不了媒体时给它的操作提示（告知可用哪些工具查看直链）。"""
+    return get_message("plugins", __plugin_name__, "media_cannot_view_hint",
+                       tools="、".join(tools))
 
 
 def _find_injected_media_blocks(messages: list) -> set[int]:
@@ -500,13 +535,8 @@ class AIHelper:
             self.cached_tokens = float(resume_data.get("cached_tokens") or 0)
             self.other_credits = float(resume_data.get("other_credits") or 0)
             self.activate_skills = list(resume_data.get("activate_skills") or [])
-        # 插入队列键与开关：共享会话按群号码，普通会话按 用户+会话名（所有会话均可开启）
-        if self.shared is not None:
-            self.insert_key = share.shared_insert_key(self.shared.code)
-            self.insert_enabled = self.shared.insert_enabled
-        else:
-            self.insert_key = share.user_insert_key(user_id, self.ai_session)
-            self.insert_enabled = normal_insert_enabled(user_id, self.ai_session)
+        # 插入模式的队列键与开关都是实时查询（见 insert_key / insert_enabled_now），
+        # 不存构造期快照——会话名会被 AI 改名，快照会立刻过期
         tools_path = Path(__file__).parent / "tools.json"
         with open(tools_path, "r", encoding="utf-8") as f:
             self.tools = json.load(f)
@@ -869,17 +899,22 @@ class AIHelper:
             return 0
         return 0
 
-    async def get_video_url_dicts(self, text):
+    async def get_video_url_dicts(self, text, download: bool = True):
         """把文本里的视频链接转为 video_url 输入段。
 
         - 平台链接（B站/YouTube 等）：yt-dlp 下载到本地后以限时直链附入（文本替换为
           "[视频:平台] …"，只展示平台链接，不暴露本地直链）；
         - 媒体直链（.mp4 等）：LLM 已持有可用直链，直接原样附入，不下载。
+
+        download=False（本轮模型看不了视频）：不下载、不产出 video_url 段，
+        文本保留原始链接交给模型自己用 view_video 查看——避免白下载一个看不了的视频。
         """
         links = extract_video_links(text)
         video_dicts: list = []
         pths: list = []
         new_text = text
+        if not download:
+            return new_text, video_dicts, pths
         if links:
             try:
                 result: VideoExtractResult = await extract_and_download(
@@ -913,28 +948,46 @@ class AIHelper:
         new_text = _DIRECT_VIDEO_RE.sub(_direct_repl, new_text)
         return new_text, video_dicts, pths
 
-    def entry_for_media(self, has_video: bool = False) -> tuple[dict, str]:
-        """带媒体（图片/视频）的轮次用哪个模型。
-
-        当前模型自身支持该媒体类型 → 直接用它（不切换、无提示）；否则切到对应能力
-        配置的模型：图片看 vision，视频看 video（video_url 段只有 GLM 端点接受，
-        DeepSeek 等 OpenAI 兼容端点会在 JSON 层拒绝，所以视频不能沿用 vision 判据）。
-        返回 (模型目录项, 切换提示文案；无切换时为空串)。
-        """
-        need = "video" if has_video else "vision"
-        if self.model_entry.get(need):
-            return self.model_entry, ""
-        entry = registry.video_entry() if has_video else registry.vision_entry()
-        message_key = "video_model_change_prefix" if has_video else "model_change_prefix"
-        prefix = get_message("plugins", __plugin_name__, message_key,
-                            model=self.model, vision_model=entry["model"], video_model=entry["model"])
-        return entry, prefix
-
     def supports_media(self, item_type: str) -> bool:
         """本轮模型能否直接收下这类媒体段（图/文件看 vision，视频看 video）。"""
         if item_type == "video_url":
             return bool(getattr(self, "current_video", False))
         return bool(getattr(self, "current_vision", False))
+
+    async def prepare_user_media(self, session, text) -> tuple[str, list, list[str], list[str]]:
+        """整理用户输入里的媒体，返回 (文本, 媒体段, 图片直链, 需提示的查看工具名)。
+
+        模型能看某类媒体 → 仍作为段附入（图片位置保留占位符）；看不了 → 不附段，
+        图片 CQ 换成已提取的直链、视频保留原链接且不下载，并把对应的查看工具名
+        返回给调用方拼提示（模型据此自己调 view_image / view_video）。
+        """
+        image_objects, matches = [], []
+        try:
+            image_objects, matches = await get_images_from_message(session.bot, text)
+        except Exception as ex:
+            ai_logger.warning(f"提取消息中的图片失败（按无图继续）：{type(ex).__name__}: {ex}")
+        image_urls = [x["file"] for x in image_objects]
+        can_see_image = bool(self.model_entry.get("vision"))
+        can_see_video = bool(self.model_entry.get("video"))
+        if can_see_image:
+            for image_cq in matches:
+                text = text.replace(image_cq, image_placeholder(image_cq) + " 已附在输入里")
+        else:
+            text = replace_media_markers(text, matches, image_urls)
+
+        has_video_link = bool(extract_video_links(text))
+        text, video_dicts, pths = await self.get_video_url_dicts(text, download=can_see_video)
+        self.temp_file_paths += pths
+        self.user_input_urls["images"] = image_urls
+        parts = ([{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
+                 if can_see_image else [])
+        parts += video_dicts
+        hint_tools: list[str] = []
+        if image_urls and not can_see_image:
+            hint_tools.append("view_image")
+        if has_video_link and not can_see_video:
+            hint_tools.append("view_video")
+        return text, parts, image_urls, hint_tools
 
     @staticmethod
     def recent_context_text(history: list) -> str:
@@ -1008,12 +1061,19 @@ class AIHelper:
         ai_logger.info(f"话题分类：{category} → {alias}（{entry['model']}）")
         return entry
 
-    def insert_enabled_now(self) -> bool:
-        """实时查询插入模式开关（对话进行中切换可立即生效）。
+    @property
+    def insert_key(self) -> str:
+        """插入队列键（实时计算）：共享会话按群号码，普通会话按用户。
 
-        `self.insert_enabled` 是构造期快照：群主在对话进行中用 /ai -c ins 打开后，
-        运行中的 agent 若不动态查询就永远不会消费成员插入的消息。
+        普通会话的键**不含会话名**——名字会被 AI（name_session）改，
+        键里带名字会导致改名前后的入队/消费用不同键，插入消息收不到。
         """
+        if self.shared is not None:
+            return share.shared_insert_key(self.shared.code)
+        return share.user_insert_key(self.user_id)
+
+    def insert_enabled_now(self) -> bool:
+        """实时查询插入模式开关（对话进行中切换、会话改名都能立即生效）。"""
         if self.shared is not None:
             return bool(getattr(self.shared, "insert_enabled", False))
         return normal_insert_enabled(self.user_id, self.ai_session)
@@ -1102,37 +1162,26 @@ class AIHelper:
             compressed = await self._compress_context(session)
             history, curr_text = await get_history(user, self.storage)
 
-            # 提取 text 里的图片（取图失败只降级为"无图继续"，不终止整轮对话）
-            image_objects, matches = [], []
-            try:
-                image_objects, matches = await get_images_from_message(session.bot, text)
-            except Exception as ex:
-                ai_logger.warning(f"提取消息中的图片失败（按无图继续）：{type(ex).__name__}: {ex}")
-            for image_cq in matches:
-                text = text.replace(image_cq, f"[图片{hash_text(image_cq)} 已附在输入里]")
-            image_urls = [x["file"] for x in image_objects]
-
-            text, video_dicts, pths = await self.get_video_url_dicts(text)
-            self.temp_file_paths += pths
-            self.user_input_urls["images"] = image_urls
-            url_dicts = [{"type": "image_url", "image_url": {"url": v}} for v in image_urls]
-            url_dicts += video_dicts
+            text, url_dicts, image_urls, hint_tools = await self.prepare_user_media(session, text)
             ai_logger.info(f"用户 {user.id} 说：{text}")
-            ai_logger.info(f"用户附带了以下图片url {url_dicts}")
+            ai_logger.info(f"用户附带了以下图片url {image_urls}，媒体段 {url_dicts}")
 
+            # 看不了的媒体给一条操作提示（不进 asks：避免提示随历史重复注入）
+            user_text = f"{curr_text}\n{text}"
+            if hint_tools:
+                user_text += f"\n{media_hint(hint_tools)}"
             ai_params = [
                 {"role": "system","content": role},
                 *history,
                 # 注意：url_dicts 已包含全部图片段（image_url）与视频段，位置参数再传
                 # image_urls 会让同一张图出现两次（浪费 tokens，也更容易触发媒体错误）
-                {"role": "user","content": build_user_content(f"{curr_text}\n{text}", [], url_dicts)},
+                {"role": "user","content": build_user_content(user_text, [], url_dicts)},
             ]
-            if url_dicts:
-                real_entry, prefix = self.entry_for_media(has_video=bool(video_dicts))
-            else:
-                # 无媒体的普通对话：按话题动态挑模型（带上最近对话，识别开场设定的人设/角色扮演）
-                real_entry = await self.route_model_entry(
-                    text, self.recent_context_text(history)) or self.model_entry
+            # 媒体输入不参与话题路由（保持原行为）；也**不再**自动切换视觉模型
+            has_media = bool(image_urls or url_dicts or hint_tools)
+            real_entry = (self.model_entry if has_media
+                          else await self.route_model_entry(
+                              text, self.recent_context_text(history)) or self.model_entry)
             # 多提问记录：发起者的原始输入 + 每一条被并入的插入消息（共享会话插入模式）
             asks = [{"user_id": user.id, "text": text, "image_urls": list(image_urls)}]
             self.asks = asks
@@ -1168,28 +1217,23 @@ class AIHelper:
             except InsertInterrupted:
                 # 打断点：把全部待插入消息并入上下文后重入 agent 循环（messages 数组原样延续）
                 inserts = share.consume_inserts(self.insert_key)
-                has_image_insert = False
+                # 本轮模型能否直接看插入消息里的图片：看不了就不切模型，改为保留直链 + 提示
+                can_see_insert_image = bool(real_entry.get("vision"))
                 for ins in inserts:
                     if self.shared is not None:
                         ins_name = await get_user_name(ins.user_id, default=str(ins.user_id))
                         ins_label = f"[共享会话成员 {ins_name}(qq{ins.user_id}) 插入] "
                     else:
                         ins_label = "[用户插入] "  # 普通会话：插入者即用户本人
-                    ai_params.append({"role": "user", "content": build_user_content(
-                        f"{ins_label}{ins.text}",
-                        list(ins.image_urls))})
+                    ai_params.append({"role": "user", "content": build_insert_content(
+                        ins_label, ins, can_see_insert_image)})
                     asks.append({"user_id": ins.user_id, "text": ins.text,
                                  "image_urls": list(ins.image_urls)})
-                    has_image_insert = has_image_insert or bool(ins.image_urls)
                     if ins.user_id not in self.participants:
                         self.participants.append(ins.user_id)
                     ai_logger.info(
                         f"插入消息已并入上下文: {ins.user_id} {ins.text[:150]!r}"
                         + ("..." if len(ins.text) > 150 else ""))
-                if has_image_insert and not real_entry.get("vision"):
-                    # 插入消息带图片，且当前轮模型不支持视觉：切换到视觉模型
-                    real_entry, switch_prefix = self.entry_for_media()
-                    prefix += switch_prefix
         self.spent_secs.stop()
         # 构造期若发生过 provider 预检回退，提示一并带出（原来只记录未展示）
         if self.model_fallback_note:

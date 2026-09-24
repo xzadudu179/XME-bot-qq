@@ -164,6 +164,14 @@ async def get_images_from_message(bot, msg):
     images = [(await bot.get_image(file=image)) for image in matches]
     return images, cqs
 
+# 图片在上下文里的占位文本格式（生产者与识别者成对，改格式只需改这一处）
+IMAGE_PLACEHOLDER_RE = re.compile(r"\[图片[^\]]*\]")
+
+
+def image_placeholder(image_cq: str) -> str:
+    """图片段在上下文里的占位文本（同一张图用 CQ 码哈希保持稳定、便于去重）。"""
+    return f"[图片{hash_text(image_cq)}]"
+
 # async def get_files_from_message(bot, msg):
 #     cqs = re.findall(r"\[CQ:file,[^\]]*\]", msg)
 #     matches = re.findall(r"\[CQ:file,[^\]]*?file=([^,]+),[^\]]*?file_id=([^,]+),", msg)

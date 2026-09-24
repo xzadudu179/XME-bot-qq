@@ -22,15 +22,16 @@ from nonebot.message import message_preprocessor, CanceledException
 from character import get_message
 from xme.xmetools.cmdtools import is_command
 from xme.xmetools.msgtools import send_event_msg
-from xme.xmetools.texttools import get_images_from_message, hash_text
+from xme.xmetools.texttools import get_images_from_message, image_placeholder
 from xme.xmetools.timetools import get_time_now
 
 from .constants import __plugin_name__, MAX_PENDING_INSERTS, COMMAND_ALIAS
 from . import received_files
 from . import share
 
-# 运行中的 AI 会话登记：key = (group_id, user_id)，value = {task, insert_key,
-# insert_enabled}。私聊 group_id 为 None；key 里查不到时本预处理器一律放行。
+# 运行中的 AI 会话登记：key = (group_id, user_id)，value = {task, agent, insert_enabled}。
+# agent 引用用于**实时**取插入队列键与开关（会话名会被 AI 改名，缓存名字会失效）。
+# 私聊 group_id 为 None；key 里查不到时本预处理器一律放行。
 _running_turns: dict[tuple, dict] = {}
 
 _FILE_CQ_RE = re.compile(r"\[CQ:file,[^\]]*\]")
@@ -62,12 +63,30 @@ def strip_file_cq(user_id: int, text: str) -> str | None:
     return " ".join(parts) if parts else None
 
 
-def register_turn(group_id, user_id, task: asyncio.Task, insert_key: str = None, insert_enabled: bool = False) -> None:
-    """会话开始时登记任务与插入信息（talk() 调用）。"""
+def register_turn(group_id, user_id, task: asyncio.Task, agent=None,
+                  insert_enabled: bool = False) -> None:
+    """会话开始时登记任务与 agent 引用（talk() 调用）；插入键与开关由 agent 实时提供。"""
     _running_turns[(group_id, user_id)] = {
-        "task": task, "insert_key": insert_key, "insert_enabled": insert_enabled,
+        "task": task, "agent": agent, "insert_enabled": insert_enabled,
         "awaiting_reply": False,
     }
+
+
+def _insert_key_now(turn: dict) -> str:
+    """当前插入队列键（优先取 agent 的实时值，无 agent 时回落登记时的快照）。"""
+    agent = turn.get("agent")
+    if agent is not None:
+        try:
+            return agent.insert_key
+        except Exception:
+            logger.exception("读取插入键失败")
+    return turn.get("insert_key") or ""
+
+
+def insert_enabled_now_for(group_id, user_id) -> bool:
+    """该窗口运行中的会话是否开启插入模式（命令路径用的实时查询；无运行会话返回 False）。"""
+    turn = _running_turns.get((group_id, user_id))
+    return _insert_enabled_now(turn) if turn is not None else False
 
 
 def set_awaiting_reply(group_id, user_id, flag: bool) -> None:
@@ -104,16 +123,12 @@ def _insert_enabled_now(turn: dict) -> bool:
 
     构造期登记的快照值可能过期（群主在对话中打开插入），故以实时配置为准。
     """
-    key = turn.get("insert_key") or ""
-    try:
-        if key.startswith("shared:"):
-            return bool(share.SharedSession(key[len("shared:"):]).insert_enabled)
-        if key.startswith("user:"):
-            _, uid, name = key.split(":", 2)
-            from . import session as session_module
-            return session_module.normal_insert_enabled(int(uid), name)
-    except Exception:
-        pass
+    agent = turn.get("agent")
+    if agent is not None:
+        try:
+            return bool(agent.insert_enabled_now())
+        except Exception:
+            logger.exception("查询插入模式开关失败")
     return bool(turn.get("insert_enabled"))
 
 
@@ -140,20 +155,24 @@ async def handle_running_turn_input(bot, event, plugin_manager):
                 logger.warning(f"aistop 预处理器回复失败（消息仍被吞掉）：{reason}")
         raise CanceledException(reason)
 
-    async def enqueue_and_ack(ins_text: str):
-        """提取图片、过滤文件段后把文本入插入队列，并按结果回执（/ai 分支与私聊普通文本共用）。"""
-        image_objects, cq_matches = await get_images_from_message(bot, ins_text)
+    async def collect_insert(raw: str) -> tuple[str, list, bool]:
+        """整理待插入内容：提取图片、过滤文件段，返回 (文本, 图片对象, 是否还有用户内容)。
+
+        bot 自己发出的文件被用户点击预览时，协议端会把它回显成一条来自用户的
+        [CQ:file] 消息——命中登记表的移除，真实用户文件替换为占位说明。
+        整理后既无文本也无图片（纯回显/空消息）时第三项为 False：调用方应静默吞掉，
+        不能提示"未开插入模式"（那不是用户发的内容）。
+        """
+        image_objects, cq_matches = await get_images_from_message(bot, raw)
         for image_cq in cq_matches:
-            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
-        # bot 发出文件被用户点击预览时，协议端会把该文件回显成一条来自用户的
-        # [CQ:file] 消息——命中登记表的移除，真实用户文件替换为占位说明
-        stripped = strip_file_cq(event.user_id, ins_text)
-        if stripped is None and not image_objects:
-            logger.info(f"忽略 {event.user_id} 的文件回显/空消息，未入插入队列")
-            await swallow("insert-file-echo")
-            return
-        ins_text = stripped if stripped is not None else ""
-        enqueued = share.enqueue_insert(turn["insert_key"], share.Insert(
+            raw = raw.replace(image_cq, image_placeholder(image_cq))
+        stripped = strip_file_cq(event.user_id, raw)
+        text_out = stripped if stripped is not None else ""
+        return text_out, image_objects, bool(text_out.strip()) or bool(image_objects)
+
+    async def enqueue_and_ack(ins_text: str, image_objects: list):
+        """把已整理好的插入内容入队，并按结果回执（/ai 分支与私聊普通文本共用）。"""
+        enqueued = share.enqueue_insert(_insert_key_now(turn), share.Insert(
             user_id=event.user_id, text=ins_text,
             image_urls=tuple(x["file"] for x in image_objects),
             time=get_time_now()))
@@ -171,8 +190,8 @@ async def handle_running_turn_input(bot, event, plugin_manager):
         logger.info(f"{event.user_id} 发送 aistop：已中断其运行中的 AI 会话")
         raise CanceledException("aistop")
 
-    if turn.get("insert_key") is None:
-        return  # 会话尚未完成登记（AIHelper 未建好），放行给原有流程
+    if not _insert_key_now(turn):
+        return  # 会话尚未完成登记（agent 引用未就绪），放行给原有流程
 
     # /ai xxx：插入入队；/ai stop：直接中断
     if text[0] in config.COMMAND_START and text.split(" ")[0][1:] in (__plugin_name__, *COMMAND_ALIAS):
@@ -185,13 +204,19 @@ async def handle_running_turn_input(bot, event, plugin_manager):
             await swallow("insert", reply=get_message(
                 "plugins", __plugin_name__, "no_shared_insert"))
             return
+        ins_text, image_objects, has_content = await collect_insert(ins_text)
+        if not has_content:
+            # 纯文件回显/空消息：不是用户发的内容，静默吞掉（不给"未开插入"之类提示）
+            logger.info(f"忽略 {event.user_id} 的文件回显/空消息，未入插入队列")
+            await swallow("insert-file-echo")
+            return
         if not _insert_enabled_now(turn):
             # 未开插入模式：给提示（原指令路径的 ai_session_on 提示因预处理器先接管而永不触发）
             from character import get_message as _gm
             await swallow("ai-cmd-no-insert",
                           reply=_gm("plugins", __plugin_name__, "ai_session_on"))
             return
-        await enqueue_and_ack(ins_text)
+        await enqueue_and_ack(ins_text, image_objects)
         return
 
     # 其他指令：提示正在与 AI 聊天中
@@ -202,15 +227,21 @@ async def handle_running_turn_input(bot, event, plugin_manager):
     # 未开 → 提示如何开启。共享会话的插入键不是 user: 前缀，回执提示用 /ai 插入，
     # 不能像群聊那样静默吞掉（否则消息无声消失）。
     if event.get("group_id") is None:
-        if not (turn.get("insert_key") or "").startswith("user:"):
+        if not _insert_key_now(turn).startswith("user:"):
             await swallow("plain-text-shared", reply=get_message(
                 "plugins", __plugin_name__, "no_shared_insert"))
+            return
+        ins_text, image_objects, has_content = await collect_insert(text)
+        if not has_content:
+            # 纯文件回显/空消息：静默吞掉（用户点开 bot 发的文件就会走到这里）
+            logger.info(f"忽略 {event.user_id} 的文件回显/空消息，未入插入队列")
+            await swallow("plain-text-file-echo")
             return
         if not _insert_enabled_now(turn):
             await swallow("plain-text-no-insert", reply=get_message(
                 "plugins", __plugin_name__, "normal_insert_off"))
             return
-        await enqueue_and_ack(text)
+        await enqueue_and_ack(ins_text, image_objects)
         return
     # 群聊维持静默（避免群内闲聊被误吞/误插）。
     await swallow("plain-text")

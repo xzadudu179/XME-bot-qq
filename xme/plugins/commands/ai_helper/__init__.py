@@ -12,15 +12,17 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage, read_doc_md
 from xme.xmetools.bottools import XmeArgumentParser
 from xme.xmetools.msgtools import CMD_END, aget_arg, is_text_can_send, send_session_msg, send_to_user
-from xme.xmetools.texttools import get_images_from_message, hash_text
+from xme.xmetools.texttools import get_images_from_message, image_placeholder
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import get_time_now, secs_to_ymdh
 from character import get_message, get_character_item, character_format
 from xme.plugins.commands.xme_user.classes import user as u
 
-from .agent import AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content, estimate_context_tokens
+from .agent import (AIHelper, ai_logger, load_snapshot, clear_snapshot, build_user_content,
+                    estimate_context_tokens, media_hint, replace_media_markers)
 from .session import (AISession, allows_auto_model, current_storage, enable_normal_insert,
                       set_user_model, user_model, user_model_setting)
+from .llm import registry
 from . import constants, share, aistop, credits, window
 from .credits import ai_credits_left
 from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
@@ -233,7 +235,9 @@ async def _(session: CommandSession, user: u.User):
                 await send_session_msg(session, await window.other_window_reply(
                     shared=running_turn.shared, group_id=running_turn.group_id))
             return False
-        if not (running_turn.ready and running_turn.insert_enabled):
+        # 实时查询插入模式（不用登记快照：会话名可能已被 AI 改，开关也可能刚切换）
+        if not (running_turn.ready
+                and aistop.insert_enabled_now_for(running_turn.group_id, user.id)):
             # 会话刚登记未就绪 / 未开启插入模式：维持原有拒绝
             await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_session_on"))
             return False
@@ -334,15 +338,25 @@ async def _(session: CommandSession, user: u.User):
                 # 继续并把本条新消息（含图片）并入恢复的上下文
                 image_objects, cq_matches = await safe_get_images(session.bot, text)
                 image_urls = [x["file"] for x in image_objects]
+                # 恢复用的模型能否直接看图：看不了就不附媒体，改成直链 + 提示它用工具查看
+                snap_entry = registry.model_by_name(snap.get("model") or "") or {}
+                can_see_image = bool(snap_entry.get("vision"))
                 new_text = text
-                for image_cq in cq_matches:
-                    new_text = new_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+                if can_see_image:
+                    for image_cq in cq_matches:
+                        new_text = new_text.replace(image_cq, image_placeholder(image_cq))
+                else:
+                    new_text = replace_media_markers(new_text, cq_matches, image_urls)
                 # 文件段处理同插入通道：bot 发出文件的预览回显剔除，用户文件转占位
                 new_text = aistop.strip_file_cq(session.event.user_id, new_text)
                 if new_text is None and not image_urls:
                     resume_data = snap  # 纯文件回显：原样恢复，不并入本条
                 else:
-                    snap["messages"].append({"role": "user", "content": build_user_content(new_text or "", image_urls)})
+                    attach = list(image_urls) if can_see_image else []
+                    merge_text = new_text or ""
+                    if image_urls and not can_see_image:
+                        merge_text += f"\n{media_hint(['view_image'])}"
+                    snap["messages"].append({"role": "user", "content": build_user_content(merge_text, attach)})
                     snap["asks"] = (snap.get("asks") or []) + [
                         {"user_id": user.id, "text": new_text or "", "image_urls": image_urls}]
                     resume_data = snap
@@ -379,7 +393,7 @@ async def _(session: CommandSession, user: u.User):
         image_urls = [x["file"] for x in image_objects]
         ins_text = text
         for image_cq in cq_matches:
-            ins_text = ins_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+            ins_text = ins_text.replace(image_cq, image_placeholder(image_cq))
         # 文件段处理同 aistop 插入通道：预览回显剔除、用户文件转占位；
         # 只剩回显（无文本无图）时按普通"忙"提示返回，不入队
         ins_text = aistop.strip_file_cq(session.event.user_id, ins_text)
@@ -532,19 +546,21 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     # 进行中的对话登记：无论是否开启插入模式都要记下发起窗口与共享标识
     # （窗口判定依赖它；插入队列键与展示名仅在开启插入模式时有效）
     display = ai_helper.shared.code if ai_helper.shared is not None else ai_helper.ai_session
+    # 实时查询（不用构造期快照：新会话的插入模式在构造之后才登记、会话名也可能被 AI 改）
+    insert_on = ai_helper.insert_enabled_now()
     window.register(
         user.id,
         group_id=session.event.group_id,
         shared=ai_helper.shared is not None,
         display=display,
-        insert_key=ai_helper.insert_key if ai_helper.insert_enabled else "",
-        insert_enabled=ai_helper.insert_enabled,
+        insert_key=ai_helper.insert_key if insert_on else "",
+        insert_enabled=insert_on,
     )
     # 开始前先清空放置上轮会话强制结束之类的问题
     ai_helper.delete_temp()
     # aistop 登记：预处理器 / /ai stop 可随时取消本任务（长工具执行中也即时生效）
     aistop.register_turn(session.event.group_id, user.id, asyncio.current_task(),
-                         insert_key=ai_helper.insert_key, insert_enabled=ai_helper.insert_enabled)
+                         agent=ai_helper)
     try:
         result = await ai_helper.user_talk(session, role, user, text)
     except asyncio.CancelledError:

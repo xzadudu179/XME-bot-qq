@@ -7,7 +7,7 @@ from pathlib import Path
 
 from nonebot.log import logger
 from xme.xmetools.msgtools import aget_arg_with_timeout, send_session_msg, is_text_can_send
-from xme.xmetools.texttools import hash_text
+from xme.xmetools.texttools import image_placeholder
 from character import get_message
 from ..session import AISession
 from ._common import ImageToolResult
@@ -37,7 +37,7 @@ async def ask_user(prompt: str, session, timeout: int = 120, agent=None):
             image_objects, cq_matches = await safe_get_images(session.bot, reply)
             reply_text = reply
             for image_cq in cq_matches:
-                reply_text = reply_text.replace(image_cq, f"[图片{hash_text(image_cq)}]")
+                reply_text = reply_text.replace(image_cq, image_placeholder(image_cq))
             reply_time = time.time()
             interval = reply_time - send_time
             if interval < 3 and not image_objects:

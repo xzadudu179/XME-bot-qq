@@ -103,7 +103,7 @@ class Insert:
 
 
 # 待插入消息队列：{插入键: [Insert, ...]}，由运行中的 agent 循环消费；
-# 插入键区分会话类型（shared:群号码 / user:用户id:会话名），与 _busy_codes 同为内存态
+# 插入键区分会话类型（shared:群号码 / user:用户id），与 _busy_codes 同为内存态
 _pending_inserts: dict[str, list[Insert]] = {}
 
 
@@ -112,9 +112,14 @@ def shared_insert_key(code: str) -> str:
     return f"shared:{code}"
 
 
-def user_insert_key(user_id, ai_session: str) -> str:
-    """普通会话的插入队列键（仅本人消息自插入）。"""
-    return f"user:{user_id}:{ai_session}"
+def user_insert_key(user_id) -> str:
+    """普通会话的插入队列键（仅本人消息自插入）。
+
+    不含会话名：名字会被 AI（name_session 工具）改，键里带名字会在改名后与
+    实时名单错位（预处理器按旧名入队、agent 按新名消费，消息永远收不到）。
+    同一用户同时只有一轮对话在跑（见 window 注册），用户维度即可唯一标识。
+    """
+    return f"user:{user_id}"
 
 
 def enqueue_insert(key: str, insert: Insert) -> bool:

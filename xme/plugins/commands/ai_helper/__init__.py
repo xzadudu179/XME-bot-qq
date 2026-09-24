@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import inspect
 import re
+import time
 
 import config
 from nonebot import CommandSession
@@ -11,7 +12,8 @@ from xme.plugins.commands.ai_helper import history
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc, shell_like_usage, read_doc_md
 from xme.xmetools.bottools import XmeArgumentParser
-from xme.xmetools.msgtools import CMD_END, aget_arg, is_text_can_send, send_session_msg, send_to_user
+from xme.xmetools.msgtools import (CMD_END, aget_arg, aget_arg_with_retry,
+                                   is_text_can_send, send_session_msg, send_to_user)
 from xme.xmetools.texttools import get_images_from_message, image_placeholder
 from xme.xmetools.jsontools import read_from_path
 from xme.xmetools.timetools import get_time_now, secs_to_ymdh
@@ -23,10 +25,11 @@ from .agent import (AIHelper, ai_logger, load_snapshot, clear_snapshot, build_us
 from .session import (AISession, allows_auto_model, current_storage, enable_normal_insert,
                       set_user_model, user_model, user_model_setting)
 from .llm import registry
-from . import constants, share, aistop, credits, window
+from . import constants, pro, share, aistop, credits, window
 from .credits import ai_credits_left
 from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
-from .commands import adjust_credits, clear_history, clear_all_sessions, list_sessions, name_session, new_session, switch_session
+from .commands import (adjust_credits, clear_history, clear_all_sessions, list_sessions,
+                       name_session, new_session, switch_session, toggle_pro_user)
 from .share_commands import (
     join_session,
     kick_member,
@@ -113,6 +116,11 @@ cmds = {
         "args": "(qq) (±数值)",
         "desc": "查看/调整用户自存 credits（超管专用；无 qq 查看自己，无数值仅查看）",
     },
+    "pro": {
+        "content": toggle_pro_user,
+        "args": "(qq号或@用户)",
+        "desc": "查看/切换高级模型白名单（超管专用；不带参数列出受控模型与白名单用户）",
+    },
     "history": {
         "content": session_history,
         "args": "",
@@ -145,10 +153,37 @@ def auto_model_list() -> str:
 
 def get_model_list():
     """模型列表文案（别名 / 简介 / 计费倍率），供帮助与报错提示展示。"""
+    pro_models = set(pro.pro_models())
     return "auto:\t(默认)自动选择合适的模型（flash）\n" + "\n".join(
         f"{n}:\t{m.get('description', '')}（计费 x{m.get('credit_multiplier', 1)} 缓存 x{m.get('cache_credit_ratio', 0.25)}）"
+        + ("【需白名单】" if n in pro_models else "")
         for n, m in LLM_MODELS.items()
     )
+
+async def ask_resume_model(session: CommandSession, user: u.User, model: str) -> str | None:
+    """恢复会话的原模型不可用时，请用户回复一个可用模型名。
+
+    最多问 RESUME_MODEL_ATTEMPTS 次、总等待不超过 RESUME_MODEL_TIMEOUT 秒；
+    拿到合法别名即返回，超时或始终不合法返回 None（调用方回落默认模型）。
+    """
+    allowed = pro.allowed_aliases(user.id)
+
+    def _normalize(reply: str) -> str:
+        """去掉首尾空白与用户可能带的引号（复制模型名时常见）。"""
+        return (reply or "").strip().strip("\"'")
+
+    picked = await aget_arg_with_retry(
+        session,
+        prompt=get_message("plugins", __plugin_name__, "resume_model_unavailable",
+                           model=model, models="、".join(allowed),
+                           timeout=int(constants.RESUME_MODEL_TIMEOUT)),
+        is_valid=lambda reply: _normalize(reply) in allowed,
+        attempts=int(constants.RESUME_MODEL_ATTEMPTS),
+        timeout_secs=float(constants.RESUME_MODEL_TIMEOUT),
+        retry_prompt=get_message("plugins", __plugin_name__, "resume_model_invalid",
+                                 models="、".join(allowed)))
+    return _normalize(picked) if picked is not None else None
+
 
 async def parse_control(session: CommandSession, text: str, user: u.User) -> str:
     cmd_name, args = text.split(" ")[0], text.split(" ")[1:]
@@ -283,10 +318,12 @@ async def _(session: CommandSession, user: u.User):
         return False
     # /ai -m <模型> 且没有对话内容：把该模型设为用户的默认模型（持久化，之后 /ai 都用它）
     if args.model and not text:
-        if args.model != constants.LLM_AUTO_MODEL_ALIAS and not llm.registry.is_valid_model(args.model):
-            return await send_session_msg(session, get_message(
-                "plugins", __plugin_name__, 'error_model', model=args.model,
-                models="、".join([f'"{i}"' for i in available_models])))
+        if args.model != constants.LLM_AUTO_MODEL_ALIAS:
+            denied = pro.check_spec(user.id, args.model)
+            if denied is not None:
+                return await send_session_msg(session, get_message(
+                    "plugins", __plugin_name__, denied, model=args.model,
+                    models="、".join([f'"{i}"' for i in available_models])))
         set_user_model(user, args.model)
         # auto：存的是"按话题自动选择"这一策略，回执文案单独给
         key = 'model_saved_auto' if args.model == constants.LLM_AUTO_MODEL_ALIAS else 'model_saved'
@@ -317,8 +354,13 @@ async def _(session: CommandSession, user: u.User):
     model = args.model or user_model(user)
     if auto_requested:
         model = llm.registry.default_alias()
-    elif not llm.registry.is_valid_model(model):
-        return await send_session_msg(session, get_message("plugins", __plugin_name__, 'error_model', model=model, models="、".join([f'"{i}"' for i in available_models])))
+    else:
+        # 兜底再校验一次（user_model 已按权限回落过；显式 -m 时这里才是主校验点）
+        denied = pro.check_spec(user.id, model)
+        if denied is not None:
+            return await send_session_msg(session, get_message(
+                "plugins", __plugin_name__, denied, model=model,
+                models="、".join([f'"{i}"' for i in available_models])))
     # 检测上次异常中断的会话快照：三选项（1 原样继续 / 2 继续并带入当前消息 / 3 取消）
     resume_data = None
     if not args.resume and text:
@@ -370,6 +412,14 @@ async def _(session: CommandSession, user: u.User):
         if not resume_data:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_resume'))
             return False
+    if resume_data:
+        # 快照里的模型若对这名用户受限（高级模型/自由指定形式）：请他挑一个可用模型再继续
+        snapshot_model = resume_data.get("model_alias") or ""
+        if pro.spec_restricted(user.id, snapshot_model):
+            chosen = await ask_resume_model(session, user, snapshot_model)
+            resume_data["model_alias"] = chosen or llm.registry.default_alias()
+            ai_logger.info(
+                f"恢复会话的模型 {snapshot_model!r} 无权限，改用 {resume_data['model_alias']!r}")
     if resume_data:
         shared_session = share.SharedSession(resume_data["shared_code"]) if resume_data.get("shared_code") else None
         ai_session = resume_data.get("ai_session") or history.DEFAULT_SESSION

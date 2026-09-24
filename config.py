@@ -59,5 +59,9 @@ CONTAINER_BOT_PATH = "/xmebot"
 MAI_ARCADE_PATH = "./bin/mai-arcade"
 DEBUG = False
 
+# OneBot API 调用等待上限（秒）：aiocqhttp 默认 60s，大文件上传（如录制的高清视频）
+# 远超这个时间，超时会被误判成发送失败（协议端其实还在上传/已送达）
+API_TIMEOUT_SEC = 300
+
 USE_PROXY = True
 HTTP_PORT = 7890

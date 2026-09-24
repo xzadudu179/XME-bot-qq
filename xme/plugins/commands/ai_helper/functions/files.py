@@ -15,6 +15,7 @@ from typing import Literal
 from uuid import uuid4
 
 from nonebot.log import logger
+from aiocqhttp.exceptions import NetworkError
 from xme.xmetools.dicttools import reverse_dict
 from xme.xmetools.filetools import (
     decode_text, detect_file_type, search_json, history_file_name,
@@ -31,26 +32,37 @@ from ..constants import (
 )
 from ._common import exception_detail
 
-async def send_local_file(session, path, name="") -> tuple[bool, str]:
+# send_local_file 的返回状态：
+#   ok      确认发送成功
+#   failed  确认失败（可安全重试）
+#   unknown 调用超时——协议端不会因我们超时中止上传，文件**可能已送达**，
+#           盲目重发会导致重复投递，所以既不能当成功也不能当失败
+SEND_OK, SEND_FAILED, SEND_UNKNOWN = "ok", "failed", "unknown"
+
+
+async def send_local_file(session, path, name="") -> tuple[str, str]:
     """把本地文件以私聊文件消息发给当前用户（公共发送通道：send_file / record_page 共用）。
 
     name 为可选的展示文件名：非法时拒绝；为空或与原名一致直接发原文件，
     否则复制到通用临时目录以该名上传（展示名需成为磁盘文件名，防路径注入），
-    发送后副本即删。返回 (是否成功, 说明信息——成功为"文件名（N 字节）"，失败为原因)。
+    发送后副本即删（超时除外，见下）。
+    返回 (状态, 说明信息)，状态见 SEND_OK / SEND_FAILED / SEND_UNKNOWN：
+    超时返回 SEND_UNKNOWN 且**不删文件**——协议端可能仍在读该文件上传，
+    删掉会打断它（残留文件由 temp 清理机制收尾）。
     """
     path = Path(path)
     if not path.is_file():
-        return False, f"文件不存在：{path.name}"
+        return SEND_FAILED, f"文件不存在：{path.name}"
     if path.stat().st_size == 0:
-        return False, "文件为空"
+        return SEND_FAILED, "文件为空"
     if session is None or getattr(session, "bot", None) is None:
-        return False, "无法获取会话上下文"
+        return SEND_FAILED, "无法获取会话上下文"
     send_path = path
     if name and name != path.name:
         # 展示名需成为磁盘文件名：校验安全后复制到通用临时目录再上传，
         # 防止路径穿越/绝对路径借 copy2 写到任意位置（is_safe_custom_name 拒绝 / 与 ..）
         if not is_safe_custom_name(name):
-            return False, f"文件名 {name} 不合法（仅允许中英文/数字/_-.，不含路径）"
+            return SEND_FAILED, f"文件名 {name} 不合法（仅允许中英文/数字/_-.，不含路径）"
         temp_dir = Path("./data/temp")
         temp_dir.mkdir(parents=True, exist_ok=True)
         send_path = safe_join(temp_dir, name)
@@ -58,7 +70,8 @@ async def send_local_file(session, path, name="") -> tuple[bool, str]:
             shutil.copy2(path, send_path)
         except Exception as ex:
             logger.exception(f"准备发送文件失败: {path} -> {send_path}")
-            return False, exception_detail(ex)
+            return SEND_FAILED, exception_detail(ex)
+    cleanup_copy = False
     try:
         await bot_call_action(
             session.bot, "upload_private_file",
@@ -70,13 +83,21 @@ async def send_local_file(session, path, name="") -> tuple[bool, str]:
         # 插入通道据此过滤（见 received_files.is_bot_sent_file）
         from .. import received_files
         received_files.record_sent_file(session.event.user_id, send_path.name)
+        cleanup_copy = True
+    except NetworkError as ex:
+        # 调用等待超时：上传可能已在平台上完成（协议端不会因超时中止），结果不可知
+        logger.warning(f"私聊发送文件超时（结果未知，文件保留）: {send_path}: {ex}")
+        detail = "上传超时，可能已送达（勿直接重发，先与用户确认）" \
+            if "timeout" in str(ex).lower() else exception_detail(ex)
+        return SEND_UNKNOWN, detail
     except Exception as ex:
         logger.exception(f"私聊发送文件失败: {send_path}")
-        return False, exception_detail(ex)
+        cleanup_copy = True
+        return SEND_FAILED, exception_detail(ex)
     finally:
-        if send_path is not path:
+        if cleanup_copy and send_path is not path:
             send_path.unlink(missing_ok=True)  # 副本用完即删，不残留通用临时目录
-    return True, f"{send_path.name}（{path.stat().st_size} 字节）"
+    return SEND_OK, f"{send_path.name}（{path.stat().st_size} 字节）"
 
 
 async def send_file(ref: str, new_name="", agent=None):
@@ -85,11 +106,13 @@ async def send_file(ref: str, new_name="", agent=None):
         path = Path(agent.resolve_ref(ref))
     except KeyError:
         return {"result": f"[发送失败：没有找到引用 {ref}]", "no_compress": True}
-    ok, info = await send_local_file(agent.session, path.resolve(), new_name)
-    if not ok:
-        return {"result": f"[发送失败：{info}]", "no_compress": True}
-    return {"result": f"已把文件 {info} 通过私聊发送给用户。",
-            "file_name": info.split("（")[0], "no_compress": True}
+    status, info = await send_local_file(agent.session, path.resolve(), new_name)
+    if status == SEND_OK:
+        return {"result": f"已把文件 {info} 通过私聊发送给用户。",
+                "file_name": info.split("（")[0], "no_compress": True}
+    if status == SEND_UNKNOWN:
+        return {"result": f"[发送结果未知：{info}]", "no_compress": True}
+    return {"result": f"[发送失败：{info}]", "no_compress": True}
 
 
 def edit_file(ref: str, old_string: str, new_string: str, replace_all: bool = False, agent=None):

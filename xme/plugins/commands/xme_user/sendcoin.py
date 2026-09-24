@@ -9,7 +9,7 @@ from xme.plugins.commands.xme_user.classes.user import User, coin_name
 from character import get_message
 from xme.xmetools.debugtools import debug_msg
 # from nonebot.log import logger
-from xme.xmetools.texttools import get_at_id, no_except_cn2an
+from xme.xmetools.texttools import no_except_cn2an
 
 alias = ['转账', f'给{coin_name}', 'ta', 'transfer', 'givecoin', 'v']
 cmd_name = 'sendcoin'
@@ -40,11 +40,8 @@ async def _(session: CommandSession, user: User, check_invalid, count_tick):
         message = get_message("plugins", __plugin_name__, cmd_name, 'limited', max_count=COUNT_LIMIT)
         await send_session_msg(session, message, tips=True)
         return False
-    if arg_text and args[0].startswith("[CQ:at,qq="):
-        # at_id = int(args[0].split("[CQ:at,qq=")[-1].split(",")[0])
-        at_id = get_at_id(args[0])
-
-    else:
+    at_id = get_user_id_from_arg(args[0]) if arg_text else None
+    if at_id is None:
         message = get_message("plugins", __plugin_name__, cmd_name, 'no_arg')
         await send_session_msg(session, message, tips=True)
         return False

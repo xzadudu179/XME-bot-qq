@@ -16,7 +16,6 @@ from xme.plugins.commands.xme_user.classes.user import (
 )
 from xme.xmetools.imgtools import get_html_image_async, get_qq_avatar
 from xme.xmetools.msgtools import image_msg
-from xme.xmetools.texttools import get_at_id
 from xme.xmetools.timetools import TimeUnit
 
 from . import api, binding, constants, records, render
@@ -74,8 +73,8 @@ def _resolve_target(session: CommandSession, user: User, arg: str) -> tuple[str,
         tuple[str, str, int | None] | None: (查询方式, Token或用户名, 用于头像的 QQ)；
         查询方式为 "token"（本地算 b50）或 "username"（走公开接口）。
     """
-    if arg.startswith("[CQ:at,qq="):
-        at_id = get_at_id(arg)
+    at_id = get_user_id_from_arg(arg)
+    if at_id is not None:
         at_binding = binding.get_binding(try_load(at_id))
         if at_binding[binding.TOKEN_KEY]:
             return "token", at_binding[binding.TOKEN_KEY], at_id
@@ -218,7 +217,7 @@ async def handle(session: CommandSession, user: User, arg: str) -> str:
     resolved = _resolve_target(session, user, target)
     if resolved is None:
         # @ 他人时对方没绑，与自己没绑要分开提示
-        key = 'at_not_bound' if target.startswith("[CQ:at,qq=") else 'not_bound'
+        key = 'at_not_bound' if get_user_id_from_arg(target) is not None else 'not_bound'
         return get_message("plugins", __plugin_name__, key)
     target_type, target_value, known_qq = resolved
 

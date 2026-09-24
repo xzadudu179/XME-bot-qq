@@ -2,7 +2,7 @@ from nonebot import MessageSegment, Message, NoneBot
 from aiocqhttp import Event, ApiError, ActionFailed
 import config
 # import config
-from xme.xmetools.texttools import get_msg_len, text_moderations
+from xme.xmetools.texttools import get_at_id, get_msg_len, text_moderations
 from xme.xmetools.randtools import random_percent
 from xme.xmetools.debugtools import debugging
 from xme.xmetools.bottools import get_group_name, get_stranger_name, get_user_name
@@ -15,6 +15,7 @@ from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
 import asyncio
+import time
 import base64
 import traceback
 from io import BytesIO
@@ -178,6 +179,36 @@ async def aget_arg_with_timeout(session, timeout_secs, prompt=None) -> str | Non
         return reply
     except asyncio.TimeoutError:
         return None
+
+async def aget_arg_with_retry(session, prompt=None, *, is_valid=None, attempts: int = 3,
+                              timeout_secs: float = 60.0, retry_prompt=None) -> str | None:
+    """多次询问用户输入：拿到通过校验的回复即返回，否则返回 None。
+
+    - `timeout_secs` 是**总**等待上限：每次询问只等剩余时间，用完即止（不会超总预算）；
+    - `is_valid` 是校验函数（依赖注入）：不传则任何非空回复都算通过；
+    - `retry_prompt` 为重问时的提示文案，不传则沿用 `prompt`。
+
+    与 `aget_arg`（单次、规则不通过由 nonebot 抛错）不同：本函数自己管次数与总超时、
+    自行重问，适合"用户回复内容需要校验、拿不到就继续往下走"的场景（如让用户选模型）。
+    注意：等待期间用户消息经 nonebot 的 arg 通道送达，调用方需保证该窗口内消息没被
+    其他预处理器吞掉（ai_helper 的做法见 aistop.set_awaiting_reply）。
+    """
+    check = is_valid or (lambda reply: bool((reply or "").strip()))
+    deadline = time.monotonic() + max(0.0, float(timeout_secs))
+    ask = prompt
+    for _ in range(max(1, int(attempts))):
+        remain = deadline - time.monotonic()
+        if remain <= 0:
+            break
+        reply = await aget_arg_with_timeout(session, timeout_secs=remain, prompt=ask)
+        if reply is None:
+            break   # 超时：不再重复询问
+        if check(reply):
+            return reply
+        if retry_prompt is not None:
+            ask = retry_prompt
+    return None
+
 
 class _CMD_END:
     def __repr__(self):
@@ -380,6 +411,30 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
     debug_msg(f"{msg_id=}")
     if msg_id:
         add_to_open_cmd_msgs(event.message_id, msg_id)
+
+def get_user_id_from_arg(arg: str) -> int | None:
+    """从消息参数里解析目标 qq：支持 [CQ:at,qq=...] 与纯数字两种写法。
+
+    - at 段允许不在参数开头（如 "让 [CQ:at,qq=...] 看一下"）；参数里有多个 at 时取第一个；
+    - 纯数字形式顺带接受全角数字（中文输入法常见，int() 本身支持）；
+    - 解析不出（空、纯文字、残缺的 at 段）返回 None，调用方自行决定怎么提示。
+    CQ 码里取 id 复用 texttools.get_at_id（该解析的唯一入口），不另写一套拆分逻辑。
+    """
+    text = (arg or "").strip()
+    if not text:
+        return None
+    at_start = text.find("[CQ:at,qq=")
+    if at_start >= 0:
+        segment = text[at_start:]
+        end = segment.find("]")            # 截到该 at 段结束，避免 get_at_id 取到靠后的 at
+        if end >= 0:
+            segment = segment[:end + 1]
+        try:
+            return get_at_id(segment)
+        except (ValueError, IndexError):
+            return None
+    return int(text) if text.isdigit() else None
+
 
 def get_pure_text_message(message: dict) -> str:
     """获取纯文本消息

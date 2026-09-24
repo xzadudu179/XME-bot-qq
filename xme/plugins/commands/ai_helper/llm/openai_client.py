@@ -15,11 +15,25 @@ import json
 
 import httpx
 
+from nonebot.log import logger
+
 from .types import ChatResult, LLMError, LLMErrorKind, ToolCall, Usage
 
 
 # 流式日志的单行上限：无换行的长输出达到该长度也落一次日志，避免长时间不输出
 _STREAM_LOG_LINE_MAX = 400
+
+
+def ai_log(message: str) -> None:
+    """把消息写进 ai_helper 调试日志（拿不到 ai_logger 时退回 nonebot 日志）。
+
+    供应商返回的错误体只有调用方能拿到，写进 ai 日志后排查"模型为什么失败"不用翻 stderr。
+    """
+    try:
+        from ..agent import ai_logger
+        ai_logger.warning(message)
+    except Exception:
+        logger.warning(message)
 
 
 def _map_error(status: int, body: object, provider: str) -> LLMError:
@@ -80,6 +94,23 @@ class OpenAICompatProvider:
     仅用于后台调试输出，不改变最终返回结果。
     """
 
+    @staticmethod
+    def _normalize_base_url(base_url: str, provider: str) -> str:
+        """规范化端点根地址，并容错"写全了 /chat/completions"的配置。
+
+        本仓库约定 base_url 只写根地址（客户端自己拼 /chat/completions）；若写全了，
+        实际请求会变成 .../chat/completions/chat/completions 而 404，接着回退到默认模型
+        ——表现为"选了 A 模型、实际在用 B 模型"（日志里是默认模型的 provider 在思考）。
+        故这里兜底裁掉并告警。
+        """
+        url = (base_url or "").rstrip("/")
+        suffix = "/chat/completions"
+        if url.endswith(suffix):
+            logger.warning(
+                f"provider {provider} 的 base_url 带了 {suffix}（约定只写根地址），已自动裁掉")
+            url = url[: -len(suffix)].rstrip("/")
+        return url
+
     def __init__(self, name: str, base_url: str, api_key: str, *,
                  timeout: float = 300.0, stream: bool = True,
                  temperature: float | None = None,
@@ -88,7 +119,7 @@ class OpenAICompatProvider:
                  stream_fallback: bool = True):
         self.name = name
         self.transport = transport
-        self.base_url = (base_url or "").rstrip("/")
+        self.base_url = self._normalize_base_url(base_url, name)
         self.api_key = api_key
         self.timeout = timeout
         self.stream = stream                     # 默认流式：便于半流式日志
@@ -121,6 +152,10 @@ class OpenAICompatProvider:
 
     def _payload(self, messages, model, tools, temperature, thinking, stream) -> dict:
         payload: dict = {"model": model, "messages": messages, "stream": stream}
+        if stream:
+            # 显式要 usage：Moonshot 等端点的流式响应默认不带用量，
+            # 不请求的话整轮 tokens 记成 0（计费与用量展示都会看不到）
+            payload["stream_options"] = {"include_usage": True}
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
@@ -140,6 +175,12 @@ class OpenAICompatProvider:
             raise LLMError(LLMErrorKind.TIMEOUT, str(ex) or "请求超时", provider=self.name) from ex
         except httpx.HTTPError as ex:
             raise LLMError(LLMErrorKind.TIMEOUT, str(ex) or "连接失败", provider=self.name) from ex
+
+    def _fail(self, status: int, body: object, model: str) -> LLMError:
+        """把响应映射为统一错误，同时把详情写进 ai 日志（再抛给上层决定重试/回退）。"""
+        err = _map_error(status, body, self.name)
+        ai_log(f"模型调用失败 [{self.name}/{model}] {err}")
+        return err
 
     def _emit(self, kind: str, text: str) -> None:
         """立即输出一条增量（不做缓冲；note 类提示与整行输出走这里）。"""
@@ -207,6 +248,21 @@ class OpenAICompatProvider:
         use_stream = self.stream
         self._reset_stream_buffers()
         payload = self._payload(messages, model, tools, temperature, thinking, use_stream)
+        try:
+            return await self._request(payload, model, use_stream, on_tick)
+        except LLMError as ex:
+            # 端点不认 stream_options 时自动去掉重试一次（严格实现会直接 400）
+            if ("stream_options" in payload
+                    and ex.kind == LLMErrorKind.BAD_REQUEST
+                    and "stream_options" in str(ex.message).lower()):
+                payload.pop("stream_options", None)
+                self._emit("note", "端点不支持 stream_options，已去掉后重试")
+                return await self._request(payload, model, use_stream, on_tick)
+            raise
+
+    async def _request(self, payload: dict, model: str, use_stream: bool,
+                       on_tick=None) -> ChatResult:
+        """按 use_stream 走流式/非流式发起请求（chat 只负责组装参数与兜底重试）。"""
         if not use_stream:
             return await self._chat_nonstream(payload, model)
 
@@ -222,7 +278,7 @@ class OpenAICompatProvider:
                         body = json.loads(raw)
                     except Exception:
                         body = raw.decode("utf-8", "replace")
-                    raise _map_error(response.status_code, body, self.name)
+                    raise self._fail(response.status_code, body, model)
                 return await self._read_stream(response, model, on_tick)
         except httpx.TimeoutException as ex:
             err = LLMError(LLMErrorKind.TIMEOUT, str(ex) or "请求超时", provider=self.name)
@@ -245,12 +301,14 @@ class OpenAICompatProvider:
                 parsed = response.json()
             except Exception:
                 parsed = response.text
-            raise _map_error(response.status_code, parsed, self.name)
+            raise self._fail(response.status_code, parsed, model)
         try:
             data = response.json()
         except Exception as ex:
-            raise LLMError(LLMErrorKind.UNKNOWN, f"响应不是合法 JSON：{ex}",
-                           provider=self.name, status=response.status_code) from ex
+            err = LLMError(LLMErrorKind.UNKNOWN, f"响应不是合法 JSON：{ex}",
+                           provider=self.name, status=response.status_code)
+            ai_log(f"模型调用失败 [{self.name}/{model}] {err}")
+            raise err from ex
         return self._parse_completion(data, model)
 
     # ---------- 非流式 ----------

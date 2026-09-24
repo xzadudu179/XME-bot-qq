@@ -116,7 +116,16 @@ FLASH_MODEL = "deepseek-flash"
 # 默认模型别名（/ai 不带 -m 时使用）
 LLM_DEFAULT_MODEL = "dsflash"
 
-# 模型别名 → 目录项；provider 需在 keys.py 的 LLM_PROVIDERS 里存在
+# 主对话的采样温度（各模型可在 LLM_MODELS 的目录项里用 "temperature" 覆盖——
+# 部分模型对温度有限制，例如 Moonshot 的 kimi-k3 只接受 1，传别的值会 400）
+LLM_DEFAULT_TEMPERATURE = 0.5
+
+# 高级模型（受白名单限制）：写在这里的别名只有白名单用户（见 pro.py，
+# 用户名单在 _botsettings.json 的 ai_pro_users）与 SUPERUSER 能选择使用
+LLM_PRO_MODELS = ["pro", "kimik3"]
+
+# 模型别名 → 目录项；provider 需在 keys.py 的 LLM_PROVIDERS 里存在。
+# 可选字段 temperature：覆盖该模型的采样温度（缺省用 LLM_DEFAULT_TEMPERATURE）
 LLM_MODELS = {
     "flash": {
         "provider": "glm",
@@ -126,7 +135,7 @@ LLM_MODELS = {
         "context_limit": 1_000_000,  # 输入上下文上限（tokens，触发轮内折叠）
         "credit_multiplier": 1,      # credits 计费倍率
         "cache_credit_ratio": 0.25,  # 缓存命中的 tokens 按该比例计费（GLM 口径）
-        "description": "glm-5.3-flash 模型",
+        "description": "GLM-5.3-flash 模型",
     },
     "pro": {
         "provider": "glm",
@@ -136,7 +145,7 @@ LLM_MODELS = {
         "context_limit": 1_000_000,
         "credit_multiplier": 10,
         "cache_credit_ratio": 0.25,
-        "description": "glm-5.3 模型",
+        "description": "GLM-5.3 模型",
     },
     "dsflash": {
         "provider": "deepseek",
@@ -146,8 +155,19 @@ LLM_MODELS = {
         "context_limit": 1_000_000,
         "credit_multiplier": 1.2,
         "cache_credit_ratio": 0.02,  # DeepSeek 缓存折扣很低（命中仅按 2% 计）
-        "description": "deepseek-flash 模型",
+        "description": "Deepseek-flash 模型",
     },
+    "kimik3": {
+        "provider": "moonshot",
+        "model": "kimi-k3",
+        "temperature": 1,          # Moonshot 限制：kimi-k3 只接受 temperature=1
+        "vision": True,
+        "video": False,
+        "context_limit": 1_048_576,
+        "credit_multiplier": 40,
+        "cache_credit_ratio": 0.1,
+        "description": "KIMI-K3 模型",
+    }
     # "xzadudu179": {
     #     "provider": "kirari",
     #     "model": "xzadudu179",
@@ -279,6 +299,10 @@ RECEIVED_FILES_KEEP_PER_USER = 50     # 每个用户最多缓存的文件条数
 RECEIVED_FILES_KEEP_TOTAL = 500       # 全局最多缓存的文件条数（防内存/磁盘膨胀）
 RECEIVED_FILES_DEDUPE_WINDOW = 60.0   # 同文件双路上报（消息段+notice）的判重窗口（秒）
 
+# 快照恢复时原模型不可用（高级模型无权限）：让用户重选模型的交互预算
+RESUME_MODEL_ATTEMPTS = 3        # 最多询问次数
+RESUME_MODEL_TIMEOUT = 60.0      # 总等待上限（秒），超时回落默认模型
+
 # ---- 浏览器工具（browsertools.py：元素监听 / 页面录制）----
 BROWSER_NAV_WAIT_MS = 2000            # 页面加载完成后的额外等待（渲染/动画起步）
 MONITOR_MAX_DURATION = 60             # 元素监听的最长采样时长（秒）
@@ -292,8 +316,8 @@ RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限
 RECORD_QUALITY_PRESETS = {
     "low": {"output_width": 640, "fps": 10, "crf": 32, "preset": "veryfast"},
     "medium": {"output_width": 1280, "fps": 15, "crf": 25, "preset": "veryfast"},
-    "high": {"output_width": 1920, "fps": 30, "crf": 10, "preset": "faster",
+    "high": {"output_width": 1920, "fps": 30, "crf": 14, "preset": "faster",
              "x264_params": "aq-mode=3:aq-strength=1.0"},
-    "max": {"output_width": 1920, "fps": 30, "crf": 4, "preset": "medium",
+    "max": {"output_width": 1920, "fps": 30, "crf": 8, "preset": "medium",
             "x264_params": "aq-mode=3:aq-strength=1.2"},
 }

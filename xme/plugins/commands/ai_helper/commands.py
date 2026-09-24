@@ -5,9 +5,10 @@ import config
 from character import get_message
 from nonebot.log import logger
 from xme.xmetools.dicttools import set_value
-from xme.xmetools.msgtools import CMD_END, aget_arg, send_to_user
+from xme.xmetools.msgtools import (CMD_END, aget_arg, get_user_id_from_arg,
+                                   send_to_user)
 
-from . import credits, history, share
+from . import credits, history, pro, share
 from .constants import (
     DEFAULT_SHARED_TITLE,
     MAX_JOINED_SHARED,
@@ -347,3 +348,27 @@ def adjust_credits(session, user, args=None):
                        qq=str(target.id), delta=f"{delta:.2f}",
                        extra=f"{credits.extra_credits(target):.2f}",
                        total=f"{credits.ai_credits_left(target):.2f}")
+
+
+def toggle_pro_user(session, user, args=None):
+    """超管维护高级模型白名单：/ai -c pro (qq号或@用户)。
+
+    不带参数列出受控模型与白名单用户；带参数则在名单上切换该用户（不在则加入、已在则移除）。
+    仅超级管理员可用。
+    """
+    if user.id not in config.SUPERUSERS:
+        return get_message("plugins", __plugin_name__, "credits_denied")
+    args = [a.strip() for a in (args or []) if a.strip()]
+    if not args:
+        models = pro.pro_models()
+        users = pro.pro_users()
+        return get_message("plugins", __plugin_name__, "pro_list",
+                           models="、".join(models) if models else "（未配置，功能未启用）",
+                           users="、".join(users) if users else "（空，仅超管可用）")
+    target_id = get_user_id_from_arg(args[0])
+    if target_id is None:
+        return get_message("plugins", __plugin_name__, "pro_usage")
+    enabled = pro.toggle_user(target_id)
+    return get_message("plugins", __plugin_name__,
+                       "pro_added" if enabled else "pro_removed", qq=str(target_id))
+

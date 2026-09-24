@@ -286,10 +286,15 @@ async def record_page_hd(url: str = "", duration: int = 0, script=None,
     if notes:
         summary += "\n宏执行备注：\n- " + "\n- ".join(notes)
 
-    from .files import send_local_file
-    ok, info = await send_local_file(session, out_path, new_name)
-    out_path.unlink(missing_ok=True)   # 即发即删：无论成败都不留文件（失败重录即得）
-    if not ok:
+    from .files import SEND_OK, SEND_UNKNOWN, send_local_file
+    status, info = await send_local_file(session, out_path, new_name)
+    if status == SEND_UNKNOWN:
+        # 超时：协议端可能仍在读该文件上传，画面已发出与否不可知——
+        # 既不删文件（删了会打断上传，残留由 temp 清理收尾），也不让 AI 盲目重发（会重复投递）
+        return {"result": f"{summary}[发送结果未知：{info}｜文件保留待 temp 清理]",
+                "no_compress": True}
+    out_path.unlink(missing_ok=True)   # 即发即删：确认送达或确认失败都不留文件
+    if status != SEND_OK:
         return {"result": f"{summary}[发送用户失败：{info}，视频已删除，请重试]",
                 "no_compress": True}
     return {"result": f"{summary}已把视频以文件形式发给用户：{info}（发送后已删除，不占用空间）。",

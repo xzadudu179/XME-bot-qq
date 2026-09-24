@@ -2,7 +2,6 @@ from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.msgtools import send_session_msg
-from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission
 from character import get_message
 
@@ -27,9 +26,8 @@ async def _(session: CommandSession):
         name = args.split(" ")[1] if len(args.split(" ")) > 1 else ""
         if not name:
             return await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_name_arg'))
-        if at and "[CQ:at,qq=" in at:
-            at_id = get_at_id(at)
-        else:
+        at_id = get_user_id_from_arg(at)
+        if at_id is None:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_at_arg'))
             return
         await session.bot.set_group_special_title(group_id=session.event.group_id, user_id=at_id, special_title=name if name != "-delete" else "", duration=0)

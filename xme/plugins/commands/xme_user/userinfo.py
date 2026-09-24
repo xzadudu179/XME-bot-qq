@@ -10,7 +10,6 @@ from .classes import user as u
 from xme.plugins.commands.xme_user.classes.user import User
 from character import get_message
 from xme.xmetools.imgtools import get_qq_avatar
-from xme.xmetools.texttools import get_at_id
 
 alias = ['个人信息', '个人资料', 'uinfo', 'info']
 cmd_name = 'userinfo'
@@ -28,10 +27,7 @@ usage = {
 # @permission(lambda sender:  sender.is_groupchat, permission_help=" & ".join(usage["permissions"]))
 async def _(session: CommandSession, user: User):
     arg = session.current_arg
-    at_id = 0
-    if arg.startswith("[CQ:at,qq="):
-        # at_id = int(arg.split("[CQ:at,qq=")[-1].split(",")[0])
-        at_id = get_at_id(arg)
+    at_id = get_user_id_from_arg(arg) or 0
     if at_id != 0:
         user = u.User.load(at_id, False)
     else:

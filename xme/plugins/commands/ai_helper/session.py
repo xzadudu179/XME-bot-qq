@@ -398,13 +398,16 @@ def user_model(user) -> str:
       未设置、别名已不存在、或该模型所属 provider 已从配置中移除。
     """
     from .llm import registry
+    from . import pro
     from .constants import LLM_AUTO_MODEL_ALIAS
     spec = user_model_setting(user)
     if spec == LLM_AUTO_MODEL_ALIAS:
         return registry.default_alias()
     if spec and registry.is_valid_model(spec):
         entry = registry.resolve_model(spec)
-        if registry.provider_configured(entry.get("provider", "")):
+        # 高级模型权限：用户被移出白名单后不能再沿用原先存下的高级模型（回落默认模型）
+        if (registry.provider_configured(entry.get("provider", ""))
+                and pro.check_spec(user.id, spec) is None):
             return spec
     return registry.default_alias()
 

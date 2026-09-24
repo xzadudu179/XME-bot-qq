@@ -44,6 +44,7 @@ from .constants import (
 )
 from . import history
 from . import constants
+from . import pro
 from . import credits
 from .llm import (
     ChatResult, LLMError, LLMErrorKind, message_to_dict,
@@ -599,13 +600,14 @@ class AIHelper:
                 if ex.kind not in LLMErrorKind.RETRYABLE or retry_times >= MAX_RETRY_TIMES:
                     raise
                 retry_times += 1
+                ai_logger.warning(f"模型调用失败（{ex.kind}），第 {retry_times} 次重试｜原始错误：{ex}")
                 # 紧急折叠后再重试：若失败源于输入超长，重试才有机会成功
                 freed, dropped = _fold_early_context(messages, fold_tools=True)
                 if freed:
                     self._archive_reasonings(dropped, phase="fold")
                     ai_logger.warning(
                         f"模型调用失败（{ex.kind}），紧急折叠上下文后重试"
-                        f"（第 {retry_times} 次，释放约 {freed:,} 字符）")
+                        f"（第 {retry_times} 次，释放约 {freed:,} 字符）｜原始错误：{ex}")
                 continue
             self.tokens += result.usage.total_tokens
             self.cached_tokens += result.usage.cached_tokens
@@ -817,7 +819,8 @@ class AIHelper:
             messages,
             model=model_entry["model"],
             tools=self.tools,
-            temperature=0.5,
+            # 采样温度按模型目录项取（缺省用全局默认）——部分模型对温度有限制
+            temperature=model_entry.get("temperature", constants.LLM_DEFAULT_TEMPERATURE),
             thinking=True,
             on_tick=on_tick,
             stats=stats,
@@ -1049,6 +1052,10 @@ class AIHelper:
         if not alias:
             ai_logger.info(f"话题分类：{category}（无对应模型，使用默认模型）")
             return None
+        if pro.is_pro_model(alias) and not pro.can_use(self.user_id):
+            # 路由目标落在高级模型名单上：无权限用户不放行（回落会话模型，已按权限校验过）
+            ai_logger.info(f"话题分类：{category} → {alias}（高级模型无权限，使用默认模型）")
+            return None
         try:
             entry = registry.resolve_model(alias)
         except Exception:
@@ -1211,7 +1218,8 @@ class AIHelper:
                     prefix += get_message("plugins", __plugin_name__, "model_fallback_prefix",
                                           model=old_model, fallback=real_entry["model"])
                     ai_logger.warning(
-                        f"模型不可用（{ex.kind}）：{old_model} → 回退到 {real_entry['model']} 重试")
+                        f"模型不可用（{ex.kind}）：{old_model} → 回退到 {real_entry['model']} 重试"
+                        f"｜原始错误：{ex}")
                     continue
                 raise
             except InsertInterrupted:

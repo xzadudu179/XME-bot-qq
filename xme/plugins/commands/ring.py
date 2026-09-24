@@ -5,7 +5,6 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
 from character import get_message
-from xme.xmetools.texttools import get_at_id
 from xme.xmetools.msgtools import image_msg
 from xme.xmetools.cmdtools import use_args
 from xme.xmetools.msgtools import send_session_msg
@@ -58,8 +57,7 @@ async def _(session: CommandSession, arg_list):
     method, at = arg_list
     logger.info(" ".join(("ring arg", str(arg_list), method, at)))
     try:
-        if at.startswith("[CQ:at,qq="):
-            qq_id = get_at_id(at)
+        qq_id = get_user_id_from_arg(at) or qq_id
         image = None
         match method:
             case "maif":

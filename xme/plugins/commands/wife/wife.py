@@ -5,10 +5,9 @@ from xme.xmetools.debugtools import debug_msg
 from xme.plugins.commands.wife import command_properties
 from character import get_message
 from .wife_tools import get_wife_id, change_wife_id
-from xme.xmetools.texttools import get_at_id
 from xme.xmetools.bottools import permission, get_group_member_name
 from xme.xmetools.imgtools import get_qq_avatar
-from xme.xmetools.msgtools import image_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, image_msg
 from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools import timetools as t
 from xme.plugins.commands.xme_user.classes.user import using_user, User, custom_limit
@@ -28,9 +27,10 @@ async def _(session: CommandSession, _: User, check_is_invalid, count_tick):
     wife_id = "NO_WIFE"
     at_name = "你"
 
-    # 查看别人的老婆
-    if arg.startswith("[CQ:at,qq="):
-        at_id = get_at_id(arg)
+    # 查看别人的老婆（at 或直接给 qq 号；取不到则 at_id 保持发送者自己）
+    at_target = get_user_id_from_arg(arg)
+    if at_target is not None:
+        at_id = at_target
         at_name = await get_group_member_name(group_id, at_id, card=True)
         at_name += f" ({at_id}) "
         wife_id: int | str = get_wife_id(group_id, at_id, members, False)

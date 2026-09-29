@@ -143,7 +143,7 @@ async def safe_get_images(bot, text):
     except Exception as ex:
         ai_logger.warning(f"提取消息中的图片失败（按无图处理）：{type(ex).__name__}: {ex}")
         return [], []
-
+    
 
 def auto_model_list() -> str:
     """auto（按话题自动选择）的类别 → 模型映射文案，供切换回执展示。"""
@@ -156,7 +156,7 @@ def get_model_list():
     pro_models = set(pro.pro_models())
     return "auto:\t(默认)自动选择合适的模型（flash）\n" + "\n".join(
         f"{n}:\t{m.get('description', '')}（计费 x{m.get('credit_multiplier', 1)} 缓存 x{m.get('cache_credit_ratio', 0.25)}）"
-        + ("【需白名单】" if n in pro_models else "")
+        + ("(pro)" if n in pro_models else "")
         for n, m in LLM_MODELS.items()
     )
 

@@ -3,7 +3,7 @@ from nonebot import CommandSession
 from xme.xmetools.doctools import SUPERUSER_PERMISSION
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.bottools import permission
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, send_session_msg
 from .classes import user as u
 from xme.xmetools.debugtools import debug_msg
 # from nonebot.log import logger

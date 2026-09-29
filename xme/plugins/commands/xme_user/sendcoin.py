@@ -2,7 +2,7 @@ from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.bottools import permission
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, send_session_msg
 from .classes import user as u
 from datetime import datetime
 from xme.plugins.commands.xme_user.classes.user import User, coin_name

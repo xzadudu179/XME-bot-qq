@@ -64,7 +64,11 @@ DEFAULT_SHARED_TITLE = "共享会话"
 MAX_HISTORY_VIEW = 30
 
 # 生成图片 credits 用量
-IMAGE_GEN_CREDITS = 80000
+# hd 按账单实际价格校准）
+IMAGE_GEN_CREDITS_NORMAL = 176000
+IMAGE_GEN_CREDITS_HD = 480000
+# 参考图数量上限（Seedream 多图融合上限 10 张；ref 与 url 两入口合计）
+IMAGE_GEN_MAX_REF_IMAGES = 10
 
 # 插入消息的图片大小上限（insert_image / gen_image 共用；url 下载与本地文件同一上限）
 MAX_INSERT_IMAGE_SIZE = 10 * 1024 * 1024
@@ -189,14 +193,27 @@ LLM_MODELS = {
 }
 
 # 能力配置：各项能力用哪个 provider/模型；api 标识实现方式
-# （"chat" 走对话协议；glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
+# （"chat" 走对话协议；"openai_images" 走 OpenAI 兼容 /images/generations；
+#   glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
 LLM_CAPABILITIES = {
     "vision": {"provider": "deepseek", "model": "deepseek-flash", "api": "chat"},
     # 视频单独一项能力：video_url 段只有 GLM 端点接受（DeepSeek 等 OpenAI 兼容端点
     # 会在 JSON 层直接拒绝该段，实测 http 422 unknown variant 'video_url'）
     "video": {"provider": "glm", "model": "glm-5.3-flash", "api": "chat"},
     "ocr": {"provider": "glm", "model": "glm-ocr", "api": "glm_layout_parsing"},
-    "image_gen": {"provider": "glm", "model": "glm-image", "api": "glm_images"},
+    # 图片生成：OpenAI 兼容 images 抽象层，当前接火山方舟 Seedream（质量档位=选模型：
+    # Seedream 没有 quality 字段）。模型 ID 以方舟控制台为准，直接改这里即可换版本/供应商；
+    # gpt-image 这类"单模型 + quality 字段"的供应商再加 quality_map（如 {"normal": "medium"}）
+    "image_gen": {
+        "provider": "doubao",
+        "api": "openai_images",
+        "input": ["text", "image"],   # 声明支持的输入模态；不支持 image 时 gen_image 显式报错
+        "models": {
+            "normal": "doubao-seedream-5-0-lite-260128",
+            "hd": "doubao-seedream-5-0-pro-260628",
+        },
+        "extra_body": {"watermark": False},
+    },
     "web_reader": {"provider": "glm", "model": "", "api": "glm_reader"},
     "moderation": {"provider": "glm", "model": "", "api": "glm_moderations"},
 }
@@ -241,6 +258,10 @@ LLM_TOPIC_CLASSIFIERS = [
     {"provider": "glm", "model": "glm-4-flashx"},
     {"provider": "glm", "model": "glm-4.5-air"},
     {"provider": "glm", "model": "glm-4.7-flash"},
+]
+LLM_FREE_MODELS = [
+    {"provider": "glm", "model": "glm-4-flashx"},
+    {"provider": "glm", "model": "glm-4.5-air"},
 ]
 LLM_TOPIC_BILLABLE = False   # 分类调用是否计入用户 credits（内部开销，默认不计）
 LLM_TOPIC_MAX_CHARS = 500    # 本次输入最多取前 N 字
@@ -307,6 +328,12 @@ RESUME_MODEL_TIMEOUT = 60.0      # 总等待上限（秒），超时回落默认
 BROWSER_NAV_WAIT_MS = 2000            # 页面加载完成后的额外等待（渲染/动画起步）
 MONITOR_MAX_DURATION = 60             # 元素监听的最长采样时长（秒）
 MONITOR_MAX_INTERVAL = 30             # 元素监听的采样间隔上限（秒）
+# screenshot_page 的等待预算（真实墙钟等待，不是虚拟时间）：
+# wait_ms 是「wait_until 满足后」的缓冲等待上限；wait_until 是条件轮询上限；
+# TOTAL_BUDGET 是单次截图的总预算，各阶段共享剩余预算，超出则跳过剩余阶段
+SCREENSHOT_MAX_WAIT_MS = 30000        # 条件满足后的缓冲等待上限（毫秒）
+SCREENSHOT_MAX_WAIT_UNTIL_MS = 60000  # wait_until 条件轮询的上限（毫秒）
+SCREENSHOT_TOTAL_BUDGET = 75          # 单次截图总预算（秒，含启动/加载/等待/出图）
 RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
 RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
 RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限

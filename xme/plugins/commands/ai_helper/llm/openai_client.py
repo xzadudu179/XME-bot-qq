@@ -36,8 +36,11 @@ def ai_log(message: str) -> None:
         logger.warning(message)
 
 
-def _map_error(status: int, body: object, provider: str) -> LLMError:
-    """把 HTTP 状态与响应体映射为统一错误（含供应商原始错误码）。"""
+def map_openai_error(status: int, body: object, provider: str) -> LLMError:
+    """把 HTTP 状态与响应体映射为统一错误（含供应商原始错误码）。
+
+    OpenAI 兼容协议的公共工具：chat（本模块）与图片生成（images.py）共用同一套分类。
+    """
     code = None
     message = ""
     if isinstance(body, dict):
@@ -178,7 +181,7 @@ class OpenAICompatProvider:
 
     def _fail(self, status: int, body: object, model: str) -> LLMError:
         """把响应映射为统一错误，同时把详情写进 ai 日志（再抛给上层决定重试/回退）。"""
-        err = _map_error(status, body, self.name)
+        err = map_openai_error(status, body, self.name)
         ai_log(f"模型调用失败 [{self.name}/{model}] {err}")
         return err
 

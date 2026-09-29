@@ -1,7 +1,7 @@
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
-from xme.xmetools.msgtools import send_session_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, send_session_msg
 from xme.xmetools.bottools import permission
 from character import get_message
 

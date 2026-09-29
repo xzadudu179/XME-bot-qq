@@ -23,9 +23,10 @@ from xme.xmetools.videotools import download_video, is_video_url, parse_video
 from xme.xmetools.videotools.probe import get_video_duration
 from xme.xmetools.msgtools import create_image_message
 from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
-from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image
+from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image, split_long_image
 from xme.xmetools.bottools import bot_call_action
-from ..constants import MAX_DOWNLOAD_FILE_SIZE, VIDEO_URL_TTL
+from ..constants import (MAX_DOWNLOAD_FILE_SIZE, SCREENSHOT_MAX_WAIT_MS,
+                         SCREENSHOT_MAX_WAIT_UNTIL_MS, VIDEO_URL_TTL)
 from xme.plugins.commands.ai_helper.llm import registry
 from config import IMAGE_TEMP_PATH, CONTAINER_BOT_PATH
 from ._common import exception_detail, ImageToolResult
@@ -423,6 +424,13 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         if probe_error:
             return (f"[{label}无法解析，未附入输入：{probe_error}]"
                     f"（可让用户重新发送该{label}，或先下载到本地改用 ref 传入）")
+        if item_type == "image_url":
+            slice_urls = _long_image_slice_urls(url)
+            if slice_urls and len(slice_urls) > 1:
+                return ImageToolResult(
+                    f"[图片内容已直接附在输入中（长图已自动分 {len(slice_urls)} 片，从上到下），"
+                    f"请逐片查看后完成：{prompt}]",
+                    [{"type": "image_url", "image_url": {"url": u}} for u in slice_urls])
         return ImageToolResult(
             f"[{label}内容已直接附在输入中，请针对该{label}完成：{prompt}]",
             [part])
@@ -434,13 +442,6 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         "若用户提出要你审查，请严谨、严格、苛刻地说明其中所有可能有问题的地方"
         "（但是没有问题不要编造）并且详细审查内容"
     )
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            part,
-        ]},
-    ]
     try:
         # 独立分析按媒体类型选模型：图片走 vision 能力，视频走 video 能力
         # （video_url 段只有 GLM 之类端点接受，用只支持图片的端点会直接 422）
@@ -448,13 +449,40 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         provider = registry.get_provider(entry["provider"])
         if provider is None:
             return f"[查看文件失败：provider {entry['provider']} 未配置]"
-        result = await provider.chat(messages, model=entry["model"], temperature=0.3)
-        # 计费 tokens 到 credits（带外调用，跟随会话模型倍率折算）
-        if agent is not None:
-            agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
+        # 本地长图按方形分片逐片分析（整图会被视觉模型压缩成缩略图）；普通内容单目标
+        targets = (_long_image_slice_urls(url) if item_type == "image_url" else None) or [url]
+        texts, failed = [], []
+        for i, target in enumerate(targets):
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": item_type, item_type: {name: target}},
+                ]},
+            ]
+            try:
+                result = await provider.chat(messages, model=entry["model"], temperature=0.3)
+            except Exception as ex:
+                # 单片失败不整体作废：已分析的片保留，失败片显式标注
+                # （模型端回源拉图偶发失败，AI 可据此只重试缺失的片）
+                flag = "限流" if getattr(ex, "kind", "") == "rate_limit" else type(ex).__name__
+                failed.append(f"第 {i + 1} 片（{flag}: {str(ex)[:80]}）")
+                continue
+            # 计费 tokens 到 credits（带外调用，跟随会话模型倍率折算）
+            if agent is not None:
+                agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
+            text = result.text or "[没有识别到内容]"
+            texts.append(f"[第 {i + 1}/{len(targets)} 片（从上到下）]\n{text}"
+                         if len(targets) > 1 else text)
+        if failed:
+            logger.warning(f"查看 url 内容部分分片失败: {'；'.join(failed)}")
+        if not texts:
+            return f"[查看文件失败：{'全部' if len(targets) > 1 else ''}分片分析失败（{'；'.join(failed)}）]"
         # 标注来源：让模型知道这是第三方分析结论、自己并未亲眼看过，
         # 避免它把别人的描述当成"我看过"（尤其自查自己产出时）
-        return INDEPENDENT_ANALYSIS_NOTE + (result.text or "[没有识别到内容]")
+        missed = (f"[注意：{len(failed)} 片分析失败，结果缺少这些部分：{'；'.join(failed)}]\n"
+                  if failed else "")
+        return INDEPENDENT_ANALYSIS_NOTE + missed + "\n".join(texts)
     except Exception as ex:
         logger.exception(f"查看 url 内容失败: {ex}")
         return f"[查看文件失败: {ex}]"
@@ -507,19 +535,97 @@ async def read_webpage(
         return f"[网页阅读失败: {ex}]"
 
 
-async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800, wait_ms: int = 1000, prompt: str = "", attach: bool = False, agent=None):
-    """对网页/SVG/HTML 做内部预览截图：存入 data/images/temp 并返回限时 url 给 AI。
+def _cache_image_url(data: bytes, ext: str = ".png") -> str:
+    """把图片字节写入限时 url 缓存目录并返回直链（供视觉模型读取，直链不作为文本暴露）。"""
+    image_dir = Path(IMAGE_TEMP_PATH)
+    image_dir.mkdir(parents=True, exist_ok=True)
+    png_path = image_dir / f"screenshot-{uuid4().hex}{ext}"
+    png_path.write_bytes(data)
+    return get_local_file_url(str(png_path))
+
+
+def _jpeg_view_bytes(data: bytes) -> bytes:
+    """把图片字节编码成给视觉模型看的 JPEG（q88）。
+
+    视觉模型要经公网回源拉取直链，大 PNG 实测频繁下载失败（DeepSeek 400
+    media_invalid），同内容 JPEG 体积小一个数量级、拉取稳定；模型看图无需无损。
+    """
+    buf = io.BytesIO()
+    with Image.open(io.BytesIO(data)) as img:
+        img.load()
+        img.convert("RGB").save(buf, format="JPEG", quality=88)
+    return buf.getvalue()
+
+
+def _long_image_slice_urls(url: str, max_slices: int = 8) -> list[str] | None:
+    """图片 url 指向本地长图（高>宽）时切成方形分片，返回各分片限时 url；否则 None。
+
+    只处理能反查到本地文件的 url（我们自己的 /file/ 限时直链，如截图缓存与
+    temp 引用）；外链长图不下载、不分片。视觉模型按长边压缩整图，长图直接看
+    会糊成缩略图，分片后每片都是方形清晰图。分片统一转 JPEG 提高模型端拉取成功率。
+    """
+    if not (url.startswith("http") and "/file/" in url and DOMAIN in url):
+        return None
+    token = url.split("/file/", 1)[1].split("?", 1)[0].strip("/")
+    info = FILE_TOKENS.get(token)
+    if not info:
+        return None
+    path = Path(info["path"])
+    if not path.is_file():
+        return None
+    try:
+        parts, (width, height) = split_long_image(path.read_bytes(), max_slices=max_slices)
+        if height <= width:
+            return None
+        has_alpha = parts[0].mode in ("RGBA", "LA", "PA") or \
+            (parts[0].mode == "P" and "transparency" in parts[0].info)
+        urls = []
+        for part in parts:
+            buf = io.BytesIO()
+            if has_alpha:
+                part.save(buf, format="PNG")
+                ext = ".png"
+            else:
+                part.convert("RGB").save(buf, format="JPEG", quality=88)
+                ext = ".jpg"
+            urls.append(_cache_image_url(buf.getvalue(), ext))
+            part.close()
+    except Exception as ex:
+        logger.info(f"长图分片跳过（{ex}）：{path.name}")
+        return None
+    return urls
+
+
+def wait_until_budget_s() -> float:
+    """wait_until 条件轮询的时长上限（秒），仅用于给模型的提示文案。"""
+    return SCREENSHOT_MAX_WAIT_UNTIL_MS / 1000
+
+
+async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800,
+                          wait_ms: int = 1000, wait_until: str = "", prompt: str = "",
+                          attach: bool = False, scale: int = 2, agent=None):
+    """对网页/SVG/HTML 做内部预览截图：整图存入 temp 并返回引用给 AI。
 
     url 与 ref 二选一（url 为公网地址，ref 为已下载的 svg/html 引用）；
-    wait_ms 控制动态内容的等待时间。prompt 非空时截图默认交给独立视觉模型按
-    prompt 分析并返回文本（中立视角）；attach=True 且本轮模型支持图片输入时，
-    才把截图直接附进当前对话自己看（适合看别人的页面，不适合验收自己的产出）。
+    等待是**真实墙钟**的，两者可一起用、顺序为「条件优先、wait_ms 作缓冲」：
+    先轮询 wait_until（CSS 选择器或 JS 表达式，如加载动画消失的条件），
+    条件满足后再额外等 wait_ms 让收尾动画/懒加载稳定；条件超时则跳过缓冲、
+    照常截图并在结果里注明「条件未满足」，不静默假装页面已就绪。
+    scale 为渲染倍率（默认 2，Retina 式物理分辨率翻倍——视觉模型会压缩大图，
+    源越清晰压完越可读）。
+    存储的始终是完整原图（发给用户/转存都用它）；页面较长（高>宽）时 view_image
+    查看会自动分片逐片读取，AI 无需关心。
+    prompt 非空时截图默认交给独立视觉模型按 prompt 分析并返回文本（中立视角；
+    长图自动逐片分析拼接）；attach=True 且本轮模型支持图片输入时，
+    才把截图（各分片）直接附进当前对话自己看（适合看别人的页面，不适合验收自己的产出）。
     """
     if bool(url) == bool(ref):
         return "[截图失败：url 与 ref 二选一]"
     width = min(max(int(width), 100), 3840)
-    height = min(max(int(height), 100), 3840)
-    wait_ms = min(max(int(wait_ms), 0), 15000)
+    height = min(max(int(height), 100), 8192)
+    scale = min(max(int(scale), 1), 2)
+    wait_ms = min(max(int(wait_ms), 0), SCREENSHOT_MAX_WAIT_MS)
+    wait_until = (wait_until or "").strip()
     if ref:
         try:
             p = Path(agent.resolve_ref(ref))
@@ -537,36 +643,51 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
         except ValueError as ex:
             return f"[截图失败：{ex}]"
     try:
-        png = await chrome_screenshot_bytes(source, width=width, height=height,
-                                            wait_ms=wait_ms, timeout_secs=45.0)
+        outcome = await chrome_screenshot_bytes(source, width=width, height=height,
+                                               wait_ms=wait_ms, timeout_secs=45.0,
+                                               scale=scale, wait_until=wait_until)
     except ValueError as ex:
         return f"[截图失败：{ex}]"
     except Exception as ex:
         logger.exception(f"截图失败 {source}")
         return f"[截图失败：{exception_detail(ex)}]"
-    # 存入图片缓存目录，生成限时 url 供 GLM 读取（直链不作为文本暴露给模型）
-    image_dir = Path(IMAGE_TEMP_PATH)
-    image_dir.mkdir(parents=True, exist_ok=True)
-    png_path = image_dir / f"screenshot-{uuid4().hex}.png"
-    png_path.write_bytes(png)
-    file_url = get_local_file_url(str(png_path))
+    png = outcome.png
+    # 等待过程如实汇报：条件超时不等于失败，但要明确告诉模型"页面可能还没就绪"
+    wait_note = ""
+    if outcome.condition is False:
+        wait_note = (f"\n（等待条件 {wait_until!r} 在 {wait_until_budget_s():g}s 内未满足："
+                     f"页面可能仍处于加载/过渡状态，已按当前状态截图，"
+                     f"不要把这张图当作「页面已就绪」的证据）")
+    elif outcome.condition is True:
+        wait_note = f"\n（等待条件 {wait_until!r} 已满足，等待 {outcome.waited_ms / 1000:.1f}s 后截图）"
+    elif outcome.waited_ms > 0:
+        wait_note = f"\n（页面加载完成后等待 {outcome.waited_ms / 1000:.1f}s 截图）"
+    if outcome.via == "oneshot":
+        wait_note += "（本次为降级截图路径：真实等待不可用，等待时长可能短于请求值）"
+    with Image.open(io.BytesIO(png)) as img:
+        phys_w, phys_h = img.size
+    dims = f"{width}x{height}"
+    if scale > 1:
+        dims += f"，{scale}x 渲染（物理 {phys_w}x{phys_h}）"
+
     prompt = (prompt or "").strip()
     if not prompt:
-        # 无分析需求：不暴露直链，登记 temp 引用供后续 view_image(ref) 使用
+        # 无分析需求：整图登记 temp 引用（唯一本体，发给用户/转存都用它）；
+        # 长图的分片是查看动作（view_image 内处理），不落存储
         ref = ""
         try:
-            res = bytes_to_file(png, agent.user_id, ".png", agent)
-            ref = res["ref"]
+            ref = bytes_to_file(png, agent.user_id, ".png", agent)["ref"]
         except FileExistsError as ex:
             # 同内容截图已存在：反查既有引用复用，不产生第二个引用
             ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
-        return (f"截图完成（{width}x{height}），已保存到 temp（引用 {ref}）。\n"
-                f"需要分析内容时可用 view_image 传入该引用。")
-    # 默认交给独立模型分析（中立视角，避免自查自证偏差）；attach=True 且本轮模型支持
-    # 图片输入时，才把截图直接附进当前对话由模型自己看（适合看别人的页面）
-    if attach and agent is not None and getattr(agent, "supports_media", lambda _t: False)("image_url"):
-        return ImageToolResult(
-            f"截图完成（{width}x{height}），截图已直接附在输入中。请针对该截图完成：{prompt}",
-            [{"type": "image_url", "image_url": {"url": file_url}}])
-    analysis = await view_item(url=file_url, prompt=prompt, item_type="image_url", agent=agent)
-    return f"[对截图（{width}x{height}）的分析结果]\n{analysis}"
+        tail = ("页面较长，用 view_image 查看该引用时会自动分片逐片读取。"
+                if phys_h > phys_w else "需要分析内容时可用 view_image 传入该引用。")
+        return f"截图完成（{dims}），已保存到 temp（引用 {ref}）。{wait_note}\n{tail}"
+    # 带 prompt：统一交给 view_item 分析（长图在查看时自动分片——attach 直附与
+    # 独立分析两条路径行为与 view_image 完全一致，避免两处分片逻辑）；
+    # 交给模型的缓存图转 JPEG：大 PNG 回源拉取实测频繁失败
+    analysis = await view_item(url=_cache_image_url(_jpeg_view_bytes(png), ".jpg"),
+                               prompt=prompt, item_type="image_url", attach=attach, agent=agent)
+    if isinstance(analysis, ImageToolResult):
+        return ImageToolResult(f"[截图完成（{dims}）]{wait_note}\n{analysis}", analysis.image_parts)
+    return f"[对截图（{dims}）的分析结果]{wait_note}\n{analysis}"

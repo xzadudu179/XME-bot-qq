@@ -4,7 +4,10 @@
 - types.py          统一数据模型（ChatResult / Usage / ToolCall / LLMError）
 - base.py           provider 协议
 - openai_client.py  httpx 实现的兼容客户端（流式 + 工具分片 + 错误分类）
+- images.py         图片生成抽象层（OpenAI 兼容 /images/generations，方舟/GPT-Image/智谱同形）
 - registry.py       provider 注册表 / 模型目录 / 能力配置（配置单点）
+- oneshot.py        通用单轮调用（程序内部用：指定提示词/模型，拿回解析好的回复）
+- topic.py          话题分类器（基于 oneshot，供动态模型分配使用）
 
 上层（agent / 工具）只依赖本包导出的符号，不直接接触任何供应商 SDK。
 """
@@ -12,7 +15,9 @@ from .types import (  # noqa: F401
     ChatResult, LLMError, LLMErrorKind, ToolCall, Usage, message_to_dict,
 )
 from .openai_client import OpenAICompatProvider  # noqa: F401
+from .images import ImageResult, OpenAIImagesProvider  # noqa: F401
 from .registry import (  # noqa: F401
-    close_all, default_alias, get_capability, get_provider,
-    list_model_aliases, resolve_model,
+    close_all, default_alias, get_capability, get_image_provider, get_provider,
+    get_provider_config, list_model_aliases, resolve_model,
 )
+from .oneshot import AskResult, ask, extract_json  # noqa: F401

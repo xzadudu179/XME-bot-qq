@@ -6,6 +6,7 @@
 - **模型目录与能力**：`constants.py` 的 `LLM_MODELS` / `LLM_CAPABILITIES`（可提交，
   不含敏感信息），用户直接改常量即可切换模型、倍率、上下文上限与各能力归属。
 """
+from .images import OpenAIImagesProvider
 from .openai_client import OpenAICompatProvider
 from .types import ChatResult, LLMError, LLMErrorKind, ToolCall, Usage  # noqa: F401 (对外导出)
 
@@ -13,6 +14,7 @@ from .types import ChatResult, LLMError, LLMErrorKind, ToolCall, Usage  # noqa: 
 _GLM_DEFAULT_BASE = "https://open.bigmodel.cn/api/paas/v4"
 
 _providers: dict[str, object] = {}
+_image_providers: dict[str, object] = {}
 
 
 def _load_provider_configs() -> dict:
@@ -101,14 +103,50 @@ def get_provider(name: str):
     return provider
 
 
+def get_image_provider(name: str):
+    """按名取图片生成 provider（惰性构造并缓存）；无该配置时回落 GLM。返回 None 表示不可用。
+
+    transport：openai_images（OpenAI 兼容 /images/generations，火山方舟/OpenAI/智谱同形）。
+    """
+    if name in _image_providers:
+        return _image_providers[name]
+    cfg = get_provider_config(name)
+    if not cfg or not cfg.get("api_key") or not cfg.get("base_url"):
+        return None
+    transport = str(cfg.get("image_transport") or "openai_images")
+    if transport != "openai_images":
+        raise LLMError(LLMErrorKind.BAD_REQUEST,
+                       f"provider {name} 的图片 transport={transport} 尚未实现",
+                       provider=name)
+    provider = OpenAIImagesProvider(
+        name, cfg["base_url"], cfg["api_key"],
+        timeout=float(cfg.get("image_timeout") or 120.0),
+        extra_headers=cfg.get("extra_headers"),
+    )
+    _image_providers[name] = provider
+    return provider
+
+
+def get_provider_config(name: str) -> dict:
+    """按名取 provider 配置副本（base_url/api_key 等；glm 缺配置时回落官方端点）。
+
+    chat（get_provider）与图片生成（get_image_provider）共用的配置查询入口。
+    """
+    cfg = dict(_load_provider_configs().get(name) or {})
+    if not cfg and name == "glm":
+        cfg = _glm_fallback()
+    return cfg
+
+
 async def close_all() -> None:
     """释放所有已建 provider 的连接（进程退出/重载时调用）。"""
-    for p in list(_providers.values()):
-        try:
-            await p.close()
-        except Exception:
-            pass
-    _providers.clear()
+    for cache in (_providers, _image_providers):
+        for p in list(cache.values()):
+            try:
+                await p.close()
+            except Exception:
+                pass
+        cache.clear()
 
 
 # ---------- 模型目录 ----------
@@ -124,6 +162,18 @@ def default_alias() -> str:
     alias = getattr(constants, "LLM_DEFAULT_MODEL", "flash")
     return alias if alias in _model_table() else next(iter(_model_table()), "flash")
 
+def free_models() -> list[str]:
+    """候选分类模型（新配置为列表；兼容早期的单配置项写法），归一成 provider/model 规格。"""
+    from .. import constants
+    cands = getattr(constants, "LLM_TOPIC_CLASSIFIERS", None)
+    if isinstance(cands, list) and cands:
+        items = [dict(c) for c in cands if isinstance(c, dict)]
+    else:
+        single = getattr(constants, "LLM_TOPIC_CLASSIFIER", None)
+        items = [dict(single)] if (isinstance(single, dict) and single.get("provider")
+                                   and single.get("model")) else []
+    return [f"{c['provider']}/{c['model']}" for c in items
+            if c.get("provider") and c.get("model")]
 
 def resolve_model(spec: str) -> dict:
     """把"模型别名"或"provider/model"解析为目录项。

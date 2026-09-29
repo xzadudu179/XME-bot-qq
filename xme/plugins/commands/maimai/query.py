@@ -15,7 +15,7 @@ from xme.plugins.commands.xme_user.classes.user import (
     try_load,
 )
 from xme.xmetools.imgtools import get_html_image_async, get_qq_avatar
-from xme.xmetools.msgtools import image_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, image_msg
 from xme.xmetools.timetools import TimeUnit
 
 from . import api, binding, constants, records, render
@@ -61,7 +61,6 @@ def _split_skin(arg: str) -> tuple[str | None, str]:
         return None, arg
     rest = (arg[:match.start()] + " " + arg[match.end():]).strip()
     return match.group(1), rest
-
 
 def _resolve_target(session: CommandSession, user: User, arg: str) -> tuple[str, str, int | None] | None:
     """解析查分目标，Token 优先（Token 只能读到它对应账号的成绩，故可用于代查）。

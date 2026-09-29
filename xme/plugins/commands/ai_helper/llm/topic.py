@@ -3,20 +3,19 @@
 
 设计要点：
 - 类别清单从 `constants.LLM_TOPIC_ROUTING` 的键派生（单点维护）；
-- 分类模型由 `constants.LLM_TOPIC_CLASSIFIERS` 给出**候选链**，按顺序尝试，前一个失败
-  就换下一个（免费模型限流严重、个别型号排队久，靠候选链保住可用性）；
+- 分类模型由 `constants.LLM_TOPIC_CLASSIFIERS` 给出**候选链**，实际调用交给
+  llm.oneshot.ask（超时/失败自动换下一个候选——免费模型限流严重，靠候选链保可用性）；
 - **带上下文**：分类输入包含最近几轮对话 + 本次输入——角色扮演/设定常出现在对话开头，
   只看当前一句会把"嗯嗯"这类短输入判错；
-- 调用形态：非流式 + 静默（不写流式日志）；
+- 调用形态：分类这类内部小调用保持流式日志可见（silent=False），便于排查分类质量；
 - 一律兜底：候选链全部失败、超时、输出无法识别 → 返回兜底类别并记日志；连续失败则熔断
   一段时间，期间直接兜底（不再为每次对话白等一次失败请求）。
 """
-import asyncio
 import time
 
 from nonebot.log import logger
 
-from . import registry
+from . import oneshot, registry
 
 _fail_streak = 0         # 候选链整体连续失败次数
 _circuit_until = 0.0     # 熔断截止时间戳
@@ -50,8 +49,8 @@ def parse_category(raw: str) -> str:
     return fallback
 
 
-def build_messages(text: str, context: str = "", max_chars: int = 500) -> list:
-    """构造分类提示词：可选带最近对话，再给本次输入，严格要求只输出类别词。"""
+def build_prompt(text: str, context: str = "", max_chars: int = 500) -> tuple[str, str]:
+    """构造分类提示词，返回 (system, user)：可选带最近对话，再给本次输入，严格要求只输出类别词。"""
     cats = "、".join(_categories())
     system = (
         "你是一个话题分类器。请综合「最近对话」与「本次输入」，判断这次对话属于哪一类，"
@@ -61,14 +60,21 @@ def build_messages(text: str, context: str = "", max_chars: int = 500) -> list:
     if (context or "").strip():
         body += f"[最近对话]\n{context.strip()}\n\n"
     body += f"[本次输入]\n{(text or '')[:max_chars]}"
-    return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": body},
-    ]
+    return system, body
 
 
-def _is_rate_limited(ex: Exception) -> bool:
-    return getattr(ex, "kind", "") == "rate_limit"
+def _candidates() -> list[str]:
+    """候选分类模型（新配置为列表；兼容早期的单配置项写法），归一成 provider/model 规格。"""
+    from .. import constants
+    cands = getattr(constants, "LLM_TOPIC_CLASSIFIERS", None)
+    if isinstance(cands, list) and cands:
+        items = [dict(c) for c in cands if isinstance(c, dict)]
+    else:
+        single = getattr(constants, "LLM_TOPIC_CLASSIFIER", None)
+        items = [dict(single)] if (isinstance(single, dict) and single.get("provider")
+                                   and single.get("model")) else []
+    return [f"{c['provider']}/{c['model']}" for c in items
+            if c.get("provider") and c.get("model")]
 
 
 def _note_failure() -> None:
@@ -84,23 +90,11 @@ def _note_failure() -> None:
         logger.warning(f"话题分类连续失败，暂停分类 {cooldown:g}s（期间使用默认模型）")
 
 
-def _candidates() -> list[dict]:
-    """候选分类模型（新配置为列表；兼容早期的单配置项写法）。"""
-    from .. import constants
-    cands = getattr(constants, "LLM_TOPIC_CLASSIFIERS", None)
-    if isinstance(cands, list) and cands:
-        return [dict(c) for c in cands if isinstance(c, dict)]
-    single = getattr(constants, "LLM_TOPIC_CLASSIFIER", None)
-    if isinstance(single, dict) and single.get("provider") and single.get("model"):
-        return [dict(single)]
-    return []
-
-
 async def classify_topic(text: str, context: str = "", agent=None) -> str:
     """判断话题类别，返回类别名（任何失败都返回兜底类别，不抛异常）。
 
     context：最近对话文本（调用方从历史提取），用于识别"角色扮演在开头定义"这类情况。
-    agent：按需计费（LLM_TOPIC_BILLABLE 为真时累加到 other_credits）。
+    agent：按需计费（LLM_TOPIC_BILLABLE 为真时把本次用量累加到 other_credits）。
     """
     from .. import constants
     fallback = _fallback_category()
@@ -111,42 +105,22 @@ async def classify_topic(text: str, context: str = "", agent=None) -> str:
     if time.time() < _circuit_until:
         return fallback   # 熔断期内直接兜底，省掉失败等待
 
-    timeout = float(getattr(constants, "LLM_TOPIC_TIMEOUT", 8.0))
-    max_chars = int(getattr(constants, "LLM_TOPIC_MAX_CHARS", 500))
-    messages = build_messages(text, context, max_chars)
-    billable = bool(getattr(constants, "LLM_TOPIC_BILLABLE", False))
-
-    result = None
-    for cand in _candidates():
-        provider = registry.get_provider(cand.get("provider", ""))
-        if provider is None:
-            logger.info(f"话题分类：provider {cand.get('provider')} 未配置，跳过 {cand.get('model')}")
-            continue
-        model = cand.get("model") or ""
-        try:
-            result = await asyncio.wait_for(
-                provider.chat(messages, model=model, temperature=0.0, silent=False),
-                timeout=timeout)
-        except asyncio.TimeoutError:
-            logger.info(f"话题分类：{model} 超时（>{timeout:g}s），尝试下一个候选")
-            continue
-        except Exception as ex:
-            # 限流或其他错误都换下一个候选（免费模型限流很常见）
-            flag = "限流" if _is_rate_limited(ex) else type(ex).__name__
-            logger.info(f"话题分类：{model} 调用失败（{flag}: {ex}），尝试下一个候选")
-            continue
-        if agent is not None and billable:
-            entry = registry.model_by_name(model) or {}
-            agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
-        break
+    system, prompt = build_prompt(
+        text, context, int(getattr(constants, "LLM_TOPIC_MAX_CHARS", 500)))
+    result = await oneshot.ask(
+        prompt, system=system, model=_candidates(), temperature=0.0,
+        timeout=float(getattr(constants, "LLM_TOPIC_TIMEOUT", 8.0)),
+        silent=False, label="话题分类")
 
     if result is None:
         _note_failure()
         return fallback
 
     _fail_streak = 0   # 成功一次即解除熔断计数
-    raw = (result.text or "").strip()
-    category = parse_category(raw)
-    if category == fallback and raw and fallback not in raw:
-        logger.warning(f"话题分类输出无法识别：{raw[:80]!r}，本轮按「{fallback}」处理")
+    category = parse_category(result.text)
+    if category == fallback and result.text and fallback not in result.text:
+        logger.warning(f"话题分类输出无法识别：{result.text[:80]!r}，本轮按「{fallback}」处理")
+    if agent is not None and bool(getattr(constants, "LLM_TOPIC_BILLABLE", False)):
+        entry = registry.model_by_name(result.model) or {}
+        agent.other_credits += result.usage.billable_tokens(registry.cache_credit_ratio(entry))
     return category

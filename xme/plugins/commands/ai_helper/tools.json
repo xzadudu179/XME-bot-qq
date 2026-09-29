@@ -15,7 +15,7 @@
         "type": "function",
         "function": {
             "name": "gen_image",
-            "description": "通过提示词和指定大小和质量调用 ai 生成图片，图片生成成功会直接在本轮会话结束后发给用户或返回 url，失败会返回 \"图片生成失败：原因\"",
+            "description": "通过提示词生成图片（支持参考图做图生图/风格迁移/多图融合）。生成成功后按 action 处理：send 直接插入本轮回复发给用户；save 保存为文件并返回引用（可再 send_file / insert_image / 继续编辑）。如果要生成角色插图，建议使用双视图/三视图或多张不同图片作为图片输入，否则AI可能会倾向于在原图中编辑，而不是创建该角色的相关图片。失败会返回\"图片生成失败：原因\"。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -25,11 +25,29 @@
                     },
                     "action": {
                         "type": "string",
-                        "description": "图片生成后的操作，可以是 \"send\" 或者 \"url\"，send 为在本轮会话末尾发给用户，url 则是返回图片 url。"
+                        "description": "send（默认）：插入本轮回复末尾发给用户；save：保存为文件并返回引用"
                     },
                     "size": {
                         "type": "string",
-                        "description": "图片大小，格式为 数字x数字（默认1024x1024）"
+                        "description": "图片尺寸：\"2k\"/\"3k\"/\"4k\" 或像素 WIDTHxHEIGHT（默认 2k；注意不支持 1K）"
+                    },
+                    "quality": {
+                        "type": "string",
+                        "description": "normal（默认，速度快）或 hd（细节更佳，消耗更多额度）"
+                    },
+                    "ref": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "参考图的文件引用列表（temp/history 的 file_N，最多 10 张），用于图生图/风格迁移/多图融合"
+                    },
+                    "url": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "参考图的公网直链列表（http/https，与 ref 合计最多 10 张）——用户发来的图片通常用这个"
+                    },
+                    "save_to": {
+                        "type": "string",
+                        "description": "仅 action=save 时生效：填 history 内保存名（如 \"画作/日落.png\"，文件夹须已存在）则转存 history，不填存 temp"
                     }
                 },
                 "required": [
@@ -207,7 +225,7 @@
         "type": "function",
         "function": {
             "name": "view_image",
-            "description": "使用视觉模型查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。内容默认交给独立视觉模型分析后以文本返回（中立第三方视角，避免自查自证偏差）。只有当你要看的是「别人的东西」（用户发来的、网上找的、别人的页面）时才传 attach=true 把内容直接附进当前对话自己看；【验证你自己产出或写的东西】（生成的图表、你写的 SVG/HTML 截图、你编辑过的文件效果）一律不要 attach，让独立模型替你挑毛病，否则你容易因为「这是我做的」而看漏问题。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
+            "description": "使用视觉模型查看指定 url 或者 ref 里的图片，并按你给的 prompt 解析回答。内容默认交给独立视觉模型分析后以文本返回（中立第三方视角，避免自查自证偏差）。只有当你要看的是「别人的东西」（用户发来的、网上找的、别人的页面）时才传 attach=true 把内容直接附进当前对话自己看；【验证你自己产出或写的东西】（生成的图表、你写的 SVG/HTML 截图、你编辑过的文件效果）一律不要 attach，让独立模型替你挑毛病，否则你容易因为「这是我做的」而看漏问题。长图（高超过宽）会自动切成方形分片逐片查看/分析，无需手动处理。若 url 无法解析（链接失效/不是该类型内容/内网地址），工具会显式返回失败原因而非假装已附上；此时可请用户重新发送或改用本地 ref。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -899,7 +917,7 @@
         "type": "function",
         "function": {
             "name": "screenshot_page",
-            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用。\nprompt 非空时截图默认交给独立视觉模型分析并返回文本；只有看图「别人的页面」时才传 attach=true 直接附入当前对话自己看，【验收你自己写的 SVG/HTML 效果】不要 attach，让独立模型挑问题。\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
+            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用（默认 2x 渲染，文字清晰）。\n保存的始终是完整原图（发给用户/转存都用这一个引用）；页面较长（高超过宽）时用 view_image 查看会自动分片逐片读取，长页面直接给足 height（如 2000-8192）即可。\nprompt 非空时截图默认交给独立视觉模型分析并返回文本（长图会自动逐片分析拼接）；只有看图「别人的页面」时才传 attach=true 直接附入当前对话自己看，【验收你自己写的 SVG/HTML 效果】不要 attach，让独立模型挑问题。\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -917,11 +935,15 @@
                     },
                     "height": {
                         "type": "integer",
-                        "description": "视口高度像素，100-3840，默认 800"
+                        "description": "视口高度像素，100-8192，默认 800；长页面给足高度（超过宽度会自动分片）"
+                    },
+                    "scale": {
+                        "type": "integer",
+                        "description": "渲染倍率，1 或 2（默认 2 = Retina 式物理分辨率翻倍，文字更清晰；想省体积才传 1）"
                     },
                     "wait_ms": {
                         "type": "integer",
-                        "description": "等待页面加载/动态渲染的毫秒数，0-15000，默认 1000"
+                        "description": "页面加载完成后额外**真实等待**的毫秒数（0-30000，默认 1000）。与 wait_until 一起用时它只作「条件满足后的缓冲等待」——别靠加大它硬等加载完成。"
                     },
                     "prompt": {
                         "type": "string",
@@ -930,6 +952,10 @@
                     "attach": {
                         "type": "boolean",
                         "description": "是否把内容直接附进当前对话让自己看（默认 false = 交给独立视觉模型分析后返回文本）。仅当你确认看的是「别人的东西」时传 true；验证自己产出/自己写的东西时保持 false。"
+                    },
+                    "wait_until": {
+                        "type": "string",
+                        "description": "可选等待条件：CSS 选择器或 JS 表达式，轮询到为真才截图（上限 60s）。等加载动画/进度条结束时用，例：\".loading{display:none}\" 或 \"document.body.innerText.includes('Wait For') === false\"。超时不报错：会按当前状态截图并在结果里注明「条件未满足」。"
                     }
                 },
                 "required": []

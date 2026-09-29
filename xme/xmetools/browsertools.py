@@ -95,9 +95,12 @@ class CDPBrowser:
     退出时保证 chrome 进程被杀、临时 profile 被清。
     """
 
-    def __init__(self, width: int = 1280, height: int = 720):
+    def __init__(self, width: int = 1280, height: int = 720,
+                 extra_args: list[str] | None = None):
         self.width = int(width)
         self.height = int(height)
+        # 追加的 chrome 启动参数（如 file:// 源传"死代理"以整体关闭页面网络）
+        self._extra_args = list(extra_args or [])
         self._msg_id = 0
         self._frame_cb = None    # 录制中的帧回调 on_frame(jpeg_bytes, timestamp)
         self._proc = None
@@ -153,6 +156,7 @@ class CDPBrowser:
         # 无独显时 chrome 自动回退 SwiftShader，功能不受影响
         launch_args.insert(1, "--headless=new")
         launch_args += ["--use-gl=angle", "--use-angle=gl-egl"]
+        launch_args += self._extra_args
         launch_args.append("about:blank")
         self._proc = await asyncio.create_subprocess_exec(
             *launch_args,
@@ -301,6 +305,38 @@ class CDPBrowser:
             desc = (result["exceptionDetails"].get("exception") or {}).get("description") or "未知 JS 错误"
             raise CDPError(f"JS 执行失败: {desc[:200]}")
         return result.get("result", {}).get("value")
+
+    async def wait_until(self, expression: str, timeout: float,
+                         interval: float = 0.2) -> bool:
+        """轮询 JS 表达式直到取值为真或超时；返回是否在时限内满足。
+
+        表达式在页面上下文求值（与 evaluate 同语义），轮询期间页面抛错按"未满足"继续等，
+        适合等加载动画消失/某元素出现这类条件。
+        """
+        deadline = time.monotonic() + max(0.0, timeout)
+        while True:
+            try:
+                if await self.evaluate(expression):
+                    return True
+            except Exception:
+                pass          # 导航/上下文切换期间求值可能失败，忽略后重试
+            if time.monotonic() >= deadline:
+                return False
+            await asyncio.sleep(interval)
+
+    async def screenshot(self, *, scale: int = 1, timeout: float = 20.0) -> bytes:
+        """按当前视口截图，返回 PNG 字节；scale 为渲染倍率（Retina 式物理分辨率翻倍）。"""
+        await self._command("Emulation.setDeviceMetricsOverride", {
+            "width": self.width, "height": self.height,
+            "deviceScaleFactor": max(1, int(scale)), "mobile": False,
+        }, timeout=timeout)
+        result = await self._command("Page.captureScreenshot", {
+            "format": "png", "fromSurface": True,
+        }, timeout=timeout)
+        data = result.get("data") or ""
+        if not data:
+            raise CDPError("截图返回为空")
+        return base64.b64decode(data)
 
     # ---------- 真实输入注入 ----------
 

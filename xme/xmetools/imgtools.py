@@ -1,4 +1,5 @@
 import time
+from dataclasses import dataclass
 import base64
 import os
 from xme.xmetools import filetools
@@ -646,14 +647,118 @@ if __name__ == "__main__":
     take_screenshot(2)
 
 
-async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800,
-                                  wait_ms: int = 1000, timeout_secs: float = 45.0) -> bytes:
-    """用系统 Chrome 无头模式对 url 截图，返回 PNG 字节。
+def split_long_image(data: bytes, max_slices: int = 8) -> tuple[list, tuple[int, int]]:
+    """把长截图按宽度切成方形分片（视觉模型会压缩大图，越长的图压得越狠）。
 
-    wait_ms 经 --virtual-time-budget 控制页面加载/动态渲染的等待时间；
-    width/height 为视口大小。file:// 源渲染时页面网络整体关闭（所有
-    http(s)/ws 子资源请求逼进死代理，loopback 与 IP 直连也不例外），
-    页面内容不可信时 iframe/img 借此也探不到内网；公网 url 源需正常联网。
+    高度不超过宽度（物理像素）时原样返回单元素列表；超出时按高度 = 宽度逐片切，
+    分片数超过 max_slices 则放弃分片原样返回（宁可整图也不无限切）。
+    返回 (分片 Image 列表, 原图尺寸 (宽, 高))，只做像素切割，编码与落盘由调用方决定。
+    """
+    with Image.open(BytesIO(data)) as img:
+        img.load()   # 切块/拷贝只在句柄关闭后仍可用：先把像素读进内存
+        width, height = img.size
+        count = -(-height // width)   # 向上取整的切片数
+        if height <= width or count > max_slices:
+            return [img.copy()], (width, height)
+        parts = [img.crop((0, i * width, width, min((i + 1) * width, height)))
+                 for i in range(count)]
+        return parts, (width, height)
+
+
+@dataclass
+class ScreenshotOutcome:
+    """截图结果：图片字节 + 等待过程信息（供工具层如实汇报给模型）。"""
+
+    png: bytes
+    waited_ms: int                  # 真实等待总时长（加载后的缓冲 + 条件等待）
+    condition: bool | None = None   # None=未用 wait_until；True=条件满足；False=超时未满足
+    via: str = "cdp"                # 出图路径：cdp（真实等待）/ oneshot（降级兜底）
+
+
+def _file_offline_args(url: str) -> list[str]:
+    """file:// 源渲染时整体关闭页面网络：所有 http(s)/ws 子资源请求逼进死代理，
+    loopback 与 IP 直连也不例外），页面内容不可信时 iframe/img 借此也探不到内网。"""
+    if url.startswith("file:"):
+        return ["--proxy-server=http://127.0.0.1:9", "--proxy-bypass-list=<-loopback>"]
+    return []
+
+
+async def _cdp_screenshot(url: str, *, width: int, height: int, wait_ms: int,
+                          scale: int, wait_until: str, budget: float) -> ScreenshotOutcome:
+    """CDP 路径截图：真实墙钟等待（非虚拟时间）。
+
+    等待顺序为「条件优先、wait_ms 作缓冲」：
+    1) 导航并等 readyState 到 complete；
+    2) 给了 wait_until 就轮询该 JS 表达式到真值或超时（超时不算失败，如实上报）；
+    3) 条件满足（或未给条件）时再真等 wait_ms 作缓冲；条件超时则跳过缓冲。
+    """
+    from xme.xmetools.browsertools import CDPBrowser, CDPError
+
+    deadline = time.monotonic() + max(5.0, budget)
+    waited_ms = 0
+    condition: bool | None = None
+    async with CDPBrowser(width=width, height=height,
+                          extra_args=_file_offline_args(url)) as browser:
+        # 1) 导航：readyState 轮询到 complete（navigate 内部用剩余时间兜底）
+        await browser.navigate(url, wait_ms=0, timeout=max(5.0, deadline - time.monotonic()))
+        expr = (wait_until or "").strip()
+        if expr:
+            # 2) 条件等待：预算取「剩余总预算」与「条件上限」的较小值
+            remain = deadline - time.monotonic()
+            if remain > 0.5:
+                t0 = time.monotonic()
+                condition = await browser.wait_until(expr, timeout=min(remain, wait_until_ms_cap()))
+                waited_ms += int((time.monotonic() - t0) * 1000)
+        if wait_ms > 0 and condition in (None, True):
+            # 3) 缓冲等待：条件超时（condition=False）时跳过
+            sleep_ms = min(int(wait_ms), max(0, int((deadline - time.monotonic()) * 1000)))
+            if sleep_ms > 0:
+                await asyncio.sleep(sleep_ms / 1000)
+                waited_ms += sleep_ms
+        return ScreenshotOutcome(png=await browser.screenshot(scale=scale),
+                                 waited_ms=waited_ms, condition=condition, via="cdp")
+
+
+def wait_until_ms_cap() -> float:
+    """wait_until 条件轮询的时长上限（秒）。"""
+    from xme.plugins.commands.ai_helper import constants
+    return float(getattr(constants, "SCREENSHOT_MAX_WAIT_UNTIL_MS", 60000)) / 1000
+
+
+async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800,
+                                  wait_ms: int = 1000, timeout_secs: float = 45.0,
+                                  scale: int = 1, wait_until: str = "") -> ScreenshotOutcome:
+    """用系统 Chrome 无头模式对 url 截图，返回图片字节与等待过程信息。
+
+    wait_ms 是**真实墙钟**等待（页面加载完成后、条件满足后的缓冲等待毫秒数）；
+    wait_until 为可选等待条件（CSS 选择器或 JS 表达式），条件优先、wait_ms 作缓冲：
+    条件超时会跳过缓冲并如实上报（不是失败）。
+    width/height 为视口大小（CSS 像素）；scale 为渲染倍率（>1 时物理分辨率按倍率
+    放大，即 Retina 式渲染，文字与小元素更清晰，供视觉模型压缩后仍可读）。
+    file:// 源渲染时页面网络整体关闭（见 _file_offline_args）；公网 url 源需正常联网。
+    主路径走 CDP（可真等待）；CDP 启动/通信异常时降级为一次性截图兜底（via="oneshot"）。
+    """
+    from xme.plugins.commands.ai_helper import constants
+    budget = float(getattr(constants, "SCREENSHOT_TOTAL_BUDGET", 75))
+    try:
+        return await _cdp_screenshot(url, width=int(width), height=int(height),
+                                     wait_ms=int(wait_ms), scale=int(scale),
+                                     wait_until=wait_until, budget=budget)
+    except Exception as ex:
+        logger.warning(f"CDP 截图失败，降级为一次性截图兜底：{type(ex).__name__}: {ex}")
+    return ScreenshotOutcome(
+        png=await _oneshot_screenshot(url, width=width, height=height, wait_ms=wait_ms,
+                                      timeout_secs=timeout_secs, scale=scale),
+        waited_ms=0, condition=None, via="oneshot")
+
+
+async def _oneshot_screenshot(url: str, width: int = 1280, height: int = 800,
+                              wait_ms: int = 1000, timeout_secs: float = 45.0,
+                              scale: int = 1) -> bytes:
+    """一次性 Chrome 截图（--screenshot + --virtual-time-budget）兜底路径。
+
+    注意 --virtual-time-budget 推进的是**虚拟时钟**（会快进定时器、遇网络请求暂停），
+    实际墙钟耗时可能远小于 wait_ms，因此仅作 CDP 不可用时的兜底。
     """
     import asyncio
     import tempfile
@@ -667,8 +772,9 @@ async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800
         f"--virtual-time-budget={int(max(0, wait_ms))}",
         f"--timeout={int(timeout_secs * 1000)}",
     ]
-    if url.startswith("file:"):
-        cmd += ["--proxy-server=http://127.0.0.1:9", "--proxy-bypass-list=<-loopback>"]
+    if int(scale) > 1:
+        cmd.append(f"--force-device-scale-factor={int(scale)}")
+    cmd += _file_offline_args(url)
     cmd.append(url)
     try:
         proc = await asyncio.create_subprocess_exec(

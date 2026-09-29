@@ -730,7 +730,7 @@ class AIHelper:
             if result is AISTOP:
                 return AISTOP
             spent = self.spent_secs.get_timer_value()
-            spent_msg = f"本轮对话总计消耗 {spent:,.2f}s"
+            spent_msg = f"当前总计消耗 {spent:,.2f}s"
             ai_logger.info(
                 f"[{spent_msg}]工具调用完毕，名称 {name} 结果类型={type(result)}, str={str(result)[:100]!r}...{str(result)[-100:]!r}"
             )

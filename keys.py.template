@@ -82,6 +82,22 @@ SEARCH_PROVIDERS = {
     # "brave": {"api_key": "", "proxy": True},
 }
 
+# ---- MCP 服务器（Model Context Protocol）：dict 顺序即加载顺序，删除条目即停用该 server ----
+# server 的工具会以 mcp_<server名>_<工具名> 注册进 AI 工具列表（constants.MCP_ENABLED=False 整体关闭）。
+# 两种传输：http（远程 server，填 url）/ stdio（本地进程 server，填 command），transport 字段可省略
+# （有 url 视为 http，有 command 视为 stdio）。单 server 连接失败不影响 bot 其余功能。
+MCP_SERVERS = {
+    # GitHub 官方远程 MCP server（仓库/Issue/PR 检索读写；PAT 在 github.com/settings/
+    # personal-access-tokens 生成 fine-grained，只圈需要的仓库，只读模式勾 Read 即可）
+    # "github": {
+    #     "url": "https://api.githubcopilot.com/mcp/",
+    #     "token": "<GitHub fine-grained PAT>",   # Authorization: Bearer 直连
+    #     "readonly": True,                        # 加 X-MCP-Readonly: true 请求头
+    # },
+    # 本地 stdio server 示例（blender-mcp：需先 pip install uvx 且 Blender 侧装好插件开端口）
+    # "blender": {"command": ["uvx", "blender-mcp"], "env": {}},
+}
+
 def generate_file_token(path: str, ttl: float | None = None) -> str:
     # 发放前清掉过期项：访问端只在 token 被再次访问时才惰性删除，
     # 从未被再次访问的过期 token 会常驻内存

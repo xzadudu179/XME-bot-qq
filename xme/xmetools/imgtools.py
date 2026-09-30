@@ -677,10 +677,19 @@ class ScreenshotOutcome:
 
 def _file_offline_args(url: str) -> list[str]:
     """file:// 源渲染时整体关闭页面网络：所有 http(s)/ws 子资源请求逼进死代理，
-    loopback 与 IP 直连也不例外），页面内容不可信时 iframe/img 借此也探不到内网。"""
-    if url.startswith("file:"):
-        return ["--proxy-server=http://127.0.0.1:9", "--proxy-bypass-list=<-loopback>"]
-    return []
+    loopback 与 IP 直连也不例外，页面内容不可信时 iframe/img 借此也探不到内网。
+    例外：ai_helper 常量 SCREENSHOT_FILE_CDN_BYPASS 白名单内的公共包托管 CDN
+    （unpkg / jsdelivr / cdnjs）走直连放行，供本地 HTML 预览加载 three.js 等库；
+    重定向逐跳重新判定代理规则，内网依旧不可达。"""
+    if not url.startswith("file:"):
+        return []
+    try:
+        from xme.plugins.commands.ai_helper import constants
+        cdns = getattr(constants, "SCREENSHOT_FILE_CDN_BYPASS", ()) or ()
+    except ImportError:
+        cdns = ()
+    bypass = "<-loopback>" + "".join(f";{d}" for d in cdns)
+    return ["--proxy-server=http://127.0.0.1:9", f"--proxy-bypass-list={bypass}"]
 
 
 async def _cdp_screenshot(url: str, *, width: int, height: int, wait_ms: int,

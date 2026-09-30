@@ -552,9 +552,10 @@ class AIHelper:
     async def _distill_thinking(self) -> str:
         """把本轮的思考过程提炼成短思路笔记（随条目存入历史，下轮随正文注入上下文）。
 
+        总开关 THINKING_NOTE_ENABLED=False 时直接跳过（不发起提炼调用）；
         无思考内容 / 未配置提炼提示词 / 提炼失败时返回空串，绝不阻断对话。
         """
-        if not self.round_reasonings:
+        if not constants.THINKING_NOTE_ENABLED or not self.round_reasonings:
             return ""
         try:
             prompt = read_from_path("./ai_configs.json")[__plugin_name__].get("thinking") or ""
@@ -1152,10 +1153,69 @@ class AIHelper:
         clear_snapshot(self.user_id)   # 已结算即视为本轮结束：避免恢复后再扣一次
         return data
 
+    async def load_mcp_tools(self) -> None:
+        """把 keys.MCP_SERVERS 里各 MCP server 的工具合并进本轮工具列表（每轮一次）。
+
+        总开关 MCP_ENABLED=False 或未配置任何 server 时直接返回；单 server 失败
+        只 warning 跳过，原生工具不受影响。工具名注册为 mcp_<server>_<工具名>
+        （不同 server 的同名工具互不挤占），description 加 [MCP:<server>] 前缀。
+        """
+        if not constants.MCP_ENABLED:
+            return
+        try:
+            from keys import MCP_SERVERS
+        except (ImportError, AttributeError):
+            return
+        if not MCP_SERVERS:
+            return
+        from .llm.mcp import MCPError, get_client
+        for server_name, config in MCP_SERVERS.items():
+            try:
+                client = get_client(str(server_name), config, timeout=constants.MCP_TIMEOUT)
+                for tool in await client.list_tools():
+                    name, desc = str(tool.get("name") or ""), str(tool.get("description") or "")
+                    schema = tool.get("inputSchema") or {}
+                    full_name = f"mcp_{server_name}_{name}"
+                    if full_name in self.tool_functions:
+                        ai_logger.warning(f"MCP 工具 {full_name} 与现有工具重名，已跳过")
+                        continue
+                    mcp_schema = {
+                        "type": "function",
+                        "function": {
+                            "name": full_name,
+                            "description": f"[MCP:{server_name}] {desc}",
+                            "parameters": {
+                                "type": "object",
+                                "properties": schema.get("properties") or {},
+                                **({"required": schema["required"]}
+                                   if schema.get("required") else {}),
+                            },
+                        },
+                    }
+                    try:
+                        _validate_tools([mcp_schema])
+                    except ValueError as ex:
+                        ai_logger.warning(f"MCP 工具 {full_name} schema 不合法，已跳过：{ex}")
+                        continue
+
+                    # 默认参数绑定当前迭代值：闭包直接捕获变量会全部指向最后一轮
+                    async def _call(_tool_name=name, _client=client, **kwargs):
+                        return {"result": await _client.call_tool(
+                            _tool_name, kwargs), "no_compress": True}
+
+                    self.tool_functions[full_name] = _call
+                    self.tools.append(mcp_schema)
+            except MCPError as ex:
+                ai_logger.warning(f"MCP server {server_name} 不可用，已跳过：{ex}")
+            except Exception as ex:
+                ai_logger.warning(f"MCP server {server_name} 加载失败，已跳过："
+                                  f"{type(ex).__name__}: {ex}")
+
     async def user_talk(self, session: CommandSession, role, user, text):
         self.spent_secs.start()
         self.pending_messages.clear()
         self.round_reasonings.clear()
+        await self.load_mcp_tools()
         prefix = ""
         if self.resume_messages is not None:
             # /ai --continue：以上次快照的完整上下文（用户输入/思考/工具结果/插入）重入循环

@@ -117,9 +117,9 @@ class TeliaClock:
             return "上午"
         if 13 <= hour < 17:
             return "中午"
-        if 17 <= hour < 23:
+        if 17 <= hour < 24:
             return "下午"
-        if 24 <= hour < 26:
+        if 24 <= hour < 27:
             return "黄昏"
         if 27 <= hour < 30:
             return "晚上"
@@ -134,7 +134,7 @@ class TeliaClock:
                 "minute": 0-59,
                 "second": 0-59,
                 "time": "HH:MM:SS",
-                "period": "上午|中午|下午|晚上|黄昏|日出",
+                "period": "上午|中午|下午|晚上|黄昏|...",
                 "day_hours": 30,
             }
         """

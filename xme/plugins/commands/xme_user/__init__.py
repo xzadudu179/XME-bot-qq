@@ -1,6 +1,6 @@
 __plugin_name__ = 'XME 宇宙'
 # 反射需要依靠 import 访问子 module
-from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, inventory, describe, get_achievements  # noqa: F401
+from . import coinrank, lottery, sign, userinfo, takecoin, sendcoin, inventory, describe, get_achievements, bonus  # noqa: F401
 from nonebot import CommandSession
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.msgtools import send_session_msg

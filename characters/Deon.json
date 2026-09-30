@@ -248,7 +248,8 @@
     "no_coin": "你的{coin_name}数量不够哦，至少需要 {count} {coin_pronoun}呢 {neutral}",
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
-    "user_info_str": "----------\n{desc}用户 id: {id}\n注册时间: {reg_time}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{sign_message}",
+    "user_info_str": "----------\n{desc}用户 id: {id}\n注册时间: {reg_time}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{bonus_line}{sign_message}",
+    "bonus_line": "奖金账户: {count} {coin_pronoun}{coin_name}（每天凌晨自动发放到{coin_name}余额，每天最多 2000 {coin_name}）",
     "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
     "no_sign": "没有签过到呢...",
     "empty_inventory": "什么也没有呢...",
@@ -2015,6 +2016,15 @@
         "ranking_row": "{rank}. {nickname}:{spacing}拥有 {coins_count} {coin_pronoun}{coin_name}",
         "rank_info": "你有 {count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {neutral}"
       },
+      "addbonus": {
+ "desc": "给用户添加奖金（SUPERUSER）",
+ "introduction": "at 一个人并给TA的奖金账户添加指定数量的{coin_name}（每天凌晨自动发放最多 2000 到星币余额）",
+ "no_arg": "请在参数里 at 你要添加奖金的用户哦",
+ "invalid_user": "找不到 at 的用户呢...",
+ "invalid_coin_count": "奖金数量需要是大于 0 的整数哦",
+ "no_coin_count": "请指定奖金数量哦",
+ "success": "成功给{target_user}的奖金账户添加了 {coin_count} {coin_pronoun}{coin_name}！\nTA 的奖金账户现在有 {bonus_left} {coin_pronoun}{coin_name}，每天凌晨会自动发放最多 2000 到{coin_name}余额哦"
+ },
       "takecoin": {
         "desc": "拿取{coin_name}（SUPERUSER）",
         "introduction": "at 一个人并且拿走指定数量的{coin_name}",
@@ -2429,7 +2439,7 @@
     },
     "ai_helper": {
       "desc": "AI 助手",
-      "introduction": "使用大模型与用户对话的 AI 助手，一般用于解答 bot 使用方面的问题，你也可以让他执行任务，搜索，代码（推荐html/css/js），或者一些复杂任务。长上下文可以自动压缩。\n每周可使用 12,000,000 credits（按 flash 消耗 tokens为基准计算，缓存消耗量 0.25x，使用 pro 模型消耗量 x10，图片生成一张算 80000 credits，OCR 消耗量 0.125x。）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
+      "introduction": "使用大模型与用户对话的 AI 助手，一般用于解答 bot 使用方面的问题，你也可以让他执行任务，搜索，代码（推荐html/css/js），或者一些复杂任务。长上下文可以自动压缩。\n每周可使用 12,000,000 credits（按 flash 输入输出 tokens 为基准计算，缓存会折算，使用 pro 模型消耗量 x10，图片生成一张算 176000 credits（普通）/480000 credits (HD)，OCR 消耗量 0.125x。）\n\n在询问 AI 的时候发送 \"aistop\" 可以中断 AI 对话\n注：AI生成仅供参考，不一定是真实的哦",
       "no_arg": "你好像没有写内容哦，正确格式应该是 \"/ai 对话内容\" {neutral}",
       "media_cannot_view_hint": "[BOT] 你的模型不能直接查看图片/视频，上面给出的链接可用 {tools} 工具查看（把链接填入 url 参数）。\n",
 "pro_denied": "{negative} 模型 \"{model}\" 属于高级模型，只有白名单用户能用哦\n需要的话可以找超管用 \"/ai -c pro\" 加白名单（/ai -m 可看可用模型）",
@@ -2438,7 +2448,7 @@
 "pro_removed": "{neutral} 已把 {qq} 移出高级模型白名单，之后只能用普通模型",
 "pro_list": "高级模型白名单：\n- 受控模型：{models}\n- 可用用户：{users}",
 "pro_usage": "用法：/ai -c pro (qq号或@用户)，例如 \"/ai -c pro 1795886524\"；不带参数查看当前名单",
-"resume_model_invalid": "{negative} 没认出来这个模型，请回复可用别名之一：{models}",
+"resume_model_invalid": "{negative} 不知道这是什么模型呢...\n可用模型名：{models}",
 "resume_model_unavailable": "{negative} 这个会话原先用的模型 \"{model}\" 你没有权限使用哦\n请回复一个可用模型名继续（可选：{models}），最多等 {timeout} 秒，超时会自动用默认模型",
       "talking_to_ai": "[{ai_session}] 正在使用 \"{model}\" 模型询问 AI！ {positive}\n若感觉等待时间太长，可以发送 \"aistop\" 中断对话哦。",
       "error_model": "没有称为 \"{model}\" 的模型哦，只能指定为 {models} 中的任意一个呢",

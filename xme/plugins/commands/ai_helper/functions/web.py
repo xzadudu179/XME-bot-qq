@@ -6,6 +6,7 @@ from pathlib import Path
 import html
 import mimetypes
 import re
+import shutil
 import time
 from urllib.parse import urlparse
 import aiohttp
@@ -52,14 +53,24 @@ def _url_suffix(url: str) -> str:
     return ""
 
 
-def _save_received_bytes(data: bytes, url: str, content_type: str, agent) -> dict:
+def _name_suffix(name: str) -> str:
+    """从原始文件名取扩展名（2~6 位字母数字的 .xxx）；没有则返回空串。"""
+    suffix = Path((name or "").strip()).suffix.lower()
+    if 2 <= len(suffix) <= 6 and re.fullmatch(r"\.[a-z0-9]+", suffix):
+        return suffix
+    return ""
+
+
+def _save_received_bytes(data: bytes, url: str, content_type: str, agent,
+                         original_name: str = "") -> dict:
     """探测后缀并写入用户 temp（download 与 get_received_files 共用的落盘单点）。
 
-    后缀探测顺序：URL 扩展名 → Content-Type → 魔数探测；文本文件统一转 utf-8。
+    后缀探测顺序：原始文件名扩展名（用户发送的文件自带真实文件名，最可信）
+    → URL 扩展名 → Content-Type → 魔数探测；文本文件统一转 utf-8。
     """
     probe = agent.get_temp_path() / f"{uuid4().hex}.part"
     probe.write_bytes(data)
-    suffix = _url_suffix(url)
+    suffix = _name_suffix(original_name) or _url_suffix(url)
     if not suffix:
         main_type = (content_type or "").split(";")[0].strip().lower()
         guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
@@ -196,7 +207,7 @@ async def get_received_files(max_count: int = 5, within_hours: float = 24.0,
             files.append(entry)
             continue
         try:
-            res = _save_received_bytes(data, item.url or item.name, "", agent)
+            res = _save_received_bytes(data, item.url or "", "", agent, original_name=item.name)
         except FileExistsError as ex:
             dup_name = str(ex)
             existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
@@ -603,10 +614,13 @@ def wait_until_budget_s() -> float:
 
 async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800,
                           wait_ms: int = 1000, wait_until: str = "", prompt: str = "",
-                          attach: bool = False, scale: int = 2, agent=None):
+                          attach: bool = False, scale: int = 2, file_type: str = "", agent=None):
     """对网页/SVG/HTML 做内部预览截图：整图存入 temp 并返回引用给 AI。
 
     url 与 ref 二选一（url 为公网地址，ref 为已下载的 svg/html 引用）；
+    file_type 显式指定 ref 的渲染方式（"html" / "svg" / "text"，留空按扩展名判定）：
+    temp 里 AI 产出的文件落盘多为 .txt 后缀，Chrome 按扩展名渲染——要让 HTML/SVG
+    按网页渲染必须显式传 file_type，否则会被当纯文本转义显示。
     等待是**真实墙钟**的，两者可一起用、顺序为「条件优先、wait_ms 作缓冲」：
     先轮询 wait_until（CSS 选择器或 JS 表达式，如加载动画消失的条件），
     条件满足后再额外等 wait_ms 让收尾动画/懒加载稳定；条件超时则跳过缓冲、
@@ -626,6 +640,10 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     scale = min(max(int(scale), 1), 2)
     wait_ms = min(max(int(wait_ms), 0), SCREENSHOT_MAX_WAIT_MS)
     wait_until = (wait_until or "").strip()
+    file_type = (file_type or "").strip().lower()
+    if file_type and file_type not in ("html", "svg", "text"):
+        return "[截图失败：file_type 只支持 html / svg / text，留空则按文件扩展名判定]"
+    render_copy: Path | None = None
     if ref:
         try:
             p = Path(agent.resolve_ref(ref))
@@ -633,6 +651,15 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
             return "[截图失败：没有找到引用 {0}]".format(ref)
         if not p.is_file():
             return "[截图失败：引用 {0} 指向的文件不存在]".format(ref)
+        if file_type and p.suffix.lower() != f".{file_type}":
+            # Chrome 按扩展名决定渲染方式：以正确后缀的同目录副本渲染，
+            # 相对路径引用的同目录资源（图片/库）不受影响，截完即删
+            # （text 是渲染模式，磁盘扩展名为 .txt）
+            suffix = ".txt" if file_type == "text" else f".{file_type}"
+            if p.suffix.lower() != suffix:
+                render_copy = p.with_name(f"{p.stem}_render{suffix}")
+                shutil.copyfile(p, render_copy)
+                p = render_copy
         source = p.resolve().as_uri()  # 本地 svg/html 直接渲染，无 SSRF 面
     else:
         source = html.unescape((url or "").strip())
@@ -651,6 +678,9 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     except Exception as ex:
         logger.exception(f"截图失败 {source}")
         return f"[截图失败：{exception_detail(ex)}]"
+    finally:
+        if render_copy is not None:
+            render_copy.unlink(missing_ok=True)
     png = outcome.png
     # 等待过程如实汇报：条件超时不等于失败，但要明确告诉模型"页面可能还没就绪"
     wait_note = ""

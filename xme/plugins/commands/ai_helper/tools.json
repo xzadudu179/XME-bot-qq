@@ -917,7 +917,7 @@
         "type": "function",
         "function": {
             "name": "screenshot_page",
-            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用（默认 2x 渲染，文字清晰）。\n保存的始终是完整原图（发给用户/转存都用这一个引用）；页面较长（高超过宽）时用 view_image 查看会自动分片逐片读取，长页面直接给足 height（如 2000-8192）即可。\nprompt 非空时截图默认交给独立视觉模型分析并返回文本（长图会自动逐片分析拼接）；只有看图「别人的页面」时才传 attach=true 直接附入当前对话自己看，【验收你自己写的 SVG/HTML 效果】不要 attach，让独立模型挑问题。\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
+            "description": "对网页或 SVG/HTML 文件做内部预览截图，保存到 temp 并返回引用（默认 2x 渲染，文字清晰）。\n注意：ref 截本地文件时按**扩展名**决定渲染方式，而 temp 里 AI 产出的文件都是 .txt 后缀——要让 HTML/SVG 按网页渲染必须显式传 file_type=\"html\"/\"svg\"（否则被当纯文本转义显示）。本地渲染是离线的（安全防护，内网/任意站点均不可达），外部资源只有三个公共 CDN 可加载：unpkg.com / cdn.jsdelivr.net / cdnjs.cloudflare.com——要用 three.js 等库就引用这三个域，或把代码写进 HTML 自包含；公网 url 截图不受此限。\n保存的始终是完整原图（发给用户/转存都用这一个引用）；页面较长（高超过宽）时用 view_image 查看会自动分片逐片读取，长页面直接给足 height（如 2000-8192）即可。\nprompt 非空时截图默认交给独立视觉模型分析并返回文本（长图会自动逐片分析拼接）；只有看图「别人的页面」时才传 attach=true 直接附入当前对话自己看，【验收你自己写的 SVG/HTML 效果】不要 attach，让独立模型挑问题。\nprompt 留空时仅保存并返回引用，之后可用 view_image 传入该引用查看。\n适用于 svg/html 预览、含动态加载内容的页面（用 wait_ms 等待）。url 与 ref 二选一。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -928,6 +928,10 @@
                     "ref": {
                         "type": "string",
                         "description": "要截图的 svg/html 文件引用，例如 file_1"
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "description": "ref 渲染方式的显式指定：html / svg / text（留空按文件扩展名判定）。**强烈建议传**：temp 里 AI 产出的文件都是 .txt 后缀，不传会把 HTML 当纯文本转义渲染（截出来是源代码）。要按网页渲染 HTML 传 \"html\"，SVG 传 \"svg\"，就想看源码传 \"text\""
                     },
                     "width": {
                         "type": "integer",

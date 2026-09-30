@@ -57,9 +57,9 @@ def _is_number(value) -> bool:
 
 class User:
     # 增量语义的数值列：flush 写回的是「本对象相对加载时的净变化」（col = col + ?），
-    # 并发下各自的金币/好感度增减会正确叠加；其余列一律绝对写，
+    # 并发下各自的金币/好感度/奖金增减会正确叠加；其余列一律绝对写，
     # 「绝对赋值」的意图（如管理员把金币清零）由调用方用 replace_field 声明
-    _DELTA_COLUMNS = ("coins", "xme_favorability")
+    _DELTA_COLUMNS = ("coins", "xme_favorability", "bonus")
 
     def form_dict(data: dict):
         return load_from_dict(data, id=data["user_id"])
@@ -112,6 +112,7 @@ class User:
             user_id: int,
             db_id: int = -1,
             coins: int = 0,
+            bonus: int = 0,
             inventory: Inventory | None = None,
             talked_to_bot: list | None = None,
             desc: str = "",
@@ -135,6 +136,8 @@ class User:
         # avoid shared mutable defaults
         self.inventory: Inventory = inventory if inventory is not None else Inventory()
         self.coins: int = coins
+        # 奖金账户：每天凌晨自动发放最多 DAILY_BONUS_LIMIT 到星币余额的发放池
+        self.bonus: int = int(bonus or 0)
         self.xme_favorability: int = xme_favorability
         self.talked_to_bot: list = talked_to_bot if talked_to_bot is not None else []
         self.counters: dict = counters if counters is not None else {}
@@ -233,6 +236,9 @@ class User:
         except Exception:
             sign_message = get_message("user", "no_sign")
         _, rank_ratio, _ = get_user_rank(self.id)
+        # 奖金账户为 0 时不显示该行（与 desc 空值不显示同款条件拼接）
+        bonus_line = (get_message("user", "bonus_line", count=self.bonus) + "\n----------\n"
+                      if self.bonus else "")
         return str(get_message("user", "user_info_str",
             id=str(self.id),
             reg_time=datetime.strftime(datetime.fromtimestamp(self.get_reg_time()), format=r"%Y-%m-%d %H:%M:%S"),
@@ -242,7 +248,8 @@ class User:
             sign_message=sign_message,
             rank_ratio=f"{rank_ratio:.2f}",
             space=self.inventory.get_space_left(),
-            desc=self.desc + "\n----------\n" if self.desc else ""
+            desc=self.desc + "\n----------\n" if self.desc else "",
+            bonus_line=bonus_line,
         ))
 
     def add_favorability(self, count):
@@ -286,6 +293,7 @@ class User:
             "id": self.db_id,
             "user_id": self.id,
             "coins": self.coins,
+            "bonus": self.bonus,
             "counters": self.counters,
             # "timers": self.timers,
             "afdian_id": self.afdian_id,
@@ -307,6 +315,14 @@ class User:
         if amount < 0:
             return False
         self.coins += amount
+        return True
+
+    def add_bonus(self, amount: int) -> bool:
+        """给奖金账户充值（拒绝负数；扣减走发放流程，不在这里做）。"""
+        amount = int(amount)
+        if amount < 0:
+            return False
+        self.bonus += amount
         return True
 
     def exec_query(query, params=(), dict_data=True):
@@ -798,6 +814,7 @@ def load_dict_user(data: dict):
             "id": data.get('id', -1),
             "user_id": data["user_id"],
             "coins": data.get('coins', 0),
+            "bonus": data.get('bonus', 0) or 0,
             "counters": counters,
             "afdian_id": data.get('afdian_id', ""),
             "xme_favorability": data.get('xme_favorability', 0),
@@ -831,6 +848,7 @@ def load_from_dict(data: dict, id: int) -> User:
         db_id=data.get('id', -1),
         user_id=id,
         coins=data.get('coins', 0),
+        bonus=data.get('bonus', 0) or 0,
         inventory=inventory,
         afdian_id= data.get("afdian_id", ''),
         talked_to_bot=json.loads(data.get('talked_to_bot', "[]")),

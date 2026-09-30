@@ -13,7 +13,7 @@ TOKENS_LIMIT_WEEKLY = 12_000_000
 
 # 长上下文：历史条数不设上限（长期保留），历史估算占用达模型上下文预算
 # （context_limit）的该比例时，把最旧部分压缩成摘要
-COMPRESS_TRIGGER_RATIO = 0.75
+COMPRESS_TRIGGER_RATIO = 0.68
 # 字符 → token 估算系数（中文约 1 token / 1.5~2 字，取偏小值防低估占用）
 CONTEXT_TOKEN_CHARS = 1.6
 # 压缩时保留的最新的记录条数（其余压缩进摘要）
@@ -22,6 +22,8 @@ CONTEXT_KEEP_RECENT = 20
 COMPRESS_MAX_LENGTH = 4000
 
 # 思路笔记：轮末把本轮 reasoning 提炼成短笔记随条目入历史、下轮注入上下文
+# 想要彻底关闭：把 THINKING_NOTE_ENABLED 设为 False（不做提炼调用，历史条目不带 thinking 字段）
+THINKING_NOTE_ENABLED = False
 THINKING_NOTE_MAX_LENGTH = 150        # 笔记字数上限（传给 ai_configs 里 thinking 提示词）
 THINKING_NOTE_INPUT_CHARS = 8000      # 参与提炼的 reasoning 输入上限（超长取尾部）
 
@@ -126,7 +128,7 @@ LLM_DEFAULT_TEMPERATURE = 0.5
 
 # 高级模型（受白名单限制）：写在这里的别名只有白名单用户（见 pro.py，
 # 用户名单在 _botsettings.json 的 ai_pro_users）与 SUPERUSER 能选择使用
-LLM_PRO_MODELS = ["pro", "kimik3"]
+LLM_PRO_MODELS = ["kimipro", "grok"]
 
 # 模型别名 → 目录项；provider 需在 keys.py 的 LLM_PROVIDERS 里存在。
 # 可选字段 temperature：覆盖该模型的采样温度（缺省用 LLM_DEFAULT_TEMPERATURE）
@@ -139,7 +141,7 @@ LLM_MODELS = {
         "context_limit": 1_000_000,  # 输入上下文上限（tokens，触发轮内折叠）
         "credit_multiplier": 1,      # credits 计费倍率
         "cache_credit_ratio": 0.25,  # 缓存命中的 tokens 按该比例计费（GLM 口径）
-        "description": "GLM-5.3-flash 模型",
+        "description": "GLM-5.3 flash 模型",
     },
     "pro": {
         "provider": "glm",
@@ -159,9 +161,9 @@ LLM_MODELS = {
         "context_limit": 1_000_000,
         "credit_multiplier": 1.2,
         "cache_credit_ratio": 0.02,  # DeepSeek 缓存折扣很低（命中仅按 2% 计）
-        "description": "Deepseek-flash 模型",
+        "description": "Deepseek V4.1 flash 模型",
     },
-    "kimik3": {
+    "kimipro": {
         "provider": "moonshot",
         "model": "kimi-k3",
         "temperature": 1,          # Moonshot 限制：kimi-k3 只接受 temperature=1
@@ -170,7 +172,37 @@ LLM_MODELS = {
         "context_limit": 1_048_576,
         "credit_multiplier": 40,
         "cache_credit_ratio": 0.1,
-        "description": "KIMI-K3 模型",
+        "description": "KIMI K3 模型",
+    },
+    "grok": {
+        "provider": "xai",
+        "vision": True,
+        "model": "grok-4.7",
+        "video": False,
+        "context_limit": 500_000,
+        "credit_multiplier": 20,
+        "cache_credit_ratio": 0.25,
+        "description": "Grok 4.7 模型",
+    },
+    "minimax": {
+        "provider": "minimax",
+        "vision": True,
+        "model": "MiniMax-M3",
+        "video": False,
+        "context_limit": 1_000_000,
+        "credit_multiplier": 2.5,
+        "cache_credit_ratio": 0.2,
+        "description": "MiniMax M3 模型",
+    },
+    "qwenflash": {
+        "provider": "qwen",
+        "vision": True,
+        "video": True,
+        "model": "qwen3.8-flash",
+        "context_limit": 1_000_000,
+        "credit_multiplier": 1.15,
+        "cache_credit_ratio": 0.125,
+        "description": "Qwen 3.8 Flash 模型",
     }
     # "xzadudu179": {
     #     "provider": "kirari",
@@ -196,10 +228,10 @@ LLM_MODELS = {
 # （"chat" 走对话协议；"openai_images" 走 OpenAI 兼容 /images/generations；
 #   glm_* 为 GLM 专属接口；不方便的第三方可保留 glm 实现）
 LLM_CAPABILITIES = {
-    "vision": {"provider": "deepseek", "model": "deepseek-flash", "api": "chat"},
+    "vision": {"provider": "qwen", "model": "qwen3.8-flash", "api": "chat"},
     # 视频单独一项能力：video_url 段只有 GLM 端点接受（DeepSeek 等 OpenAI 兼容端点
     # 会在 JSON 层直接拒绝该段，实测 http 422 unknown variant 'video_url'）
-    "video": {"provider": "glm", "model": "glm-5.3-flash", "api": "chat"},
+    "video": {"provider": "qwen", "model": "qwen3.8-flash", "api": "chat"},
     "ocr": {"provider": "glm", "model": "glm-ocr", "api": "glm_layout_parsing"},
     # 图片生成：OpenAI 兼容 images 抽象层，当前接火山方舟 Seedream（质量档位=选模型：
     # Seedream 没有 quality 字段）。模型 ID 以方舟控制台为准，直接改这里即可换版本/供应商；
@@ -240,12 +272,23 @@ LLM_AUTO_MODEL_ALIAS = "auto"
 
 LLM_TOPIC_ROUTING_ENABLED = True
 
+# ---- MCP 服务器接入（配置见 keys.py 的 MCP_SERVERS）----
+# 想要彻底关闭：把 MCP_ENABLED 设为 False（不发起任何 MCP 请求/子进程，行为与关闭前完全一致）
+MCP_ENABLED = True
+MCP_TIMEOUT = 15              # 单次 MCP 请求超时（秒）
+MCP_STDIO_BOOT_TIMEOUT = 30   # stdio server 启动 + 握手超时（秒）
+
 # 类别 → 模型别名（键就是分类器要输出的类别，单点维护：改这里即可增删类别/换模型）
 LLM_TOPIC_ROUTING = {
-    "闲聊": "flash",
-    "讲故事": "flash",
+    "闲聊": "qwenflash",
+    "讲故事": "pro",
     "角色扮演": "flash",
-    "编程": "dsflash",
+    "其他编程": "dsflash",
+    "前端简单任务": "flash",
+    "前端中型任务": "dsflash",
+    "前端复杂任务": "dsflash",
+    "前端视觉还原": "qwenflash",
+    "单点BUG修复": "qwenflash",
     "信息检索": "dsflash",
     "其他": "dsflash",
 }
@@ -268,7 +311,7 @@ LLM_TOPIC_MAX_CHARS = 500    # 本次输入最多取前 N 字
 # 话题判断要带上下文：角色扮演/设定常出现在对话开头，只看当前这句会判错
 LLM_TOPIC_CONTEXT_ITEMS = 3   # 取最近 N 轮历史（用户+AI）
 LLM_TOPIC_CONTEXT_CHARS = 600  # 上下文总长度上限（超出截断，控制 tokens 与延迟）
-LLM_TOPIC_TIMEOUT = 8.0      # 单个候选模型的超时；超时/失败换下一个，全失败用兜底类别
+LLM_TOPIC_TIMEOUT = 12.0      # 单个候选模型的超时；超时/失败换下一个，全失败用兜底类别
 LLM_TOPIC_FAIL_STREAK = 3    # 整条候选链都失败达该次数 → 熔断
 LLM_TOPIC_COOLDOWN = 20.0   # 熔断时长（秒）；期间不发起分类请求，直接用兜底类别
 
@@ -334,6 +377,9 @@ MONITOR_MAX_INTERVAL = 30             # 元素监听的采样间隔上限（秒�
 SCREENSHOT_MAX_WAIT_MS = 30000        # 条件满足后的缓冲等待上限（毫秒）
 SCREENSHOT_MAX_WAIT_UNTIL_MS = 60000  # wait_until 条件轮询的上限（毫秒）
 SCREENSHOT_TOTAL_BUDGET = 75          # 单次截图总预算（秒，含启动/加载/等待/出图）
+# 本地 HTML/SVG 渲染默认离线（SSRF 防护：内网/loopback/任意域一律进死代理），
+# 仅此白名单内的公共包托管 CDN 走直连放行；页面重定向逐跳重新判定，内网依旧不可达
+SCREENSHOT_FILE_CDN_BYPASS = ("*.unpkg.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com")
 RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
 RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
 RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限

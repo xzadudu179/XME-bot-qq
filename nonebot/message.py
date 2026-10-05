@@ -107,11 +107,30 @@ async def handle_message(bot: NoneBot, event: CQEvent) -> None:
     for preprocessor in MessagePreprocessorManager.preprocessors:
         coros.append(preprocessor.func(bot, event, plugin_manager))
     if coros:
-        try:
-            await asyncio.gather(*coros)
-        except CanceledException as e:
-            logger.info(f'Message {event["message_id"]} is ignored: {e.reason}')
+        # 短路语义：任一 preprocessor 抛 CanceledException，整条消息被吞——
+        # 其余 preprocessor 立即取消，不做任何指令/自然语言分发
+        tasks = [asyncio.ensure_future(coro) for coro in coros]
+        done, pending = await asyncio.wait(tasks,
+                                           return_when=asyncio.FIRST_EXCEPTION)
+        canceled = None
+        first_error = None
+        for task in tasks:
+            if task.cancelled() or not task.done():
+                continue
+            exc = task.exception()
+            if canceled is None and isinstance(exc, CanceledException):
+                canceled = exc
+            elif first_error is None and exc is not None:
+                first_error = exc
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.wait(pending)
+        if canceled is not None:
+            logger.info(f'Message {event["message_id"]} is ignored: {canceled.reason}')
             return
+        if first_error is not None:
+            raise first_error
 
     if _is_self_message(event):
         # 自身消息只交给 preprocessor（接龙打断、撤回自身刷屏、自身消息过滤），

@@ -3,6 +3,7 @@ from nonebot.plugin import PluginManager
 import re
 import aiocqhttp
 from xme.xmetools.doctools import SpecialDoc
+from xme.xmetools.plugintools import record_plugin_call
 from ...xmetools import colortools as c
 from character import get_message
 from xme.xmetools.msgtools import send_event_msg
@@ -23,7 +24,7 @@ __plugin_usage__ = SpecialDoc(
 )
 
 @message_preprocessor
-async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
+async def _(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     raw_msg = fullwidth_to_halfwidth(event.raw_message.strip()).upper()
     # print(raw_msg)
     color_num_str = raw_msg.split("#")[-1]
@@ -37,6 +38,7 @@ async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, _: PluginManager):
     try:
         path = gen_color_image(color_num_str)
         # return await event_send_msg(bot, event, f"[CQ:image,file=http://server.xzadudu179.top:17980/temp/{name}]", False)
+        record_plugin_call(__plugin_name__, event.user_id, event.group_id, True, args=event.raw_message.strip())
         return await send_event_msg(bot, event, await image_msg(path, to_jpeg=False))
     except ValueError:
         return

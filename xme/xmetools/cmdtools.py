@@ -4,10 +4,12 @@ from xme.xmetools import dicttools
 from functools import wraps
 import time
 from aiocqhttp import Event
+from aiocqhttp.message import Message
 from xme.xmetools.typetools import try_parse
 from bot_variables import command_msgs
 from xme.xmetools.timetools import time_diff
 from nonebot.command import call_command, CommandManager, Command
+from nonebot.message import handle_message
 from nonebot import CommandSession
 from nonebot.log import logger
 
@@ -34,6 +36,19 @@ async def event_send_cmd(cmd_string, bot, event: Event, check_permission=True):
         name=name,
         current_arg=args,
         check_perm=check_permission)
+
+async def redispatch_cmd(cmd_string: str, bot, event: Event) -> None:
+    """把指令文本构造成新消息事件，重新走一遍完整分发（含全部 message_preprocessor）。
+
+    与 event_send_cmd 直达 call_command 不同：prevent_cmds、aistop、私聊校验
+    等护栏对本入口同样生效，别名解析交给 handle_command 的 parse_command。
+    """
+    new_event = Event(**event)
+    new_event['message'] = Message(cmd_string)
+    new_event['raw_message'] = cmd_string
+    # 能走到重分发，说明用户明确在跟 bot 说话；不置位群内 only_to_me 指令会被静默忽略
+    new_event['to_me'] = True
+    await handle_message(bot, new_event)
 
 def get_command_args(arg_text: str, mim_args_len: int, max_args_len: int, split_str: str = None, default: str = "", arg_types: type | list[type] = str) -> list[str]:
     """获取指令参数列表
@@ -113,21 +128,22 @@ def get_alias():
 def is_command(text):
     """检测一个文本是否属于指令
 
+    首词按任意空白切分（与 nonebot parse_command 的口径一致）：多行指令
+    （如「。exec\\nfrom datetime import ...」）的指令名后跟的是换行不是空格，
+    只按空格切会把整段判成非指令。
+
     Args:
         text (str): 文本
 
     Returns:
         bool: 是否
     """
-    # print("111")
-    # print(event)
-    # if raw_msg[0] not in config.COMMAND_START or not raw_msg[1:] or not raw_msg.replace(raw_msg[0], ""):
     if len(text) < 1:
         return False
     if text[0] not in config.COMMAND_START or not text[1:] or not text.replace(text[0], ""):
         return False
 
-    if not get_cmd_by_alias(text.split(" ")[0]):
+    if not get_cmd_by_alias(text.split()[0]):
         return False
     return True
 
@@ -168,10 +184,9 @@ def get_args(arg_text: str):
 
 def clean_cmd_msgs():
     t = time.time()
-    # 先收集再删：迭代字典时直接 del 会抛 RuntimeError（dictionary changed size
-    # during iteration），此前靠调用方吞异常兜底，导致每次最多清掉一条
     expired = [k for k, v in command_msgs.items()
                if time_diff(v.get('time', 0), t) >= 120]
     for k in expired:
         logger.info("删除指令消息: " + str(command_msgs[k]))
         del command_msgs[k]
+

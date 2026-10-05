@@ -37,7 +37,7 @@ class Good:
         return f"- {self.name} -\n---------------------------\n{self.introduction}\n---------------------------"
 
     def get_html_information(self) -> str:
-        from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
+        from xme.xmetools.templates import IIUN_COLORS, FONTS_STYLE
         introduction = '\n'.join(['<p>' + n + '</p>' for n in self.introduction_html.split('\n')])
         return """
             <!DOCTYPE html>
@@ -47,7 +47,7 @@ class Good:
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>shopcheck</title>
                     <style>
-                        """ + HIUN_COLORS + FONTS_STYLE + """
+                        """ + IIUN_COLORS + FONTS_STYLE + """
 
                         * {
                             margin: 0;

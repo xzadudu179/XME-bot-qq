@@ -59,6 +59,35 @@
         "owo~！"
       ]
     },
+    "special_tips": {
+        "morning": [
+            "早上好呀！",
+            "早上好哦！"
+        ],
+        "noon": [
+            "中午好哦~",
+            "中午好哇~"
+        ],
+        "before_dawn": [
+            "还没睡嘛~ 还是已经醒啦？",
+            "凌晨好呀~ 唔，还没睡觉嘛？还是已经醒了呀"
+        ],
+        "long_time_no_see": [
+            "好久不见呀~",
+            "欢迎重新使用{bot_name}呀~",
+            "好久不见哇~欢迎继续使用{bot_name}哦~"
+        ],
+        "forgot_sign": [
+            "你今天还没有签到哦——",
+            "记得用 /s 签到哦~",
+            "记得签到哦~"
+        ],
+        "noticed_179": [
+            "注意到这句话里有 {count} 个 \"179\"...",
+            "注意到这句话里出现了 {count} 次 \"179\"...",
+            "注意到这段话里有 {count} 个 \"179\"..."
+        ]
+    },
     "tips": [
       "{bot_name}会随机发消息",
       "如果想在别的群开启{bot_name}的报时功能，可以让管理使用 \"/schtime\" 指令哦",
@@ -160,7 +189,9 @@
       "你让 \"/ai\" 生成图片的时候，假如你刻意让他生成非常华丽或者复杂细节丰富的图片，又或者是提供很长的提示词，他可能会超常发挥哦（？）",
       "\"/ai\" 默认会使用 flash 模型，如果你想用 pro 模型，可以使用 \"/ai -m pro xxx\" 来使用 pro 模型问 AI xxx",
       "tip:",
-      "如果有什么问题/BUG或者建议，可以使用 \"/rep 建议内容\" 指令来汇报给{author_nick}哦~"
+      "如果有什么问题/BUG或者建议，可以使用 \"/rep 建议内容\" 指令来汇报给{author_nick}哦~",
+      "你可以把平台视频链接发给 \"/ai\" 让 AI 下载下来给你哦~",
+      "奖金账户是一种特殊的账户~ 在它还有余额的时候，每天会自动往你的{coin_name}账户里发送{coin_name}，不过一天最多 2000 哦~"
     ]
   },
   "apis": {
@@ -229,6 +260,13 @@
       "你好像打错了指令哦 {neutral}，是不是想输入 \"{new_cmd}\" 哇, 是的话在下一句话发送 \"y\" 就好啦~",
       "你好像打错了指令了诶 {neutral}，是不是想输入 \"{new_cmd}\" 哦, 是的话就在下一句话发送 \"y\" 啦~"
     ],
+    "cmd_suggest": [
+      "可以{prefix}试试发送 \"/{name}\" 指令哦 {neutral}\n{desc_line}",
+      "唔..可以试试{prefix}发送 \"/{name}\" 哦 {neutral}\n{desc_line}",
+      "可以{prefix}试试看 \"/{name}\" 指令 {neutral}\n{desc_line}",
+      "可以{prefix}尝试一下用 \"/{name}\" 指令哦{positive_punc}\n{desc_line}"
+    ],
+    "cmd_suggest_desc": "（简介：\"{desc}\"）",
     "achievement_message": [
       "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n可以使用 \"/achi\" 来查看自己的所有成就哦",
       "你达成了成就 \"{achievement}\"！ {positive}，奖励你 {award} {coin_pronoun}{coin_name}！\n你可以使用 \"/achi\" 来查看自己的所有成就哦",
@@ -249,7 +287,7 @@
     "spent_coin": "你花费了 {count} {coin_pronoun}{coin_name} {neutral}",
     "get_coin": "你得到了 {count} {coin_pronoun}{coin_name} {positive}",
     "user_info_str": "----------\n{desc}用户 id: {id}\n注册时间: {reg_time}\n查询共同群聊：https://ti.qq.com/friends/recall?uin={id}\n物品栏占用 ({space}) 成就达成 ({achievements_count} / {get_achievements_total})\n拥有 {coins_count} {coin_pronoun}{coin_name}，超过了 {rank_ratio}% 其他拥有{coin_name}的用户 {positive}\n{bonus_line}{sign_message}",
-    "bonus_line": "奖金账户: {count} {coin_pronoun}{coin_name}（每天凌晨自动发放到{coin_name}余额，每天最多 2000 {coin_name}）",
+    "bonus_line": "奖金账户: {count} {coin_pronoun}{coin_name}",
     "sign_message": "最近签到时间是：{last_sign_time}{positive_punc}",
     "no_sign": "没有签过到呢...",
     "empty_inventory": "什么也没有呢...",
@@ -962,7 +1000,7 @@
     },
     "choice": {
       "desc": "随机决定事情",
-      "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n\n{bot_name}会因情况的不同而返回不同的结果，例如：在 choice 的参数中填写一个数字范围比如 `1~10` 会返回 1 ~ 10 的随机数\n\n在选择 \"xxx吗\" 的时候可能一些特殊名词会被解析为动词词组影响结果，可以使用双引号包裹特殊名词，这样就不会被解析。\n\n其中，有一些可指定的全局变量，在 choice 里以 `{xxx}` 的方式使用即可调用：\n\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
+      "introduction": "让{bot_name}帮忙决定事情吧！默认用空格分隔，若是英文则以英文逗号分隔。\n\n{bot_name}会因情况的不同而返回不同的结果，例如：在 choice 的参数中填写一个数字范围比如 `1~10` 会返回 1 ~ 10 的随机数\n\n语句里出现多个相同动词时，会以该动词拆分为多个选项，第一个动词前的内容作为每个选项的前缀，例如：今天吃好的吃差的吃普通的 会拆分为 今天吃好的 / 今天吃差的 / 今天吃普通的\n\n在选择 \"xxx吗\" 的时候可能一些特殊名词会被解析为动词词组影响结果，可以使用双引号包裹特殊名词，这样就不会被解析。\n\n其中，有一些可指定的全局变量，在 choice 里以 `{xxx}` 的方式使用即可调用：\n\n1. {member} - 使用{member}可以将该内容替换为随机群员名",
       "no_args": [
         "你还没有说我要决定的事情哦",
         "{bot_name}还不知道决定什么诶",
@@ -1100,7 +1138,7 @@
     },
     "status": {
       "desc": "查看系统状态",
-      "introduction": "查看运行该 XME-Bot 实例的设备的系统状态和指令调用数据",
+      "introduction": "查看运行该 XME-Bot 实例的设备的系统状态、指令调用数据和各 AI 供应商余额",
       "fetch_failed": [
         "这个运行设备好像不可以展示系统状态诶...",
         "这个运行设备好像无法展示系统状态诶...",
@@ -1325,7 +1363,7 @@
       "game_not_found": "找不到你想玩的游戏 \"{text}\" 哦 {neutral}",
       "option_help_desc": "查看帮助",
       "option_args_desc": "指定小游戏的参数，示例：/game -a (小游戏参数列表)",
-      "option_info_desc": "查看你输入的小游戏的帮助而不是游玩",
+      "option_info_desc": "查看你输入的小游戏的信息而不是游玩",
       "not_enough_coins": "你没有足够的{coin_name}啦，至少需要 {cost} {coin_pronoun}哦\n可以试试用 \"/s\" 来签到哦",
       "invalid_args": "游戏参数解析错误啦...请确认记得参数格式是否正确哦...",
       "guess": {
@@ -1344,7 +1382,7 @@
         "guess_prompt": "{prefix}输入你要猜的数字吧{positive_punc} 或输入 {quit_input} 退出",
         "quit_message": "退出游戏啦 {neutral}",
         "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
-        "cmd_in_game": "你还在游戏中哦，不能执行指令 {negative}\n想要退出可以发送 quit 哦",
+        "cmd_in_game": "你还在游戏中哦，不能执行指令 {negative}\n想要退出可以发送 {quit_input} 哦",
         "game_over": "你的猜测次数用完啦，正确答案应该是 {answer} {neutral}",
         "num_too_big_result": "大啦{positive_punc}",
         "num_too_small_result": "小啦{positive_punc}",
@@ -1355,10 +1393,36 @@
         "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
         "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
         "no_award": "你没有拿到任何{coin_name}..."
-      },
-      "wordle": {
-        "desc": "Wordle 游戏",
-        "introduction": "输入一个单词得到提示，随后通过提示猜到答案的单词。\n黄色背景为 单词包含该文字，绿色背景为 这个文字对应在单词的这个位置，灰色背景为，单词里没有这个文字。"
+    },
+    "wordle": {
+        "word_definition": "\n含义： {definition}",
+        "interjection_confirm": "「{word}」看起来像语气词哦 {neutral} 想猜这个词的话，再发一次吧",
+        "desc": "猜单词游戏",
+        "introduction": "随机抽一个英文单词，每次输入一个单词作为猜测，棋盘会用颜色提示每个字母：绿=位置正确，黄=单词里有这个字母但位置不对，灰=单词里没有这个字母。\n在规定次数内猜中就能拿到{coin_name}奖励，一天可以拿到 {times_limit} 次",
+        "arg_letters": "单词字数 (c=字数)\n示例：c=5（可选 4~8）",
+        "arg_times_limit": "猜测次数限制 (t=次数限制)\n示例：t=6",
+        "wordle_start": "游戏开始{positive_punc} 你需要在 {max_times} 次尝试内猜出一个 {letters} 个字母的英文单词！",
+        "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
+        "guess_prompt_prefix_default": "{start}\n",
+        "word_guessed": "你已经猜过这个词啦 {neutral}",
+        "guess_prompt": "{prefix}输入你要猜的单词吧{positive_punc} 或输入 {quit_input} 退出",
+        "invalid_word": "这个词不在词库里哦 {negative}，换一个试试吧",
+        "wrong_length": "长度不对哦 {negative}，应该是 {letters} 个字母的单词",
+        "win_message": "{positive} 猜对啦！",
+        "game_over": "你的猜测次数用完了 {negative}，正确答案是 {answer} 哦 {neutral}",
+        "remaining_times": "你还可以猜 {times} 次单词{positive_punc}",
+        "quit_message": "退出游戏啦 {neutral}",
+        "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
+        "cmd_in_game": "你还在游戏中哦，不能执行指令 {negative}\n想要退出可以发送 quit 哦",
+        "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 {negative}",
+        "letters_out_of_range": "单词字数只能在 {min} ~ {max} 之间哦 {negative}",
+        "word_list_missing": "这个字数的词库还没有准备好哦 {negative}",
+        "arg_error": "参数解析出现错误，请确定你写的是整数哦 {negative}\n{ex}",
+        "render_error": "棋盘渲染失败了 {negative}，本局结束，你花费的{coin_name}还给你了哦\n{ex}",
+        "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
+        "limited": "你今天游玩这个游戏的奖励次数用完啦",
+        "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
+        "no_award": "你没有拿到任何{coin_name}..."
       }
     },
     "漂流瓶": {
@@ -1758,7 +1822,7 @@
       ],
       "unknown_skin": "没有叫 \"{skin}\" 的皮肤哦... {neutral}\n可用皮肤：{skins}",
       "current_binding": "你已经绑定水鱼账号啦{positive_punc}\nToken：{token}\n想换一个的话，再发一次 {cmd_sep}mai bind (新Token) 就行",
-      "bind_usage": "请把你的水鱼成绩导入 Token 发给我哦{neutral}\n用法：{cmd_sep}mai bind <成绩导入Token>\n获取方式见水鱼手册：https://maimai.diving-fish.com/manual/\n（Token 是敏感凭证，只能在私聊里发给我哦）",
+      "bind_usage": "请把你的水鱼成绩导入 Token 发给我哦{neutral}\n用法：{cmd_sep}mai bind <成绩导入Token>\n获取方式见水鱼手册：https://maimai.diving-fish.com/manual/",
       "bind_success": [
         "成功绑定水鱼账号 \"{username}\"{positive_punc}\n现在可以用 {cmd_sep}mai b50 查分啦",
         "成功绑定用户 \"{username}\"{positive_punc}\n用 {cmd_sep}mai b50 就能查分了{positive_punc}"
@@ -2023,7 +2087,7 @@
  "invalid_user": "找不到 at 的用户呢...",
  "invalid_coin_count": "奖金数量需要是大于 0 的整数哦",
  "no_coin_count": "请指定奖金数量哦",
- "success": "成功给{target_user}的奖金账户添加了 {coin_count} {coin_pronoun}{coin_name}！\nTA 的奖金账户现在有 {bonus_left} {coin_pronoun}{coin_name}，每天凌晨会自动发放最多 2000 到{coin_name}余额哦"
+ "success": "成功给{target_user}的奖金账户添加了 {coin_count} {coin_pronoun}{coin_name}！\n他的奖金账户现在有 {bonus_left} {coin_pronoun}{coin_name}哦"
  },
       "takecoin": {
         "desc": "拿取{coin_name}（SUPERUSER）",
@@ -2460,14 +2524,16 @@
       "ai_error": "AI 调用出错了 {negative}\n错误码：{code}\n错误内容：{msg}",
       "shell_error": "指令执行的参数有问题哦，可以试试运行 \"/ai -h\" 来查看帮助 {neutral}\n如果你没有任何指令要调用，使用 /ai -r 消息内容 即可{positive_punc}",
       "ai_send_interrupted": "取消当前进行的 AI 对话了哦 {neutral}\n本次消耗 {credits} credits，剩余 {left} 总 credits",
+      "turn_limit_hit": "这轮对话消耗太久了（{limit}）{negative}\n已自动结束并结算：本次消耗 {credits} credits，剩余 {left} 总 credits。有需要可以开个新对话继续",
       "credits_view": "用户 {qq} 拥有自存 credits：{extra}｜本周可用总数：{total}",
       "credits_adjusted": "已把 [qq {qq}] 的自存 credits 调整 {delta}{positive_punc}现为 {extra}，总额度 {total}",
       "credits_denied": "{negative} 这个指令只有 SUPERUSER 能用哦",
       "credits_usage": "用法：/ai -c credits (qq) (±数值)，例如 \"/ai -c credits 123456 +1000000\"",
       "user_content_reply": "正在将你的回复发给 AI {positive}",
-      "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}（可以携带图片哦），AI 最多等待 {timeout} 秒",
-      "reply_too_fast": "AI 正在问你问题哦 {neutral}，你发太快或者误发了，发送消息来回复 AI 吧！",
-      "reply_is_illegal": "你的回复似乎违规 {negative}",
+      "ai_ask": "{positive} AI 正在问你：\"{prompt}\"\n发送消息来回复 AI 吧{positive_punc}（可以携带/发图片哦），AI 最多等待 {timeout} 秒",
+      "reply_too_fast": "AI 正在问你问题哦 {neutral}，你发太快啦，阅读以后发送消息来回复 AI 吧！",
+        "ask_low_confidence": "{neutral} 确定将这句话拿来回答 AI 的提问吗？\n回复 1：确认刚才那条就是回答\n回复 2：取消，结束本次提问\n直接发新内容：当作新的回答重新判断",
+      "reply_is_illegal": "你的回复似乎违规哦... {negative}",
       "ai_sending": "你还在与 AI 聊天中哦，不可以使用指令 {neutral}\n如果想要结束当前聊天可以发送 \"aistop\" 来中断哦",
       "ai_session_on": "你还有与 AI 的会话正在执行中哦，不可以继续调用 AI，或者也可以在你调用 ai 的地方发送 \"aistop\" 中断\n若你没有手动调用，可以忽略这句话哦。",
       "ai_send_timeout": "{negative} AI 发送消息秒数超过上限（{secs}s）",
@@ -2627,9 +2693,9 @@
       "desc": "兽聚汇总相关指令",
       "introduction": "使用兽聚汇总的 API 进行各种兽聚相关的查询~",
       "countdown": "这是当前兽聚时间表信息 {positive}{image}",
-      "error": "数据读取错误 {negative}：code {code}",
+      "error": "数据读取错误 {negative}：{info}",
       "no_search_data": "找不到和关键词 \"{keyword}\" 有关的兽聚诶 {neutral}",
-      "fusion_data": "{image}{name}\n状态：{state}\n官方群：{groups}\n别名：{correlation}\n数据来源于 FURRYFUSION",
+      "fusion_data": "{image}{name}\n状态：{state}\n时间：{time}\n地点：{region}\n主办方：{org}\n数据来源于 {source}",
       "search_mutiple": "找到了多条相关数据{positive_punc}\n{datas}\n在下面发送序号来指定要搜索的内容吧 {neutral}",
       "index_not_num": "你输入的序号不是整数哦 {negative} 重新发一个序号吧",
       "index_out_of_range": "你输入的序号不在可选的范围里哦 {neutral}"

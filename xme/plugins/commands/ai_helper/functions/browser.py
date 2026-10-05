@@ -17,7 +17,7 @@ from xme.xmetools.browsertools import (CDPBrowser, CDPError, run_macro,
 from ..constants import (BROWSER_NAV_WAIT_MS, MONITOR_MAX_DURATION, MONITOR_MAX_INTERVAL,
                          RECORD_MAX_DURATION, RECORD_DEFAULT_RENDER_WIDTH,
                          RECORD_LAYOUT_MAX_WIDTH, RECORD_QUALITY_PRESETS)
-from ._common import exception_detail, ImageToolResult
+from ._common import exception_detail, ImageToolResult, render_url_guard
 
 
 def _resolve_source(url: str, ref: str, agent) -> tuple[str | None, str | None]:
@@ -68,7 +68,8 @@ async def monitor_element(url: str = "", selector: str = "", duration: int = 20,
     error = ""
     try:
         async with asyncio.timeout(duration * 2 + 60):
-            async with CDPBrowser(1280, 720) as browser:
+            # 渲染 URL 守卫：file:// 子资源只放行会话目录内，http(s) 逐跳公网校验
+            async with CDPBrowser(1280, 720, url_guard=render_url_guard(source, agent)) as browser:
                 await browser.navigate(source, wait_ms=BROWSER_NAV_WAIT_MS)
                 start = time.monotonic()
                 while time.monotonic() - start < duration:
@@ -106,12 +107,14 @@ async def monitor_element(url: str = "", selector: str = "", duration: int = 20,
 
 async def _record_core(source: str, duration: int | None, script: list, show_cursor: bool,
                        render_width: int, preset: dict, agent,
-                       make_ref: bool = True) -> tuple[Path, str, list[str], str | None]:
+                       make_ref: bool = True,
+                       url_guard=None) -> tuple[Path, str, list[str], str | None]:
     """两个录制工具共享的录制核心：headless+GPU 渲染页面，CDP 采集画面后编码成 mp4。
 
     宏回放与画面采集并行。duration 为 None 时不限窗（宏决定时长，宏完成即停录）；
     为数值时为硬窗（宏超窗部分截断/忽略）。make_ref=False 时不登记 temp 引用
     （即发即删的交付档用——AI 不应拿到可保存的引用）。宏的元素定位按布局视口计算。
+    url_guard 非 None 时启用渲染 URL 守卫：违规即中止录制（视频不产出）。
     返回 (视频文件路径, temp 引用, 宏执行备注, 错误文案——成功为 None)。
     """
     notes: list[str] = []
@@ -129,9 +132,10 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
         out_path = agent.get_temp_path() / video_name
 
     frames: list[tuple[bytes, float]] = []
+    guard_error: str | None = None
     try:
         async with asyncio.timeout(duration + 120 if duration else RECORD_MAX_DURATION + 120):
-            async with CDPBrowser(render_width, render_height) as browser:
+            async with CDPBrowser(render_width, render_height, url_guard=url_guard) as browser:
                 await browser.navigate(source, wait_ms=BROWSER_NAV_WAIT_MS)
                 if show_cursor:
                     await browser.inject_cursor()
@@ -160,14 +164,23 @@ async def _record_core(source: str, duration: int | None, script: list, show_cur
                             pass
                 finally:
                     await browser.stop_capture()
-        if not frames:
-            return out_path, out_ref, notes, "[录制失败：未采集到任何画面帧]"
+        guard_error = browser.guard_error
+    except TimeoutError:
+        return out_path, out_ref, notes, "[录制失败：浏览器会话超时]"
+    except CDPError as ex:
+        return out_path, out_ref, notes, f"[录制失败：{exception_detail(ex)}]"
+    # 守卫拦截过越界访问：视频整段作废（帧已在拦截后丢弃，仍不产出成品）
+    if guard_error:
+        out_path.unlink(missing_ok=True)
+        agent.ref_map.pop(out_ref, None)   # 视频已删，登记的引用一并回收
+        return out_path, "", notes, f"[录制中止：{guard_error}]"
+    if not frames:
+        return out_path, out_ref, notes, "[录制失败：未采集到任何画面帧]"
+    try:
         await frames_to_mp4(frames, out_path, width, fps=fps, span=span,
                             crf=int(preset["crf"]),
                             preset=str(preset.get("preset", "veryfast")),
                             x264_params=str(preset.get("x264_params", "")))
-    except TimeoutError:
-        return out_path, out_ref, notes, "[录制失败：浏览器会话超时]"
     except CDPError as ex:
         return out_path, out_ref, notes, f"[录制失败：{exception_detail(ex)}]"
     if not out_path.is_file() or out_path.stat().st_size <= 0:
@@ -214,7 +227,8 @@ async def record_page(url: str = "", duration: int = 0, script=None,
 
     run_duration = None if auto_duration else max(3, min(int(duration), RECORD_MAX_DURATION))
     out_path, out_ref, notes, error = await _record_core(
-        source, run_duration, script, show_cursor, render_width, preset, agent)
+        source, run_duration, script, show_cursor, render_width, preset, agent,
+        url_guard=render_url_guard(source, agent))
     if error:
         return {"result": error, "no_compress": True}
     size_mb = out_path.stat().st_size / 1048576
@@ -275,7 +289,7 @@ async def record_page_hd(url: str = "", duration: int = 0, script=None,
     run_duration = None if auto_duration else max(3, min(int(duration), RECORD_MAX_DURATION))
     out_path, out_ref, notes, error = await _record_core(
         source, run_duration, script, show_cursor, render_width, preset, agent,
-        make_ref=False)
+        make_ref=False, url_guard=render_url_guard(source, agent))
     if error:
         return {"result": error, "no_compress": True}
     size_mb = out_path.stat().st_size / 1048576

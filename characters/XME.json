@@ -270,7 +270,7 @@
         },
         "choice": {
             "desc": "随机决定事情",
-            "introduction": "让XME帮忙决定事情吧！\nXME会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0 ~ 数字的随机数，choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数",
+            "introduction": "让XME帮忙决定事情吧！\nXME会因情况的不同而返回不同的结果，例如：只 choice 数字会返回 0 ~ 数字的随机数，choice一个数字范围比如 1 ~ 10 会返回 1 ~ 10 的随机数\n语句里出现多个相同动词时会自动拆成多个选项，第一个动词前的内容会作为每个选项的前缀，例如：今天吃好的吃差的吃普通的 会拆成 今天吃好的 / 今天吃差的 / 今天吃普通的",
             "no_args": [
                 "你还没有说我要决定的事情哦",
                 "XME还不知道决定什么诶",
@@ -391,7 +391,7 @@
         },
         "status": {
             "desc": "查看系统状态",
-            "introduction": "查看运行该 XME-Bot 实例的设备的系统状态",
+            "introduction": "查看运行该 XME-Bot 实例的设备的系统状态与各 AI 供应商余额",
             "fetch_failed": [
                 "这个运行设备好像不可以展示系统状态诶...",
                 "这个运行设备好像无法展示系统状态诶...",
@@ -627,6 +627,36 @@
                 "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
                 "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
                 "no_award": "你没有拿到任何{coin_name}..."
+            },
+            "wordle": {
+                "desc": "（私聊）Wordle 猜单词游戏",
+                "introduction": "随机抽一个英文单词，每次输入一个单词作为猜测，棋盘会用颜色提示每个字母：绿=位置正确，黄=单词里有这个字母但位置不对，灰=单词里没有这个字母。\n在规定次数内猜中就能拿到{coin_name}奖励哦，一天可以拿到 {times_limit} 次{positive_punc}",
+                "arg_letters": "单词字数 (c=字数)\n示例：c=5（可选 4~8）",
+                "arg_times_limit": "猜测次数限制 (t=次数限制)\n示例：t=6",
+                "wordle_start": "游戏开始{positive_punc} 我已经想好了一个 {letters} 个字母的英文单词，你需要在 {max_times} 次尝试内猜出它！\n每次猜测后我会发给你棋盘图：绿=位置正确，黄=字母存在但位置不对，灰=没有这个字母",
+                "cost_message": "你花费了 {cost} {coin_pronoun}{coin_name}来玩这个游戏！\n",
+                "guess_prompt_prefix_default": "{start}\n请",
+                "guess_prompt": "{prefix}输入你要猜的单词吧{positive_punc} 或输入 {quit_input} 退出",
+                "invalid_word": "这个词不在词库里哦 {negative}，换一个试试吧",
+                "wrong_length": "长度不对哦 {negative}，要猜的是 {letters} 个字母的单词",
+                "win_message": "猜中啦{positive_punc} 答案就是 {answer}！",
+                "game_over": "你的猜测次数用完啦，正确答案是 {answer} {neutral}",
+                "remaining_times": "你还可以猜 {times} 次单词 {neutral}",
+                "quit_message": "退出游戏啦 {neutral}",
+                "quit_message_not_start": "退出游戏啦，你花费的{coin_name}还给你了哦",
+                "cmd_in_game": "你还在游戏中哦，不能执行指令 {negative}\n想要退出可以发送 quit 哦",
+                "times_out_of_range": "猜测次数不能大于 {max_limit} 哦 {negative}",
+                "letters_out_of_range": "单词字数只能在 {min} ~ {max} 之间哦 {negative}",
+                "word_list_missing": "这个字数的词库还没有准备好哦 {negative}",
+                "arg_error": "参数解析出现错误，请确定你写的是整数哦 {negative}\n{ex}",
+                "render_error": "棋盘渲染失败了 {negative}，本局结束，你花费的{coin_name}还给你了哦\n{ex}",
+                "times_left": "你还有 {times_left} 次机会得到奖励{positive_punc}",
+                "limited": "你今天游玩这个游戏的奖励次数用完啦",
+                "award": "你拿到了 {award} {coin_pronoun}{coin_name}作为奖励！\n你还有 {coins_left} {coin_pronoun}{coin_name}哦",
+                "no_award": "你没有拿到任何{coin_name}...",
+                "interjection_confirm": "「{word}」看起来像语气词哦 {neutral} 想猜这个词的话，再发一次吧",
+                "word_guessed": "你已经猜过这个词啦 {neutral}",
+                "word_definition": "\n📖 {definition}"
             }
         },
         "漂流瓶": {

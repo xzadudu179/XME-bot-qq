@@ -6,6 +6,7 @@
 """
 
 import os
+import re
 import socket
 import sys
 from pathlib import Path
@@ -103,13 +104,17 @@ def repo_probes() -> list[dict]:
 
     try:
         with open("/app/keys.py", "rb") as f:
-            content = f.read()
-        # 已知设计取舍：calc 导入链顶层依赖 keys，repo 档无任意代码能力
-        checks.append({"name": "keys.py 可见（设计取舍）", "passed": True,
-                       "detail": f"{len(content)} 字节，仅 AST 白名单档可达"})
+            content = f.read().decode("utf-8", "replace")
     except OSError as ex:
-        checks.append({"name": "keys.py 可见（设计取舍）", "passed": True,
+        checks.append({"name": "keys.py 遮蔽为 None 存根", "passed": False,
                        "detail": f"不可读（{type(ex).__name__}），导入链会失败需排查"})
+    else:
+        lines = [ln.strip() for ln in content.splitlines()
+                 if ln.strip() and not ln.strip().startswith("#")]
+        is_stub = bool(lines) and all(re.fullmatch(r"\w+ = None", ln) for ln in lines)
+        checks.append({"name": "keys.py 遮蔽为 None 存根", "passed": is_stub,
+                       "detail": ("全部顶层名字均为 None，密钥值不进沙箱" if is_stub
+                                  else f"存在非存根内容（{len(lines)} 行有效代码）！")})
 
     try:
         with open("/app/bot.py", "a"):

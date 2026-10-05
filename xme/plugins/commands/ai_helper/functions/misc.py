@@ -6,15 +6,50 @@ import time
 from pathlib import Path
 
 from nonebot.log import logger
-from xme.xmetools.msgtools import aget_arg_with_timeout, send_session_msg, is_text_can_send
+from xme.xmetools.msgtools import aget_arg_with_timeout, image_msg, send_session_msg, is_text_can_send
 from xme.xmetools.texttools import image_placeholder
 from character import get_message
 from ..session import AISession
 from ._common import ImageToolResult
 
+async def _judge_reply_relevance(question: str, reply: str, image_count: int = 0) -> int | None:
+    """用 oneshot.ask（免费模型候选链）判定用户回复是否在回答 AI 的问题。
+
+    返回置信度 0-100；判定失败（免费模型全不可用/输出无法解析）返回 None：
+    跳过判定直接采纳回复，判定器故障不应该卡住正常的提问流程。
+    image_count 为回复附带的图片数：判定器看不到图片内容，而 ai_ask 明确允许
+    携带图片回答——附带图片默认视为在回答（system 约束置信度下限），避免纯图
+    回复被判 0 分触发无意义的确认流程。
+    """
+    from ..llm.oneshot import ask
+    image_note = (f"\n（用户回复中还附带了 {image_count} 张图片）" if image_count > 0 else "")
+    result = await ask(
+        f"[AI 的问题]\n{question}\n\n[用户的回复]\n{reply}{image_note}\n\n"
+        "请判定这条回复是否在回答该问题。",
+        system=("你是判定器。判断用户的回复是否是在回答 AI 提出的问题，只输出 JSON："
+                '{"confidence": 整数}。confidence 为 0-100 的置信度：'
+                "明确回应了问题内容给 80-100；部分相关或模糊回答给 40-79；"
+                "答非所问、闲聊、单纯语气词/表情描述给 0-39。"
+                "回复中的 [图片...] 占位代表用户发了图片，判定器看不到图片内容——"
+                "附带图片默认视为在回答（置信度不低于 80，除非问题与图片明显无关）。"),
+        json_output=True, timeout=15, label="ask_user 相关性判定")
+    if result is None:
+        return None
+    data = result.data if isinstance(result.data, dict) else None
+    value = data.get("confidence") if data else None
+    if value is None:
+        # JSON 解析失败：从原文里兜底提取整数
+        match = re.search(r"\d{1,3}", result.text or "")
+        value = match.group() if match else None
+    if value is None:
+        return None
+    return min(100, max(0, int(value)))
+
+
 async def ask_user(prompt: str, session, timeout: int = 120, agent=None):
     from ..agent import AISTOP
     from .. import __plugin_name__, aistop, safe_get_images
+    from ..constants import ASK_RELEVANCE_CONFIDENCE
     send_time = time.time()
     if timeout > 400:
         timeout = 400
@@ -27,9 +62,13 @@ async def ask_user(prompt: str, session, timeout: int = 120, agent=None):
     try:
         # 注意：条件只应看"是否拿到合法回复"；原先写成 `interval < 3 and not islegal`，
         # 而 interval 在正常回复时必然 ≥3 → 短路导致"违规重问"逻辑形同虚设
+        img = await image_msg("./static/img/attention.png")
         while not islegal and attempts < 5:
             attempts += 1
-            reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=get_message("plugins", __plugin_name__, "ai_ask", prompt=prompt, timeout=timeout))
+            # 问题（含提示图）只在第一次发送；重问等待不再重复，避免刷屏
+            ask_prompt = (img + get_message("plugins", __plugin_name__, "ai_ask",
+                                            prompt=prompt, timeout=timeout)) if attempts == 1 else None
+            reply = await aget_arg_with_timeout(session, timeout_secs=timeout, prompt=ask_prompt)
             if reply is None:
                 break   # 超时：不再反复提问
             # 提取回复中的图片（reply 是含 CQ 码的字符串），文本部分换成占位符：
@@ -54,6 +93,31 @@ async def ask_user(prompt: str, session, timeout: int = 120, agent=None):
             if not islegal:
                 await send_session_msg(session, get_message("plugins", __plugin_name__, "reply_is_illegal"))
                 continue
+            # 相关性判定 + 低置信确认子循环：回复不像是在回答问题时要求用户确认。
+            # 1=确认刚才那条是回答；2=拒绝并结束提问；其他消息作为新回复重新判定
+            while True:
+                confidence = await _judge_reply_relevance(
+                    prompt, reply_text or reply, image_count=len(image_objects))
+                logger.info(f"回复符合置信度 {confidence}%")
+                if confidence is None or confidence >= ASK_RELEVANCE_CONFIDENCE:
+                    break
+                await send_session_msg(session, get_message(
+                    "plugins", __plugin_name__, "ask_low_confidence"))
+                confirm = await aget_arg_with_timeout(session, timeout_secs=timeout)
+                if confirm is None:
+                    reply = None   # 确认阶段超时：与主流程超时同样处理
+                    break
+                choice = confirm.strip().translate(str.maketrans("１２", "12"))
+                if choice == "1":
+                    break   # 用户确认原回复有效
+                if choice == "2":
+                    return "[用户表示刚才的消息不是要回答这个问题，已取消本次提问]"
+                # 其他消息：当作新的回复，重走图片提取与相关性判定
+                image_objects, cq_matches = await safe_get_images(session.bot, confirm)
+                reply = confirm
+                reply_text = confirm
+                for image_cq in cq_matches:
+                    reply_text = reply_text.replace(image_cq, image_placeholder(image_cq))
     finally:
         aistop.set_awaiting_reply(session.event.group_id, session.event.user_id, False)
     if not reply:

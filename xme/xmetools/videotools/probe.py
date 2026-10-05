@@ -28,15 +28,19 @@ async def get_video_duration(path_or_url: str, *, timeout: float = 30) -> float 
 
     path_or_url: 直链媒体文件地址，也可传本地文件路径；平台页面链接请用 parse_video。
     timeout: ffprobe 进程的等待上限（秒），超时进程会被终止。
-    http(s) 地址会先做 SSRF 校验（拒绝本机/内网/链路本地目标，视同无法解析）。
+    http(s) 地址会先做 SSRF 校验（拒绝本机/内网/链路本地目标，视同无法解析）；
+    其余带协议的地址（file/ftp/rtsp 等）一律拒绝探测，只放行纯本地路径。
     """
     from urllib.parse import urlsplit
-    if urlsplit(str(path_or_url)).scheme in ("http", "https"):
+    scheme = urlsplit(str(path_or_url)).scheme.lower()
+    if scheme in ("http", "https"):
         from xme.xmetools.reqtools import assert_public_http_url
         try:
             assert_public_http_url(str(path_or_url))
         except ValueError:
             return None
+    elif scheme:
+        return None
     cmd = [
         "ffprobe", "-v", "error",
         "-show_entries", "format=duration",

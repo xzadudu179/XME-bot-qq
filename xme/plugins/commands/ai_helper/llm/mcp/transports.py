@@ -5,6 +5,7 @@
 """
 import asyncio
 import json
+import re
 from collections import deque
 
 import httpx
@@ -16,6 +17,10 @@ from .types import (
 
 # Streamable HTTP 规范要求 Accept 同时声明两种类型（服务器二选一返回）
 _HTTP_ACCEPT = "application/json, text/event-stream"
+
+# stdio server 子进程的环境变量过滤：宿主环境里名字含敏感词的项不继承
+# （keys/token/secret/password 等），server 只拿到通用运行变量 + 显式配置的 env
+_SENSITIVE_ENV_RE = re.compile(r"KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL", re.IGNORECASE)
 
 
 class HttpTransport:
@@ -137,7 +142,8 @@ class StdioTransport:
                 *self.command,
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                env={**os.environ, **self._env})
+                env={**{k: v for k, v in os.environ.items()
+                        if not _SENSITIVE_ENV_RE.search(k)}, **self._env})
         except OSError as ex:
             raise MCPError(self.name, "transport",
                            f"无法启动 {self.command[:2]}：{ex}") from ex

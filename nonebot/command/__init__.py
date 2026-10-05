@@ -1,5 +1,6 @@
 import re
 import asyncio
+import time
 import warnings
 from datetime import datetime, timedelta
 from functools import partial
@@ -21,6 +22,18 @@ from nonebot.permission import check_permission
 # key: context id
 # value: CommandSession object
 _sessions = {}  # type: Dict[str, "CommandSession"]
+
+
+def has_running_session(event: CQEvent) -> bool:
+    """查该消息上下文是否有接管输入的指令会话（handler 执行中或 aget 等待参数中）。
+
+    供 message_preprocessor 在拦截/吞消息前判断：这两种状态下用户的输入属于
+    会话参数（如游戏里回答数字、aget_arg 的选项回复），预处理器不应抢跑，
+    交回 handle_command 喂给会话即可。注意 aget 挂起期间 running 为 False，
+    真正的等待标记是 waiting（_future 未完成）。
+    """
+    session = _sessions.get(context_id(event))
+    return session is not None and (session.running or session.waiting)
 
 
 class CommandInterrupt(Exception):
@@ -449,7 +462,7 @@ class CommandSession(BaseSession):
     __slots__ = ('cmd', 'current_key', 'current_arg_filters',
                  '_current_send_kwargs', 'current_arg', '_current_arg_text',
                  '_current_arg_images', '_state', '_last_interaction',
-                 '_running', '_run_future', '_future')
+                 '_running', '_run_future', '_future', '_current_event')
 
     def __init__(self,
                  bot: NoneBot,
@@ -585,13 +598,21 @@ class CommandSession(BaseSession):
 
         Refill the session with a new message event.
 
+        ``self.event`` 保持为会话创建时的原始事件（message_id 等键随之稳定），
+        新事件存入 ``_current_event``，需要最新一条消息时用 ``current_event``。
+
         :param event: new message event
         :param current_arg: new command argument as a string
         """
-        self.event = event
+        self._current_event = event
         self.current_arg = current_arg
         self._current_arg_text = None
         self._current_arg_images = None
+
+    @property
+    def current_event(self) -> CQEvent:
+        """会话最近一次收到的事件（创建事件或 refresh 传入的新事件）。"""
+        return self._current_event
 
     def get(self,
             key: str,
@@ -733,6 +754,24 @@ class CommandSession(BaseSession):
         raise e
 
 
+# 运行中会话吞消息时的忙碌提示节流：ctx_id → 上次提示时刻（懒清理，量级=活跃会话数）
+_busy_notice_at: Dict[str, float] = {}
+SESSION_RUNNING_NOTICE_INTERVAL = 15.0
+
+
+def _notify_session_running(bot: NoneBot, event: CQEvent, ctx_id: str) -> None:
+    """会话运行中吞掉新消息前发忙碌提示；同一上下文按间隔节流避免刷屏。"""
+    now = time.monotonic()
+    if now - _busy_notice_at.get(ctx_id, 0.0) < SESSION_RUNNING_NOTICE_INTERVAL:
+        return
+    _busy_notice_at[ctx_id] = now
+    expression = bot.config.SESSION_RUNNING_EXPRESSION
+    if not expression:
+        return
+    asyncio.ensure_future(
+        send(bot, event, render_expression(expression)))
+
+
 async def handle_command(bot: NoneBot, event: CQEvent,
                          manager: CommandManager) -> Optional[bool]:
     """
@@ -773,13 +812,10 @@ async def handle_command(bot: NoneBot, event: CQEvent,
 
     if session is not None:
         if session.running:
-            if cmd:
-                logger.warning(f'There is a session of command '
-                            f'{session.cmd.name} running, notify the user')
-                asyncio.ensure_future(
-                    send(bot, event,
-                        render_expression(bot.config.SESSION_RUNNING_EXPRESSION)))
-                # pretend we are successful, so that NLP won't handle it
+            logger.warning(f'There is a session of command '
+                        f'{session.cmd.name} running, notify the user')
+            _notify_session_running(bot, event, ctx_id)
+            # pretend we are successful, so that NLP won't handle it
             return True
 
         if session.is_valid:

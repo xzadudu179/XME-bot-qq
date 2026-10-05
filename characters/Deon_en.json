@@ -928,7 +928,7 @@
         },
         "status": {
             "desc": "View system status",
-            "introduction": "View the system status of the device running this XME-Bot instance",
+            "introduction": "View the system status, command usage stats and AI provider balances of the device running this XME-Bot instance",
             "fetch_failed": [
                 "This running device seems unable to display system status...",
                 "This running device appears unable to show system status...",
@@ -2177,10 +2177,10 @@
         "furfusion": {
             "desc": "FurFusion related commands",
             "introduction": "Use the FurFusion API to query various FurFusion-related information~",
-            "countdown": "Here is the current FurFusion schedule information {positive}{image}",
-            "error": "Data read error {negative}: code {code}",
+            "countdown": "Here is the current furry convention schedule {positive}{image}",
+            "error": "Data read error {negative}: {info}",
             "no_search_data": "No data found related to keyword \"{keyword}\" {neutral}",
-            "fusion_data": "{image}{name}\nStatus: {state}\nOfficial group: {groups}\nAliases: {correlation}\nData source: FURRYFUSION",
+            "fusion_data": "{image}{name}\nStatus: {state}\nTime: {time}\nLocation: {region}\nOrganizer: {org}\nData source: {source}",
             "search_mutiple": "Found multiple related entries{positive_punc}\n{datas}\nSend the index below to select which item to search {neutral}",
             "index_not_num": "The index you entered is not an integer {negative} please send an integer",
             "index_out_of_range": "The index you entered is not within the selectable range {neutral}"

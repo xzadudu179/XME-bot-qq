@@ -17,6 +17,10 @@ TAVILY_API_KEY = ""
 WEATHER_API_KEY = ""
 JIANMAO_TOKEN = ""
 JIANMAO_QQ = ""
+# 兽展日历 FCC API（furrycons.cn，兽聚指令数据源）的访问令牌：
+# 在工作台 dashboard.furrycons.cn 注册并创建应用后获取，
+# 请求时以 Authorization: <该值> 头携带
+FURCONS_TOKEN = ""
 BOTTLE_IMAGE_KEY = ""
 AFDIAN_USER_ID = ''
 AFDIAN_TOKEN = ''
@@ -53,6 +57,10 @@ VERCEL_DOCS_DEPLOY_HOOK = ""
 #   transport 可选：openai_http（默认，httpx 直连）
 #   stream    可选：默认 True（流式读块并写调试日志；不支持流式的端点设为 False）
 #   timeout   可选：单次调用超时秒数（默认取 constants.LLM_TIMEOUT）
+#   billing   可选：余额查询方式（.stats 的「AI 余额」段用）：
+#             deepseek / moonshot / one_api；缺省按 base_url 域名自动识别，
+#             中转站多为 one-api 系可手动指定，"none" 显式禁用该 provider 的余额查询
+#             （glm / 方舟 / minimax / xai 无公开余额接口，恒显示「未知」）
 #   temperature / extra_headers 可选
 LLM_PROVIDERS = {
     "glm": {

@@ -1,10 +1,17 @@
 __plugin_name__ = "ai_helper"
 
+INPUT_MAX_LENGTH = 10000
+
 # /ai 指令的别名（agent 内识别同聊天追加消息是否为 ai 指令时复用）
 COMMAND_ALIAS = ["ai"]
 
 # MAX_CHECK_TIMES = 1400
 MAX_TOOL_CALL_TIMES = 1000
+
+# 单轮熔断：对话时长墙钟与累计 credits 消耗的硬上限。run_agent 在每次发起模型
+# 调用前检查，超限即中断收尾并结算（防失控对话无限消耗，见 agent._check_turn_budget）
+TURN_TIME_LIMIT = 5 * 3600              # 单轮最长 5 小时
+TURN_CREDITS_LIMIT = 24_000_000         # 单轮最多消耗 2400 万 credits
 # /ai -c history 展示：转发单节点截断长度与整包失败后分块转发的每块节点数
 HISTORY_NODE_MAX_CHARS = 2500
 HISTORY_FORWARD_GROUP_NODES = 35
@@ -26,6 +33,12 @@ COMPRESS_MAX_LENGTH = 4000
 THINKING_NOTE_ENABLED = False
 THINKING_NOTE_MAX_LENGTH = 150        # 笔记字数上限（传给 ai_configs 里 thinking 提示词）
 THINKING_NOTE_INPUT_CHARS = 8000      # 参与提炼的 reasoning 输入上限（超长取尾部）
+
+# ask_user 相关性判定：用户回复后用 oneshot 能力模型（LLM_CAPABILITIES.oneshot）
+# oneshot 判断「这条回复是否在回答 AI 的问题」，置信度低于阈值时要求用户确认
+# （1=确认是回复；2=拒绝并结束提问；其他消息作为新回复重新判定）。
+# 判定调用失败时跳过判定（直接采纳回复，不阻塞提问）
+ASK_RELEVANCE_CONFIDENCE = 60
 
 # 单会话 history 文件夹（AI 转存文件）的资源上限
 HISTORY_MAX_FILES = 256                 # 最多 256 个文件
@@ -89,8 +102,11 @@ MAX_EXTRACT_TOTAL_SIZE = 50 * 1024 * 1024
 MAX_SYNTAX_CHECK_SIZE = 1 * 1024 * 1024
 
 # content_search 的全文匹配超时（秒）：匹配在子线程执行，超时即报错返回；
-# 灾难性回溯正则最多占住一个后台线程，不再冻结事件循环
+# 灾难性回溯正则最多占住一个后台线程，不再冻结事件循环。
+# 线程无法强杀，超时的匹配线程会跑完才释放，因此文件大小另设上限，
+# 压缩"超时后线程长跑"的最坏情况
 CONTENT_SEARCH_TIMEOUT = 5
+CONTENT_SEARCH_MAX_SIZE = 2 * 1024 * 1024   # 全文匹配的文件大小上限（2 MiB）
 
 # 语法检测子进程超时（秒），超时 kill
 SYNTAX_CHECK_TIMEOUT = 15
@@ -157,16 +173,16 @@ LLM_MODELS = {
         "provider": "deepseek",
         "model": "deepseek-flash",
         "vision": True,
-        "video": False,              # DeepSeek 端点在 JSON 层拒绝 video_url 段（实测 http 422）
+        "video": False,
         "context_limit": 1_000_000,
         "credit_multiplier": 1.2,
-        "cache_credit_ratio": 0.02,  # DeepSeek 缓存折扣很低（命中仅按 2% 计）
+        "cache_credit_ratio": 0.02,
         "description": "Deepseek V4.1 flash 模型",
     },
     "kimipro": {
         "provider": "moonshot",
         "model": "kimi-k3",
-        "temperature": 1,          # Moonshot 限制：kimi-k3 只接受 temperature=1
+        "temperature": 1,          # kimi-k3 只接受 temperature=1
         "vision": True,
         "video": False,
         "context_limit": 1_048_576,
@@ -177,12 +193,12 @@ LLM_MODELS = {
     "grok": {
         "provider": "xai",
         "vision": True,
-        "model": "grok-4.7",
+        "model": "grok-4.6",
         "video": False,
         "context_limit": 500_000,
         "credit_multiplier": 20,
         "cache_credit_ratio": 0.25,
-        "description": "Grok 4.7 模型",
+        "description": "Grok 4.6 模型",
     },
     "minimax": {
         "provider": "minimax",
@@ -277,11 +293,14 @@ LLM_TOPIC_ROUTING_ENABLED = True
 MCP_ENABLED = True
 MCP_TIMEOUT = 15              # 单次 MCP 请求超时（秒）
 MCP_STDIO_BOOT_TIMEOUT = 30   # stdio server 启动 + 握手超时（秒）
+MCP_RESULT_MAX_CHARS = 200_000  # 工具结果字符上限（超出截断；>1 万仍走通用压缩转文件）
 
 # 类别 → 模型别名（键就是分类器要输出的类别，单点维护：改这里即可增删类别/换模型）
 LLM_TOPIC_ROUTING = {
     "闲聊": "qwenflash",
-    "讲故事": "pro",
+    "创作故事": "qwenflash",
+    "世界知识": "dsflash",
+    "创作短篇故事": "pro",
     "角色扮演": "flash",
     "其他编程": "dsflash",
     "前端简单任务": "flash",
@@ -289,6 +308,7 @@ LLM_TOPIC_ROUTING = {
     "前端复杂任务": "dsflash",
     "前端视觉还原": "qwenflash",
     "单点BUG修复": "qwenflash",
+    "堆栈报错/深层逻辑报错查看": "dsflash",
     "信息检索": "dsflash",
     "其他": "dsflash",
 }
@@ -380,6 +400,16 @@ SCREENSHOT_TOTAL_BUDGET = 75          # 单次截图总预算（秒，含启动/
 # 本地 HTML/SVG 渲染默认离线（SSRF 防护：内网/loopback/任意域一律进死代理），
 # 仅此白名单内的公共包托管 CDN 走直连放行；页面重定向逐跳重新判定，内网依旧不可达
 SCREENSHOT_FILE_CDN_BYPASS = ("*.unpkg.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com")
+
+# view_image / screenshot_page 独立分析的 model="auto" 路由：
+# prompt 命中审美/设计类关键词 → aesthetic 模型（GLM 视觉审美更强），
+# 否则（内容识别/细节/世界知识类）→ detail 模型（qwenflash）；别名须在 LLM_MODELS
+# 且具备 vision 能力，不具备时自动回退默认视觉模型
+VISION_AUTO_AESTHETIC_KEYWORDS = (
+    "审美", "好看", "美观", "漂亮", "丑", "配色", "色彩", "构图", "排版", "布局",
+    "设计感", "视觉效果", "视觉风格", "颜值", "艺术", "好看吗", "好不好看",
+)
+VISION_AUTO_MODEL_ALIASES = {"aesthetic": "flash", "detail": "qwenflash"}
 RECORD_MAX_DURATION = 60              # 页面录制的最长时长（秒）
 RECORD_DEFAULT_RENDER_WIDTH = 1920    # 录制浏览器布局宽度的缺省值（所有档位统一，桌面排版）
 RECORD_LAYOUT_MAX_WIDTH = 3840        # 布局宽度上限

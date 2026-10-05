@@ -6,14 +6,15 @@
 - `aistop`：取消会话任务并吞掉消息（长工具执行中同样即时生效）；
 - `/ai xxx`：插入消息入队（开启插入模式时），`/ai stop` 直接中断；
 - 其他指令：回复"正在与 AI 聊天中"提示；
-- 普通文本：私聊下作为插入消息入队（开启插入模式时，未开则提示如何开启）；
-  群聊下静默吞掉（避免群内闲聊被误吞/误插）。
+- 普通文本：私聊与群聊统一——静默吞掉，要插入消息用 "/ai 内容"（符合直觉，
+  也避免闲聊被误插进 AI 上下文）。
 以上均吞掉消息（CanceledException），不再进入任何命令/会话流；发送者在该聊天
 没有运行中的会话时，本预处理器不干预，消息照常流转。
 取消的收尾统一在 talk() 的 CancelledError 分支：清快照、清 temp、发送中断文案。
 """
 import asyncio
 import re
+from pathlib import Path
 
 import config
 from nonebot.log import logger
@@ -68,8 +69,9 @@ def register_turn(group_id, user_id, task: asyncio.Task, agent=None,
     """会话开始时登记任务与 agent 引用（talk() 调用）；插入键与开关由 agent 实时提供。"""
     _running_turns[(group_id, user_id)] = {
         "task": task, "agent": agent, "insert_enabled": insert_enabled,
-        "awaiting_reply": False,
+        "awaiting_reply": False, "stop_requested": False,
     }
+    _sync_active_file()
 
 
 def _insert_key_now(turn: dict) -> str:
@@ -89,6 +91,15 @@ def insert_enabled_now_for(group_id, user_id) -> bool:
     return _insert_enabled_now(turn) if turn is not None else False
 
 
+def has_running_turn(group_id, user_id) -> bool:
+    """该 (聊天, 用户) 是否有运行中的 AI 会话（含等待回复与插入模式期间）。
+
+    供其他预处理器判断是否让路：运行期间发起者的消息由本模块全权接管
+    （插入入队 / aistop / 提示），指令提示之类的功能不应抢跑打断 AI 对话流程。
+    """
+    return (group_id, user_id) in _running_turns
+
+
 def set_awaiting_reply(group_id, user_id, flag: bool) -> None:
     """标记"AI 正在等用户回复"（ask_user 提问期间）。
 
@@ -103,17 +114,38 @@ def set_awaiting_reply(group_id, user_id, flag: bool) -> None:
 def unregister_turn(group_id, user_id) -> None:
     """会话结束时注销（talk() 的 finally 调用）。"""
     _running_turns.pop((group_id, user_id), None)
+    _sync_active_file()
+
+
+def stop_requested(group_id, user_id) -> bool:
+    """该会话的中断是否由 /ai stop 主动发起（区别于进程退出等外部取消）。
+
+    talk() 的 CancelledError 分支据此分流：主动 stop 清快照不保留；
+    外部取消保留快照供重启后 /ai --continue 恢复。
+    """
+    turn = _running_turns.get((group_id, user_id))
+    return bool(turn and turn.get("stop_requested"))
+
+
+def _sync_active_file() -> None:
+    """把运行中的会话数落盘（watchdog 收到 Ctrl+C 时据此要求二次确认；best-effort）。"""
+    try:
+        Path("data").mkdir(exist_ok=True)
+        Path("data/.ai_active_turns").write_text(str(len(_running_turns)), encoding="utf-8")
+    except Exception:
+        pass
 
 
 def request_stop(group_id, user_id) -> bool:
     """取消该 (聊天, 用户) 正在运行的会话任务；找到并取消返回 True。
 
     /ai stop 与预处理器共用此入口；取消的收尾统一在 talk() 的
-    CancelledError 分支处理（清快照/temp + 中断文案）。
+    CancelledError 分支处理（主动 stop 清快照/temp + 中断文案）。
     """
     turn = _running_turns.get((group_id, user_id))
     if turn is None:
         return False
+    turn["stop_requested"] = True
     turn["task"].cancel()
     return True
 
@@ -186,7 +218,7 @@ async def handle_running_turn_input(bot, event, plugin_manager):
 
     # aistop：任意时刻（含长工具执行中）即时取消
     if text == "aistop":
-        turn["task"].cancel()
+        request_stop(event.get("group_id"), event.user_id)
         logger.info(f"{event.user_id} 发送 aistop：已中断其运行中的 AI 会话")
         raise CanceledException("aistop")
 
@@ -197,7 +229,7 @@ async def handle_running_turn_input(bot, event, plugin_manager):
     if text[0] in config.COMMAND_START and text.split(" ")[0][1:] in (__plugin_name__, *COMMAND_ALIAS):
         ins_text = " ".join(text.split(" ")[1:]).strip()
         if ins_text in ("stop", "aistop"):
-            turn["task"].cancel()
+            request_stop(event.get("group_id"), event.user_id)
             logger.info(f"{event.user_id} 发送 /ai stop：已中断其运行中的 AI 会话")
             raise CanceledException("/ai stop")
         if not ins_text:
@@ -223,25 +255,6 @@ async def handle_running_turn_input(bot, event, plugin_manager):
     if is_command(text):
         await swallow("other-cmd", reply=get_message("plugins", __plugin_name__, "ai_sending"))
         return
-    # 私聊普通文本：开了插入模式 → 作为插入消息入队并回执（私聊下最自然的插入方式）；
-    # 未开 → 提示如何开启。共享会话的插入键不是 user: 前缀，回执提示用 /ai 插入，
-    # 不能像群聊那样静默吞掉（否则消息无声消失）。
-    if event.get("group_id") is None:
-        if not _insert_key_now(turn).startswith("user:"):
-            await swallow("plain-text-shared", reply=get_message(
-                "plugins", __plugin_name__, "no_shared_insert"))
-            return
-        ins_text, image_objects, has_content = await collect_insert(text)
-        if not has_content:
-            # 纯文件回显/空消息：静默吞掉（用户点开 bot 发的文件就会走到这里）
-            logger.info(f"忽略 {event.user_id} 的文件回显/空消息，未入插入队列")
-            await swallow("plain-text-file-echo")
-            return
-        if not _insert_enabled_now(turn):
-            await swallow("plain-text-no-insert", reply=get_message(
-                "plugins", __plugin_name__, "normal_insert_off"))
-            return
-        await enqueue_and_ack(ins_text, image_objects)
-        return
-    # 群聊维持静默（避免群内闲聊被误吞/误插）。
+    # 普通文本（非 /ai 形式）：私聊与群聊统一——运行中的 AI 会话期间静默吞掉，
+    # 要插入消息用 "/ai 内容"（上方分支处理），避免闲聊被误插进 AI 上下文
     await swallow("plain-text")

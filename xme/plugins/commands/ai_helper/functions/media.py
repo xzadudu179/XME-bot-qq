@@ -244,7 +244,8 @@ async def gen_image(prompt, action: str = "send", size="2k",
         else:
             data = result.b64_images[0]
         try:
-            temp_ref = bytes_to_file(data, agent.user_id, _image_suffix(data), agent)["ref"]
+            temp_ref = (await asyncio.to_thread(
+                bytes_to_file, data, agent.user_id, _image_suffix(data), agent))["ref"]
         except FileExistsError as ex:
             # 同内容成图已存在：反查既有引用复用
             temp_ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")

@@ -27,7 +27,7 @@ from .session import (AISession, allows_auto_model, current_storage, enable_norm
 from .llm import registry
 from . import constants, pro, share, aistop, credits, window
 from .credits import ai_credits_left
-from .constants import LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
+from .constants import INPUT_MAX_LENGTH, LLM_MODELS, __plugin_name__, MAX_TOOL_CALL_TIMES, COMPRESS_TRIGGER_RATIO, CONTEXT_LIMIT_DEFAULT
 from .commands import (adjust_credits, clear_history, clear_all_sessions, list_sessions,
                        name_session, new_session, switch_session, toggle_pro_user)
 from .share_commands import (
@@ -280,7 +280,7 @@ async def _(session: CommandSession, user: u.User):
         pending_insert = running_turn
     else:
         pending_insert = None
-    MAX_LENGTH = 3000
+
     from . import llm
     available_models = llm.registry.list_model_aliases()
     # current_arg 带 CQ 码（图片等）；current_arg_text 会把 CQ 整个剥掉导致图片丢失
@@ -310,7 +310,7 @@ async def _(session: CommandSession, user: u.User):
         await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
         return False
     # ---------
-    if args.ctrl and text and len(text) <= MAX_LENGTH:
+    if args.ctrl and text and len(text) <= INPUT_MAX_LENGTH:
         control = await parse_control(session, text, user)
         if control is CMD_END:
             return False
@@ -333,8 +333,8 @@ async def _(session: CommandSession, user: u.User):
     if not text:
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_arg'))
         return False
-    if len(text) > MAX_LENGTH:
-        await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=MAX_LENGTH))
+    if len(text) > INPUT_MAX_LENGTH:
+        await send_session_msg(session, get_message("plugins", __plugin_name__, 'too_long', count=INPUT_MAX_LENGTH))
         return False
 
     # 自己进行中的对话开启了插入模式：仅发起该对话的窗口可插入，跨窗口一律拒绝
@@ -406,12 +406,21 @@ async def _(session: CommandSession, user: u.User):
                 resume_data = snap  # 原样恢复，当前消息不带入
             else:
                 clear_snapshot(user.id)  # 3 或无效输入：丢弃快照，按新对话处理
+            if resume_data:
+                # 恢复确认作为独立消息即时发出，不再附带在最终回答前
+                await send_session_msg(session, get_message(
+                    "plugins", __plugin_name__, "resume_prefix",
+                    count=len(snap.get("messages") or [])))
     # /ai --continue：显式恢复上次异常中断的会话（快照含全部用户输入/思考/工具结果/插入）
     if args.resume:
         resume_data = load_snapshot(session.event.user_id)
         if not resume_data:
             await send_session_msg(session, get_message("plugins", __plugin_name__, 'no_resume'))
             return False
+        # 恢复确认作为独立消息即时发出（与 resume_ask 确认流程一致）
+        await send_session_msg(session, get_message(
+            "plugins", __plugin_name__, "resume_prefix",
+            count=len(resume_data.get("messages") or [])))
     if resume_data:
         # 快照里的模型若对这名用户受限（高级模型/自由指定形式）：请他挑一个可用模型再继续
         snapshot_model = resume_data.get("model_alias") or ""
@@ -518,9 +527,9 @@ async def _(session: CommandSession, user: u.User):
             prefix=prefix
         )
         # ai_logger.info(f"send msg {send_msg}")
-        moderation_result = await is_text_can_send(session, send_msg, 4)
-        can_send = moderation_result["result"]
-        reason = moderation_result["reason"]
+        # moderation_result = await is_text_can_send(session, send_msg, 4)
+        # can_send = moderation_result["result"]
+        # reason = moderation_result["reason"]
         # if not can_send:
             # await send_session_msg(session, get_message("config", "moderation_danger_send", reason=reason))
             # return False
@@ -581,7 +590,7 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     tips_str = [f"- {t}\n" for t in tips]
     skills = {
         "worldview_settings": "漠月、漠星和九九/九镹所在世界观相关的设定合集，在有世界观相关的问题可以调用。",
-        "visual_design_artifact": "Generate art & visual-design artifacts as self-contained deliverables — SVG illustrations, icons, logos, cartoon scenes, SMIL loop animations, HTML/CSS visual pages, generative patterns — each verified by rendering. Use whenever the user asks to 画/设计/生成 anything visual, e.g. \"画一个……的 SVG 小动画\", \"设计一个 logo/图标/头像/海报/封面/banner\", \"来个循环动画/生成艺术/粒子效果\", or asks to fix or beautify an existing visual artifact (形状断开、云朵颠倒、配色乱、构图歪、比例怪 etc.). Even a bare \"帮我画个…\" counts. Document deliverables (docx/pptx/pdf) have their own skills, but the visual principles here still apply to their embedded graphics."
+        # "visual_design_artifact": "Generate art & visual-design artifacts as self-contained deliverables — SVG illustrations, icons, logos, cartoon scenes, SMIL loop animations, HTML/CSS visual pages, generative patterns — each verified by rendering. Use whenever the user asks to 画/设计/生成 anything visual, e.g. \"画一个……的 SVG 小动画\", \"设计一个 logo/图标/头像/海报/封面/banner\", \"来个循环动画/生成艺术/粒子效果\", or asks to fix or beautify an existing visual artifact (形状断开、云朵颠倒、配色乱、构图歪、比例怪 etc.). Even a bare \"帮我画个…\" counts. Document deliverables (docx/pptx/pdf) have their own skills, but the visual principles here still apply to their embedded graphics."
     }
     skills_text = "\n".join([f"{i + 1}. {k}: {v}" for i, (k, v) in enumerate(skills.items())])
     ai_helper = AIHelper(user.id, session=session, model=model, ai_session=ai_session, shared_session=shared, resume_data=resume_data, routing_allowed=routing_allowed)
@@ -614,10 +623,25 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
     try:
         result = await ai_helper.user_talk(session, role, user, text)
     except asyncio.CancelledError:
-        # 被 aistop / /ai stop 取消：不发 talk_result、不写历史，
-        # 但已消耗的 tokens 照常结算（逐参与者），中断文案附带消耗
-        clear_snapshot(user.id)
+        # 取消分两类：
+        # - /ai stop 主动取消：清快照 + 结算 + 中断文案（用户明确不要继续了）；
+        # - 外部取消（Ctrl+C 重启等进程退出）：保留快照供重启后 /ai --continue 恢复，
+        #   不在此结算（恢复后的轮次会带上快照里的 token 计数一并结算，避免重复计费）；
+        #   此时协议端大概率已随进程退出，通知发不出去就静默放弃。
+        user_stopped = aistop.stop_requested(session.event.group_id, user.id)
+        if user_stopped:
+            clear_snapshot(user.id)
         ai_helper.delete_temp()
+        if not user_stopped:
+            ai_logger.warning(
+                f"用户 {user.id} 的会话被外部中断（进程退出），快照已保留，可 /ai --continue 恢复")
+            try:
+                await send_session_msg(session, get_message(
+                    "plugins", __plugin_name__, "ai_send_interrupted",
+                    credits="未知", left="未知"))
+            except Exception:
+                pass
+            return False, {}, {}, 0
         try:
             tokens_use_dict = ai_helper.settle_once()   # 幂等：重复调用不会二次扣费
             lefts = tokens_use_dict.get("lefts", {})
@@ -631,7 +655,10 @@ async def talk(session, text, user: u.User, model: str, ai_session=history.DEFAU
             )
         except Exception:
             ai_logger.error(f"aistop 中断结算失败：{format_exc()}")
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted", credits="未知", left="未知"))
+            try:
+                await send_session_msg(session, get_message("plugins", __plugin_name__, "ai_send_interrupted", credits="未知", left="未知"))
+            except Exception:
+                pass   # 进程退出阶段协议端已不可用：通知放弃，不再让异常逃出收尾分支
         return False, {}, {}, 0
     except BaseException:
         # 异常中断：temp（含本轮下载的视频）也要清理，快照保留供 --continue 恢复

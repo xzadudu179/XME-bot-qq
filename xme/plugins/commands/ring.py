@@ -5,7 +5,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from xme.xmetools import imgtools
 from character import get_message
-from xme.xmetools.msgtools import image_msg
+from xme.xmetools.msgtools import get_user_id_from_arg, image_msg
 from xme.xmetools.cmdtools import use_args
 from xme.xmetools.msgtools import send_session_msg
 import traceback

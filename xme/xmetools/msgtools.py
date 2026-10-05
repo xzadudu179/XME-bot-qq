@@ -3,18 +3,20 @@ from aiocqhttp import Event, ApiError, ActionFailed
 import config
 # import config
 from xme.xmetools.texttools import get_at_id, get_msg_len, text_moderations
-from xme.xmetools.randtools import random_percent
+from xme.xmetools.randtools import random_percent, str_choice
 from xme.xmetools.debugtools import debugging
 from xme.xmetools.bottools import get_group_name, get_stranger_name, get_user_name
 from xme.xmetools.cmdtools import send_cmd, get_cmd_by_alias
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from xme.xmetools.dicttools import set_value
+from xme.xmetools.specialtips import SpecialTip, SpecialTipContext, eligible_special_tips, mark_special_tip_used, pick_special_tip, resolve_tip_params, roll_special_tip
 from xme.xmetools.logtools import ColoredFormatter
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
 import asyncio
+import re
 import time
 import base64
 import traceback
@@ -22,10 +24,11 @@ from io import BytesIO
 from bot_variables import command_msgs
 from xme.xmetools.imgtools import gif_to_base64, get_url_image, limit_size, image_to_base64
 from xme.xmetools.animtools import is_animated
-from character import get_message
+from character import character_format, get_character_item, get_message
 from logging.handlers import TimedRotatingFileHandler
 import logging
 import os
+import random
 
 async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = False, session=None, strictness = 3):
     """分析风控返回的记录，返回 {"result": 是否放行, "reason": 原因}。
@@ -83,29 +86,148 @@ async def analyze_risk(results, bot, event: Event, risk_send_to_superusers = Fal
     logger.warning(f"风控没有返回可判定的记录，按放行处理：{str(results)[:200]}")
     return {"result": True, "reason": ""}
 
-async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
-    try:
-        logger.info(f"正在分析 \"{text}\"")
-        response = await text_moderations(text)
-        return await analyze_risk(response.get("result_list", []), bot, event, risk_send_to_superusers=risk_send_to_superusers)
+# 风控重试的超时（秒）：正常请求用 text_moderations 默认超时，重试快速失败
+_MODERATION_RETRY_TIMEOUT = 15
 
+
+async def _moderate_text(text: str, label: str) -> dict:
+    """请求文本风控：失败短超时重试一次，仍失败按「无风险」放行（fail-open）。
+
+    风控服务不可用 ≠ 内容违规——fail-closed 会把风控抖动变成误杀正常内容
+    （曾把跑了一分多钟的 /ai 正常回答整轮拦截替换）。重试用短超时，快速失败；
+    两次失败都只记 warning（最终失败附堆栈一次，便于排查非超时类异常），
+    返回空 result_list 让 analyze_risk 走「未被标记」放行分支。
+    """
+    try:
+        return await text_moderations(text)
     except Exception as ex:
-        logger.exception(traceback.format_exc())
+        logger.warning(f"[{label}] 文本风控请求失败（{type(ex).__name__}: {str(ex)[:120]}），短超时重试一次")
+    try:
+        return await text_moderations(text, timeout=_MODERATION_RETRY_TIMEOUT)
+    except Exception as ex:
+        logger.warning(f"[{label}] 文本风控重试仍失败（{type(ex).__name__}: {str(ex)[:120]}），按无风险放行",
+                       exc_info=True)
+        return {"result_list": []}
+
+
+async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
+    logger.info(f"正在分析 \"{text}\"")
+    response = await _moderate_text(text, label="event")
+    try:
+        return await analyze_risk(response.get("result_list", []), bot, event,
+                                  risk_send_to_superusers=risk_send_to_superusers)
+    except Exception as ex:
+        # 判定阶段异常是本地逻辑错误（bug）：与请求失败不同，按拦截处理更安全
+        logger.exception("文本风控判定阶段出错")
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
 
 
 async def is_text_can_send(session: CommandSession, text: str, strictness=3):
+    logger.info(f"正在分析 \"{text}\"")
+    response = await _moderate_text(text, label="session")
     try:
-        logger.info(f"正在分析 \"{text}\"")
-        response = await text_moderations(text)
-        return await analyze_risk(response.get("result_list", []), session.bot, session.event, True, session, strictness)
+        return await analyze_risk(response.get("result_list", []), session.bot, session.event,
+                                  True, session, strictness)
     except Exception as ex:
-        logger.exception(traceback.format_exc())
+        logger.exception("文本风控判定阶段出错")
         return {"result": False, "reason": f"文本风控出现未知错误：{ex}"}
 
 
-def get_tips():
-    return get_message("bot_info", "tips")
+def get_tips(message: str = "", session: BaseSession | None = None) -> str:
+    """随机获取一条 tip 文本（包含特殊tips）
+
+    有会话时：必现类（perc=100）命中优先返回并记账，否则按"已出名额"决策——
+    掷点类（0<pers<100）各自掷 perc 抢占，都未掷中从混合池抽取；
+    无会话时只返回普通随机 tip（特殊 tip 需要绑定用户记账）。
+    """
+    if session is None:
+        return get_message("bot_info", "tips")
+    context = SpecialTipContext(message=message, session=session)
+    return _guaranteed_tip_text(context) or _granted_tip_text(context)
+
+# tip 段头部：分隔线 + "tip：" 前缀，正文接 tip 文本
+TIP_HEADER = "\n-------------------\ntip："
+
+# 长消息折叠：群聊超 1200、私聊超 3000（get_msg_len 口径）自动转聊天记录；
+# 聊天记录内容按 5000 字一块拆分，块边界不切 CQ 码
+GROUP_MSG_FOLD_LEN = 1200
+PRIVATE_MSG_FOLD_LEN = 3000
+FORWARD_NODE_MAX_CHARS = 5000
+
+def _guaranteed_tip_text(context: SpecialTipContext) -> str:
+    """取必现类（perc=100）特殊 tip 文本并记账：命中返回渲染文本，否则空串"""
+    tip = pick_special_tip(context)
+    if tip is None:
+        return ""
+    return _render_special_tip(tip, context)
+
+def _granted_tip_text(context: SpecialTipContext) -> str:
+    """出 tip 名额已定时决定内容：掷点类（0<pers<100）各自掷 perc 抢占出场，都未掷中回落混合池"""
+    tip = roll_special_tip(context)
+    if tip is not None:
+        text = _render_special_tip(tip, context)
+        if text:
+            return text
+    return _draw_tip_text(context)
+
+def _render_special_tip(tip: SpecialTip, context: SpecialTipContext) -> str:
+    """渲染一条特殊 tip 文本：解析 params（支持 ctx 求值项）后随机取文本变体并格式化
+
+    params 解析失败或角色文件缺文本返回空串（此时不记账，由调用方回落）。
+    """
+    params = resolve_tip_params(tip, context)
+    if params is None:
+        return ""
+    raw = get_character_item("bot_info", "special_tips", tip.id, default="")
+    text = str_choice(raw)
+    if not text:
+        logger.warning(f"特殊 tip {tip.id} 条件命中但角色文件缺少文本，回落普通 tip")
+        return ""
+    mark_special_tip_used(tip, context.user_id)
+    return character_format(str(text), **params)
+
+def _draw_tip_text(context: SpecialTipContext) -> str:
+    """从普通 tips 与池掺杂类（perc=0）特殊 tip 的混合池中随机抽一条 tip 文本（特殊 tip 抽中即记账）
+
+    池中每条普通 tip 和特殊 tip 文本变体权重相同；池为空返回空串。
+    """
+    pool: list[tuple[SpecialTip | None, str, dict]] = []
+    normal = get_character_item("bot_info", "tips")
+    for text in (normal if isinstance(normal, list) else [normal]):
+        if text:
+            pool.append((None, str(text), {}))
+    for tip in eligible_special_tips(context):
+        params = resolve_tip_params(tip, context)
+        if params is None:
+            continue
+        raw = get_character_item("bot_info", "special_tips", tip.id, default=None)
+        for text in (raw if isinstance(raw, list) else [raw]):
+            if text:
+                pool.append((tip, str(text), params))
+    if not pool:
+        return ""
+    chosen_tip, text, params = random.choice(pool)
+    if chosen_tip is not None:
+        mark_special_tip_used(chosen_tip, context.user_id)
+    return character_format(text, **params)
+
+def build_tip_suffix(message: str, session: BaseSession, tips_percent: float | int) -> str:
+    """计算消息应附加的 tip 后缀
+
+    perc=100 的特殊 tip 条件命中且该用户今天未出现过时直接附加并记账（必现）；
+    否则按 tips_percent 掷出 tip 名额：掷中后 0<pers<100 的特殊 tip 各自掷 perc
+    抢占出场（掷中即附加并记账），都未掷中从普通 tips 与 perc=0 特殊 tip 的混合池
+    抽取。都不出现返回空串。
+    """
+    context = SpecialTipContext(message=message, session=session)
+    text = _guaranteed_tip_text(context)
+    if text:
+        return TIP_HEADER + text
+    if random_percent(tips_percent):
+        text = _granted_tip_text(context)
+        if text:
+            return TIP_HEADER + text
+    return ""
 
 def setup_logger(name: str, filename: str):
     log_dir = f"./logs/{name}"
@@ -412,6 +534,92 @@ async def send_forward_msg(bot: NoneBot, event: Event, messages: list[MessageSeg
     if msg_id:
         add_to_open_cmd_msgs(event.message_id, msg_id)
 
+_CQ_CODE_PATTERN = re.compile(r"\[CQ:[^\]]*\]")
+
+def split_msg_chunks(msg: str, max_chars: int = FORWARD_NODE_MAX_CHARS) -> list[str]:
+    """把消息文本按 max_chars 一块拆分，块边界不切 CQ 码，且 CQ 码与其紧邻的
+    前文保持在同一块——图片始终嵌在文字里而不是单独成一条节点，与折叠前的
+    观感一致。
+
+    分组：每个 CQ 码连同它前面的那段文本构成「锚段」（原子，不内切）；CQ 码
+    之后的纯文本是「自由文本」，可被逐字硬切。锚段自身超长（超长文本 + 码）时
+    其文本部分退回硬切，码仍保持完整；自身超过 max_chars 的单个码（如 base64
+    大图）自成一块。空文本返回空列表。
+    """
+    tokens: list[tuple[str, bool]] = []   # (内容, 是否 CQ 码)
+    pos = 0
+    for match in _CQ_CODE_PATTERN.finditer(msg):
+        if match.start() > pos:
+            tokens.append((msg[pos:match.start()], False))
+        tokens.append((match.group(), True))
+        pos = match.end()
+    if pos < len(msg):
+        tokens.append((msg[pos:], False))
+
+    # 锚段：文本 + 其后紧邻的 CQ 码（原子）；码之后的纯文本为自由文本
+    groups: list[tuple[str, bool]] = []   # (内容, 是否原子)
+    pending: list[str] = []
+    for token, is_cq in tokens:
+        if not token:
+            continue
+        pending.append(token)
+        if is_cq:
+            groups.append(("".join(pending), True))
+            pending = []
+    if pending:
+        groups.append(("".join(pending), False))
+
+    chunks: list[str] = []
+    buf: list[str] = []
+    buf_len = 0
+
+    def flush() -> None:
+        nonlocal buf, buf_len
+        if buf:
+            chunks.append("".join(buf))
+            buf = []
+            buf_len = 0
+
+    def append_text(text: str) -> None:
+        """自由文本：按剩余空间逐字硬切。"""
+        nonlocal buf_len
+        while text:
+            space = max_chars - buf_len
+            if space <= 0:
+                flush()
+                continue
+            take = text[:space]
+            buf.append(take)
+            buf_len += len(take)
+            text = text[len(take):]
+
+    def append_atomic(seg: str) -> None:
+        """原子段：整段进当前块或下一块；超长时拆出尾部 CQ 码，文本硬切、码保持完整。"""
+        nonlocal buf_len
+        if len(seg) <= max_chars:
+            if buf_len and buf_len + len(seg) > max_chars:
+                flush()
+            buf.append(seg)
+            buf_len += len(seg)
+            return
+        idx = seg.rindex("[CQ:")
+        if idx <= 0:
+            # 自身超长的单个 CQ 码：自成一块，不拆
+            flush()
+            buf.append(seg)
+            buf_len += len(seg)
+            return
+        append_text(seg[:idx])
+        append_atomic(seg[idx:])
+
+    for seg, atomic in groups:
+        if atomic:
+            append_atomic(seg)
+        else:
+            append_text(seg)
+    flush()
+    return chunks
+
 def get_user_id_from_arg(arg: str) -> int | None:
     """从消息参数里解析目标 qq：支持 [CQ:at,qq=...] 与纯数字两种写法。
 
@@ -461,8 +669,10 @@ async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=Fal
     debug_prefix = "" if not debug else "[DEBUG] "
     msg_id = await bot.send(event, debug_prefix + message, at_sender=at, **kwargs)
     add_to_open_cmd_msgs(event.message_id, msg_id)
-    from xme.plugins.commands.xme_user.classes.user import User, try_load
-    u: User = try_load(event.user_id)
+    from xme.plugins.commands.xme_user.classes.user import User
+    u: User = User.load(event.user_id)
+    if u is None:
+        return
     u.record_call()
 
 async def msg_preprocesser(session: BaseSession, message: Message, send_time=-1):
@@ -503,12 +713,12 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
     debug_prefix = "" if not debug else "[DEBUG] "
     if debug and not debugging():
         return
-    has_tips = random_percent(tips_percent) and tips
     msg = str(prompt) if prompt is not None else ""
     if msg and msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
     is_nline_start = True if msg and msg[0] == "\n" else False
     msg = await msg_preprocesser(session, Message(msg))
+    tip_suffix = build_tip_suffix(msg, session, tips_percent) if tips else ""
     reply = await session.aget(
         prompt="" if prompt is None else (
             debug_prefix + (
@@ -520,12 +730,7 @@ async def aget_session_msg(session: CommandSession, prompt=None, at=True, linebr
                 else ""
             ) +
             msg +
-            (
-                "" if not has_tips
-                else
-                    "\n-------------------\ntip：" +
-                get_tips()
-            )
+            tip_suffix
         ), at_sender=at, **kwargs)
     if can_use_command and get_cmd_by_alias(reply):
         if command_func:
@@ -545,42 +750,43 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     debug_prefix = "" if not debug else "[DEBUG] "
     if debug and not debugging():
         return
-    has_tips = random_percent(tips_percent) and tips
     msg = str(message_result)
     if msg[-1] in ["\n", "\r"]:
         msg = msg[:-1]
+    tip_suffix = build_tip_suffix(msg, session, tips_percent) if tips else ""
     msg_dict = {
         "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)
     }
-    send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + ("" if not has_tips else "\n-------------------\ntip：" + get_tips())
-    # 太长的消息用聊天记录发送
+    send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + tip_suffix
+    # 太长的消息用聊天记录发送（群聊 1200、私聊 3000 起折；内容按 5000 字分块，不拆 CQ 码）
+    fold_len = GROUP_MSG_FOLD_LEN if session.event.group_id is not None else PRIVATE_MSG_FOLD_LEN
     try:
-        if get_msg_len(list_msg) > 1200 and session.event.group_id is not None and merge_long_msg:
-            # if at:
-            #     await session.send("", at_sender=at, **kwargs)
+        if merge_long_msg and get_msg_len(list_msg) > fold_len:
+            nickname = await get_user_name(
+                session.event.user_id,
+                group_id=session.event.group_id,
+                default="未知用户"
+            )
             return await send_forward_msg(
                 session.bot,
                 session.event,
                 [
                     change_group_message_content(
-                        msg_dict, send_msg.strip(),
+                        msg_dict, chunk,
                         user_id=session.event.user_id,
-                        nickname=await get_user_name(
-                            session.event.user_id,
-                            group_id=session.event.group_id,
-                            default="未知用户"
-                        )
+                        nickname=nickname
                     )
+                    for chunk in split_msg_chunks(send_msg.strip())
                 ]
             )
     except ApiError:
         return
     msg_id = await session.send(send_msg, at_sender=at, **kwargs)
     add_to_open_cmd_msgs(session.event.message_id, msg_id)
-    from xme.plugins.commands.xme_user.classes.user import User, try_load
-    u: User = try_load(session.event.user_id)
-    u.record_call()
-
+    from xme.plugins.commands.xme_user.classes.user import User
+    u: User = User.load(session.event.user_id)
+    if u is None:
+        return
 
 async def send_to_user(bot: NoneBot, user_id: int, message):
     """给单个用户发私聊消息；发送失败只记日志不抛出（通知类消息不应打断主流程）。

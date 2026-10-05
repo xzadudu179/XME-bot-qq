@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 import config
@@ -13,6 +13,8 @@ ALIAS_SEPARATOR = "、 "
 
 # 只有 SUPERUSER 能用的指令（权限逐项就是这个字符串），docs.md 里单独归到文末一栏
 SUPERUSER_PERMISSION = ["是 SUPERUSER"]
+# 仅群聊可用的权限标记（bottools.permission(..., permission_help=...) 的惯用文案）
+GROUP_ONLY_PERMISSION = "在群聊内"
 DOCS_SUPERUSER_HEADING = "## SUPERUSERS 可用指令"
 
 # 文档标题级别：插件条目为 MD_TITLE_LEVEL，其子指令用下一级；子指令块整体缩进
@@ -52,6 +54,21 @@ def is_superuser_only(permissions: Iterable[str] = ()) -> bool:
     """
     perms = [p.strip() for p in permissions or () if p and p.strip()]
     return bool(perms) and all(p in SUPERUSER_PERMISSION for p in perms)
+
+
+def is_group_only_cmd(permissions: Iterable[str] = ()) -> bool:
+    """权限是否含「在群聊内」标记（普通用户只能在群里用，私聊提示时要引导去群里）。"""
+    return any(GROUP_ONLY_PERMISSION in (p or "") for p in permissions or ())
+
+
+def is_superuser_required(permissions: Iterable[str] = ()) -> bool:
+    """权限（& 连接的 AND 语义）是否要求 SUPERUSER：任一条精确为「是 SUPERUSER」即需超管。
+
+    复合条件（如「在群聊内」&「是 SUPERUSER」）实际仅超管可用，但要求逐条全等的
+    is_superuser_only 认不出这类写法；推荐/提示类场景用本函数过滤更严。
+    """
+    perms = [p.strip() for p in permissions or () if p and p.strip()]
+    return any(p in SUPERUSER_PERMISSION for p in perms)
 
 
 def check_can_show(perms):
@@ -289,6 +306,28 @@ def doc_to_markdown(doc, level: int = MD_TITLE_LEVEL) -> DocMarkdown:
     if isinstance(doc, Doc):
         return doc.to_markdown(level)
     return DocMarkdown()
+
+
+def iter_visible_cmd_docs() -> Iterator[CommandDoc]:
+    """遍历普通用户可见的指令文档：单指令插件直接产出，多指令插件拆成子指令。
+
+    与 /help 同一口径（check_can_show）之外还排除「权限里任一条要求 SUPERUSER」的
+    AND 复合写法（如在群聊内 & 是 SUPERUSER）——这类指令普通用户实际用不了，
+    推荐器不应看到它们；/help 的展示口径不受影响。
+    """
+    import nonebot
+
+    for plugin in nonebot.get_loaded_plugins():
+        if not plugin.name:
+            continue
+        usage = getattr(plugin, "usage", None)
+        if isinstance(usage, CommandDoc):
+            if check_can_show(usage.permissions) and not is_superuser_required(usage.permissions):
+                yield usage
+        elif isinstance(usage, PluginDoc):
+            for doc in usage._command_docs():
+                if check_can_show(doc.permissions) and not is_superuser_required(doc.permissions):
+                    yield doc
 
 
 def _entry_sort_key(entry: MarkdownEntry) -> str:

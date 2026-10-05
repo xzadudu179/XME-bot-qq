@@ -54,7 +54,8 @@ def to_forwardable_message(text: str) -> str:
     return re.sub(rf"\[CQ:(?!(?:{keep})[,\]])[^\]]*\]", "", text or "")
 
 
-async def text_moderations(text: str):
+async def text_moderations(text: str, timeout: float | None = None):
+    """请求 GLM 文本风控；timeout 为本次请求的总超时秒数（缺省用 glm_api_request 默认）。"""
     from xme.xmetools.reqtools import glm_api_request
     text = strip_cq(text)
     if not text.strip():
@@ -72,7 +73,7 @@ async def text_moderations(text: str):
             "type": "text",
             "text": text
         })
-    response = await glm_api_request("/paas/v4/moderations", _input=new_objects)
+    response = await glm_api_request("/paas/v4/moderations", _input=new_objects, timeout=timeout)
     return response
 
 async def object_moderations(objects: list[dict]):

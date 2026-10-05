@@ -52,11 +52,12 @@ def glm_headers() -> dict:
 
 
 
-async def glm_api_request(path: str, method: str = "POST", **payload) -> dict:
+async def glm_api_request(path: str, method: str = "POST", timeout: float | None = None, **payload) -> dict:
     """调用智谱(GLM) 开放平台接口，统一处理 base url、认证头与 request_id。
     payload 参数前面的 _ 会被 strip 掉
     之后新增 GLM 工具接口（网页搜索、文件、知识库等）只需调用本函数并传入 path 与参数：
         result = await glm_api_request("/paas/v4/reader", url="https://...")
+    timeout 为本次请求的总超时秒数（缺省用 fetch_data_post / fetch_data 各自的默认值）。
     失败时会抛出异常。
     """
     from xme.plugins.commands.ai_helper.functions import GLM_API_BASE
@@ -66,10 +67,16 @@ async def glm_api_request(path: str, method: str = "POST", **payload) -> dict:
     headers = glm_headers()
     payload = {k.lstrip("_"): v for k, v in payload.items()}
     if method.upper() == "GET":
-        return await fetch_data(url, raise_error=True, response_type="json", headers=headers, params=payload)
+        args = dict(params=payload, headers=headers)
+        if timeout:
+            args["timeout"] = aiohttp.ClientTimeout(total=timeout)
+        return await fetch_data(url, raise_error=True, response_type="json", **args)
     body = dict(payload)
     body["request_id"] = body.get("request_id", str(uuid.uuid4()))
-    return await fetch_data_post(url, json=body, headers=headers)
+    kwargs = dict(headers=headers)
+    if timeout:
+        kwargs["timeout"] = aiohttp.ClientTimeout(total=timeout)
+    return await fetch_data_post(url, json=body, **kwargs)
 
 async def fetch_data(url, response_type="json", raise_error=False, **args):
     # 缺省 30s 总超时：不传 timeout 时 aiohttp 默认 5 分钟，慢端点会拖住整个会话

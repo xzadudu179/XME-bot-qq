@@ -67,7 +67,7 @@ cp keys.py.template keys.py
 - `ACCESS_TOKEN`：与协议端约定的鉴权 token，可用 `python -c "import secrets; print(secrets.token_urlsafe(32))"` 生成
 - `LLM_PROVIDERS` 中各 Provider 的 `api_key`（AI 功能需要，如 `GLM_API_KEY`）
 - `SEARCH_PROVIDERS` 的搜索 key（不需要联网搜索可只留免 key 的 duckduckgo）
-- 其余按需：SMTP 邮箱、爱发电系列、天气 key、`DOMAIN` 等
+- 其余按需：SMTP 邮箱、爱发电系列、天气 key、`FURCONS_TOKEN`（兽聚指令的数据源，工作台 dashboard.furrycons.cn 申请）、`DOMAIN` 等
 
 再按需修改 `config.py`，各项含义见文件内注释。
 
@@ -129,7 +129,7 @@ sudo bash deploy/cloudflared/install.sh   # 一次性 sudoers 授权（只放行
 
 | 文件                            | 需要改什么                                                                                                                                                                                                |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `keys.py`                       | 全部密钥与 token（`ACCESS_TOKEN`、LLM key、搜索 key、邮箱、爱发电系列等），并按需增删 `LLM_PROVIDERS` / `SEARCH_PROVIDERS` 条目                                                                           |
+| `keys.py`                       | 全部密钥与 token（`ACCESS_TOKEN`、LLM key、搜索 key、邮箱、爱发电系列等），并按需增删 `LLM_PROVIDERS` / `SEARCH_PROVIDERS` 条目（provider 可选 `billing` 字段控制 `.stats` 余额段的查询方式，见模板内注释）  |
 | `config.py`                     | `SELF_ID`（bot 的 QQ 号）、`SUPERUSERS`（管理员 QQ 号白名单）、`GROUPS_WHITELIST` / `ANTI_MESSAGEBURST_GROUP` / `PEEK_GROUP`（群号）、`MIN_GROUP_MEMBER_COUNT`、`PORT`、`USE_PROXY` / `HTTP_PORT`（代理） |
 | `characters/*.json`             | bot 的名字、昵称、语气词、金币名称与各类回复文案；切换角色改 `character.py` 的 `CHARACTER`                                                                                                                |
 | `ai_configs.json`               | AI 助手的管理员名单与系统提示词                                                                                                                                                                           |

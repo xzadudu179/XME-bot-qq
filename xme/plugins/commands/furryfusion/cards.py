@@ -1,5 +1,10 @@
+from itertools import groupby
+
 from xme.xmetools.templates import FONTS_STYLE
 from xme.plugins.commands.xme_user.classes.user import User
+from xme.xmetools.loctools import short_region
+
+from .providers.base import FurEvent
 
 STATE = {
     0: "活动结束",
@@ -9,7 +14,7 @@ STATE = {
     4: "活动取消"
 }
 
-def get_fusion_card(card_data: dict, u: User):
+def get_event_card(event: FurEvent, u: User):
     state_class = {
         0: "cancelled",
         1: "",
@@ -17,52 +22,61 @@ def get_fusion_card(card_data: dict, u: User):
         3: "on-event",
         4: "cancelled",
     }
-    c = state_class[card_data['state']]
+    c = state_class[event.state]
     state_c = c
-    if card_data["state"] in [0, 3, 4]:
+    if event.state in [0, 3, 4]:
         daysleft_str = {
             0: "活动结束",
             3: "正在进行",
             4: "活动取消"
-        }[card_data["state"]]
+        }[event.state]
     else:
-        time_surplus = card_data['time_surplus']
+        time_surplus = event.days_until
         if time_surplus < 10:
             c = "about-begin"
         daysleft_str = f"剩余 {time_surplus} 天"
-        if time_surplus <= 0 and time_surplus + card_data["time_day"] <= 0:
-            c = "cancelled"
-            daysleft_str = "预期结束"
-        elif time_surplus <= 0:
+        if time_surplus <= 0:
             c = "on-event"
-            daysleft_str = "预期进行中"
+            daysleft_str = "即将开始"
     title_class = ""
-    if card_data["time_day"] > 3:
+    if event.duration_days > 3:
         title_class = "gold"
     loc_class = ""
     border_c = ""
-    location_province = u.plugin_datas.get("location", {}).get("adm1")
-    if location_province is not None and location_province.split("省")[0] == card_data['address_province']:
+    # 本地高亮：优先省份匹配（同城不同市也算本地），城市名互含作为兜底
+    loc = u.plugin_datas.get("location", {})
+    user_province = short_region(loc.get("adm1") or "")
+    user_city = short_region(loc.get("adm2") or "")
+    is_local = bool(user_province and event.province and user_province == event.province) \
+        or bool(user_province and user_province in event.region) \
+        or bool(user_city and event.region and (user_city in event.region or event.region in user_city))
+    if is_local:
         loc_class = "gold-small"
     if loc_class == "gold-small" and title_class == "gold":
         c = "gold"
         border_c = "gold-border"
-    time_formatted = ".".join(card_data["time_start"].split(".")[1:]) + " - " + ".".join(card_data["time_end"].split(".")[1:])
+    if event.start.year == event.end.year:
+        time_formatted = f"{event.start.month}.{event.start.day} - {event.end.month}.{event.end.day}"
+    else:
+        time_formatted = f"{event.time_start} - {event.time_end}"
+    # 大标题显示主办方品牌名，活动主题名放小字；缺品牌名时回退为主题名
+    main_title = event.org or event.title
+    sub_title = event.title if event.org else ""
     return f"""
         <section class="card {border_c}">
             <div class="img">
                 <div class="cover">
                     <div class="top">
-                        <h1 class="title {title_class}">{card_data['title']}</h1>
+                        <h1 class="title {title_class}">{main_title}</h1>
                         <div>
-                            <p class="{loc_class}">{card_data['address_province']}·{card_data['address_city']}</p>
-                            <p class="{state_c}">{STATE[card_data['state']]}</p>
+                            <p class="{loc_class}">{event.location_text}</p>
+                            <p class="{state_c}">{STATE[event.state]}</p>
                         </div>
                     </div>
                     <div class="bottom">
                         <div>
 
-                            <p>{card_data['name']}</p>
+                            <p>{sub_title}</p>
                             <p>{time_formatted}</p>
                         </div>
                         <div class="btm_right">
@@ -76,7 +90,7 @@ def get_fusion_card(card_data: dict, u: User):
             </div>
         </section>
     """
-def get_countdown_cards(data: list[dict], u: User):
+def get_countdown_cards(events: list[FurEvent], u: User, source: str):
     html_head = """
     <!DOCTYPE html>
     <html lang="en">
@@ -131,9 +145,12 @@ def get_countdown_cards(data: list[dict], u: User):
             }
 
             .title {
+                flex: 1;
+                min-width: 0;
+                margin-right: 12px;
                 overflow: hidden;
-                word-break: keep-all;
-                max-width: 8em;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .rec-circsmall {
@@ -248,6 +265,16 @@ def get_countdown_cards(data: list[dict], u: User):
                 /* padding-right: 40px; */
             }
 
+            .bottom > div:first-child {
+                min-width: 0;
+            }
+
+            .bottom p {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
 
             h1 {
                 font-size: 2rem;
@@ -327,30 +354,30 @@ def get_countdown_cards(data: list[dict], u: User):
     html_bottom = """
                 </div>
                 <footer>
-                    <p class="orbitron">数据来源于 FURRYFUSION 提供的 API.</p>
+                    <p class="orbitron">数据来源于 {source} 提供的 API.</p>
                 </footer>
             </div>
         </body>
     </html>
-    """
+    """.format(source=source)
     html_content = ""
-    for year_datas in data:
-        year = year_datas["year"]
+    ordered = sorted(events, key=lambda e: (e.start.year, e.start.month))
+    for year, year_events in groupby(ordered, key=lambda e: e.start.year):
         html_content += f"""
         <h2>
             <div class="rec-circbig"></div>
             <span>{year}</span>
         </h2>
         """
-        for month_datas in year_datas["data"]:
+        for month, month_events in groupby(year_events, key=lambda e: e.start.month):
             html_content += f"""
             <h4>
                 <div class="rec-circsmall"></div>
-                <span>{year}.{month_datas['month']}</span>
+                <span>{year}.{month}</span>
             </h4>
             <div class="month">
             """
-            for card_data in month_datas['list']:
-                html_content += get_fusion_card(card_data, u)
+            for event in month_events:
+                html_content += get_event_card(event, u)
             html_content += "</div>"
     return html_head + html_content + html_bottom

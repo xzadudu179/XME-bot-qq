@@ -121,6 +121,9 @@ def get_local_file_url(path: str, ttl: float | None = None):
         ttl (float | None): 链接有效期（秒）；视频这类大文件要给模型服务端留足
             拉取时间，传更长的值
 
+    注意：该链接会注入模型上下文、由模型服务端回源拉取，文件内容对 LLM 供应商
+    可见——走这条链路的文件按公开内容对待，勿放仅限私密的内容。
+
     Raises:
         ValueError: 文件层级低于项目层级
 

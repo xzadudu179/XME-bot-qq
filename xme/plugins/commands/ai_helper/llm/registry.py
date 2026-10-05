@@ -138,6 +138,18 @@ def get_provider_config(name: str) -> dict:
     return cfg
 
 
+def list_provider_names() -> list[str]:
+    """所有已配置的 provider 名（keys.LLM_PROVIDERS 的键，保持配置顺序）。
+
+    glm 未显式配置但可回落官方端点（有 GLM_API_KEY）时也计入；
+    供余额查询这类「按 provider 逐个处理」的场景遍历。
+    """
+    names = list(_load_provider_configs().keys())
+    if "glm" not in names and provider_configured("glm"):
+        names.append("glm")
+    return names
+
+
 async def close_all() -> None:
     """释放所有已建 provider 的连接（进程退出/重载时调用）。"""
     for cache in (_providers, _image_providers):

@@ -33,9 +33,9 @@
   进程已加载模块（sys.modules）按名还原，绝不 import 回传的模块名（防
   「种模块 + raise」反打主进程）。
 - 残余风险：内核 user-namespace 0-day 可逃逸；/usr 与 venv 的只读内容（公共
-  库）沙箱内可见；repo 档仓库源码与 keys.py 可见（该档没有任意代码能力，与
-  旧行为持平且严格更优）；新部署机器需预装 bubblewrap（apt install
-  bubblewrap），否则沙箱拒绝工作。
+  库）沙箱内可见；repo 档仓库源码可见但 keys.py 已遮蔽为「同名 None 存根」
+  （导入链不破、密钥值不进沙箱；该档没有任意代码能力，输入先经 AST 白名单）；
+  新部署机器需预装 bubblewrap（apt install bubblewrap），否则沙箱拒绝工作。
 
 返回值约定：JSON 可序列化的纯数据。repo 档 dataclass 自动转 dict、tuple/set
 转 list、Path 转 str；不可序列化时整个调用以 SandboxExecutionError 失败。
@@ -55,6 +55,7 @@ import shutil
 import signal
 import struct
 import sys
+import tempfile
 import traceback
 import weakref
 from contextlib import asynccontextmanager
@@ -93,9 +94,35 @@ _IN_VENV = sys.prefix != getattr(sys, "base_prefix", sys.prefix)
 _HOST_VENV_ROOT = Path(sys.prefix) if _IN_VENV else None
 _SANDBOX_PYTHON = f"{_SANDBOX_VENV}/bin/{_PYTHON_VERSION}" if _HOST_VENV_ROOT else f"/usr/bin/{_PYTHON_VERSION}"
 # repo 档在 /app 内用空文件覆盖绑定遮蔽数据库（导入链无任何模块读它们）。
-# keys.py 不能遮蔽：filetools 顶层 `from keys import ...` 在 calc 导入链上，
-# 而 repo 档无任意代码能力（AST 白名单），keys 的值不可被表达式读取。
 _REPO_SHADOWED_FILES = ("guild1.db", "guild1.db-shm", "guild1.db-wal")
+
+# keys.py 以「同名 None 存根」遮蔽进 repo 档：导入链（config/filetools 等）在
+# 顶层 from keys import 名字，直接空文件遮蔽会 ImportError，因此存根保留真实
+# keys 的全部顶层名字、值全置 None——导入成立而任何密钥值不进沙箱。
+# 存根放仓库外的私有临时目录（repo 档把 data/ 映射为可写，放里面会被沙箱内
+# 进程看到乃至改动）；进程级缓存，单文件随 tmp 目录生命周期回收。
+_keys_stub_loaded = False
+_keys_stub_path: Path | None = None
+
+
+def _keys_stub() -> Path | None:
+    """生成 keys.py 的 None 存根文件并返回宿主路径；keys 不存在或失败返回 None。"""
+    global _keys_stub_loaded, _keys_stub_path
+    if _keys_stub_loaded:
+        return _keys_stub_path
+    _keys_stub_loaded = True
+    try:
+        import keys as _keys_module
+        names = [n for n in dir(_keys_module) if not n.startswith("_")]
+        stub = Path(tempfile.mkdtemp(prefix="xme_keys_stub_")) / "keys_stub.py"
+        stub.write_text(
+            "# repo 档 keys.py 遮蔽存根：仅保留真实 keys 的顶层名字，值全部为 None\n"
+            + "".join(f"{n} = None\n" for n in names),
+            encoding="utf-8")
+        _keys_stub_path = stub
+    except Exception:
+        _keys_stub_path = None
+    return _keys_stub_path
 
 _REPO_ROOT = str(Path(__file__).resolve().parents[2])
 
@@ -669,6 +696,10 @@ def _bwrap_args(profile: str, work_dir: str | None) -> list[str]:
         for name in _REPO_SHADOWED_FILES:
             if Path(_REPO_ROOT, name).is_file():
                 args += ["--ro-bind", "/dev/null", f"{_SANDBOX_APP}/{name}"]
+        # keys.py 遮蔽为 None 存根：导入链不破、密钥值不进沙箱（见 _keys_stub）
+        keys_stub = _keys_stub()
+        if keys_stub is not None:
+            args += ["--ro-bind", str(keys_stub), f"{_SANDBOX_APP}/keys.py"]
         args += ["--chdir", _SANDBOX_APP]
     else:
         # cell 档：容器内不存在任何仓库代码，任务函数以 marshal 字节码注入

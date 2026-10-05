@@ -202,3 +202,6 @@ KNOWN_ISSUES.md
 bin/
 
 deploy/cloudflared/config.yml
+ai_helper_security_audit.md
+*note.md
+*NOTE.md

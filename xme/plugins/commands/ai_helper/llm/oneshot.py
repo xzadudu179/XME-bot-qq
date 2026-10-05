@@ -12,7 +12,10 @@
   候选链按序尝试，超时/异常/未配置自动换下一个，全失败返回 None（不抛异常）；
 - temperature：显式参数 > 模型目录项 temperature > LLM_DEFAULT_TEMPERATURE；
 - json_output：提示词强制 JSON 输出并稳健解析（多数端点对 response_format
-  支持参差，用提示词约束 + 本地解析最通用）；是否计费由调用方拿 usage 自行决定。
+  支持参差，用提示词约束 + 本地解析最通用）；是否计费由调用方拿 usage 自行决定；
+- response_format：API 级输出约束（OpenAI 兼容协议，如 {"type": "json_object"}），
+  下发给 provider；端点不支持时客户端自动去掉重试，json_output 的提示词约束与
+  本地解析仍兜底。
 """
 import asyncio
 import json
@@ -112,11 +115,14 @@ def _resolve_temperature(entry: dict, temperature: float | None) -> float:
 async def ask(prompt: str, *, system: str = "", model=None,
               temperature: float | None = None, timeout: float = 30.0,
               json_output: bool = False, silent: bool = True,
-              label: str = "AI 调用") -> AskResult | None:
+              label: str = "AI 调用",
+              response_format: dict | None = None) -> AskResult | None:
     """单轮对话：发一段提示词，拿回解析好的回复；所有候选模型都失败返回 None。
 
     model：别名 / "provider/model" / 候选链列表 / None（默认模型）。
     json_output：True 时提示词强制 JSON 输出并稳健解析到 result.data。
+    response_format：OpenAI 兼容协议的输出约束字段（如 {"type": "json_object"}），
+    None 不下发；端点不支持时 provider 自动去掉重试。
     silent：静默调用（不写流式日志）；label：仅用作日志前缀，方便定位是哪个功能在调用。
     """
     if not (prompt or "").strip():
@@ -143,6 +149,7 @@ async def ask(prompt: str, *, system: str = "", model=None,
             result = await asyncio.wait_for(
                 provider.chat(messages, model=entry["model"],
                               temperature=_resolve_temperature(entry, temperature),
+                              response_format=response_format,
                               silent=silent),
                 timeout=timeout)
         except asyncio.TimeoutError:

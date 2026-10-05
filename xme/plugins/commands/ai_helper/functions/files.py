@@ -25,6 +25,7 @@ from xme.xmetools.texttools import regex_filter
 from xme.xmetools.bottools import bot_call_action
 from ..constants import (
     CONTENT_SEARCH_TIMEOUT,
+    CONTENT_SEARCH_MAX_SIZE,
     HISTORY_MAX_FILES, HISTORY_MAX_SIZE, MAX_ZIP_SIZE,
     MAX_SYNTAX_CHECK_SIZE, SYNTAX_CHECK_TIMEOUT,
     SYNTAX_CHECK_AS_LIMIT, SYNTAX_CHECK_AS_LIMIT_NODE,
@@ -271,6 +272,13 @@ async def content_search(param, file_ref, search_method: Literal["re_search", "r
         except re.error as ex:
             return {"result": f"[搜索失败：正则不合法（{ex}）；子串匹配请改用 by_line 模式]", "no_compress": True}
     path = agent.resolve_ref(file_ref)
+    if not path.is_file():
+        return {"result": f"[搜索失败：引用 {file_ref} 指向的不是普通文件]", "no_compress": True}
+    if path.stat().st_size > CONTENT_SEARCH_MAX_SIZE:
+        return {"result": f"[搜索失败：文件超过 {CONTENT_SEARCH_MAX_SIZE // 1024 // 1024} MiB，"
+                          "全文匹配会长时间占住后台线程；请先用 check_file 的 line_start/line_end "
+                          "分段定位，或改用更小的文件]",
+                "no_compress": True}
     try:
         hits = await asyncio.wait_for(
             asyncio.to_thread(_content_search_sync, path, param, pattern, search_method),

@@ -13,9 +13,7 @@ import aiohttp
 from uuid import uuid4
 from PIL import Image
 
-from zai import ZhipuAiClient
-
-from keys import GLM_API_KEY, DOMAIN, FILE_TOKENS
+from keys import DOMAIN, FILE_TOKENS
 from nonebot.log import logger
 from xme.xmetools.filetools import (
     bytes_to_file, decode_text, detect_file_type, get_local_file_url, FileType,
@@ -30,7 +28,7 @@ from ..constants import (MAX_DOWNLOAD_FILE_SIZE, SCREENSHOT_MAX_WAIT_MS,
                          SCREENSHOT_MAX_WAIT_UNTIL_MS, VIDEO_URL_TTL)
 from xme.plugins.commands.ai_helper.llm import registry
 from config import IMAGE_TEMP_PATH, CONTAINER_BOT_PATH
-from ._common import exception_detail, ImageToolResult
+from ._common import exception_detail, ImageToolResult, render_url_guard
 from .. import received_files
 # 别名导入：get_received_files 的参数名 save_to_history 会遮蔽同名函数
 from .files import save_to_history as _save_to_history
@@ -117,9 +115,10 @@ async def download(url: str, agent):
     if not data:
         return "[下载失败：文件为空]"
 
-    # 后缀探测与落盘（与 get_received_files 共用单点）
+    # 后缀探测与落盘（与 get_received_files 共用单点）；落盘含整写与魔数探测，
+    # 最大 20MiB，放线程执行不卡事件循环
     try:
-        res = _save_received_bytes(data, url, content_type, agent)
+        res = await asyncio.to_thread(_save_received_bytes, data, url, content_type, agent)
     except FileExistsError as ex:
         # 查重命中：报错中止，不分配新 ref；反查已有引用供 AI 直接使用（不产生第二个引用）
         dup_name = str(ex)
@@ -207,7 +206,8 @@ async def get_received_files(max_count: int = 5, within_hours: float = 24.0,
             files.append(entry)
             continue
         try:
-            res = _save_received_bytes(data, item.url or "", "", agent, original_name=item.name)
+            res = await asyncio.to_thread(_save_received_bytes, data, item.url or "",
+                                          "", agent, original_name=item.name)
         except FileExistsError as ex:
             dup_name = str(ex)
             existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
@@ -305,8 +305,8 @@ async def view_video(ref: str = "", url: str = "", prompt: str = "", attach=Fals
         return "[查看视频错误：视频时长过长 (>10分钟)]"
     return await view_item(ref, url, prompt, item_type="video_url", attach=attach, agent=agent)
 
-async def view_image(ref: str = "", url: str = "", prompt: str = "", attach=False, agent=None):
-    return await view_item(ref, url, prompt, item_type="image_url", attach=attach, agent=agent)
+async def view_image(ref: str = "", url: str = "", prompt: str = "", attach=False, model: str = "", agent=None):
+    return await view_item(ref, url, prompt, item_type="image_url", attach=attach, model=model, agent=agent)
 
 
 # ---- 媒体可解析性探测（注入前校验，避免"声称已附上但模型实际加载失败"的误判）----
@@ -392,11 +392,48 @@ async def _media_probe(url: str, item_type: str) -> str | None:
         return None
     return _check_media_bytes(data, item_type)
 
-async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="", attach: bool = False, agent=None):
+def _resolve_analysis_entry(model: str, item_type: str, prompt: str) -> tuple[dict, str]:
+    """独立分析（view_item）的模型解析：返回 (目录项, 给 AI 的说明)。
+
+    - model 留空：按媒体类型取默认（视频 → video_entry，其余 → vision_entry）；
+    - model="auto"：按 prompt 启发式路由（审美/设计类 → GLM flash，内容识别/细节/
+      世界知识类 → qwenflash，见 constants.VISION_AUTO_*）；
+    - 其余按模型别名或 "provider/model" 解析；不具备对应媒体能力时回退默认并附说明。
+    """
+    default = registry.video_entry() if item_type == "video_url" else registry.vision_entry()
+    cap = "video" if item_type == "video_url" else "vision"
+    requested = (model or "").strip().lower()
+    if not requested:
+        return default, ""
+    if requested == "auto":
+        from ..constants import VISION_AUTO_AESTHETIC_KEYWORDS, VISION_AUTO_MODEL_ALIASES
+        aesthetic = any(k in (prompt or "") for k in VISION_AUTO_AESTHETIC_KEYWORDS)
+        alias = VISION_AUTO_MODEL_ALIASES["aesthetic" if aesthetic else "detail"]
+        try:
+            entry = registry.resolve_model(alias)
+        except Exception:
+            return default, ""
+        if entry.get(cap):
+            route = "审美/设计类" if aesthetic else "内容识别/细节类"
+            return entry, f"[auto 已按任务路由：{route} → {alias}]\n"
+        return default, ""
+    try:
+        entry = registry.resolve_model(requested)
+    except Exception:
+        return default, f"[注意：模型 {requested} 不在模型目录里，已回退默认视觉模型]\n"
+    if entry.get(cap, False):
+        return entry, ""
+    media = "视频" if item_type == "video_url" else "图片"
+    return default, f"[注意：模型 {requested} 不支持{media}输入，已回退默认视觉模型]\n"
+
+
+async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str ="",
+                    attach: bool = False, model: str = "", agent=None):
     """查看 url/ref 里的媒体内容并按 prompt 解析。
 
     默认交给独立模型分析（返回文本，中立第三方视角）；attach=True 时若本轮模型
     支持该媒体类型，则把内容直接附进当前对话由模型自己看（仅适合看别人的东西）。
+    model 指定独立分析用的模型别名 / "auto" 自动路由（见 _resolve_analysis_entry）。
     """
     """查看 url 里的内容（图片/视频/文件），按 prompt 让模型解读并返回结果。
 
@@ -454,9 +491,9 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         "（但是没有问题不要编造）并且详细审查内容"
     )
     try:
-        # 独立分析按媒体类型选模型：图片走 vision 能力，视频走 video 能力
+        # 独立分析按 model 参数/媒体类型选模型：视频段只有支持 video 的端点能收
         # （video_url 段只有 GLM 之类端点接受，用只支持图片的端点会直接 422）
-        entry = registry.video_entry() if item_type == "video_url" else registry.vision_entry()
+        entry, model_note = _resolve_analysis_entry(model, item_type, prompt)
         provider = registry.get_provider(entry["provider"])
         if provider is None:
             return f"[查看文件失败：provider {entry['provider']} 未配置]"
@@ -493,7 +530,7 @@ async def view_item(ref: str = "", url: str ="", prompt: str ="", item_type: str
         # 避免它把别人的描述当成"我看过"（尤其自查自己产出时）
         missed = (f"[注意：{len(failed)} 片分析失败，结果缺少这些部分：{'；'.join(failed)}]\n"
                   if failed else "")
-        return INDEPENDENT_ANALYSIS_NOTE + missed + "\n".join(texts)
+        return INDEPENDENT_ANALYSIS_NOTE + model_note + missed + "\n".join(texts)
     except Exception as ex:
         logger.exception(f"查看 url 内容失败: {ex}")
         return f"[查看文件失败: {ex}]"
@@ -614,7 +651,8 @@ def wait_until_budget_s() -> float:
 
 async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, height: int = 800,
                           wait_ms: int = 1000, wait_until: str = "", prompt: str = "",
-                          attach: bool = False, scale: int = 2, file_type: str = "", agent=None):
+                          attach: bool = False, scale: int = 2, file_type: str = "",
+                          model: str = "", agent=None):
     """对网页/SVG/HTML 做内部预览截图：整图存入 temp 并返回引用给 AI。
 
     url 与 ref 二选一（url 为公网地址，ref 为已下载的 svg/html 引用）；
@@ -670,9 +708,12 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
         except ValueError as ex:
             return f"[截图失败：{ex}]"
     try:
+        # 渲染 URL 守卫：file:// 子资源只放行会话目录内，http(s) 逐跳过公网校验，
+        # 防"本地 HTML 借 iframe 渲染服务器文件"与"公网页面 302 跳内网"
         outcome = await chrome_screenshot_bytes(source, width=width, height=height,
                                                wait_ms=wait_ms, timeout_secs=45.0,
-                                               scale=scale, wait_until=wait_until)
+                                               scale=scale, wait_until=wait_until,
+                                               url_guard=render_url_guard(source, agent))
     except ValueError as ex:
         return f"[截图失败：{ex}]"
     except Exception as ex:
@@ -706,7 +747,8 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
         # 长图的分片是查看动作（view_image 内处理），不落存储
         ref = ""
         try:
-            ref = bytes_to_file(png, agent.user_id, ".png", agent)["ref"]
+            res = await asyncio.to_thread(bytes_to_file, png, agent.user_id, ".png", agent)
+            ref = res["ref"]
         except FileExistsError as ex:
             # 同内容截图已存在：反查既有引用复用，不产生第二个引用
             ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
@@ -717,7 +759,8 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
     # 独立分析两条路径行为与 view_image 完全一致，避免两处分片逻辑）；
     # 交给模型的缓存图转 JPEG：大 PNG 回源拉取实测频繁失败
     analysis = await view_item(url=_cache_image_url(_jpeg_view_bytes(png), ".jpg"),
-                               prompt=prompt, item_type="image_url", attach=attach, agent=agent)
+                               prompt=prompt, item_type="image_url", attach=attach,
+                               model=model, agent=agent)
     if isinstance(analysis, ImageToolResult):
         return ImageToolResult(f"[截图完成（{dims}）]{wait_note}\n{analysis}", analysis.image_parts)
     return f"[对截图（{dims}）的分析结果]{wait_note}\n{analysis}"

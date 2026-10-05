@@ -9,3 +9,4 @@ from .private_messages import * # noqa: F403
 from .fuzzy_command import *    # noqa: F403
 from .call_deon import *    # noqa: F403
 from .prevent_cmds import *  # noqa: F403
+from .cmd_suggest import *   # noqa: F403

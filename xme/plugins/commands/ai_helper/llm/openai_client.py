@@ -8,6 +8,7 @@ vLLM / Ollama / OpenRouter 等），差异只在 base_url、api_key 与模型名
 - 非流式（一次返回）与流式（SSE 增量，拼装完整结果，供上层写调试日志）；
 - 工具调用（含流式下的 tool_calls 分片按 index 拼装）；
 - 思考内容（reasoning_content，GLM/DeepSeek 等兼容字段）；
+- response_format（API 级输出约束，如 JSON 模式；端点不支持时自动去掉重试）；
 - 用量字段（usage，缺 cached_tokens 时按 0 计，不报错）；
 - 错误分类（LLMError.kind，含 GLM 1210 媒体解析失败 → media_invalid）。
 """
@@ -153,8 +154,11 @@ class OpenAICompatProvider:
         return {"Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json", **self.extra_headers}
 
-    def _payload(self, messages, model, tools, temperature, thinking, stream) -> dict:
+    def _payload(self, messages, model, tools, temperature, thinking, stream,
+                 response_format=None) -> dict:
         payload: dict = {"model": model, "messages": messages, "stream": stream}
+        if response_format is not None:
+            payload["response_format"] = response_format
         if stream:
             # 显式要 usage：Moonshot 等端点的流式响应默认不带用量，
             # 不请求的话整轮 tokens 记成 0（计费与用量展示都会看不到）
@@ -239,10 +243,12 @@ class OpenAICompatProvider:
     # ---------- 对外 ----------
 
     async def chat(self, messages, *, model, tools=None, temperature=None,
-                   thinking=False, on_tick=None, silent=False,
+                   thinking=False, response_format=None, on_tick=None, silent=False,
                    stats: dict | None = None) -> ChatResult:
         """发起一次对话调用，返回统一结果。失败抛 LLMError。
 
+        response_format：OpenAI 兼容协议的输出约束字段（如 {"type": "json_object"}），
+        None 则不下发；端点不认时自动去掉重试一次。
         on_tick：流式读块期间周期性回调（每若干块一次），供上层检查
         "是否有插入消息/是否需要中断"——回调抛出的异常会原样穿透，用于打断当前生成。
         """
@@ -250,18 +256,21 @@ class OpenAICompatProvider:
         self._stats = stats           # 调用方容器：流式过程中累计已产出字符（中断时估算用量）
         use_stream = self.stream
         self._reset_stream_buffers()
-        payload = self._payload(messages, model, tools, temperature, thinking, use_stream)
-        try:
-            return await self._request(payload, model, use_stream, on_tick)
-        except LLMError as ex:
-            # 端点不认 stream_options 时自动去掉重试一次（严格实现会直接 400）
-            if ("stream_options" in payload
-                    and ex.kind == LLMErrorKind.BAD_REQUEST
-                    and "stream_options" in str(ex.message).lower()):
-                payload.pop("stream_options", None)
-                self._emit("note", "端点不支持 stream_options，已去掉后重试")
+        payload = self._payload(messages, model, tools, temperature, thinking,
+                                use_stream, response_format)
+        while True:
+            try:
                 return await self._request(payload, model, use_stream, on_tick)
-            raise
+            except LLMError as ex:
+                # 端点不认某字段时自动去掉重试一次（严格实现会直接 400）
+                unsupported = next(
+                    (field for field in ("stream_options", "response_format")
+                     if field in payload and ex.kind == LLMErrorKind.BAD_REQUEST
+                     and field in str(ex.message).lower()), None)
+                if unsupported is None:
+                    raise
+                payload.pop(unsupported, None)
+                self._emit("note", f"端点不支持 {unsupported}，已去掉后重试")
 
     async def _request(self, payload: dict, model: str, use_stream: bool,
                        on_tick=None) -> ChatResult:

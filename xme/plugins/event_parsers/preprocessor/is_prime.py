@@ -3,6 +3,7 @@ import asyncio
 import aiocqhttp
 from nonebot.plugin import PluginManager
 from xme.xmetools.msgtools import send_event_msg
+from xme.xmetools.plugintools import record_plugin_call
 from xme.xmetools.texttools import remove_punctuation, remove_suffix, text_combinations
 # from xme.xmetools import numtools
 from nonebot import message_preprocessor
@@ -10,6 +11,7 @@ from character import get_message
 import sympy
 
 last_process = {}
+PLUGIN_NAME = "IS_PRIME"
 
 @message_preprocessor
 async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
@@ -24,6 +26,7 @@ async def is_message_prime(bot: NoneBot, event: aiocqhttp.Event, plugin_manager:
     msgs = text_combinations(("是不是{prime}", "是不是{prime}{punc}", "是否是{prime}", "是{prime}吗", "是{prime}嘛"), punc=punc, prime=prime)
     # print(no_punc_msg, msgs, no_punc_msg.endswith(tuple(msgs)), remove_suffix(no_punc_msg, tuple(msgs)))
     if no_punc_msg.endswith(tuple(msgs)) and (x:=remove_suffix(no_punc_msg, tuple(msgs))).isdecimal():
+        record_plugin_call(PLUGIN_NAME, event.user_id, event.group_id, True)
         if len(x) > 576:
             try:
                 del last_process[id]

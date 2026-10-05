@@ -74,7 +74,7 @@ def _resolve_target(session: CommandSession, user: User, arg: str) -> tuple[str,
     """
     at_id = get_user_id_from_arg(arg)
     if at_id is not None:
-        at_binding = binding.get_binding(try_load(at_id))
+        at_binding = binding.get_binding(User.load(at_id))
         if at_binding[binding.TOKEN_KEY]:
             return "token", at_binding[binding.TOKEN_KEY], at_id
         if at_binding[binding.USERNAME_KEY]:

@@ -22,6 +22,7 @@ import asyncio # noqa: E402
 import math # noqa: E402
 from xme.xmetools.msgtools import send_session_msg # noqa: E402
 from .inventory import Inventory # noqa: E402
+from xme.plugins.commands.xme_user import __plugin_name__ # noqa: E402
 from xme.xmetools.debugtools import debug_msg # noqa: E402
 from nonebot.log import logger # noqa: E402
 # from .xme_map import get_galaxymap # noqa: E402
@@ -170,6 +171,20 @@ class User:
             self.save()
             return time_now
         return v
+
+    def is_signed_today(self) -> bool:
+        """用户今天是否已签到；从未签到过视为未签到"""
+        # 键路径与 sign.py 的 (__plugin_name__, cmd_name) 对应；sign_date 缺省在 sign.py
+        # 里表示"从未签到"，这里取 None 区分于真实日期
+        last_sign = dicttools.get_value(__plugin_name__, "sign", "sign_date", search_dict=self.plugin_datas, default=None)
+        return last_sign is not None and last_sign == timetools.curr_days()
+
+    def get_sign_streak(self) -> int:
+        """用户保持的连签数量，断签（最后签到既不是今天也不是昨天）后为 0"""
+        last_sign = dicttools.get_value(__plugin_name__, "sign", "sign_date", search_dict=self.plugin_datas, default=None)
+        if last_sign is None or timetools.curr_days() - last_sign > 1:
+            return 0
+        return dicttools.get_value(__plugin_name__, "sign", "consecutive_days", search_dict=self.plugin_datas, default=0)
 
 
     def get_achievement(self, achievement_name) -> dict | bool:

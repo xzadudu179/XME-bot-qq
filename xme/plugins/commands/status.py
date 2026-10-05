@@ -9,6 +9,7 @@ from xme.xmetools.jsontools import read_from_path, save_to_path
 from xme.xmetools.msgtools import send_session_msg, image_msg
 from xme.xmetools.bottools import bot_call_action
 from xme.plugins.commands.xme_user.classes import user
+from xme.plugins.commands.ai_helper.llm import balance as ai_balance
 from xme.xmetools.plugintools import PluginCallData
 from xme.xmetools.drawtools import generate_command_trend_chart
 
@@ -48,6 +49,21 @@ async def _(session: CommandSession):
     save_to_path("data/bot_vars.json", vars)
     # user_datas = read_from_path("./data/users.json")
     user_count = len(user.User.get_users())
+
+    # AI provider 余额段：只展示查到余额的 provider，未知家数附在总计后
+    balance_msg = ""
+    try:
+        balances = await ai_balance.get_providers_balance()
+        if balances:
+            known = [b for b in balances if b.balance is not None]
+            unknown = len(balances) - len(known)
+            rows = "; ".join(f"{b.provider}: {ai_balance.format_balance(b)}" for b in known)
+            totals = ai_balance.format_total_balance(ai_balance.total_by_currency(balances))
+            suffix = f"（未知 {unknown} 家）" if unknown else ""
+            body = f"{rows}\n" if rows else ""
+            balance_msg = f"\n=== AI 余额 ===\n{body}总计: {totals}{suffix}"
+    except Exception:
+        pass
 
     # 获取指令统计数据（SQL 直接限定 95 天窗口，统计表逐指令增长、不能全表加载）
     start_time = datetime.now() - timedelta(days=95)
@@ -98,7 +114,9 @@ async def _(session: CommandSession):
                 xlabel='时间周期（每7天）',
                 ylabel='日均调用量'
             )
-            message += "=== 当前 bot 状态 ===\n" + info + f"\n===============\nBOT 记录了 {user_count:,} 位用户。" + "\n=== 指令统计 ===\n"
+            message += ("=== 当前 bot 状态 ===\n" + info
+                        + f"\n===============\nBOT 记录了 {user_count:,} 位用户。"
+                        + balance_msg + "\n=== 指令统计 ===\n")
             # 发送图片
             await send_session_msg(
                 session, message + (await image_msg(image_path)),

@@ -18,6 +18,22 @@ import functools
 # from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 import time
+from pathlib import Path
+
+# 运行中的指令会话计数（watchdog 收到 Ctrl+C 时据此要求二次确认；best-effort 落盘）
+_ACTIVE_SESSIONS_FILE = Path("./data/.nb_active_sessions")
+_active_sessions = 0
+
+
+def _bump_active_sessions(delta: int) -> None:
+    """增减运行中的指令会话计数并落盘（单事件循环内调用，计数无并发问题）。"""
+    global _active_sessions
+    _active_sessions = max(0, _active_sessions + delta)
+    try:
+        Path("./data").mkdir(exist_ok=True)
+        _ACTIVE_SESSIONS_FILE.write_text(str(_active_sessions), encoding="utf-8")
+    except Exception:
+        pass
 from xme.xmetools.dbtools import DATABASE
 
 class PluginCallData:
@@ -59,6 +75,15 @@ class PluginCallData:
                 (since,), dict_data=True)
         return [PluginCallData.form_dict(d) for d in rows]
 
+    @staticmethod
+    def get_last_call_times() -> dict[str, float]:
+        """统计各群最后一次调用时间，返回 群号(字符串) -> 最后调用时间戳；
+        从未有调用记录的群不在结果中，群号统一转为字符串方便比较。"""
+        rows = DATABASE.exec_query(
+            f"SELECT call_group, MAX(call_time) AS last_call FROM {PluginCallData.get_table_name()} GROUP BY call_group",
+            dict_data=True)
+        return {str(d["call_group"]): d["last_call"] for d in rows}
+
     def save(self):
         self.id = DATABASE.save_to_db(self)
 
@@ -93,6 +118,30 @@ class PluginCallData:
             time_cost=data["time_cost"],
             db_id=data["id"]
         )
+
+def record_plugin_call(
+        name: str,
+        from_user_id: int,
+        call_group: Union[int, str, None] = None,
+        success: bool = True,
+        time_cost: float = 0.0,
+        args: str = "",
+        call_time: Optional[float] = None,
+    ) -> PluginCallData:
+    """手动记录一次插件调用数据并入库，返回生成的 PluginCallData；
+    call_time 缺省取当前时间，call_group 为 None 时记为 -1（私聊）。"""
+    data = PluginCallData(
+        name,
+        call_time=call_time if call_time is not None else time.time(),
+        from_user_id=from_user_id,
+        call_group=call_group,
+        success=success,
+        time_cost=time_cost,
+        args=args,
+    )
+    logger.info(f"存储指令调用数据：{data.to_dict()}")
+    data.save()
+    return data
 
 def on_command(
     name: Union[str, CommandName_T],
@@ -143,15 +192,18 @@ def on_command(
             start = time.monotonic()
             call_time = time.time()
             success = False
+            _bump_active_sessions(1)
             # 清理指令消息绑定
             clean_cmd_msgs()
             if session.event.message_id is not None:
-                command_msgs[session.event.message_id] = {
+                # 暂停会话续跑时 wrapper 会再次执行，事件固定后命中同一 key：
+                # 已登记条目原样保留（否则 ids 会被清空），只登记新指令消息
+                command_msgs.setdefault(session.event.message_id, {
                     "ids": [],
                     "time": call_time,
                     # 私聊为 None 和 userid
                     "open": f"{session.event.group_id}{session.event.user_id}"
-                }
+                })
             result = None
             try:
                 arg = session.current_arg
@@ -174,20 +226,19 @@ def on_command(
                     pass
                 raise
             finally:
+                _bump_active_sessions(-1)
                 if cmd_name[0] == "test":
                     return result
                 cost = time.monotonic() - start
-                data = PluginCallData(
-                        cmd_name[0],
-                        call_time=call_time,
-                        from_user_id=session.event.user_id,
-                        call_group=session.event.group_id,
-                        success=success,
-                        time_cost=cost,
-                        args=arg.strip() if arg is not None else "",
-                    )
-                logger.info(f"存储指令调用数据：{data.to_dict()}")
-                data.save()
+                record_plugin_call(
+                    cmd_name[0],
+                    from_user_id=session.event.user_id,
+                    call_group=session.event.group_id,
+                    success=success,
+                    time_cost=cost,
+                    args=arg.strip() if arg is not None else "",
+                    call_time=call_time,
+                )
                 if session.event.message_id is not None:
                     set_value(session.event.message_id, "open", search_dict=command_msgs, set_method=lambda _: False)
                     # command_msgs[session.event.message_id]["open"] = False

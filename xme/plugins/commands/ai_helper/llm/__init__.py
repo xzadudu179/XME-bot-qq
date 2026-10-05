@@ -6,6 +6,7 @@
 - openai_client.py  httpx 实现的兼容客户端（流式 + 工具分片 + 错误分类）
 - images.py         图片生成抽象层（OpenAI 兼容 /images/generations，方舟/GPT-Image/智谱同形）
 - registry.py       provider 注册表 / 模型目录 / 能力配置（配置单点）
+- balance.py        provider 余额查询抽象层（各服务商余额端点适配，查不到为 None）
 - oneshot.py        通用单轮调用（程序内部用：指定提示词/模型，拿回解析好的回复）
 - topic.py          话题分类器（基于 oneshot，供动态模型分配使用）
 
@@ -18,6 +19,10 @@ from .openai_client import OpenAICompatProvider  # noqa: F401
 from .images import ImageResult, OpenAIImagesProvider  # noqa: F401
 from .registry import (  # noqa: F401
     close_all, default_alias, get_capability, get_image_provider, get_provider,
-    get_provider_config, list_model_aliases, resolve_model,
+    get_provider_config, list_model_aliases, list_provider_names, resolve_model,
+)
+from .balance import (  # noqa: F401
+    ProviderBalance, format_balance, format_total_balance, get_providers_balance,
+    get_total_balance, total_by_currency,
 )
 from .oneshot import AskResult, ask, extract_json  # noqa: F401

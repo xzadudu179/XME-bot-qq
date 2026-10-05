@@ -54,8 +54,8 @@ async def _(session: CommandSession, user: u.User):
         messy_rate_string = f"{messy_rate}%"
     suffix = ""
 
-    sender: u.User = u.try_load(bottle.sender_id)
-    logger.info(f"sender is {sender}")
+    sender: u.User = u.User.load(bottle.sender_id)
+    logger.info(f"sender is {bottle.sender_id}")
     if sender is not None:
         custom_card = sender.get_custom_setting(__plugin_name__, "custom_cards")
         logger.info(f"{custom_card} {CUSTOM_CARD_NAMES}")

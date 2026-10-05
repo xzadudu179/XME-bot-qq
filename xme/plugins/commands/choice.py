@@ -54,6 +54,7 @@ async def _(session: CommandSession):
             ends_can_choice(choices[0], word="会"),
             ends_can_choice(choices[0], word="在"),
             ends_is_or_not_choice(choices[0]),
+            repeated_verb_choice(choices[0]),
             # has_or_not_choice(choices[0]),
         ]
         for c in special_choices:
@@ -211,6 +212,70 @@ def is_or_not_choice(input_str):
     choices = [('' if splits[0] in ['我', '你'] else splits[0]) + c for c in choices]
     # message = ('' if splits[0] in ['我', '你'] else splits[0]) + random.choice([is_not if first_last == "是" else texttools.merge_positive_negative(is_not), texttools.merge_positive_negative("不" + is_not)])
     return choices
+
+def is_verb_word(word: str) -> bool:
+    """判断词语是否为动词（jieba 词性含 v）"""
+    return any('v' in w.flag for w in pseg.cut(word))
+
+def find_word_positions(text: str, word: str) -> list:
+    """返回 word 在 text 中所有不重叠出现的起始下标"""
+    positions = []
+    idx = text.find(word)
+    while idx != -1:
+        positions.append(idx)
+        idx = text.find(word, idx + len(word))
+    return positions
+
+def repeated_verb_choice(text):
+    """文本中出现多个相同动词时按该动词分割选项，第一个动词前的内容作为公共前缀
+
+    例："今天吃好的吃差的吃普通的" 分割为 "今天吃好的"、"今天吃差的"、"今天吃普通的"；无匹配返回 False
+    """
+    for size in (1, 2):
+        checked = []
+        for i in range(len(text) - size + 1):
+            word = text[i:i + size]
+            if word in checked or text.count(word) < 2:
+                continue
+            checked.append(word)
+            if not is_verb_word(word):
+                continue
+            options = split_by_repeated_word(text, word)
+            if options:
+                debug_msg("repeated verb choice", word, options)
+                return options
+    return False
+
+def split_by_repeated_word(text: str, word: str):
+    """按重复出现的 word 把 text 分割成选项列表，第一个 word 前的内容作为公共前缀
+
+    word 会先向左扩展为更长的重复单元（如 "我想吃我想喝" 中 "吃" 扩展为 "我想"），
+    出现不足两次或分割出空片段时返回 None
+    """
+    positions = find_word_positions(text, word)
+    if len(positions) < 2:
+        return None
+    # 逐字向左比较各出现位置前的字符，扩展出完整的重复单元
+    ext = 0
+    while ext < positions[0]:
+        ch = text[positions[0] - ext - 1]
+        if not all(text[p - ext - 1] == ch for p in positions[1:]):
+            break
+        ext += 1
+    if ext:
+        word = text[positions[0] - ext:positions[0]] + word
+        positions = find_word_positions(text, word)
+        if len(positions) < 2:
+            return None
+    prefix = text[:positions[0]]
+    options = []
+    for i, pos in enumerate(positions):
+        end = positions[i + 1] if i + 1 < len(positions) else len(text)
+        tail = text[pos + len(word):end]
+        if not tail:
+            return None
+        options.append(prefix + word + tail)
+    return options
 
 def parse_num_choice(s):
     s = texttools.replace_chinese_punctuation(s)

@@ -19,8 +19,13 @@ class LLMProvider(Protocol):
 
     async def chat(self, messages: list, *, model: str, tools: list | None = None,
                    temperature: float | None = None,
-                   thinking: bool = False) -> ChatResult:
-        """发起一次对话调用：返回统一结果，失败抛 LLMError。"""
+                   thinking: bool = False,
+                   response_format: dict | None = None) -> ChatResult:
+        """发起一次对话调用：返回统一结果，失败抛 LLMError。
+
+        response_format：OpenAI 兼容协议的输出约束字段（如 {"type": "json_object"}），
+        None 表示不下发该字段。
+        """
         ...
 
     async def close(self) -> None:

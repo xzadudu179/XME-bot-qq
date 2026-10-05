@@ -37,12 +37,16 @@
                     },
                     "ref": {
                         "type": "array",
-                        "items": {"type": "string"},
+                        "items": {
+                            "type": "string"
+                        },
                         "description": "参考图的文件引用列表（temp/history 的 file_N，最多 10 张），用于图生图/风格迁移/多图融合"
                     },
                     "url": {
                         "type": "array",
-                        "items": {"type": "string"},
+                        "items": {
+                            "type": "string"
+                        },
                         "description": "参考图的公网直链列表（http/https，与 ref 合计最多 10 张）——用户发来的图片通常用这个"
                     },
                     "save_to": {
@@ -240,6 +244,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "你想让模型针对该 url 内容做什么"
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "独立分析用的视觉模型：别名（qwenflash / flash=GLM-5.3-flash / dsflash 等，须具备视觉能力）或 \"auto\"（按任务自动路由：审美/设计/配色类→flash，内容识别/细节/世界知识类→qwenflash）；留空用默认视觉模型"
                     },
                     "attach": {
                         "type": "boolean",
@@ -952,6 +960,10 @@
                     "prompt": {
                         "type": "string",
                         "description": "分析要求；填写后截图直接交给视觉模型分析并返回文本结果"
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "独立分析用的视觉模型：别名（qwenflash / flash=GLM-5.3-flash / dsflash 等，须具备视觉能力）或 \"auto\"（按任务自动路由：审美/设计/配色类→flash，内容识别/细节/世界知识类→qwenflash）；留空用默认视觉模型"
                     },
                     "attach": {
                         "type": "boolean",

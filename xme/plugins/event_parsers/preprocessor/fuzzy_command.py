@@ -119,7 +119,8 @@ async def fuzzy_cmd(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plugin
     if remove_punctuation(strip_cq(text).strip().lower()) in ["y", "Y"]:
         command = confirms.pop(key)
         if command is not None:
-            await cmdtools.event_send_cmd(command, bot, event)
+            # 重分发走完整 handle_message，护栏（寻宝/aistop/私聊校验）照常生效
+            await cmdtools.redispatch_cmd(command, bot, event)
             raise CanceledException(f"已按指令纠错执行 {command}")
 
     # 没回 y（或回的不是 y）：本次纠错作废，只认紧接着的那一句话

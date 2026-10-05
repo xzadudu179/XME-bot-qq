@@ -5,7 +5,7 @@ from xme.xmetools.doctools import CommandDoc
 from xme.xmetools.cmdtools import use_args, send_cmd
 from xme.xmetools.typetools import try_parse
 from config import COMMAND_START
-from xme.xmetools.templates import HIUN_COLORS, FONTS_STYLE
+from xme.xmetools.templates import IIUN_COLORS, FONTS_STYLE
 from xme.xmetools.debugtools import debug_msg
 # from nonebot.log import logger
 from xme.xmetools.dicttools import set_value, get_value
@@ -34,7 +34,7 @@ def get_custom_items_html(*keys, user: User, curr_custom: str, none_message = "ä
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>shop</title>
                 <style>
-    """ + HIUN_COLORS + FONTS_STYLE + """
+    """ + IIUN_COLORS + FONTS_STYLE + """
             * {
                 margin: 0;
                 padding: 0;

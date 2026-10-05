@@ -538,6 +538,8 @@ class AIHelper:
             self.activate_skills = list(resume_data.get("activate_skills") or [])
         # 插入模式的队列键与开关都是实时查询（见 insert_key / insert_enabled_now），
         # 不存构造期快照——会话名会被 AI 改名，快照会立刻过期
+        # 单轮熔断命中说明（时长/费用超限，见 _check_turn_budget；空串=未触发）
+        self.limit_hit = ""
         tools_path = Path(__file__).parent / "tools.json"
         with open(tools_path, "r", encoding="utf-8") as f:
             self.tools = json.load(f)
@@ -572,6 +574,20 @@ class AIHelper:
             ai_logger.warning(f"思路笔记提炼失败（跳过）：{type(ex).__name__}: {ex}")
             return ""
 
+    def _check_turn_budget(self) -> str:
+        """单轮熔断检查：时长/费用超限返回说明并置 limit_hit（真值时调用方中断）。
+
+        在 run_agent 每次发起模型调用前执行；费用按 compute_credits 的当前累计
+        估算（含 other_credits，此刻无在途调用），未结算前每次调用都会复查。
+        """
+        if self.limit_hit:
+            return self.limit_hit
+        if self.spent_secs.get_timer_value() > constants.TURN_TIME_LIMIT:
+            self.limit_hit = f"对话时长达到单轮上限 {constants.TURN_TIME_LIMIT // 3600} 小时"
+        elif self.compute_credits()["credits_use"] > constants.TURN_CREDITS_LIMIT:
+            self.limit_hit = f"消耗达到单轮上限 {constants.TURN_CREDITS_LIMIT:,} credits"
+        return self.limit_hit
+
     async def run_agent(self, session, messages, model_entry):
         """单轮 agent 循环：反复调用模型并执行工具，直到模型不再请求工具。
 
@@ -585,6 +601,10 @@ class AIHelper:
         MAX_RETRY_TIMES = 5
         retry_times = 0
         while True:
+            # 单轮熔断（时长/费用，constants.TURN_*）：超限不再发起新的模型调用，
+            # 按 AISTOP 同款路径中断收尾并结算
+            if self._check_turn_budget():
+                return False, 0
             try:
                 result = await self.create_and_wait(session, messages, model_entry)
             except LLMError as ex:
@@ -727,7 +747,9 @@ class AIHelper:
             if inspect.iscoroutinefunction(func):
                 result = await func(**arguments)
             else:
-                result = func(**arguments)
+                # 同步工具多为文件 I/O（读大文件/压缩/解压/整目录改名），放线程池
+                # 执行，避免大文件时阻塞事件循环、拖住整个 bot 的所有消息处理
+                result = await asyncio.to_thread(func, **arguments)
             if result is AISTOP:
                 return AISTOP
             spent = self.spent_secs.get_timer_value()
@@ -1200,8 +1222,13 @@ class AIHelper:
 
                     # 默认参数绑定当前迭代值：闭包直接捕获变量会全部指向最后一轮
                     async def _call(_tool_name=name, _client=client, **kwargs):
-                        return {"result": await _client.call_tool(
-                            _tool_name, kwargs), "no_compress": True}
+                        text = await _client.call_tool(_tool_name, kwargs)
+                        if len(text) > constants.MCP_RESULT_MAX_CHARS:
+                            text = (text[:constants.MCP_RESULT_MAX_CHARS]
+                                    + f"\n…[MCP 结果超长，已截断至 {constants.MCP_RESULT_MAX_CHARS} 字符]")
+                        # 不带 no_compress：超 1 万字符的结果走通用压缩转文件路径，
+                        # 可 check_file 查看；上限只作 MCP server 异常输出时的硬兜底
+                        return {"result": text}
 
                     self.tool_functions[full_name] = _call
                     self.tools.append(mcp_schema)
@@ -1224,7 +1251,8 @@ class AIHelper:
             asks = self.asks
             real_entry = self.resume_entry or self.model_entry
             text = asks[-1].get("text", "") if asks else text
-            prefix = get_message("plugins", __plugin_name__, "resume_prefix", count=len(ai_params))
+            # 恢复提示已由入口（resume_ask 确认 / --continue）作为独立消息即时发出
+            prefix = ""
         else:
             compressed = await self._compress_context(session)
             history, curr_text = await get_history(user, self.storage)
@@ -1307,16 +1335,17 @@ class AIHelper:
         if self.model_fallback_note:
             prefix = self.model_fallback_note + prefix
         if result == False or result is AISTOP:
-            # 主动中断（ask_user 的 aistop）：已消耗的 tokens 照常结算并提示（幂等）
+            # 主动中断（ask_user 的 aistop）或单轮熔断：已消耗的 tokens 照常结算并提示（幂等）
             tokens_use_dict = self.settle_once()
             lefts = tokens_use_dict.get("lefts", {})
             share_used = tokens_use_dict["credits_split"].get(str(self.user_id))
             left = lefts.get(str(self.user_id))
             fmt = lambda x: f"{x:,.2f}".rstrip('0').rstrip('.') if x is not None else "未知"
+            msg_key = "turn_limit_hit" if self.limit_hit else "ai_send_interrupted"
             await send_session_msg(
                 session,
-                get_message("plugins", __plugin_name__, "ai_send_interrupted",
-                            credits=fmt(share_used), left=fmt(left))
+                get_message("plugins", __plugin_name__, msg_key,
+                            limit=self.limit_hit, credits=fmt(share_used), left=fmt(left))
             )
             return False, {}, {}, 0
         try:

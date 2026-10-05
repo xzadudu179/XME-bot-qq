@@ -12,7 +12,7 @@ USERNAME_KEY = 'username'
 TOKEN_KEY = 'import_token'
 
 
-def get_binding(user: User) -> dict:
+def get_binding(user: User | None) -> dict:
     """得到用户的舞萌绑定信息，缺失时返回空绑定 dict（不写入用户数据）。
 
     Args:
@@ -21,6 +21,8 @@ def get_binding(user: User) -> dict:
     Returns:
         dict: {"username": str | None, "import_token": str | None}
     """
+    if user is None:
+        return {USERNAME_KEY: None, TOKEN_KEY: None}
     data = user.plugin_datas.get(PLUGIN_DATA_KEY)
     if not isinstance(data, dict):
         return {USERNAME_KEY: None, TOKEN_KEY: None}

@@ -18,7 +18,7 @@ sending_msgs = {}
 sent_msgs = {}
 
 @message_preprocessor
-async def is_it_command(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
+async def _(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: PluginManager):
     global sending_msgs
     global groups_messages
     raw_msg = event.raw_message

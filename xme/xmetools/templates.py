@@ -1,6 +1,6 @@
 from xme.xmetools.filetools import b64_encode_file
 
-HIUN_COLORS = """
+IIUN_COLORS = """
 :root {
     --color-primary: #97DAFF;
     --color-primary2: #78B9FF;

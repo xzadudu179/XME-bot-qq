@@ -8,6 +8,8 @@ import cn2an
 from xme.xmetools import randtools
 
 import random
+
+from xme.xmetools.texttools import remove_punctuation
 # random.seed()
 from .classes import user as u
 from .classes.user import User
@@ -89,7 +91,7 @@ async def _(session: CommandSession, user: User):
         reply = await aget_arg(
             session,
             prompt="",
-            rules=lambda r: r in ['y', 'Y', 'n', 'N'],
+            rules=lambda r: remove_punctuation(r) in ['y', 'Y', 'n', 'N'],
         )
         if reply in ['y', 'Y']:
             spend_result = await user.try_spend(session, make_up_cost)

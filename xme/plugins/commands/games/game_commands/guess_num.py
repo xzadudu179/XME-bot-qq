@@ -2,7 +2,7 @@ from nonebot import CommandSession
 from nonebot.log import logger
 from xme.plugins.commands.games.play import cmd_name
 from xme.xmetools.cmdtools import is_command
-from .game import Game
+from .game import Game, return_state, limited
 from xme.xmetools.bottools import permission
 # from xme.xmetools.cmdtools import get_cmd_by_alias
 from xme.plugins.commands.xme_user.classes import user
@@ -74,32 +74,17 @@ class GuessNum(Game):
             return -1
         return 0
 
-def return_state(message: str="", state: str="OK", data: dict={}) -> str:
-    return {
-        "state": state,
-        "message": message,
-        "data": data
-    }
-
-def calc_award(basic, game: GuessNum):
-    range_len = game.number_range[1] - game.number_range[0]
-    theorical_times = math.log2(range_len)
-    times_addition = 2 ** abs(theorical_times - game.guessing_times) // 20
-    times_addition = -times_addition if theorical_times - game.guessing_times < 0 else times_addition
-    award = int(basic + times_addition + min(2 * theorical_times, theorical_times ** 2))
-    if game.guessing_times >= range_len:
-        award = 0
-    award = min(award, 1024)
-    return int(max(0, award) / 2)
-
-
-async def limited(func, session: CommandSession, user: user.User, *args, **kwargs):
-    debug_msg(args, kwargs)
-    result = await func(session, user, *args, **kwargs)
-    debug_msg(result)
-    if result['state'] == 'OK':
-        result['data']['limited'] = True
-    return result
+    def calc_award(self, basic: int) -> int:
+        """按范围二分理论次数与实际猜测次数的差距计算奖励，越接近理论值越高"""
+        range_len = self.number_range[1] - self.number_range[0]
+        theorical_times = math.log2(range_len)
+        times_addition = 2 ** abs(theorical_times - self.guessing_times) // 20
+        times_addition = -times_addition if theorical_times - self.guessing_times < 0 else times_addition
+        award = int(basic + times_addition + min(2 * theorical_times, theorical_times ** 2))
+        if self.guessing_times >= range_len:
+            award = 0
+        award = min(award, 1024)
+        return int(max(0, award) / 2)
 
 @user.limit(f"{cmd_name}_{name}", 1, "", TIMES_LIMIT, fails=lambda x: x['state'] != "OK", limit_func=limited)
 @permission(lambda sender: sender.is_privatechat, no_perm_result=return_state(f"{get_message('config', 'no_permission', permission='在私聊使用')}", "ERROR"), silent=True)
@@ -196,7 +181,7 @@ async def play_game(session: CommandSession, u: user.User, args: dict):
         )
         # prefix = f"{message}\n请"
     return return_state(data={
-        "award": calc_award(BASIC_AWARD, guess),
+        "award": guess.calc_award(BASIC_AWARD),
         "limited": False,
         "times_left": get_award_times_left
     })

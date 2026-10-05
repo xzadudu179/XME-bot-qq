@@ -6,9 +6,10 @@ import asyncio
 from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.bottools import is_group_member_count_legal
 from nonebot.log import logger
+from xme.xmetools.plugintools import record_plugin_call
 
 increase_people = {}
-
+PLUGIN_NAME = "GROUP_INCREASE"
 # 将函数注册为群成员增加通知处理器
 @on_notice('group_increase')
 async def _(session: NoticeSession):
@@ -20,6 +21,7 @@ async def _(session: NoticeSession):
         await session.bot.api.set_group_leave(group_id=group_info['group_id'])
         return
     # 发送欢迎消息
+    record_plugin_call(PLUGIN_NAME, session.event.user_id, session.event.group_id, True)
     # 如果是自己换一种欢迎方法
     if session.event.user_id == session.self_id:
         debug_msg("欢迎自己")
@@ -35,7 +37,6 @@ async def _(session: NoticeSession):
     await asyncio.sleep(4)
     # debug_msg(increase_people)
     if len(people) == len(increase_people[group]):
-
         at = " ".join(increase_people[group])
         increase_people[group] = []
         debug_msg(get_message("event_parsers", "welcome", at=" ".join(str(s) for s in increase_people[group])))

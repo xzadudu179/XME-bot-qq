@@ -82,9 +82,10 @@ def _user_state_file(user_id, name: str) -> Path:
 
 
 def is_valid_code(code: str) -> bool:
-    """校验群号码格式：AI 前缀 + 纯数字。"""
-    return (isinstance(code, str) and code.startswith(SHARED_CODE_PREFIX)
-            and code[len(SHARED_CODE_PREFIX):].isdigit())
+    """校验群号码格式：AI 前缀 + ASCII 纯数字（isdigit 会放行全角等 unicode 数字）。"""
+    rest = code[len(SHARED_CODE_PREFIX):] if isinstance(code, str) else ""
+    return bool(code) and code.startswith(SHARED_CODE_PREFIX) \
+        and rest.isascii() and rest.isdigit()
 
 
 def normalize_code(code: str) -> str:

@@ -29,9 +29,33 @@ class CDPError(RuntimeError):
     """CDP 连接/命令/页面执行错误。"""
 
 
+class CDPGuardError(CDPError):
+    """渲染 URL 守卫拦截（file:// 越目录 / 内网目标）：本次渲染操作直接失败。
+
+    与普通 CDPError 的区别：截图/录制工具收到它时绝不降级重试——oneshot
+    兜底路径没有守卫能力，重试也只会再次被拦截。
+    """
+
+
 _CDP_START_TIMEOUT = 15.0   # 等 chrome 调试端口就绪
 _CMD_TIMEOUT = 10.0         # 单条 CDP 命令默认超时
 _WS_MAX_MSG = 64 * 1024 * 1024  # ws 单条消息上限（防止大响应被拒）
+
+# ---- 渲染 URL 守卫（CDPBrowser(url_guard=...) 时启用，双层互补）----
+# 第一层 Network.setBlockedURLs：私网/本机目标的 URL 文本模式，导航/子资源请求
+# 发出前即断开。host 逐个配「无端口 + 带端口」两条；文本模式挡不住"域名解析
+# 到内网"的 rebinding，由第二层守卫（frameNavigated 时真实 DNS 校验）兜住。
+_PRIVATE_HOST_PATTERNS = (
+    "localhost", "127.*", "10.*", "192.168.*", "169.254.*", "0.*",
+    *(f"172.{n}.*" for n in range(16, 32)),
+    "[::1]", "[fe80*]", "[fc*]", "[fd*]",
+)
+_BLOCKED_URL_PATTERNS = [p for h in _PRIVATE_HOST_PATTERNS
+                         for p in (f"*://{h}/*", f"*://{h}:*/*")]
+# 守卫无需裁决的内部协议（chrome-error 是 chrome 把加载失败的帧导航到错误页）
+_GUARD_SKIP_SCHEMES = ("about", "data", "blob", "chrome", "chrome-error", "devtools",
+                       "javascript", "view-source")
+_GUARD_TIMEOUT = 8.0   # 守卫异步校验（DNS 解析）的单次上限；超时按违规处理（fail-closed）
 
 # 键名 → (key, code, windowsVirtualKeyCode)：宏 key 动作的内置映射
 _KEY_CODES = {
@@ -96,11 +120,16 @@ class CDPBrowser:
     """
 
     def __init__(self, width: int = 1280, height: int = 720,
-                 extra_args: list[str] | None = None):
+                 extra_args: list[str] | None = None, url_guard=None):
         self.width = int(width)
         self.height = int(height)
         # 追加的 chrome 启动参数（如 file:// 源传"死代理"以整体关闭页面网络）
         self._extra_args = list(extra_args or [])
+        # 渲染 URL 守卫：async callable(url) -> None，违规抛 ValueError。
+        # 启用后双层拦截——Fetch 域拦 file:// 请求（读盘前）、Network 域拦私网
+        # 目标、frameNavigated 逐次导航复检；违规即停加载并让后续操作全部失败
+        self._url_guard = url_guard
+        self._guard_error: str | None = None
         self._msg_id = 0
         self._frame_cb = None    # 录制中的帧回调 on_frame(jpeg_bytes, timestamp)
         self._proc = None
@@ -110,6 +139,11 @@ class CDPBrowser:
         self._recv_task = None
         self._pending: dict[int, asyncio.Future] = {}
         self._msg_id = 0
+
+    @property
+    def guard_error(self) -> str | None:
+        """本次会话中守卫拦截到的第一条违规说明（未发生为 None）。"""
+        return self._guard_error
 
     # ---------- 生命周期 ----------
 
@@ -189,6 +223,8 @@ class CDPBrowser:
             await self.close()
             raise
         self._recv_task = asyncio.create_task(self._recv_loop())
+        if self._url_guard is not None:
+            await self._setup_guard()
         return self
 
     async def __aexit__(self, *exc) -> None:
@@ -230,6 +266,73 @@ class CDPBrowser:
 
     # ---------- 协议底层 ----------
 
+    async def _setup_guard(self) -> None:
+        """启用渲染守卫的两层网络隔离；单层不可用只降级告警，不阻断会话。"""
+        try:
+            await self._command("Network.enable", {})
+            await self._command("Network.setBlockedURLs", {"urls": _BLOCKED_URL_PATTERNS})
+        except CDPError as ex:
+            logger.warning(f"Network.setBlockedURLs 不可用（私网拦截降级为守卫单层）: {ex}")
+        try:
+            # 只拦截 file:// 请求：守卫放行初始文档与会话目录内的资源，其余在
+            # 「读盘之前」直接失败（frameNavigated 拦截发生在提交后，iframe 内容
+            # 可能已开始渲染）；http(s) 源页面试图加载 file:// 同样在此被拦
+            await self._command("Fetch.enable", {"patterns": [
+                {"urlPattern": "file://*", "requestStage": "Request"}]})
+        except CDPError as ex:
+            logger.warning(f"Fetch.enable 不可用（file:// 拦截降级为导航守卫单层）: {ex}")
+
+    async def _handle_fetch_paused(self, params: dict) -> None:
+        """Fetch 拦截回调（file:// 请求）：放行会话目录内的资源，其余读盘前即失败。"""
+        request_id = params.get("requestId") or ""
+        url = (params.get("request") or {}).get("url") or ""
+        try:
+            await self._check_guard(url)
+        except Exception as ex:
+            self._record_violation(url, ex)
+            try:
+                await self._command("Fetch.failRequest",
+                                    {"requestId": request_id, "errorReason": "AccessDenied"})
+            except CDPError:
+                pass
+            return
+        try:
+            await self._command("Fetch.continueRequest", {"requestId": request_id})
+        except CDPError:
+            pass   # 页面已导航走：请求对象已失效，忽略即可
+
+    async def _apply_guard(self, url: str) -> None:
+        """frameNavigated 守卫（第二层）：违规即停加载并记错，后续操作全部失败。"""
+        if not url or self._url_guard is None:
+            return
+        try:
+            await self._check_guard(url)
+        except Exception as ex:
+            self._record_violation(url, ex)
+            try:
+                await self._command("Page.stopLoading", {})
+            except CDPError:
+                pass
+
+    async def _check_guard(self, url: str) -> None:
+        """单条 URL 守卫裁决：守卫未启用或内部协议直接放行，违规抛异常。"""
+        if self._url_guard is None:
+            return
+        scheme = url.split(":", 1)[0].lower()
+        if scheme in _GUARD_SKIP_SCHEMES:
+            return
+        await asyncio.wait_for(self._url_guard(url), _GUARD_TIMEOUT)
+
+    def _record_violation(self, url: str, ex: Exception) -> None:
+        msg = f"渲染 URL 守卫拦截 {url[:120]}（{ex}）"
+        if self._guard_error is None:
+            self._guard_error = msg
+        logger.warning(msg)
+
+    def _raise_if_guarded(self) -> None:
+        if self._guard_error is not None:
+            raise CDPGuardError(self._guard_error)
+
     async def _recv_loop(self) -> None:
         try:
             async for msg in self._ws:
@@ -252,12 +355,19 @@ class CDPBrowser:
                     await self._ws.send_str(json.dumps({
                         "id": self._msg_id, "method": "Page.screencastFrameAck",
                         "params": {"sessionId": params.get("sessionId")}}))
+                    if self._guard_error is not None:
+                        continue   # 守卫已拦截：丢弃后续帧，防越界内容混进录制
                     try:
                         jpeg = base64.b64decode(params.get("data") or "")
                         ts = float((params.get("metadata") or {}).get("timestamp") or 0)
                         self._frame_cb(jpeg, ts)
                     except Exception:
                         logger.exception("处理采集帧失败")
+                elif data.get("method") == "Fetch.requestPaused":
+                    await self._handle_fetch_paused(data.get("params") or {})
+                elif data.get("method") == "Page.frameNavigated":
+                    url = ((data.get("params") or {}).get("frame") or {}).get("url") or ""
+                    await self._apply_guard(url)
         except asyncio.CancelledError:
             raise
         except Exception as ex:
@@ -282,6 +392,7 @@ class CDPBrowser:
 
     async def navigate(self, url: str, wait_ms: int = 2000, timeout: float = 30.0) -> None:
         """导航并等待文档加载完成（readyState 轮询，容忍导航期间的执行上下文切换）。"""
+        self._raise_if_guarded()
         await self._command("Page.enable", {})
         await self._command("Page.navigate", {"url": url}, timeout=timeout)
         deadline = time.monotonic() + timeout
@@ -297,6 +408,7 @@ class CDPBrowser:
 
     async def evaluate(self, expression: str):
         """执行 JS 并取返回值（returnByValue）；页面抛错转 CDPError。"""
+        self._raise_if_guarded()
         result = await self._command("Runtime.evaluate", {
             "expression": expression, "returnByValue": True,
             "awaitPromise": False, "userGesture": True,
@@ -326,6 +438,7 @@ class CDPBrowser:
 
     async def screenshot(self, *, scale: int = 1, timeout: float = 20.0) -> bytes:
         """按当前视口截图，返回 PNG 字节；scale 为渲染倍率（Retina 式物理分辨率翻倍）。"""
+        self._raise_if_guarded()
         await self._command("Emulation.setDeviceMetricsOverride", {
             "width": self.width, "height": self.height,
             "deviceScaleFactor": max(1, int(scale)), "mobile": False,

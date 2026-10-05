@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass
+from functools import lru_cache
 import base64
 import os
 from xme.xmetools import filetools
@@ -31,6 +32,29 @@ from pyzbar.pyzbar import decode
 hti = Html2Image(
 )
 hti.output_path = IMAGE_TEMP_PATH
+
+def _check_scale(scale) -> float:
+    """校验渲染倍率为正数，非法输入直接抛错"""
+    try:
+        scale = float(scale)
+    except (TypeError, ValueError) as ex:
+        raise ValueError(f"渲染倍率必须是数字，收到 {scale!r}") from ex
+    if not scale > 0:
+        raise ValueError(f"渲染倍率必须大于 0，收到 {scale}")
+    return scale
+
+@lru_cache(maxsize=None)
+def _scale_hti(scale_key: float) -> Html2Image:
+    """按渲染倍率取 html2image 实例
+
+    以默认单例的 flags 为底（含透明背景、隐藏滚动条），追加
+    --force-device-scale-factor；倍率不变时复用同一实例。
+    """
+    if scale_key == 1:
+        return hti
+    instance = Html2Image(custom_flags=[*hti.browser.flags, f"--force-device-scale-factor={scale_key}"])
+    instance.output_path = IMAGE_TEMP_PATH
+    return instance
 
 async def _is_images_url_can_send(image_urls: list[str]):
     return await object_moderations([{"type": "image_url", "image_url": {"url": u}} for u in image_urls])
@@ -205,11 +229,24 @@ def read_image(path):
     image = Image.open(path)
     return image
 
-def get_html_image(html_str, height=2500, width=1920) -> Image.Image:
+def get_html_image(html_str, height=2500, width=1920, scale=1) -> Image.Image:
+    """将 HTML 渲染为图片并裁掉外侧透明部分
+
+    Args:
+        html_str (str): 完整 HTML 文档字符串
+        height (int): 视口高度（CSS 像素）
+        width (int): 视口宽度（CSS 像素）
+        scale (float): 渲染倍率。版式与 CSS 布局不变，仅提高输出分辨率：
+            1x1 CSS 像素在输出图片中变为 scale×scale 物理像素
+
+    Returns:
+        Image.Image: 处理完成的图片
+    """
+    scale = _check_scale(scale)
     name = f"image-{uuid4()}.png"
     pth = os.path.join(IMAGE_TEMP_PATH, name)
     x = time.time()
-    hti.screenshot(html_str=html_str, save_as=name, size=(width, height))
+    _scale_hti(round(scale, 4)).screenshot(html_str=html_str, save_as=name, size=(width, height))
     s = time.time()
     p = s - x
     print(f"ppp{p=}")
@@ -217,11 +254,10 @@ def get_html_image(html_str, height=2500, width=1920) -> Image.Image:
     # os.remove(name)
     return image
 
-async def get_html_image_async(html_str, height=2500, width=1920) -> Image.Image:
-    """get_html_image 的异步版：Chrome 渲染 + PIL 裁剪都是秒级同步操作，
-    必须经后台线程执行，避免冻结事件循环（async 命令处理器一律用本入口）。
+async def get_html_image_async(html_str, height=2500, width=1920, scale=1) -> Image.Image:
+    """get_html_image 的异步版。
     """
-    return await asyncio.to_thread(get_html_image, html_str, height=height, width=width)
+    return await asyncio.to_thread(get_html_image, html_str, height=height, width=width, scale=scale)
 
 def crop_transparent_area(input_path) -> Image.Image:
     """将透明底 PNG 图片的外侧透明部分切除
@@ -693,13 +729,16 @@ def _file_offline_args(url: str) -> list[str]:
 
 
 async def _cdp_screenshot(url: str, *, width: int, height: int, wait_ms: int,
-                          scale: int, wait_until: str, budget: float) -> ScreenshotOutcome:
+                          scale: int, wait_until: str, budget: float,
+                          url_guard=None) -> ScreenshotOutcome:
     """CDP 路径截图：真实墙钟等待（非虚拟时间）。
 
     等待顺序为「条件优先、wait_ms 作缓冲」：
     1) 导航并等 readyState 到 complete；
     2) 给了 wait_until 就轮询该 JS 表达式到真值或超时（超时不算失败，如实上报）；
     3) 条件满足（或未给条件）时再真等 wait_ms 作缓冲；条件超时则跳过缓冲。
+    url_guard 非 None 时传给 CDPBrowser 启用渲染 URL 守卫（file:// 越界子资源
+    与私网目标的网络级拦截，见 browsertools）。
     """
     from xme.xmetools.browsertools import CDPBrowser, CDPError
 
@@ -707,7 +746,8 @@ async def _cdp_screenshot(url: str, *, width: int, height: int, wait_ms: int,
     waited_ms = 0
     condition: bool | None = None
     async with CDPBrowser(width=width, height=height,
-                          extra_args=_file_offline_args(url)) as browser:
+                          extra_args=_file_offline_args(url),
+                          url_guard=url_guard) as browser:
         # 1) 导航：readyState 轮询到 complete（navigate 内部用剩余时间兜底）
         await browser.navigate(url, wait_ms=0, timeout=max(5.0, deadline - time.monotonic()))
         expr = (wait_until or "").strip()
@@ -736,7 +776,8 @@ def wait_until_ms_cap() -> float:
 
 async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800,
                                   wait_ms: int = 1000, timeout_secs: float = 45.0,
-                                  scale: int = 1, wait_until: str = "") -> ScreenshotOutcome:
+                                  scale: int = 1, wait_until: str = "",
+                                  url_guard=None) -> ScreenshotOutcome:
     """用系统 Chrome 无头模式对 url 截图，返回图片字节与等待过程信息。
 
     wait_ms 是**真实墙钟**等待（页面加载完成后、条件满足后的缓冲等待毫秒数）；
@@ -745,15 +786,23 @@ async def chrome_screenshot_bytes(url: str, width: int = 1280, height: int = 800
     width/height 为视口大小（CSS 像素）；scale 为渲染倍率（>1 时物理分辨率按倍率
     放大，即 Retina 式渲染，文字与小元素更清晰，供视觉模型压缩后仍可读）。
     file:// 源渲染时页面网络整体关闭（见 _file_offline_args）；公网 url 源需正常联网。
-    主路径走 CDP（可真等待）；CDP 启动/通信异常时降级为一次性截图兜底（via="oneshot"）。
+    url_guard 非 None 时为强隔离模式（渲染 URL 守卫）：CDP 失败不再降级 oneshot
+    兜底——一次性截图路径没有守卫能力，直接抛错保持隔离承诺。
+    主路径走 CDP（可真等待）；守卫未启用时 CDP 异常才降级一次性截图（via="oneshot"）。
     """
+    from xme.xmetools.browsertools import CDPGuardError
     from xme.plugins.commands.ai_helper import constants
     budget = float(getattr(constants, "SCREENSHOT_TOTAL_BUDGET", 75))
     try:
         return await _cdp_screenshot(url, width=int(width), height=int(height),
                                      wait_ms=int(wait_ms), scale=int(scale),
-                                     wait_until=wait_until, budget=budget)
+                                     wait_until=wait_until, budget=budget,
+                                     url_guard=url_guard)
+    except CDPGuardError:
+        raise   # 守卫拦截：不降级重试（oneshot 无守卫能力，重试同样会被拦截）
     except Exception as ex:
+        if url_guard is not None:
+            raise
         logger.warning(f"CDP 截图失败，降级为一次性截图兜底：{type(ex).__name__}: {ex}")
     return ScreenshotOutcome(
         png=await _oneshot_screenshot(url, width=width, height=height, wait_ms=wait_ms,

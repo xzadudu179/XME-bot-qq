@@ -177,6 +177,59 @@ def draw_exprs(*expr_strs, path_folder="./data/images/temp", draw_function=draw_
     plt.savefig(path, dpi=200, bbox_inches="tight")
     return path, False
 
+
+def _plot_command_series(ax, data_list, *, title, xlabel, ylabel, floor=1.0):
+    """把指令折线数据画到指定 axes（趋势图与时段图共用的样式单点）。
+
+    样式含：四色渐变配色（颜色数 = 数据条数，同序同色）、端点指令名与末值标注、
+    log2 Y 轴（按 2 的幂分度）。floor 为 Y 轴非正值下限：数据含 0（或负）时统一
+    贴到该下限，避免 log 刻度显示不了。
+    """
+    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#ffea75", "#75ff9e", "#4c58ff", "#ff7587", num_colors=len(data_list))]
+    for i, (x, y, label) in enumerate(data_list):
+        if not x or not y:
+            continue
+        y_arr = np.asarray(y, dtype=float)
+        if np.any(y_arr <= 0):
+            y_arr = np.clip(y_arr, floor, None)
+        x_arr = np.asarray(x, dtype=float)
+        line, = ax.plot(x_arr, y_arr, color=colors[i], label='_nolegend_', marker='o', markersize=3)
+        ax.annotate(
+            label,
+            xy=(x_arr[0], y_arr[0]),
+            xytext=(-8, 0),
+            textcoords='offset points',
+            color=line.get_color(),
+            fontsize=9,
+            va='center',
+            ha='right',
+            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
+        )
+        ax.annotate(
+            f"{y_arr[-1]:.3g}",
+            xy=(x_arr[-1], y_arr[-1]),
+            xytext=(8, 0),
+            textcoords='offset points',
+            color=line.get_color(),
+            fontsize=9,
+            va='center',
+            ha='left',
+            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
+        )
+    ax.set_xlabel(xlabel, fontsize=FONT_SIZE, color=FONT_COLOR)
+    ax.set_ylabel(ylabel, fontsize=FONT_SIZE, color=FONT_COLOR)
+    ax.set_title(title, fontsize=FONT_SIZE, color=FONT_COLOR)
+    # Y 轴对数刻度按 2 的幂分度，标签显示 2^n（原先按 10 的幂）
+    ax.set_yscale('log', base=2)
+    ax.yaxis.set_major_locator(mpt.ticker.LogLocator(base=2))
+    ax.yaxis.set_major_formatter(mpt.ticker.FuncFormatter(
+        lambda v, _: f"$2^{{{int(round(float(np.log2(v))))}}}$" if v > 0 else ""))
+    ax.set_facecolor(BG_COLOR)
+    ax.tick_params(axis='x', colors=FONT_COLOR)
+    ax.tick_params(axis='y', colors=FONT_COLOR)
+    ax.grid(True, color=GRID_COLOR, linestyle='--', linewidth=1)
+
+
 def generate_command_trend_chart(
         data_list: list[tuple[list[float],
         list[float],
@@ -207,52 +260,57 @@ def generate_command_trend_chart(
         logger.info("使用缓存")
         return image_path, True
 
-    plt.figure(figsize=(10, 6), facecolor=BG_COLOR)
-    colors = [[i / 255 for i in hex_to_rgb(item)] for item in gradient_hex_color("#ffea75", "#75ff9e", "#4c58ff", "#ff7587", num_colors=len(data_list))]
-    for i, (x, y, label) in enumerate(data_list):
-        if not x or not y:
-            continue
-        y_arr = np.asarray(y, dtype=float)
-        if np.any(y_arr <= 0):
-            y_arr = np.clip(y_arr, 1, None)
-        x_arr = np.asarray(x, dtype=float)
-        line, = plt.plot(x_arr, y_arr, color=colors[i], label='_nolegend_', marker='o', markersize=3)
-        ax = plt.gca()
-        ax.annotate(
-            label,
-            xy=(x_arr[0], y_arr[0]),
-            xytext=(-8, 0),
-            textcoords='offset points',
-            color=line.get_color(),
-            fontsize=9,
-            va='center',
-            ha='right',
-            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
-        )
-        ax.annotate(
-            f"{y_arr[-1]:.3g}",
-            xy=(x_arr[-1], y_arr[-1]),
-            xytext=(8, 0),
-            textcoords='offset points',
-            color=line.get_color(),
-            fontsize=9,
-            va='center',
-            ha='left',
-            bbox=dict(boxstyle='round,pad=0.2', fc='none', ec='none', alpha=0.0)
-        )
-    plt.xlabel(xlabel, fontsize=FONT_SIZE, color=FONT_COLOR)
-    plt.ylabel(ylabel, fontsize=FONT_SIZE, color=FONT_COLOR)
-    plt.title(title, fontsize=FONT_SIZE, color=FONT_COLOR)
-    ax = plt.gca()
-    # Y 轴对数刻度按 2 的幂分度，标签显示 2^n（原先按 10 的幂）
-    ax.set_yscale('log', base=2)
-    ax.yaxis.set_major_locator(mpt.ticker.LogLocator(base=2))
-    ax.yaxis.set_major_formatter(mpt.ticker.FuncFormatter(
-        lambda v, _: f"$2^{{{int(round(float(np.log2(v))))}}}$" if v > 0 else ""))
-    ax.set_facecolor(BG_COLOR)
-    ax.tick_params(axis='x', colors=FONT_COLOR)
-    ax.tick_params(axis='y', colors=FONT_COLOR)
-    plt.grid(True, color=GRID_COLOR, linestyle='--', linewidth=1)
-    plt.savefig(image_path, dpi=150, bbox_inches='tight')
-    plt.close()
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor=BG_COLOR)
+    _plot_command_series(ax, data_list, title=title, xlabel=xlabel, ylabel=ylabel, floor=1)
+    fig.savefig(image_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    return image_path, False
+
+
+def generate_command_stats_charts(
+        trend_data: list[tuple[list[float], list[float], str]],
+        hourly_data: list[tuple[list[float], list[float], str]],
+        image_folder='./data/images/temp/',
+        trend_title='趋势图',
+        trend_xlabel='x',
+        trend_ylabel='y',
+        hourly_title='时段分布',
+        hourly_xlabel='时段（小时）',
+        hourly_ylabel='y',
+    ):
+    """生成指令统计双栏图：左为调用趋势、右为每日时段分布，左右拼接成一张横向图片。
+
+    trend_data / hourly_data 与 generate_command_trend_chart 的 data_list 同格式；
+    两组数据按同一指令顺序传入时，两图同名指令颜色一一对应。
+
+    Args:
+        trend_data (list): 左侧趋势图数据 (x_list, y_list, label)。
+        hourly_data (list): 右侧时段分布图数据 (x_list, y_list, label)。
+        image_folder (str, optional): 保存图片的文件夹路径（需带结尾 /）. Defaults to './data/images/temp/'.
+        其余参数为两栏各自的标题与轴标签。
+
+    Returns:
+        tuple[str, bool]: (图片路径, 是否使用缓存)
+    """
+    # 缓存 key 含两图数据与全部文案；末尾标记为布局版本，改版式后旧缓存自动失效
+    data_str = (str(trend_data) + str(hourly_data) + trend_title + trend_xlabel + trend_ylabel
+                + hourly_title + hourly_xlabel + hourly_ylabel + "stats2")
+    image_name = hash_text(data_str) + ".png"
+    image_path = image_folder + image_name
+    if has_file(image_path):
+        debug_msg("使用缓存")
+        logger.info("使用缓存")
+        return image_path, True
+
+    fig, (ax_trend, ax_hourly) = plt.subplots(
+        1, 2, figsize=(20, 6), facecolor=BG_COLOR, constrained_layout=True)
+    _plot_command_series(ax_trend, trend_data,
+                         title=trend_title, xlabel=trend_xlabel, ylabel=trend_ylabel, floor=1)
+    # 时段图零值（该小时无调用）按 0.01 贴底：略低于单次调用均值（1/95≈0.0105），不掩盖真实数据
+    _plot_command_series(ax_hourly, hourly_data,
+                         title=hourly_title, xlabel=hourly_xlabel, ylabel=hourly_ylabel, floor=0.01)
+    # 24 个整点标签过密，横轴每 2 小时标一个刻度
+    ax_hourly.set_xticks(range(0, 24, 2))
+    fig.savefig(image_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
     return image_path, False

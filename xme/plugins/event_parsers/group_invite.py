@@ -11,7 +11,7 @@ async def _(session: RequestSession):
         return
     # await send_session_msg(session, "收到了群聊的请求 owo", message_type="private")
     logger.info(session)
-    group_member_count = (await session.bot.get_group_info(group_id=session.event.group_id))["member_count"]
+    group_member_count = (await session.bot.get_group_info(group_id=session.event.group_id, self_id=session.self_id))["member_count"]
     inviter = escape_cq(await get_user_name(session.event.user_id))
     group_name = escape_cq(await get_group_name(session.event.group_id))
     await send_to_superusers(session.bot, f"有新的群聊请求哦\n来自: {inviter} ({session.event.user_id})\n邀请加入: {group_name} ({session.event.group_id})\n群人数：{group_member_count}")

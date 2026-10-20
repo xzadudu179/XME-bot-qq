@@ -15,6 +15,7 @@ from xme.xmetools.logtools import ColoredFormatter
 from nonebot.session import BaseSession
 from nonebot.command import CommandSession
 from PIL import Image
+from dataclasses import dataclass
 import asyncio
 import re
 import time
@@ -110,12 +111,12 @@ async def _moderate_text(text: str, label: str) -> dict:
         return {"result_list": []}
 
 
-async def event_is_text_can_send(bot, event: Event, text: str, risk_send_to_superusers = False):
+async def event_is_text_can_send(bot, event: Event, text: str, strictness=3, risk_send_to_superusers = False):
     logger.info(f"正在分析 \"{text}\"")
     response = await _moderate_text(text, label="event")
     try:
         return await analyze_risk(response.get("result_list", []), bot, event,
-                                  risk_send_to_superusers=risk_send_to_superusers)
+                                  risk_send_to_superusers=risk_send_to_superusers, strictness=strictness)
     except Exception as ex:
         # 判定阶段异常是本地逻辑错误（bug）：与请求失败不同，按拦截处理更安全
         logger.exception("文本风控判定阶段出错")
@@ -661,6 +662,87 @@ def get_pure_text_message(message: dict) -> str:
         msgs.append(msg['data'].get('text', ""))
     return "".join(msgs)
 
+
+# raw_message 里的回复段（[CQ:reply,id=123] 或带其它参数；id 可能是负数，如 -572406172）
+_REPLY_CQ_RE = re.compile(r"\[CQ:reply,[^\]]*?id=(-?\d+)")
+# 消息 id：允许负号（QQ NT 会给出负的消息 id）
+_MESSAGE_ID_RE = re.compile(r"-?\d+")
+
+
+def _parse_message_id(raw_id) -> int | None:
+    """把回复段里的 id 解析成 int；不是数字（含负号）返回 None。"""
+    text = str(raw_id if raw_id is not None else "").strip()
+    if not _MESSAGE_ID_RE.fullmatch(text):
+        return None
+    return int(text)
+
+
+@dataclass(frozen=True)
+class RepliedMessage:
+    """一条被回复的消息：内容与发送者。"""
+    message_id: int
+    user_id: int          # 发送者 qq（取不到为 0）
+    text: str             # 纯文本内容（图片等非文本段显示为 [类型] 占位）
+    raw_message: str
+
+
+def get_reply_message_id(event) -> int | None:
+    """取这条消息回复的那条消息 id：优先看 reply 消息段，其次从 message/raw_message 的 CQ 码里找。
+
+    兼容各种协议端形态：message 可能是 Message、消息段列表、消息段字典或 CQ 字符串；
+    消息 id 可能是负数（QQ NT），所以按带符号整数解析。不是回复（或没有 id）返回 None。
+    """
+    segments = event.get("message")
+    if isinstance(segments, str):
+        # message 本身是 CQ 字符串：直接从里面找
+        matched = _REPLY_CQ_RE.search(segments)
+        if matched is not None:
+            return int(matched.group(1))
+    elif segments:
+        for seg in segments:
+            seg_type = getattr(seg, "type", None) or (seg.get("type") if isinstance(seg, dict) else None)
+            if seg_type != "reply":
+                continue
+            data = getattr(seg, "data", None) or (seg.get("data") if isinstance(seg, dict) else None) or {}
+            message_id = _parse_message_id(data.get("id"))
+            if message_id is None:
+                message_id = _parse_message_id(data.get("message_id"))
+            if message_id is not None:
+                return message_id
+    matched = _REPLY_CQ_RE.search(event.get("raw_message") or "")
+    if matched is not None:
+        return int(matched.group(1))
+    logger.warning(f"消息里没找到回复 id：message={segments!r} "
+                   f"raw_message={event.get('raw_message')!r}")
+    return None
+
+
+async def get_replied_message(bot: NoneBot, event) -> RepliedMessage | None:
+    """取这条消息回复的消息内容与发送者；不是回复、消息取不到都返回 None。
+
+    内容走 get_msg 接口，非文本段（图片、表情等）在 text 里显示为 [类型] 占位。
+    """
+    message_id = get_reply_message_id(event)
+    if message_id is None:
+        return None
+    try:
+        data = await bot.api.get_msg(message_id=message_id)
+    except Exception as ex:
+        logger.warning(f"获取被回复的消息失败（id={message_id}）：{ex}")
+        return None
+    if not isinstance(data, dict):
+        return None
+    segments = data.get("message")
+    text = get_pure_text_message({"message": segments}) if isinstance(segments, list) else ""
+    if not text:
+        text = str(data.get("raw_message") or "")
+    return RepliedMessage(
+        message_id=int(data.get("message_id") or message_id),
+        user_id=int(data.get("user_id") or 0),
+        text=text.strip(),
+        raw_message=str(data.get("raw_message") or ""),
+    )
+
 async def send_event_msg(bot: NoneBot, event: Event, message, at=True, reply=False, debug=False, **kwargs):
     event.message_id
     if debug and not debugging():
@@ -788,8 +870,8 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
     if u is None:
         return
 
-async def send_to_user(bot: NoneBot, user_id: int, message):
-    """给单个用户发私聊消息；发送失败只记日志不抛出（通知类消息不应打断主流程）。
+async def send_to_user(bot: NoneBot, user_id: int, message, raise_exception=False):
+    """给单个用户发私聊消息。
 
     Args:
         bot (NoneBot): bot
@@ -800,6 +882,8 @@ async def send_to_user(bot: NoneBot, user_id: int, message):
         await bot.send_private_msg(user_id=user_id, message=message)
     except Exception as e:
         SEND_LOGGER.warning(f'发消息给 {user_id} 失败: {e}')
+        if raise_exception:
+            raise
 
 async def send_to_groups(bot: NoneBot, message, groups: list | tuple | None = None):
     """在 bot 所在所有群发消息

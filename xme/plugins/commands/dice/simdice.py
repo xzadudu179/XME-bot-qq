@@ -49,7 +49,7 @@ async def _(session: CommandSession):
                            get_message("plugins", __plugin_name__, "dice_result",
                                counts=format(counts, ','),
                                faces=format(faces, ','),
-                               faces_result_prefix=count_morethan_1_prefix if len(args) > 1 else '',
-                               faces_formula=('+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if len(args) > 1 else format(points_list[0], ',')), tips=True, tips_percent=20)
+                               faces_result_prefix=count_morethan_1_prefix if counts > 1 else '',
+                               faces_formula=('+'.join([format(points, ',') for points in points_list]) + '=' + format(sum(points_list), ',')) if counts > 1 else format(points_list[0], ',')), tips=True, tips_percent=20)
     except Exception:
         await send_session_msg(session, message=message)

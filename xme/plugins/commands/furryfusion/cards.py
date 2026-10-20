@@ -4,7 +4,7 @@ from xme.xmetools.templates import FONTS_STYLE
 from xme.plugins.commands.xme_user.classes.user import User
 from xme.xmetools.loctools import short_region
 
-from .providers.base import FurEvent
+from .providers.base import FurEvent, FurProvider
 
 STATE = {
     0: "活动结束",
@@ -14,7 +14,59 @@ STATE = {
     4: "活动取消"
 }
 
-def get_event_card(event: FurEvent, u: User):
+# 时间表列数：用户可经 /fus 数字 调整，命令层用 MIN/MAX 校验输入范围
+DEFAULT_CARDS_PER_ROW = 2
+CARDS_PER_ROW_MIN = 1
+CARDS_PER_ROW_MAX = 6
+# 卡片与容器尺寸：CSS 与本文件的宽度计算共用同一来源（.main-container 的
+# width 由 container_width 注入，映射到 CSS 的左右 padding 为 CONTAINER_PADDING_X/2；
+# .rec-timeline 的 3px 左边框 + 25px 左内边距计入 TIMELINE_WIDTH_LOSS）
+CARD_WIDTH = 400
+CARD_MARGIN_X = 40          # 卡片左右外边距合计
+CONTAINER_PADDING_X = 50    # 容器左右内边距合计
+TIMELINE_WIDTH_LOSS = 30    # 时间线左边框 + 左内边距占用（含 2px 余量）
+# 高度估算：行高按缩略图 + 文字区并留余量；页眉页脚按年份标题 + 页脚 + 内边距估算
+CARD_ROW_HEIGHT = 400
+RENDER_HEADER_HEIGHT = 1400
+
+
+def _check_cards_per_row(cards_per_row) -> int:
+    """校验时间表列数为正整数，非法输入直接抛错。"""
+    try:
+        value = int(cards_per_row)
+    except (TypeError, ValueError) as ex:
+        raise ValueError(f"时间表列数必须是整数，收到 {cards_per_row!r}") from ex
+    if value < 1:
+        raise ValueError(f"时间表列数必须大于 0，收到 {value}")
+    return value
+
+
+def estimate_render_height(events: list[FurEvent], cards_per_row: int = DEFAULT_CARDS_PER_ROW) -> int:
+    """估算卡片渲染所需视口高度：逐月统计卡片行数，加页眉页脚余量。
+
+    渲染视口过矮会截掉末尾的卡片与页脚，过高只是多出的透明区被裁掉。
+    """
+    cards_per_row = _check_cards_per_row(cards_per_row)
+    month_counts: dict[tuple[int, int], int] = {}
+    for event in events:
+        key = (event.start.year, event.start.month)
+        month_counts[key] = month_counts.get(key, 0) + 1
+    rows = sum(-(-count // cards_per_row) for count in month_counts.values())
+    return RENDER_HEADER_HEIGHT + rows * CARD_ROW_HEIGHT
+
+
+def container_width(cards_per_row: int = DEFAULT_CARDS_PER_ROW) -> int:
+    """时间表容器宽度：按列数容纳卡片行（宽度同时决定渲染视口宽度）。"""
+    n = _check_cards_per_row(cards_per_row)
+    return CONTAINER_PADDING_X + TIMELINE_WIDTH_LOSS + (CARD_WIDTH + CARD_MARGIN_X) * n
+
+
+def render_size(events: list[FurEvent], cards_per_row: int = DEFAULT_CARDS_PER_ROW) -> tuple[int, int]:
+    """时间表渲染视口尺寸 (宽, 高)：宽按列数容纳容器，高按活动行数估算。"""
+    return container_width(cards_per_row), estimate_render_height(events, cards_per_row)
+
+def get_event_card(event: FurEvent, u: User, provider: FurProvider):
+    """渲染单张活动卡片：顶部缩略图为活动封面，下方为标题与时间信息。"""
     state_class = {
         0: "cancelled",
         1: "",
@@ -62,9 +114,12 @@ def get_event_card(event: FurEvent, u: User):
     # 大标题显示主办方品牌名，活动主题名放小字；缺品牌名时回退为主题名
     main_title = event.org or event.title
     sub_title = event.title if event.org else ""
+    thumb_url = provider.card_image_url(event.image)
+    thumb_style = f" style=\"background-image: url('{thumb_url}')\"" if thumb_url else ""
     return f"""
         <section class="card {border_c}">
             <div class="img">
+                <div class="thumbnail"{thumb_style}></div>
                 <div class="cover">
                     <div class="top">
                         <h1 class="title {title_class}">{main_title}</h1>
@@ -90,7 +145,8 @@ def get_event_card(event: FurEvent, u: User):
             </div>
         </section>
     """
-def get_countdown_cards(events: list[FurEvent], u: User, source: str):
+def get_countdown_cards(events: list[FurEvent], u: User, provider: FurProvider, cards_per_row: int = DEFAULT_CARDS_PER_ROW):
+    cards_per_row = _check_cards_per_row(cards_per_row)
     html_head = """
     <!DOCTYPE html>
     <html lang="en">
@@ -168,9 +224,9 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
                 letter-spacing: 0.06em;
             }
             .rec-timeline {
-                width: 96%;
+                width: 100%;
                 padding: 0px 0 50px 25px;
-                margin: auto;
+                /* margin: 0 12px; */
                 border-left: 3px solid;
                 border-image: linear-gradient(#0000 0%, var(--border-color) 100px, var(--border-color) 90%, #0000 100%) 1;
             }
@@ -197,8 +253,8 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
             }
 
             .card {
-                width: 400px;
-                margin: 20px;
+                width: """ + str(CARD_WIDTH) + """px;
+                margin: """ + str(CARD_MARGIN_X // 2) + """px;
                 border-radius: 20px;
                 overflow: hidden;
                 border: 4px solid rgba(255, 255, 255, 0.116);
@@ -210,29 +266,31 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
             }
 
 
+
             .main-container {
-                width: 1500px;
-                padding: 25px;
+                width: """ + str(container_width(cards_per_row)) + """px;
+                padding: """ + str(CONTAINER_PADDING_X // 2) + """px;
                 background: var(--background-color);
                 /* background: url("./img/background/1791.png"); */
                 /* background-size: cover; */
             }
-
             .img {
-                max-width: 400px;
-                height: 150px;
+                max-width: """ + str(CARD_WIDTH) + """px;
                 position: relative;
-                background-size: cover;
-                background-position: center;
                 background-color: #24252e;
             }
 
+            .thumbnail {
+                height: 140px;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                border-bottom: 3px solid var(--border-color);
+            }
 
             .cover {
                 width: 100%;
-                height: 100%;
                 /* background-color: #0009; */
-                backdrop-filter: blur(5px);
                 /* padding: 20px; */
                 position: relative;
             }
@@ -254,14 +312,12 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
             }
 
             .bottom {
-                position: absolute;
-                bottom: 0;
                 /* color: white; */
                 display: flex;
                 justify-content: space-between;
                 width: 100%;
                 align-items: end;
-                padding: 20px;
+                padding: 0 20px 20px;
                 /* padding-right: 40px; */
             }
 
@@ -359,7 +415,7 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
             </div>
         </body>
     </html>
-    """.format(source=source)
+    """.format(source=provider.source)
     html_content = ""
     ordered = sorted(events, key=lambda e: (e.start.year, e.start.month))
     for year, year_events in groupby(ordered, key=lambda e: e.start.year):
@@ -378,6 +434,6 @@ def get_countdown_cards(events: list[FurEvent], u: User, source: str):
             <div class="month">
             """
             for event in month_events:
-                html_content += get_event_card(event, u)
+                html_content += get_event_card(event, u, provider)
             html_content += "</div>"
     return html_head + html_content + html_bottom

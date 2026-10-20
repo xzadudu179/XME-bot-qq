@@ -11,7 +11,7 @@ async def send_bot_email(
     content: str,
 ) -> bool:
     message = EmailMessage()
-    message["From"] = MAIL_USERNAME
+    message["From"] = f"漠月 <{MAIL_USERNAME}>"
     message["To"] = receiver
     message["Subject"] = subject
     message.set_content(content)
@@ -20,9 +20,10 @@ async def send_bot_email(
             message,
             hostname=SMTP_HOST,
             port=SMTP_PORT,
+            use_tls=True,
             username=MAIL_USERNAME,
             password=MAIL_PASSWORD,
-            start_tls=True,
+            # start_tls=True,
         )
         return True
 

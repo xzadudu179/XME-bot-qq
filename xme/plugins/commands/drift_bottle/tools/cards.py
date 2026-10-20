@@ -12,7 +12,7 @@ CARD_SKINS = {
             "hr-color": "#444",
             "sender-color": "#ddd",
         },
-        "str_len": 30,
+        "str_len": 30, # 没啥用
         "comment_name_len": 12,
         "styles": """
 
@@ -101,10 +101,18 @@ CARD_SKINS = {
         .operateul li {
         margin-bottom: 8px;
         }
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
 
         .infoul li.colored {
+            width: 170px;
+            text-align: right;
             font-weight: bold;
             color: var(--primary-color);
+            padding-right: 15px;
         }
 
         .comments div {
@@ -345,6 +353,18 @@ CARD_SKINS = {
                 color: var(--sender-color);
             }
 
+            .infoul li {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .infoul li.colored {
+                width: 170px;
+                text-align: right;
+                padding-right: 15px;
+            }
+
             .small-like {
                 font-size: 0.9em;
                 padding-top: 2px;
@@ -501,6 +521,18 @@ CARD_SKINS = {
                 align-items: center;
                 justify-content: space-between;
                 color: var(--sender-color);
+            }
+
+            .infoul li {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .infoul li.colored {
+                width: 170px;
+                text-align: right;
+                padding-right: 15px;
             }
 
             .small-like {
@@ -660,6 +692,20 @@ CARD_SKINS = {
                 justify-content: space-between;
                 color: var(--sender-color);
             }
+
+
+            .infoul li {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .infoul li.colored {
+                width: 170px;
+                text-align: right;
+                padding-right: 15px;
+            }
+
 
             .small-like {
                 font-size: 0.9em;
@@ -821,6 +867,20 @@ CARD_SKINS = {
             justify-content: space-between;
             color: var(--sender-color);
         }
+
+
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .infoul li.colored {
+            width: 170px;
+            text-align: right;
+            padding-right: 15px;
+        }
+
 
         .small-like {
             font-size: 0.9em;
@@ -1119,15 +1179,25 @@ CARD_SKINS = {
             margin: 0;
         }
 
+
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .infoul li.colored {
+            width: 170px;
+            text-align: right;
+            padding-right: 15px;
+        }
+
+
         .infoul {
             display: flex;
             align-items: center;
             justify-content: space-between;
             color: var(--sender-color);
-        }
-
-        .infoul li:nth-child(1) {
-            max-width: 370px;
         }
 
         .small-like {
@@ -1208,7 +1278,7 @@ CARD_SKINS = {
         .img {
             max-height: 500px;
             max-width: calc(100% - 20px);
-            clip-path: polygon(0% 40px, 40px 0%, 100% 0%, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0% 100%);
+            clip-path: polygon(0% min(20%, 40px), min(20%, 40px) 0%, 100% 0%, 100% calc(100% - min(20%, 40px)), calc(100% - min(20%, 40px)) 100%, 0% 100%);
             margin: 10px;
         }
 
@@ -1398,6 +1468,19 @@ CARD_SKINS = {
             justify-content: space-between;
             color: var(--sender-color);
         }
+
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .infoul li.colored {
+            width: 170px;
+            text-align: right;
+            padding-right: 15px;
+        }
+
 
         .small-like {
             font-size: 0.9em;
@@ -1660,8 +1743,17 @@ CARD_SKINS = {
             color: var(--sender-color);
         }
 
-        .infoul li:nth-child(1) {
-            max-width: 370px;
+
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .infoul li.colored {
+            width: 170px;
+            text-align: right;
+            padding-right: 15px;
         }
 
         .small-like {
@@ -1923,6 +2015,20 @@ CARD_SKINS = {
         padding: 0;
         margin: 0;
         }
+
+
+        .infoul li {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .infoul li.colored {
+            width: 170px;
+            text-align: right;
+            padding-right: 15px;
+        }
+
 
         .infoul {
             display: flex;

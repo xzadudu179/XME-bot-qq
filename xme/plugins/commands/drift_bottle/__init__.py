@@ -1,21 +1,31 @@
 __plugin_name__ = '漂流瓶'
 from xme.xmetools import texttools
 from xme.xmetools.doctools import SUPERUSER_PERMISSION, PluginDoc
-from xme.xmetools.imgtools import image_to_base64, get_image, phash_compare
+from xme.xmetools.imgtools import image_to_base64, get_image, get_hash
 from xme.xmetools.animtools import is_animated, slot_placeholder_base64
 from xme.xmetools.randtools import messy_image
 from xme.xmetools.texttools import replace_formatted
 from character import get_message
 from traceback import print_exc
 import random
+import time
 from xme.xmetools.debugtools import debug_msg
 # from nonebot.log import logger
 from keys import BOTTLE_IMAGE_KEY
 from xme.xmetools.dbtools import DATABASE
+from .tools.imagededup import (
+    MAX_HASH_DISTANCE,
+    ImagePhashCache,
+    hash_distance,
+)
 
 # from xme.xmetools.texttools import FormatDict, html_text
 import json
 BOTTLE_IMAGES_PATH = "./data/images/driftbottle/"
+# 已存图片 pHash 侧车缓存（见 tools/imagededup.py）
+BOTTLE_IMAGE_HASH_CACHE = ImagePhashCache(BOTTLE_IMAGES_PATH)
+# 文本查重相似度阈值
+DUPLICATE_SIMILARITY = 0.75
 
 class DriftBottle:
     def __init__(self, bottle_id: str = "我是妖妻酒", id=-1, content: str = '', sender: str = '', likes: int = 0, views: int = 0, from_group: str = '', send_time: str = '', sender_id: int = 0, comments: list | None = None, group_id: int = 0, is_broken: bool = False, skin: str = "", images: list | None = None):
@@ -95,16 +105,44 @@ class DriftBottle:
     def exec_query(query: str, params=(), dict_data=False):
         return DATABASE.exec_query(query=query, params=params, dict_data=dict_data)
 
+    @staticmethod
+    def parse_images(raw) -> list:
+        """解析 images 列（JSON 数组字符串）；为空或损坏时返回空列表"""
+        if not raw:
+            return []
+        try:
+            images = json.loads(raw)
+        except (TypeError, ValueError):
+            debug_msg(f"images 列解析失败：{raw!r}")
+            return []
+        return images if isinstance(images, list) else []
+
     def check_duplicate_bottle(content: str):
-        bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
-        for bottle in bottles:
-            if not bottle.bottle_id.isdecimal():
+        """文本查重：先做廉价条件与长度上界预筛，再计算相似度。
+
+        相似度最高为 2*min_len/(len1+len2)，达不到阈值时无需跑 difflib。
+        """
+        content_len = len(content)
+        rows = DriftBottle.exec_query(
+            query="SELECT bottle_id, content, views, likes FROM DriftBottle",
+            dict_data=True
+        )
+        for row in rows:
+            if not str(row["bottle_id"] or "").isdecimal():
                 continue
-            if texttools.difflib_similar(content, bottle.content, False) > 0.75 and bottle.views < 114514 and (bottle.likes <= bottle.views // 2): # 碎瓶子也一并检查
+            views = row["views"] or 0
+            likes = row["likes"] or 0
+            # 碎瓶子也一并检查；克苏鲁瓶子跳过
+            if not (views < 114514 and likes <= views // 2):
+                continue
+            bottle_content = row["content"] or ""
+            if 2 * min(content_len, len(bottle_content)) < DUPLICATE_SIMILARITY * (content_len + len(bottle_content)):
+                continue
+            if texttools.difflib_similar(content, bottle_content, False) > DUPLICATE_SIMILARITY:
                 return {
                     "status": False,
-                    "content": bottle.content,
-                    "duplicate_bottle_id": bottle.bottle_id
+                    "content": bottle_content,
+                    "duplicate_bottle_id": row["bottle_id"]
                 }
         return {
             "status": True,
@@ -113,33 +151,58 @@ class DriftBottle:
         }
 
     def check_duplicate_image(path_or_image):
-        bottles: list[DriftBottle] = [DriftBottle.form_dict(b) for b in DriftBottle.exec_query(query=f"SELECT * FROM {DriftBottle.get_table_name()}", dict_data=True)]
-        for bottle in bottles:
-            if not bottle.bottle_id.isdecimal():
-                continue
-            # 没有图片不检查
-            if bottle.images is None or len(bottle.images) <= 0:
-                continue
-            # 克苏鲁瓶子
-            if bottle.views >= 114514 and (bottle.likes <= bottle.views // 2):
-                continue
-            debug_msg("查重 " + str(bottle.bottle_id))
-            for image in bottle.images:
-                result = phash_compare(path_or_image, BOTTLE_IMAGES_PATH + image, threshold=999)
-                debug_msg("图片查重result " + str(result))
-                if result <= 10:
-                    return {
-                    "status": False,
-                    "content": bottle.content,
-                    "images": bottle.images,
-                    "duplicate_bottle_id": bottle.bottle_id,
-                }
-        return {
-            "status": True,
-            "content": "",
-            "images": [],
-            "duplicate_bottle_id": None,
-        }
+        """图片查重：目标图只哈希一次，与已存图的缓存哈希做位比较。
+
+        已存图哈希由 tools/imagededup.py 缓存，不再逐张解码磁盘图片。
+        """
+        target_hash = get_hash(path_or_image)
+        if target_hash is None:
+            # 目标图无法计算哈希，与旧实现一致：不做判定
+            return {
+                "status": True,
+                "content": "",
+                "images": [],
+                "duplicate_bottle_id": None,
+            }
+        target_hash = int(str(target_hash), 16)
+        start = time.time()
+        try:
+            rows = DriftBottle.exec_query(
+                query="SELECT bottle_id, content, images, views, likes FROM DriftBottle",
+                dict_data=True
+            )
+            for row in rows:
+                if not str(row["bottle_id"] or "").isdecimal():
+                    continue
+                images = DriftBottle.parse_images(row["images"])
+                # 没有图片不检查
+                if len(images) <= 0:
+                    continue
+                # 克苏鲁瓶子
+                views = row["views"] or 0
+                if views >= 114514 and (row["likes"] or 0) <= views // 2:
+                    continue
+                for image in images:
+                    stored_hash = BOTTLE_IMAGE_HASH_CACHE.get(image)
+                    if stored_hash is None:
+                        continue
+                    if hash_distance(target_hash, stored_hash) <= MAX_HASH_DISTANCE:
+                        debug_msg(f"图片查重命中瓶子 {row['bottle_id']}，耗时 {time.time() - start:.3f}s")
+                        return {
+                            "status": False,
+                            "content": row["content"],
+                            "images": images,
+                            "duplicate_bottle_id": row["bottle_id"],
+                        }
+            debug_msg(f"图片查重完成（无重复），耗时 {time.time() - start:.3f}s")
+            return {
+                "status": True,
+                "content": "",
+                "images": [],
+                "duplicate_bottle_id": None,
+            }
+        finally:
+            BOTTLE_IMAGE_HASH_CACHE.flush()
 
 
     def remove_self(self):
@@ -172,9 +235,6 @@ class DriftBottle:
 
     def form_dict(data: dict) -> 'DriftBottle':
         # debug_msg(data)
-        images = data.get('images', '[]')
-        if images is None:
-            images = '[]'
         return DriftBottle(
             id=data["id"],
             bottle_id=data["bottle_id"],
@@ -189,7 +249,7 @@ class DriftBottle:
             group_id=data['group_id'],
             is_broken=data.get('is_broken', False),
             skin=data.get('skin', ""),
-            images=json.loads(images),
+            images=DriftBottle.parse_images(data.get('images')),
         )
 
 # 碎瓶子，不包括 114514

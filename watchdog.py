@@ -3,6 +3,7 @@ import sys
 import time
 import signal
 import os
+import json
 import select
 import logging
 from xme.xmetools.filetools import backup_data_dir
@@ -109,19 +110,59 @@ def stop_process():
             proc.kill()
 
 
-def _read_active_sessions() -> int:
-    """运行中的会话数 = AI 会话数（aistop 落盘）+ 运行中的指令会话数（plugintools 落盘）。
+def _read_count_file(path: str) -> dict[str, int]:
+    """读一个会话计数文件，返回 {指令名: 数量}。
 
-    两个文件都由 bot 进程 best-effort 维护，读不到按 0 处理。
+    新格式为 JSON 对象；兼容旧版纯数字（指令名未知，归入空名）。
+    文件由 bot 进程 best-effort 维护，读不到 / 损坏按空处理。
     """
-    total = 0
+    try:
+        with open(path, encoding="utf-8") as f:
+            raw = f.read().strip()
+    except Exception:
+        return {}
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        data = None
+    if isinstance(data, dict):
+        counts = {}
+        for key, value in data.items():
+            try:
+                n = max(0, int(value))
+            except (TypeError, ValueError):
+                continue
+            if n:
+                counts[str(key)] = n
+        return counts
+    try:  # 旧版纯数字格式
+        n = max(0, int(raw))
+    except (TypeError, ValueError):
+        return {}
+    return {"": n} if n else {}
+
+
+def _read_active_sessions() -> dict[str, int]:
+    """运行中会话明细：{指令名: 会话数}。
+
+    来源为 aistop（AI 轮次）与 plugintools（指令会话）落盘的两个文件。AI 轮次本身
+    运行在 ai_helper 指令会话内、两个文件的写入也存在先后差，按指令名取较大值合并，
+    避免同一会话被重复计数；读不到按空处理。
+    """
+    merged: dict[str, int] = {}
     for name in (".ai_active_turns", ".nb_active_sessions"):
-        try:
-            with open(os.path.join(os.getcwd(), "data", name), encoding="utf-8") as f:
-                total += max(0, int(f.read().strip() or 0))
-        except Exception:
-            pass
-    return total
+        for cmd, count in _read_count_file(os.path.join(os.getcwd(), "data", name)).items():
+            merged[cmd] = max(merged.get(cmd, 0), count)
+    return merged
+
+
+def _format_sessions(sessions: dict[str, int]) -> str:
+    """会话明细的可读文本：`ai_helper ×1、game ×2`（数量降序、同数量按名字排序）。"""
+    return "、".join(
+        f"{cmd or '未知指令'} ×{count}"
+        for cmd, count in sorted(sessions.items(), key=lambda kv: (-kv[1], kv[0])))
 
 
 _CONFIRM_WINDOW_SECS = 10
@@ -130,13 +171,14 @@ _confirm_deadline = 0.0
 
 def handle_sigint(signum, frame):
     global running, _confirm_deadline
-    active = _read_active_sessions()
+    sessions = _read_active_sessions()
+    active = sum(sessions.values())
     if active > 0 and time.time() >= _confirm_deadline:
         # 有会话运行（AI 对话 / 指令处理）：第一次中断只提示，窗口期内再次中断才真正退出
         # （不阻塞信号处理器：靠"窗口期内二次确认"机制，而非 input/sleep）
         _confirm_deadline = time.time() + _CONFIRM_WINDOW_SECS
         logger.warning(
-            f"检测到 {active} 个运行中的会话（AI 对话/指令），现在退出会打断它们"
+            f"检测到 {active} 个运行中的会话（{_format_sessions(sessions)}），现在退出会打断它们"
             f"（AI 对话重启后可 /ai --continue 恢复）。"
             f"{_CONFIRM_WINDOW_SECS} 秒内再按一次 Ctrl+C 确认退出，否则本次中断将被忽略")
         return

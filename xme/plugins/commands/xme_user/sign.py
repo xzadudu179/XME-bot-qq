@@ -1,5 +1,6 @@
 from xme.plugins.commands.xme_user import __plugin_name__
 from nonebot import CommandSession
+from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 # from xme.xmetools.msgtools import send_session_msg
 from xme.xmetools import timetools
@@ -7,7 +8,9 @@ from xme.xmetools import timetools
 import cn2an
 from xme.xmetools import randtools
 
+import math
 import random
+from functools import wraps
 
 from xme.xmetools.texttools import remove_punctuation
 # random.seed()
@@ -31,8 +34,55 @@ usage = {
     "alias": alias
 }
 
+def heal_stale_sign_quota(func):
+    """验证签到配额（limit 与 data）是否正确并修复
+    """
+    @wraps(func)
+    async def wrapper(session: CommandSession, user: User, *args, **kwargs):
+        try:
+            if _has_stale_sign_quota(user):
+                u.reset_limit(user, cmd_name)
+                logger.warning(f"用户 {user.id} 的签到配额出现残留，已放行重签")
+        except Exception:
+            logger.exception("签到配额自愈失败")
+        return await func(session, user, *args, **kwargs)
+    return wrapper
+
+
+def _has_stale_sign_quota(user: User) -> bool:
+    """今天的配额占用是否有未完成的残留（执行中的占位已由 get_limit_info 扣除）。"""
+    counter_time, count = u.get_limit_info(user, cmd_name)
+    if count < 1 or not counter_time:
+        return False
+    today = math.floor(timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY))
+    occupied_day = math.floor(timetools.get_valuetime(counter_time, timetools.TimeUnit.DAY))
+    if today - occupied_day >= 1:
+        return False   # 占用不是今天的：限流器自己会重置，不算残留
+    sign_date = get_value(__plugin_name__, cmd_name, "sign_date",
+                          search_dict=user.plugin_datas, default=0)
+    return sign_date != timetools.curr_days()
+
+
+def count_signed_today(users: list[dict], curr_date: int) -> int:
+    """统计今天已完成签到的用户数（纯函数，供排名与首签判定）。
+
+    按完成记录（plugin_datas 里的 sign_date == 今天）统计，不用限流计数器的
+    时间：配额在本命令执行前就占住（当前用户自己的那份也在里面），且进程崩溃
+    会留下未完成的占位——用计数器会把它们都算成「今天已签到」，导致所有人的
+    名次整体后移（第一个签到的人被判成第二个），首签奖励也发不出去。
+    """
+    count = 0
+    for us in users:
+        sign_data = get_value(__plugin_name__, cmd_name,
+                              search_dict=us.get("plugin_datas") or {}, default=None)
+        if isinstance(sign_data, dict) and sign_data.get("sign_date") == curr_date:
+            count += 1
+    return count
+
+
 @on_command(cmd_name, aliases=alias, only_to_me=False, permission=lambda _: True)
 @u.using_user(save_data=False)
+@heal_stale_sign_quota
 @u.limit(cmd_name, 1, get_message("plugins", __plugin_name__, cmd_name, 'limited'))
 async def _(session: CommandSession, user: User):
     FIRST_AWARD = 20
@@ -49,18 +99,12 @@ async def _(session: CommandSession, user: User):
     consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 2))
     user.add_coins(append_coins + consecutive_award)
     users: list[dict] = User.get_users()
-    signed_users_count = 0
+    signed_users_count = count_signed_today(users, curr_date)
     macro_season, micro_season, _ = TELIA_CLOCK.get_current_state()
     status_message = get_message("character", "time_period_reactions", timetools.get_time_period(), f"{macro_season.value}{micro_season.value}", default=None)
     if status_message is None:
         status_message = get_message("character", "time_period_reactions",timetools.get_time_period(), f"normal")
     reaction = "\n" + status_message if randtools.random_percent(min(100, max(0, user.xme_favorability + 20))) else ""
-    day_now = timetools.get_valuetime(timetools.timenow(), timetools.TimeUnit.DAY)
-    for us in users:
-        counters = us["counters"]
-        last_sign_day = timetools.get_valuetime(counters.get(cmd_name, {}).get('time', 0), timetools.TimeUnit.DAY)
-        if last_sign_day == day_now:
-            signed_users_count += 1
     can_make_up = False
     if curr_date - last_sign_date == 2 and consecutive_days > 1:
         can_make_up = True

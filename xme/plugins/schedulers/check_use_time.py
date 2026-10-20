@@ -13,7 +13,7 @@ bot = nonebot.get_bot()
 INACTIVE_DAYS = 60
 SECONDS_PER_DAY = 86400
 
-@nonebot.scheduler.scheduled_job('cron', day='*', hour='8')
+@nonebot.scheduler.scheduled_job('cron', day='*')
 async def check_use_time():
     """每天检查 bot 所在的所有群，把超过 INACTIVE_DAYS 天没有任何指令
     调用记录的群汇总警告给 SUPERUSER，无不活跃群时不发消息。"""

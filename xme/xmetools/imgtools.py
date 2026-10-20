@@ -22,7 +22,7 @@ try:
 except Exception:
     pyautogui = None
 # from character import get_message
-from xme.xmetools.texttools import hash_byte, is_url, object_moderations
+from xme.xmetools.texttools import hash_byte, hash_text, is_url, object_moderations
 import mss
 from html2image import Html2Image
 from uuid import uuid4
@@ -172,33 +172,6 @@ def get_hash(path_or_image):
         logger.exception(traceback.format_exc())
         return None
 
-def phash_compare_folder(path_or_image, folder, threshold=5) -> list[tuple[str, int]]:
-    """HASH 查重图片
-
-    Args:
-        path_or_image (str): 目标图片（路径或 Image）
-        folder (str): 查重图片文件夹
-        threshold (int, optional): HASH 差别，越低越严格，最大64. Defaults to 5.
-
-    Returns:
-        list[tuple[str, int]]: 结果列表（文件路径，差距）
-    """
-    # target_hash = get_hash(path_or_image)
-
-    result = []   # (filepath, diff)
-    for filename in os.listdir(folder):
-        path = os.path.join(folder, filename)
-        if not os.path.isfile(path):
-            continue
-        # if path == path_or_image:
-        #     continue
-        diff = phash_compare(path_or_image, path, threshold=threshold)
-        if diff >= 999:
-            continue
-    # diff 越小越相似
-    result.sort(key=lambda x: x[1])
-    return result
-
 def phash_compare(target_image: str | Image.Image, compare_image: str| Image.Image, threshold=5):
     # debug_msg("比较", target_image, compare_image)
     target_hash = get_hash(target_image)
@@ -243,13 +216,21 @@ def get_html_image(html_str, height=2500, width=1920, scale=1) -> Image.Image:
         Image.Image: 处理完成的图片
     """
     scale = _check_scale(scale)
-    name = f"image-{uuid4()}.png"
+    name_hash = hash_text(f"{html_str}height{height}width{width}scale{scale}")
+    name = f"html-{name_hash}.png"
     pth = os.path.join(IMAGE_TEMP_PATH, name)
-    x = time.time()
+    try:
+        image = get_image(pth)
+        logger.info("使用缓存图片")
+        result_image = crop_transparent_area(image)
+        return result_image
+    except:
+        pass
+    # x = time.time()
     _scale_hti(round(scale, 4)).screenshot(html_str=html_str, save_as=name, size=(width, height))
-    s = time.time()
-    p = s - x
-    print(f"ppp{p=}")
+    # s = time.time()
+    # p = s - x
+    # print(f"ppp{p=}")
     image = crop_transparent_area(pth)
     # os.remove(name)
     return image
@@ -259,7 +240,7 @@ async def get_html_image_async(html_str, height=2500, width=1920, scale=1) -> Im
     """
     return await asyncio.to_thread(get_html_image, html_str, height=height, width=width, scale=scale)
 
-def crop_transparent_area(input_path) -> Image.Image:
+def crop_transparent_area(pth_or_image) -> Image.Image:
     """将透明底 PNG 图片的外侧透明部分切除
 
     Args:
@@ -268,7 +249,10 @@ def crop_transparent_area(input_path) -> Image.Image:
     Returns:
         Image.Image: 处理完成的图片
     """
-    image = Image.open(input_path).convert("RGBA")
+    if isinstance(pth_or_image, Image.Image):
+        image = pth_or_image
+    else:
+        image = Image.open(pth_or_image).convert("RGBA")
     # image = image.convert("RGBA")
     bg = Image.new("RGBA", image.size, (0, 0, 0, 0))
     diff = ImageChops.difference(image, bg)

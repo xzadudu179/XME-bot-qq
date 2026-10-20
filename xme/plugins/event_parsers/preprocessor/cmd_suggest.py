@@ -14,7 +14,8 @@
 超时/限流/解析不出一律按「不匹配」放行，绝不影响原流程。
 
 QQ 默认系统消息（好友申请/添加成功提示）与加好友之前的陌生人消息一律不记录、
-不处理——它们不是用户输入，进上下文只会污染匹配。
+不处理——它们不是用户输入，进上下文只会污染匹配。「5分钟后提醒我…」「明天9点叫我…」
+这类定时句式由 alarm 预处理器接管，本模块同样让路不做提示。
 """
 import json
 import time
@@ -31,7 +32,9 @@ from nonebot.log import logger
 from nonebot.message import CanceledException
 from nonebot.plugin import PluginManager
 from xme.xmetools import cmdtools
+from xme.xmetools import timetools
 
+from xme.xmetools.bottools import is_friend, strip_bot_name
 from xme.xmetools.doctools import is_group_only_cmd, iter_visible_cmd_docs
 from xme.xmetools.msgtools import send_event_msg
 from xme.xmetools.texttools import pinyin_sort_key, remove_punctuation, strip_cq
@@ -58,8 +61,6 @@ HINT_MAX_CHARS = 300
 HINT_TIMEOUT = 8.0
 # QQ 客户端自动附加的默认系统消息（好友申请/添加成功提示），不是用户输入
 QQ_DEFAULT_TEXTS = ("请求添加你为好友", "我们已成功添加为好友，现在可以开始聊天啦~")
-# 好友列表缓存时长（秒）：避免每条私聊都拉一次好友列表 API
-FRIEND_CACHE_TTL = 300
 
 
 @dataclass
@@ -228,50 +229,9 @@ def visible_cmd_entries() -> list[CmdEntry]:
     return entries
 
 
-def _bot_name_prefixes() -> list[str]:
-    """bot 名字/昵称前缀清单（config.NICKNAME 是指令分发实际剥离的口径）。"""
-    names = {get_message("bot_info", "name")}
-    nickname = getattr(config, "NICKNAME", [])
-    if not isinstance(nickname, list):
-        nickname = [nickname]
-    names.update(str(n) for n in nickname if n)
-    return [n for n in names if n]
-
-
-def strip_bot_name(text: str) -> str:
-    """去掉正文开头连续出现的 bot 名字/昵称（如「漠月 /s」→「/s」），供指令判定。"""
-    for name in _bot_name_prefixes():
-        while text.startswith(name):
-            text = text[len(name):].strip()
-    return text
-
-
-_friend_cache: dict[int, tuple[float, set[int]]] = {}   # self_id → (过期时间, 好友 id 集)
-
-
 def is_qq_system_text(text: str) -> bool:
     """是否为 QQ 客户端自动附加的默认消息（好友申请/添加成功提示；系统消息以该短语开头）。"""
     return any(text.startswith(default) for default in QQ_DEFAULT_TEXTS)
-
-
-async def is_friend(bot: NoneBot, user_id: int) -> bool:
-    """用户是否为 bot 好友（带 TTL 缓存；SUPERUSERS 视为好友；列表拉取失败按好友处理）。
-
-    口径与 private_messages 的好友校验一致：加好友之前的陌生人消息不该进上下文。
-    """
-    if user_id in config.SUPERUSERS:
-        return True
-    now = time.time()
-    cached = _friend_cache.get(bot.self_id)
-    if cached is None or cached[0] <= now:
-        try:
-            friends = await bot.get_friend_list()
-        except Exception:
-            logger.warning(f"拉取好友列表失败，本次按好友处理 user_id={user_id}")
-            return True
-        cached = (now + FRIEND_CACHE_TTL, {int(f.get("user_id") or 0) for f in friends})
-        _friend_cache[bot.self_id] = cached
-    return user_id in cached[1]
 
 
 def build_prompt(text: str, entries: list[CmdEntry], context: str = "",
@@ -471,6 +431,9 @@ async def cmd_suggest(bot: NoneBot, event: aiocqhttp.Event, plugin_manager: Plug
         return
     if fuzzy_command.correction_target(text) is not None:
         # 漏前缀/打错名的消息由 fuzzy_cmd 接管，避免同一句话双重提示
+        return
+    if timetools.extract_reminder(strip_bot_name(text)) is not None:
+        # 定时句式（「5分钟后提醒我…」「明天9点叫我…」）由 alarm 预处理器接管，避免同一句话双重提示
         return
     match = await match_command(text, context, suggested)
     if match is None:

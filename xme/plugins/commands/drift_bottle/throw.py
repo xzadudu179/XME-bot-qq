@@ -4,6 +4,7 @@ from PIL.Image import Image
 
 from xme.xmetools.timetools import TimeUnit
 from datetime import datetime
+import asyncio
 from .pickup import report
 from character import get_message
 from xme.plugins.commands.xme_user.classes import user as u
@@ -122,7 +123,7 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("config", "moderation_danger_input", reason=reason))
         return False
 
-    check = DriftBottle.check_duplicate_bottle(arg)
+    check = await asyncio.to_thread(DriftBottle.check_duplicate_bottle, arg)
     debug_msg("查重 " + str(check['content']))
     if not check['status']:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
@@ -172,8 +173,21 @@ async def _(session: CommandSession, user):
         await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_many", max_images=MAX_IMAGES))
         return False
 
-    # 处理图片
+    # 处理图片：先完成全部高度与查重校验，再统一落盘，
+    # 避免中途失败时留下没有瓶子引用的图片文件
     total_height = 0
+    for i, image in enumerate(images):
+        total_height += image.height
+        if total_height > 800:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_height", max_images=MAX_IMAGES))
+            return False
+        # 查重在线程内执行：首次会补建已存图哈希缓存（较慢，仅一次），此后为毫秒级
+        check_image = await asyncio.to_thread(DriftBottle.check_duplicate_image, image)
+        if not check_image["status"]:
+            await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
+            # debug_msg("查重图片：", check_image)
+            logger.info("查重图片：" + str(check_image))
+            return False
 
     # 动图入库压缩阶梯：透明裁边 → 缩放 → 降色 → 抽帧（时长补偿不裁长度），
     # 预算按动图数量均分并预留留言增长余量；超预算时拾取端仍有循环抽帧兜底
@@ -186,17 +200,7 @@ async def _(session: CommandSession, user):
             store_plans[i] = (store_seq, colors)
             logger.info(f"动图入库压缩：缩放 {scale_pct}% / {colors} 色 / {len(store_seq.frames)} 帧")
     for i, image in enumerate(images):
-        total_height += image.height
-        if total_height > 800:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "images_too_height", max_images=MAX_IMAGES))
-            return False
         path = BOTTLE_IMAGES_PATH + image_filenames[i]
-        check_image = DriftBottle.check_duplicate_image(image)
-        if not check_image["status"]:
-            await send_session_msg(session, get_message("plugins", __plugin_name__, "content_already_thrown"))
-            # debug_msg("查重图片：", check_image)
-            logger.info("查重图片：" + str(check_image))
-            return False
         # 存储图片：动图按压缩阶梯处理后存 GIF（保留动画与长度），静图/单帧动图存 WEBP
         if sequences[i] is not None:
             store_seq, colors = store_plans[i]

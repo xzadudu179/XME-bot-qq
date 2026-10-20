@@ -13,6 +13,7 @@
 取消的收尾统一在 talk() 的 CancelledError 分支：清快照、清 temp、发送中断文案。
 """
 import asyncio
+import json
 import re
 from pathlib import Path
 
@@ -128,10 +129,12 @@ def stop_requested(group_id, user_id) -> bool:
 
 
 def _sync_active_file() -> None:
-    """把运行中的会话数落盘（watchdog 收到 Ctrl+C 时据此要求二次确认；best-effort）。"""
+    """把运行中的会话数落盘为 {指令名: 数量} JSON（watchdog 收到 Ctrl+C 时据此要求二次确认与展示；best-effort）。"""
     try:
         Path("data").mkdir(exist_ok=True)
-        Path("data/.ai_active_turns").write_text(str(len(_running_turns)), encoding="utf-8")
+        Path("data/.ai_active_turns").write_text(
+            json.dumps({__plugin_name__: len(_running_turns)}, ensure_ascii=False),
+            encoding="utf-8")
     except Exception:
         pass
 

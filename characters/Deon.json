@@ -927,6 +927,55 @@
     ]
   },
   "plugins": {
+    "alarm": {
+      "desc": "定时提醒",
+      "introduction": "定一个计时器，到点后{bot_name}会私聊提醒你\n\n时间有两种写法：\n1. 相对时长：`/alm 1分20秒 喝水`、`/alm 五分钟 写作业`、`/alm 3天 交房租`\n2. 自然语句时间：`/alm 5点40分 喝水`、`/alm 明天9点 交作业`、`/alm 后天下午3点 开会`、`/alm 周三9点 交报告`、`/alm 8月15日9点 交房租`\n3. 循环提醒：`/alm 每小时 喝水`、`/alm 每5分钟 站起来走走`、`/alm 每小时5分 对时间`、`/alm 每天9点 吃药`、`/alm 每个工作日8点 打卡`、`/alm 每个周末10点 大扫除`、`/alm 每周一和周三8点 开会`、`/alm 每月3号9点 交房租`、`/alm 每月最后一天9点 对账`、`/alm 每年3月1日9点 交材料`\n循环会每次符合条件后就触发，用 `/alm del 编号` 或 `/alm del ALL` 删除计时器。\n\n也可以回复某条消息对{bot_name}说 \"记录日程\" 或 \"设置计时器\"，{bot_name}会从被回复的内容里找出日程记下\n也可以直接对{bot_name}说\"{bot_name}明天9点叫我起床\"一类语句\n单个计时器最长一年，每人最多同时有 {max_active} 个\n\n用 \"/alm list\" 或者 \"/alm\" 可以查看自己的计时器，\"/alm del 编号\" 可以取消，\"/alm del ALL\" 可以一次清掉全部\n\n> 注：到点会在私聊提醒，需要添加{bot_name}好友，否则漠月会尝试发邮件，若没有添加好友，循环计时器最多只能一天一次。",
+      "ring": "计时器 \"{name}\" 响啦 {positive}",
+      "set_ok": [
+        "好啦{positive_punc} 我会在{time}提醒你 \"{name}\" 哦 {positive}\n使用 \"/alm\" 可以查看当前的定时器",
+        "收到{positive_punc}，我会在{time}提醒你 \"{name}\" 哦 {positive}\n使用 \"/alm\" 可以查看当前的定时器"
+      ],
+      "bad_time": [
+        "没有识别到时间诶 {neutral}，可以试试 \"/alm 5分钟 喝水\" 这样的格式哦",
+        "时间格式不太对哦 {neutral}，应该为例如 \"5分40秒\"、\"1小时20分\"、\"明天9点\" 这样的格式"
+      ],
+      "time_out_of_range": "{negative} 好像你输入了一个不符合格式的时间呢 (秒和分钟最大 59，总时长最多一年)",
+      "time_zero": "时间不能是 0 哦 {neutral}",
+      "unsupported_unit": "漠月现在还不知道单位 \"{detail}\" 如何计算哦 {neutral}，可以写天数（如\"3天\"）或者直接说日期（如\"8月15日9点\"）呢",
+      "repeat_interval_invalid": "「{detail}」这个间隔{bot_name}支持不了诶 {neutral}，分钟的间隔要不小于 {min} 分钟、且能整除 60（{steps}）哦",
+      "bad_date": "\"{detail}\" 不是一个有效的日期诶 {negative}，看看是不是写错啦",
+      "need_clock": "要 \"{detail}\" 提醒的话，还需要指定是几点哦 {neutral}，例如 \"{detail}上午9点\"",
+      "need_day": "\"{detail}\" 最近的一次也在 12 小时以后啦 {neutral}，需要标注一下是哪一天哦，例如 \"明天{detail}\"",
+      "no_name": "还没说要提醒什么诶 {neutral}，补一个名字吧，例如\"/alm 5分 喝水\"",
+      "name_reserved": "\"{name}\" 不可用哦 {neutral}，换一个名字吧",
+      "already_set": "\"{name}\" 已经登记过啦 {neutral}，会在{time}提醒你",
+      "repeat_skip_hint": "\n（下一次触发是 {next}）",
+      "name_too_long": "名字太长啦 {neutral}，要在 {max} 字以内哦",
+      "too_many": "你已经同时有 {max} 个计时器啦 {neutral}，等它们响了以后再继续添加吧",
+      "not_friend_hint": "\n（注意：你好像还没有加{bot_name}好友诶，记得先加一下哦，不然到点没法正常发送提醒呢）",
+      "schedule_not_reply": "需要先回复一条消息才能让{bot_name}记录日程哦 {neutral}",
+      "schedule_reply_missing": "漠月看不到你回复的那条消息诶 {negative}，换一条试试吧",
+      "schedule_no_items": "好像没有在你回复的内容里看到任何可以解析的日程哦",
+      "schedule_parse_failed": "唔…{bot_name}解析消息失败了 {negative}，稍后再试试吧",
+      "schedule_list_header": "在你回复的内容里找到 {count} 个可以记下的日程哦{positive_punc}",
+      "schedule_list_suffix": "发送它前面的序号来选择要记下的日程吧，多个用空格隔开（比如 \"1 3\"）",
+      "schedule_select_invalid": "序号不太对哦 {neutral}，发 \"1 3\" 这样子的序号（空格隔开）就好啦",
+      "list_header": "你现在有 {count} 个还没到点的计时器哦{positive_punc}",
+      "list_item": "{index}. {time} 提醒你 \"{name}\"",
+      "list_item_paused": "{index}. {time} 提醒你 \"{name}\"（暂停中）",
+      "pause_ok": "成功暂停计时器 \"{name}\" {positive}，再发一次 \"/alm p 编号或名字\" 就可以解除暂停啦",
+      "pause_no_arg": "要暂停/继续哪一个呢 {neutral}，先用 \"/alm list\" 看看编号吧",
+      "resume_ok": "成功解除了 \"{name}\" 的暂停状态 {positive}，会在 {time} 接着触发哦",
+      "pause_not_repeat": "\"{name}\" 是一次性的计时器哦 {neutral}，暂停/继续只能用在循环计时器上",
+      "list_suffix": "可以用 \"/alm del 编号或名字\" 删除一个计时器，用 \"/alm del ALL\" 全部删除\n用 \"/alm p 编号\" 暂停或继续计时器哦",
+      "list_empty": "你现在还没有计时器哦 {neutral}，用 \"/alm 时间 名字\" 定一个吧",
+      "cancel_ok": "成功取消{time}的计时器 \"{name}\" 了哦{positive_punc}",
+      "cancel_not_found": "没找到编号或名字是 \"{arg}\" 的计时器诶 {neutral}，用 \"/alm\" 看看编号吧",
+      "cancel_ambiguous": "有不止一个叫 \"{name}\" 的计时器哦 {neutral}，用 \"/alm\" 看了编号之后再按编号取消吧{positive_punc}",
+      "cancel_no_arg": "要取消哪一个呀 {neutral}，先用 \"/alm\" 看看编号吧",
+      "clear_all_ok": "已经帮你清掉全部 {count} 个计时器啦 {positive}",
+      "name_illegal": "我不能设置这个定时器哦 {negative}，换一个名称吧"
+    },
     "sandbox": {
       "desc": "执行沙箱代码",
       "introduction": "（SUPERUSER）执行代码，用于测试沙箱的安全性"
@@ -2727,7 +2776,7 @@
       ]
     },
     "report": {
-      "desc": "汇报",
+      "desc": "汇报建议",
       "introduction": "上报 BUG 或者建议 给{author_nick}",
       "no_msg": "你好像没有写任何有效的消息内容哦 {neutral}",
       "report": "{positive} 用户 \"{uname}\"({qq}) 汇报了一条消息：{msg}",

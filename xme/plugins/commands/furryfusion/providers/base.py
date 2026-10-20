@@ -106,6 +106,13 @@ class FurProvider(ABC):
     async def search(self, keyword: str) -> list[FurEvent]:
         """按关键词搜索兽聚活动，返回规范化条目列表。"""
 
+    def card_image_url(self, url: str, width: int = 400, height: int = 170) -> str:
+        """卡片缩略图显示用的图片地址，默认原样返回。
+
+        数据源可覆写以请求图床按卡片尺寸缩放（原图可能远大于显示尺寸）。
+        """
+        return url
+
     async def fetch_image_data(self, url: str) -> bytes | None:
         """下载活动宣传图并校验为有效图片，失败返回 None（调用方回退为无图）。
 

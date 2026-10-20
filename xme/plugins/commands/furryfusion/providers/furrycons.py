@@ -138,6 +138,13 @@ class FurryconsProvider(FurProvider):
             raws = [raw for raw in await _fetch_events({}) if _fuzzy_match(raw, keyword)]
         return [_map_event(raw) for raw in raws]
 
+    def card_image_url(self, url: str, width: int = 400, height: int = 170) -> str:
+        """缩略图走图床 w/h 参数缩放（原图可达 10MB+，按卡片尺寸取小图）。"""
+        if not url:
+            return ""
+        sep = "&" if "?" in url else "?"
+        return f"{url}{sep}w={width}&h={height}"
+
     async def fetch_image_data(self, url: str) -> bytes | None:
         """经系统 curl 下载宣传图：图床按 TLS 指纹放行 curl、拦截 Python 客户端。"""
         if not url:

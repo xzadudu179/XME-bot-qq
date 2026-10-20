@@ -10,11 +10,12 @@ from nonebot.argparse import ParserExit
 from character import get_message
 import json
 import os
+import time
 from traceback import format_exc
 from xme.xmetools.debugtools import debug_msg
 from nonebot.log import logger
 from functools import wraps
-from config import GROUPS_WHITELIST, MIN_GROUP_MEMBER_COUNT
+from config import GROUPS_WHITELIST, MIN_GROUP_MEMBER_COUNT, NICKNAME, SUPERUSERS
 
 class XmeArgumentParser(ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -109,6 +110,56 @@ async def get_stranger_name(user_id, default=None):
     except Exception:
         return default
     return result
+
+# 好友列表缓存时长（秒）：避免每条私聊都拉一次好友列表 API
+FRIEND_CACHE_TTL = 300
+_friend_cache: dict[int, tuple[float, set[int]]] = {}   # self_id → (过期时间, 好友 id 集)
+
+
+async def is_friend(bot: NoneBot, user_id: int) -> bool:
+    """用户是否为 bot 好友（带 TTL 缓存；SUPERUSERS 视为好友；列表拉取失败按好友处理）。
+
+    口径与 private_messages 的好友校验一致：加好友之前的陌生人消息不该进上下文。
+    """
+    if user_id in SUPERUSERS:
+        return True
+    now = time.time()
+    cached = _friend_cache.get(bot.self_id)
+    if cached is None or cached[0] <= now:
+        try:
+            friends = await bot.get_friend_list()
+        except Exception:
+            logger.warning(f"拉取好友列表失败，本次按好友处理 user_id={user_id}")
+            return True
+        cached = (now + FRIEND_CACHE_TTL, {int(f.get("user_id") or 0) for f in friends})
+        _friend_cache[bot.self_id] = cached
+    return user_id in cached[1]
+
+
+def bot_name_prefixes() -> list[str]:
+    """bot 名字/昵称清单（角色名 + config.NICKNAME，即指令分发实际剥离的口径）。"""
+    names = {get_message("bot_info", "name")}
+    nickname = NICKNAME
+    if not isinstance(nickname, list):
+        nickname = [nickname]
+    names.update(str(n) for n in nickname if n)
+    return [n for n in names if n]
+
+
+# strip_bot_name 要剪掉的开头字符：空白与常见的连接标点（「漠月，2小时后…」）
+_NAME_TRIM_CHARS = " \t\n　，,。.、！？!?~～…:：;；\"'“”‘’"
+
+
+def strip_bot_name(text: str) -> str:
+    """去掉正文开头的 bot 名字/昵称与紧随其后的标点（「漠月，/s」→「/s」）。
+
+    回复别人的消息时框架不会自动剥昵称（消息以 reply 段开头），所以调用方需要自己剥一下。
+    """
+    text = text.lstrip(_NAME_TRIM_CHARS)
+    for name in bot_name_prefixes():
+        while text.startswith(name):
+            text = text[len(name):].lstrip(_NAME_TRIM_CHARS)
+    return text
 
 async def bot_call_action(bot: NoneBot, action: str, error_action=None, **kwargs):
     """bot 调用方法

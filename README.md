@@ -136,7 +136,7 @@ sudo bash deploy/cloudflared/install.sh   # 一次性 sudoers 授权（只放行
 | `deploy/cloudflared/config.yml` | 公网放行路径与域名（不用 cloudflared 可忽略）                                                                                                                                                             |
 | `requirements.in`               | 按需增删依赖（改完记得 `pip-compile`）                                                                                                                                                                    |
 
-`data/`、`logs/`、`.backup/` 下的内容全部由 bot 自动生成和维护，不需要也不建议手工修改。
+`data/`、`logs/`、`.backup/` 下的内容全部由 bot 自动生成和维护，不需要也不建议手工修改（`_botsettings.json` 除外）。
 
 ## 相关文档
 

@@ -1,3 +1,4 @@
+import json
 import shlex
 import warnings
 from datetime import timedelta
@@ -20,18 +21,22 @@ from nonebot.log import logger
 import time
 from pathlib import Path
 
-# 运行中的指令会话计数（watchdog 收到 Ctrl+C 时据此要求二次确认；best-effort 落盘）
+# 运行中的指令会话计数 {指令名: 会话数}（watchdog 收到 Ctrl+C 时据此要求二次确认与展示；best-effort 落盘）
 _ACTIVE_SESSIONS_FILE = Path("./data/.nb_active_sessions")
-_active_sessions = 0
+_active_sessions: dict[str, int] = {}
 
 
-def _bump_active_sessions(delta: int) -> None:
-    """增减运行中的指令会话计数并落盘（单事件循环内调用，计数无并发问题）。"""
-    global _active_sessions
-    _active_sessions = max(0, _active_sessions + delta)
+def _bump_active_sessions(name: str, delta: int) -> None:
+    """增/减某指令的运行中会话数并落盘为 JSON（单事件循环内调用，计数无并发问题）。"""
+    count = max(0, _active_sessions.get(name, 0) + delta)
+    if count:
+        _active_sessions[name] = count
+    else:
+        _active_sessions.pop(name, None)
     try:
         Path("./data").mkdir(exist_ok=True)
-        _ACTIVE_SESSIONS_FILE.write_text(str(_active_sessions), encoding="utf-8")
+        _ACTIVE_SESSIONS_FILE.write_text(
+            json.dumps(_active_sessions, ensure_ascii=False), encoding="utf-8")
     except Exception:
         pass
 from xme.xmetools.dbtools import DATABASE
@@ -192,7 +197,7 @@ def on_command(
             start = time.monotonic()
             call_time = time.time()
             success = False
-            _bump_active_sessions(1)
+            _bump_active_sessions(cmd_name[0], 1)
             # 清理指令消息绑定
             clean_cmd_msgs()
             if session.event.message_id is not None:
@@ -226,7 +231,7 @@ def on_command(
                     pass
                 raise
             finally:
-                _bump_active_sessions(-1)
+                _bump_active_sessions(cmd_name[0], -1)
                 if cmd_name[0] == "test":
                     return result
                 cost = time.monotonic() - start

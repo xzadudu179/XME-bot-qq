@@ -254,7 +254,8 @@ def get_bottle_card_html(id, messy_rate_str, messy_rate: int | float, date, cont
     info_texts = [
         "#{id} - 混乱程度：{messy_rate}".format(id=id, messy_rate=messy_rate_str),
         date,
-        limit_str_len('by "{sender}"（来自 "{group}"）'.format(sender=sender, group=group), str_len),
+        # limit_str_len('by "{sender}"（来自 "{group}"）'.format(sender=sender, group=group), str_len),
+        'by "{sender}"（来自 "{group}"）'.format(sender=sender, group=group),
         "拾取 {views} - 点赞 {likes}".format(views=views, likes=likes),
         # "- 漂流瓶留言 -",
         get_card_item("comment_message", skin_name),

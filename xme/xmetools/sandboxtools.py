@@ -1,46 +1,6 @@
 """受限子进程沙箱：把不可信输入驱动的重计算隔离到 bubblewrap 容器中执行。
-
-两个入口对应两个档位：
-- run_in_sandbox：repo 档（calc 求值/绘图；输入经 AST 白名单、无任意代码能力）。
-  目标函数按模块路径在容器内导入，仓库根只读映射为 /app，data/ 与 logs/ 可写，
-  返回相对路径主进程可读。
-- run_in_cell：cell 档（run_python 等任意 AI 生成代码，严格空白盒）。容器内
-  不存在任何仓库代码——任务函数以 marshal 字节码注入（须自包含），仅工作区
-  映射为 /workspace；config/keys/nonebot/仓库全部不可见。
-
-安全模型（纵深防御的最后一层，上层应先做输入语法校验）：
-- 强隔离由 bubblewrap 提供，失败关闭：找不到 bwrap 或 userns 不可用时抛
-  SandboxError 拒绝执行，绝不静默降级到弱隔离模式。
-- 完全没有网络：--unshare-net，独立网络命名空间内只有未配置的孤立 loopback。
-- 看不见沙箱外进程、发不出信号：--unshare-pid 独立 PID 命名空间，/proc 里只有
-  沙箱内进程；--die-with-parent 保证 bwrap 死则整树原子消失（reparent 孤儿
-  清扫仅作 bwrap 失效时的兜底保留）。
-- 读不到沙箱外文件：文件系统白名单。只有 /usr 运行时、venv 与档位指定目录以
-  只读方式进入沙箱；数据库文件在 repo 档被空文件覆盖绑定遮蔽；家目录、/etc、
-  日志完全不进沙箱；cell 档连仓库都不进。
-- 写不了沙箱外文件：/usr、venv 与仓库源码全部只读，可写点仅限 repo 档的
-  data/ 与 logs/ 运行目录、cell 档的工作区、共享的 data/mplcache 字体缓存
-  （跨运行持久，父进程按限额整体清理），以及各沙箱私有的 tmpfs（/tmp、
-  /run、/home）；其余落盘副作用随容器销毁。
-- 低权限：非特权 user namespace + 新会话 + no_new_privs；沙箱内资源仍受
-  resource.setrlimit 约束（内存 RLIMIT_AS、CPU 时间、落盘 RLIMIT_FSIZE、
-  打开文件数 RLIMIT_NOFILE，hard 一并压低）。
-- 主进程防卡死：墙钟超时强杀 bwrap 进程组；主流程永远能在 timeout 内拿到
-  结果或异常；并发名额 sandbox_slot 限量且排队有时限。
-- 回传协议不对称：父进程经 stdin 发「8 字节大端长度 + pickle 任务」（该方向
-  受信任，载荷由本模块构造；cell 档的 marshal 字节码随载荷注入）；子进程回
-  「8 字节大端长度 + JSON」。父进程绝不 unpickle 回传数据，异常按白名单从主
-  进程已加载模块（sys.modules）按名还原，绝不 import 回传的模块名（防
-  「种模块 + raise」反打主进程）。
-- 残余风险：内核 user-namespace 0-day 可逃逸；/usr 与 venv 的只读内容（公共
-  库）沙箱内可见；repo 档仓库源码可见但 keys.py 已遮蔽为「同名 None 存根」
-  （导入链不破、密钥值不进沙箱；该档没有任意代码能力，输入先经 AST 白名单）；
-  新部署机器需预装 bubblewrap（apt install bubblewrap），否则沙箱拒绝工作。
-
-返回值约定：JSON 可序列化的纯数据。repo 档 dataclass 自动转 dict、tuple/set
-转 list、Path 转 str；不可序列化时整个调用以 SandboxExecutionError 失败。
-
 仅支持 Linux（依赖 bubblewrap / resource / start_new_session）。
+module 使用 GLM5.3 生成
 """
 
 import asyncio

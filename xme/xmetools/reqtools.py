@@ -1,5 +1,7 @@
 import functools
+import hashlib
 import socket
+from pathlib import Path
 
 import aiohttp
 import yarl
@@ -167,12 +169,11 @@ class _PinnedResolver(AbstractResolver):
         pass
 
 
-async def fetch_file_stream(url: str, *, max_size: int = 20 * 1024 * 1024, timeout: float = 60, headers: dict | None = None, proxy: str | None = PROXY_URL) -> tuple[bytes, str]:
-    """流式下载 URL 内容到内存，超出 max_size 立即中止并抛 ValueError。
+async def _fetch_stream_into(url: str, sink, *, max_size: int, timeout: float,
+                             headers: dict | None, proxy: str | None) -> str:
+    """流式下载的共用实现：逐跳跟随重定向并复检 SSRF，每块数据交给 sink；返回 Content-Type。
 
-    与 fetch_data 的区别：逐块读取，可在下载过程中按大小截断，
-    不会把超大文件整个读进内存。返回 (内容 bytes, Content-Type 字符串)。
-    proxy: 默认取 config 的 PROXY_URL（USE_PROXY 时）；显式传 None 强制直连。
+    sink(chunk) 抛出的异常原样传播（调用方据此中止下载）。体积上限在读取过程中生效。
     """
     # SSRF 防护：先校验初始地址；重定向手动逐跳跟随并逐一复检（最多 5 跳），
     # 防止公网地址 302 跳到内网/元数据端点绕过检查。
@@ -197,12 +198,54 @@ async def fetch_file_stream(url: str, *, max_size: int = 20 * 1024 * 1024, timeo
                 if content_length.isdigit() and int(content_length) > max_size:
                     raise ValueError(
                         f"文件大小 {int(content_length) / 1048576:.1f}MiB 超出 {max_size / 1048576:g}MiB 限制")
-                chunks = []
                 total = 0
                 async for chunk in response.content.iter_chunked(64 * 1024):
                     total += len(chunk)
                     if total > max_size:
                         raise ValueError(f"文件超出 {max_size / 1048576:g}MiB 大小限制")
-                    chunks.append(chunk)
-                return b"".join(chunks), response.headers.get("Content-Type", "")
+                    sink(chunk)
+                return response.headers.get("Content-Type", "")
         raise ValueError("重定向次数过多（>5）")
+
+
+async def fetch_file_stream(url: str, *, max_size: int = 20 * 1024 * 1024, timeout: float = 60, headers: dict | None = None, proxy: str | None = PROXY_URL) -> tuple[bytes, str]:
+    """流式下载 URL 内容到内存，超出 max_size 立即中止并抛 ValueError。
+
+    与 fetch_data 的区别：逐块读取，可在下载过程中按大小截断，
+    不会把超大文件整个读进内存。返回 (内容 bytes, Content-Type 字符串)。
+    proxy: 默认取 config 的 PROXY_URL（USE_PROXY 时）；显式传 None 强制直连。
+    """
+    chunks: list[bytes] = []
+    content_type = await _fetch_stream_into(
+        url, chunks.append, max_size=max_size, timeout=timeout, headers=headers, proxy=proxy)
+    return b"".join(chunks), content_type
+
+
+async def fetch_file_to_path(url: str, dest: Path, *, max_size: int = 200 * 1024 * 1024,
+                             timeout: float = 300, headers: dict | None = None,
+                             proxy: str | None = PROXY_URL) -> tuple[int, str, str]:
+    """流式下载 URL 到本地文件（不整文件进内存）；返回 (字节数, Content-Type, sha256 hex)。
+
+    先写 dest 旁的 .part 再原子替换，失败时清理半成品——避免留下半截文件。
+    """
+    dest = Path(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    part = dest.with_name(dest.name + ".part")
+    digest = hashlib.sha256()
+    size = 0
+
+    def sink(chunk: bytes) -> None:
+        nonlocal size
+        size += len(chunk)
+        digest.update(chunk)
+        f.write(chunk)
+
+    try:
+        with open(part, "wb") as f:
+            content_type = await _fetch_stream_into(
+                url, sink, max_size=max_size, timeout=timeout, headers=headers, proxy=proxy)
+        os.replace(part, dest)
+    except BaseException:
+        part.unlink(missing_ok=True)
+        raise
+    return size, content_type, digest.hexdigest()

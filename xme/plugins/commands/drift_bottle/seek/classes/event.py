@@ -100,11 +100,6 @@ class Event:
         return event
 
 
-    def can_trigger_event(self, event_dict: dict) -> bool:
-        # 是否可以触发事件
-        return event_dict["condition"](self.player.health, self.player.san, self.player.oxygen, self.player.combat, self.player.insight, self.player.mental, self.player.coins, self.player.tools, self.player.depth, self.player.back, self.player.chance)
-
-
     def build_changes(event_changes):
         build_changes = {}
         for k, v in event_changes.items():
@@ -285,7 +280,8 @@ class Event:
             event_datas = {k: (v() if callable(v) else v) for k, v in event_dict.get("datas", {}).items()}
         if event_type == "normal":
             formats = {k: v(event_datas) for k, v in event_dict.get("formats", {}).items()}
-            event_dict["descs"] = [desc.format(**formats) for desc in event_dict["descs"]]
+            # 浅拷贝，避免格式化时改写全局事件表
+            event_dict = {**event_dict, "descs": [desc.format(**formats) for desc in event_dict["descs"]]}
         event_func = event_dict.get("event_func", None)
         if event_func is not None and event_type != "decision":
             event_func(event_datas, self.player)
@@ -452,7 +448,7 @@ class Event:
             # win = False
             result = fail["changes"]
             msg = fail["msg"]
-            region_change = big_fail["region_change"]
+            region_change = fail["region_change"]
             item_spec = fail.get("items", None)
         # if win:
         #     # attr_change = self.player.change_attr(ok_result, magnification)

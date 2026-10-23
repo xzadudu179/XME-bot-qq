@@ -67,5 +67,7 @@ async def run_python(code: str, ref: str = "", agent=None):
                     saved.append(f"{file_name}（引用 {res['ref']}，可经 send_file 发送）")
                 except FileExistsError:
                     saved.append(f"{file_name}（与已有文件内容相同，未重复保存）")
+                except ValueError as ex:
+                    saved.append(f"{file_name}（未能保存：{ex}）")
             parts.append("产出文件：" + "；".join(saved))
     return {"result": "\n".join(parts)}

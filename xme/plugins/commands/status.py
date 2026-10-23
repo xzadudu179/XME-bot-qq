@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 
 TOP_K = 8
 STATS_DAYS = 95  # 指令统计窗口（天）
+# 指令统计黑名单：不计入 .stats 的调用记录名（事件解析器等非指令项的落盘名）
+STATS_EXCLUDE_NAMES = {"GROUP_INCREASE"}
 
 alias = ['系统状态', 'stats']
 __plugin_name__ = 'status'
@@ -32,6 +34,11 @@ __plugin_usage__ = CommandDoc(
     permissions=["无"],
     alias=alias
 )
+
+
+def filter_stats_datas(datas):
+    """过滤指令统计黑名单（STATS_EXCLUDE_NAMES）中的调用记录，两张统计图共用。"""
+    return [d for d in datas if d.name not in STATS_EXCLUDE_NAMES]
 
 
 def weekly_chart_data(datas, start_time):
@@ -129,7 +136,7 @@ async def _(session: CommandSession):
 
     # 获取指令统计数据（SQL 直接限定 STATS_DAYS 天窗口，统计表逐指令增长、不能全表加载）
     start_time = datetime.now() - timedelta(days=STATS_DAYS)
-    datas = PluginCallData.get_datas(since=start_time.timestamp())
+    datas = filter_stats_datas(PluginCallData.get_datas(since=start_time.timestamp()))
     if datas:
         filtered_datas = datas
 
@@ -142,7 +149,7 @@ async def _(session: CommandSession):
                 generate_command_stats_charts,
                 trend_data,
                 hourly_data,
-                trend_title=f'最近 {STATS_DAYS} 天日均调用最多的 {TOP_K} 个指令',
+                trend_title=f'最近 {STATS_DAYS} 天日均调用最多的 {TOP_K} 个指令/功能',
                 trend_xlabel='时间周期（每7天）',
                 trend_ylabel='日均调用量',
                 hourly_title=f'最近 {STATS_DAYS} 天每日各时段的日均调用量',
@@ -151,7 +158,7 @@ async def _(session: CommandSession):
             )
             message += ("=== 当前 bot 状态 ===\n" + info
                         + f"\n===============\nBOT 记录了 {user_count:,} 位用户。"
-                        + balance_msg + "\n=== 指令统计 ===\n")
+                        + balance_msg + "\n=== 功能统计 ===\n")
             # 发送图片
             await send_session_msg(
                 session, message + (await image_msg(image_path)),

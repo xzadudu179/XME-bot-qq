@@ -231,6 +231,16 @@ def decode_text(data: bytes) -> str:
     return data.decode("latin-1")
 
 
+def _apply_temp_quota(agent, incoming_size: int) -> None:
+    """写入 temp 前的容量检查：agent 提供 ensure_temp_quota 时调用（超限抛 ValueError）。
+
+    temp 上限是 ai_helper 的插件策略，这里只按对象协议调用，不反向依赖插件。
+    """
+    check = getattr(agent, "ensure_temp_quota", None)
+    if callable(check):
+        check(incoming_size)
+
+
 def bytes_to_file(data: bytes, dir_name, suffix: str = ".bin", agent=None) -> dict:
     """把字节内容写入用户 temp 文件夹并分配引用；按内容哈希命名。
 
@@ -244,6 +254,7 @@ def bytes_to_file(data: bytes, dir_name, suffix: str = ".bin", agent=None) -> di
     path = Path(f"./data/temp/{dir_name}/{file_name}")
     if path.is_file():
         raise FileExistsError(file_name)
+    _apply_temp_quota(agent, len(data))   # 查重命中不占新空间，故放在查重之后
     path, ref = _create_file_ref(dir_name, "file_", file_name, agent)
     with open(path / file_name, "wb") as file:
         file.write(data)
@@ -257,6 +268,14 @@ def bytes_to_file(data: bytes, dir_name, suffix: str = ".bin", agent=None) -> di
     }
 
 
+def register_temp_file(dir_name, file_name: str, agent=None) -> str:
+    """为已写入 temp 的文件分配引用（流式下载等"先落盘后登记"场景用）。"""
+    path, ref = _create_file_ref(dir_name, "file_", file_name, agent)
+    if agent is not None:
+        agent.note_file_state(path / file_name)
+    return ref
+
+
 def text_to_file(text: str, dir_name, agent=None) -> dict:
     HEAD = "text_"
 
@@ -265,6 +284,7 @@ def text_to_file(text: str, dir_name, agent=None) -> dict:
     path = Path(f"./data/temp/{dir_name}/{file_name}")
     if path.is_file():
         raise FileExistsError(f"该文本所能够转换的文件({file_name})已经存在")
+    _apply_temp_quota(agent, len(text.encode("utf-8")))   # 查重命中不占新空间，故放在查重之后
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
 
     with open(path / file_name, "w", encoding="utf-8") as file:
@@ -295,6 +315,8 @@ def dict_to_file(d: dict, dir_name, prefix="", agent=None,
     path = Path(f"./data/temp/{dir_name}/{file_name}")
     if path.is_file():
         raise FileExistsError(f"该字典所能够转换的文件({file_name})已经存在")
+    text = json.dumps(d, ensure_ascii=False)
+    _apply_temp_quota(agent, len(text.encode("utf-8")))   # 查重命中不占新空间，故放在查重之后
     path, ref = _create_file_ref(dir_name, HEAD, file_name, agent)
     text = json.dumps(d, ensure_ascii=False)
     with open(path / file_name, "w", encoding="utf-8") as file:
@@ -422,6 +444,13 @@ def clear_temp(folder="./data/images/temp"):
     清除缓存"""
     log.logger.info("正在删除缓存文件")
     files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+    for f in files:
+        log.logger.info(f"正在删除 \"{f}\"...")
+        os.remove(folder + '/' + f)
+
+def clear_screenshots(folder="./data/images/temp"):
+    log.logger.info("正在删除缓存的 screenshot 文件")
+    files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f)) and f.startswith("screenshot-")]
     for f in files:
         log.logger.info(f"正在删除 \"{f}\"...")
         os.remove(folder + '/' + f)

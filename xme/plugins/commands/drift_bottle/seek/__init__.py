@@ -772,10 +772,8 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
                     continue
                 reply = reply.strip()
                 if reply == "quit":
-                    seek.status = "exit"
-                    if player.depth.value <= 0:
-                        # 正常结束
-                        seek.status = "stop"
+                    # 水下主动放弃按死亡结算；海面退出仍视为正常结束
+                    seek.status = "abandon" if player.depth.value > 0 else "stop"
                     valid_reply = True
                     # await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'introduction'))
                 elif is_command(reply):
@@ -847,6 +845,7 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     # 结算
     # 最后统计的值
     result_value = player.coins.value
+    # 仅超时/异常等非主动退出清零；主动放弃（abandon）与死亡共用最终深度结算
     if player.depth.value > 20 and seek.status == "exit":
         result_value = 0 if result_value > 0 else result_value
 
@@ -859,12 +858,13 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         # exit_punish = 0
     no_exit_result = int(result_value * gain_ratio)
     depth_punish = int((player.coins.value - no_exit_result) * (player.depth_gain_ratio.value / 100.0))
-    result_value = player.coins.value - depth_punish - tool_prices
+    # 道具价在购买时已从余额扣除（见上方 u.spend_coins），这里只结算局内收益与深度惩罚
+    result_value = player.coins.value - depth_punish
     suffix = ""
     if depth_punish > 0:
         suffix += f'- {depth_punish}(深度惩罚) '
     if player.hardcore.value == 1:
-        result_value = int((player.coins.value - depth_punish) * 1.7) - tool_prices
+        result_value = int((player.coins.value - depth_punish) * 1.7)
         suffix += f"+ {int((player.coins.value - depth_punish) * 0.7)}(无依无靠加成) "
     if tool_prices > 0:
         suffix += f'- {tool_prices}(道具价格) '
@@ -886,11 +886,11 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
         await u.get_coins(session, result_value, _get_message = get_message("plugins", __plugin_name__, command_name, 'result_msg_with_coins', gain=f"{coins_str}", coins=result_value))
     else:
         await send_session_msg(session, get_message("plugins", __plugin_name__, command_name, 'result_msg', gain=f"{coins_str}"))
-    # 物品结算：未死亡且深度惩罚比例小于阈值时全部保留；
+    # 物品结算：未死亡、非水下主动放弃且深度惩罚比例小于阈值时全部保留；
     # 否则只保留出发时已有的物品（被事件消耗的不算），本次新获得的物品丢失
     if not is_sim:
         died, _, _ = player.is_die()
-        keep_items = (not died) and can_save_items(player.depth.value, player.depth_gain_ratio.value)
+        keep_items = (not died) and seek.status != "abandon" and can_save_items(player.depth.value, player.depth_gain_ratio.value)
         if keep_items:
             save_inventory(u, player.items)
         else:

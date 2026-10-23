@@ -249,6 +249,8 @@ async def gen_image(prompt, action: str = "send", size="2k",
         except FileExistsError as ex:
             # 同内容成图已存在：反查既有引用复用
             temp_ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
+        except ValueError as ex:
+            return f"[图片生成失败：成图无法存入 temp（{ex}）]"
         if not temp_ref:
             return "[图片生成失败：成图保存失败（引用分配异常）]"
         if save_to:

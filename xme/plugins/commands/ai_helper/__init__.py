@@ -497,7 +497,7 @@ async def _(session: CommandSession, user: u.User):
         credits_use = tokens_use_dict["credits_use"]
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
-
+        cached_perc = cached / total * 100
         message = "\n".join([str(s) for s in pending_messages])
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")
@@ -520,7 +520,7 @@ async def _(session: CommandSession, user: u.User):
             else "∞",
             talk_time=secs_to_ymdh(secs),
             tool_call_times=tool_call_times,
-            cached=f"{cached:,.2f}".rstrip('0').rstrip('.'),
+            cached=f"{cached_perc:,.2f}".rstrip('0').rstrip('.'),
             tokens=f"{total:,.2f}".rstrip('0').rstrip('.'),
             credits=f"{credits_use:,.2f}".rstrip('0').rstrip('.'),
             history_used=f"{context_tokens / context_limit:.2%}",

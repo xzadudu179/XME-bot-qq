@@ -6,15 +6,15 @@ INPUT_MAX_LENGTH = 10000
 COMMAND_ALIAS = ["ai"]
 
 # MAX_CHECK_TIMES = 1400
-MAX_TOOL_CALL_TIMES = 1000
+MAX_TOOL_CALL_TIMES = 7000
 
 # 单轮熔断：对话时长墙钟与累计 credits 消耗的硬上限。run_agent 在每次发起模型
 # 调用前检查，超限即中断收尾并结算（防失控对话无限消耗，见 agent._check_turn_budget）
 TURN_TIME_LIMIT = 5 * 3600              # 单轮最长 5 小时
 TURN_CREDITS_LIMIT = 24_000_000         # 单轮最多消耗 2400 万 credits
 # /ai -c history 展示：转发单节点截断长度与整包失败后分块转发的每块节点数
-HISTORY_NODE_MAX_CHARS = 2500
-HISTORY_FORWARD_GROUP_NODES = 35
+HISTORY_NODE_MAX_CHARS = 3000
+HISTORY_FORWARD_GROUP_NODES = 25
 # AI 免费 credits 额度（每自然周，周一 00:00 GMT+8 重置；超出部分从自存 credits 扣）
 TOKENS_LIMIT_WEEKLY = 12_000_000
 
@@ -88,15 +88,24 @@ IMAGE_GEN_MAX_REF_IMAGES = 10
 # 插入消息的图片大小上限（insert_image / gen_image 共用；url 下载与本地文件同一上限）
 MAX_INSERT_IMAGE_SIZE = 10 * 1024 * 1024
 
-# url 下载文件最大大小
-MAX_DOWNLOAD_FILE_SIZE = 20 * 1024 * 1024
+# url 下载文件最大大小（下载走流式落盘，不整文件进内存）
+MAX_DOWNLOAD_FILE_SIZE = 200 * 1024 * 1024
+# 下载总超时（秒）：200MiB 大文件需要更长的传输时间
+DOWNLOAD_TIMEOUT = 300
+# 超过该大小的文本下载不做 utf-8 转码（避免整文件解码进内存；大文本多为 utf-8 本身）
+MAX_DOWNLOAD_TEXT_CONVERT_SIZE = 20 * 1024 * 1024
+
+# temp 单文件上限 / 单用户单轮总量上限
+# （temp 每轮对话开始与结束都会清空，总量上限是防单轮内累积过量；超限写盘方报错）
+MAX_TEMP_FILE_SIZE = 200 * 1024 * 1024
+MAX_TEMP_TOTAL_SIZE = 800 * 1024 * 1024
 
 # zip_files 打包的压缩包大小上限
 MAX_ZIP_SIZE = 50 * 1024 * 1024
 
 # extract_archive 解压上限（防压缩炸弹：条目数 / 解压总大小）
 MAX_EXTRACT_FILES = 200
-MAX_EXTRACT_TOTAL_SIZE = 50 * 1024 * 1024
+MAX_EXTRACT_TOTAL_SIZE = 100 * 1024 * 1024
 
 # 语法检测的文件/内联代码大小上限（防超大输入拖垮解析进程）
 MAX_SYNTAX_CHECK_SIZE = 1 * 1024 * 1024
@@ -304,11 +313,11 @@ LLM_TOPIC_ROUTING = {
     "角色扮演": "flash",
     "其他编程": "dsflash",
     "其他前端任务": "dsflash",
-    "前端简单任务": "flash",
+    "前端简单任务": "dsflash",
     "前端中型任务": "dsflash",
     "前端复杂任务": "dsflash",
-    "前端视觉还原": "qwenflash",
-    "单点BUG修复": "qwenflash",
+    "前端视觉还原": "dsflash",
+    "单点BUG修复": "dsflash",
     "堆栈报错/深层逻辑报错查看": "dsflash",
     "信息检索": "dsflash",
     "其他": "dsflash",

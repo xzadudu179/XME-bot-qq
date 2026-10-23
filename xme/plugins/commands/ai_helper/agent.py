@@ -12,7 +12,7 @@ from xme.xmetools.videotools import extract_video_links, extract_and_download, p
 from nonebot import CommandSession, MessageSegment
 
 from nonebot.log import logger
-from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join, TooManyFilesError, DirectoryTooLargeError
+from xme.xmetools.filetools import dict_to_file, get_local_file_url, text_to_file, history_file_name, is_safe_custom_name, safe_join, TooManyFilesError, DirectoryTooLargeError, dir_usage
 from xme.xmetools.texttools import (IMAGE_PLACEHOLDER_RE, get_images_from_message,
                                         image_placeholder)
 from xme.xmetools.debugtools import debug_msg
@@ -212,7 +212,7 @@ _SNAPSHOT_MEDIA_PLACEHOLDER = "（历史媒体未保留）"
 def _strip_media_for_snapshot(messages: list) -> list:
     """生成"用于写快照"的副本：把媒体段换成中性占位文本。
 
-    快照里的媒体链接注定失效（本地限时链接 TTL 只有 30 秒、QQ CDN 直链也会过期），
+    快照里的媒体链接注定失效（本地限时链接、QQ CDN 直链也会过期），
     恢复时必然报"图片无法解析"并终止对话，所以快照不保留媒体；原 messages 深拷贝后
     再改，当前轮对话里的图片照常可用。
     """
@@ -323,6 +323,24 @@ class AIHelper:
             return f"./data/temp/{self.user_id}"
         return Path(f"./data/temp/{self.user_id}")
 
+    def ensure_temp_quota(self, incoming_size: int) -> None:
+        """写入 temp 前的容量检查：超过单文件/总量上限时抛 ValueError（工具层转成错误文案）。
+
+        filetools 的 bytes_to_file / text_to_file 在落盘前通过 agent 的该方法统一校验，
+        下载、write_to_temp、沙箱产出、截图等所有 temp 写入共用这一处判定。
+        """
+        from .constants import MAX_TEMP_FILE_SIZE, MAX_TEMP_TOTAL_SIZE
+        if incoming_size > MAX_TEMP_FILE_SIZE:
+            raise ValueError(
+                f"文件过大（{incoming_size / 1048576:.1f} MiB > temp 单文件上限 "
+                f"{MAX_TEMP_FILE_SIZE // 1048576} MiB）")
+        usage = dir_usage(self.get_temp_path())
+        if usage["size"] + incoming_size > MAX_TEMP_TOTAL_SIZE:
+            raise ValueError(
+                f"temp 空间不足（已用 {usage['size'] / 1048576:.1f} MiB + 本次 "
+                f"{incoming_size / 1048576:.1f} MiB > 上限 {MAX_TEMP_TOTAL_SIZE // 1048576} MiB）；"
+                f"temp 每轮对话开始时会清空，可先用 send_file 发走需要的文件或减少本轮产出")
+
     def note_file_state(self, path) -> None:
         """记录文件当前内容指纹：AI 经工具读到/写出该文件时调用，供 edit_file 校验过期。"""
         try:
@@ -359,6 +377,13 @@ class AIHelper:
         新工具写文件一律走这里，不要手写 write 后再补 note_file_state。
         """
         p = Path(path)
+        if p.is_relative_to(self.get_history_path()):
+            incoming = len(data.encode("utf-8")) if isinstance(data, str) else len(data)
+            if incoming > MAX_HISTORY_FILES_SIZE:
+                raise DirectoryTooLargeError(
+                    f"该文件 {incoming / 1048576:.1f}MiB 超过 history 总上限 "
+                    f"{MAX_HISTORY_FILES_SIZE // 1024 // 1024}MiB，放不进 history；"
+                    f"可直接用 send_file 从 temp 发给用户")
         if p.is_relative_to(self.get_history_path()) and self.is_history_too_big():
             raise DirectoryTooLargeError(f"history 文件夹过大 (>{MAX_HISTORY_FILES_SIZE // 1024 // 1024}MiB)，请删除部分文件再试")
         if p.is_relative_to(self.get_history_path()) and self.is_history_files_too_many():
@@ -662,8 +687,8 @@ class AIHelper:
             if not result.tool_calls:
                 return result, self.tool_call_times
             # 有工具调用
-            self.tool_call_times += 1
             for tool_call in result.tool_calls:
+                self.tool_call_times += 1
                 ai_logger.info(
                     f"[AI Tool Call] {tool_call.name}({tool_call.arguments})"
                 )
@@ -769,11 +794,17 @@ class AIHelper:
             ####### 压缩 ########
             RESULT_MAX_LEN = 10000
             if (isinstance(result, list) and len(str(result)) > RESULT_MAX_LEN) or (isinstance(result, dict) and result.get("result", None) is None) and len(str(result)) > RESULT_MAX_LEN:
-                res = dict_to_file(result, self.user_id, name + "_", agent=self)
+                try:
+                    res = dict_to_file(result, self.user_id, name + "_", agent=self)
+                except ValueError as ex:
+                    return f"[{spent_msg}][工具调用完毕，但返回内容过长且 temp 空间不足，未能转存为文件：{ex}]"
                 result = prefix + f'[{spent_msg}][工具调用完毕，返回列表/字典过长已转为 json，可使用其他 tools 查看 数据如下]：{res}'
 
             if isinstance(result, str) and len(result) > RESULT_MAX_LEN and not no_compress:
-                res = text_to_file(result, self.user_id, self)
+                try:
+                    res = text_to_file(result, self.user_id, self)
+                except ValueError as ex:
+                    return f"[{spent_msg}][工具调用完毕，但返回文本过长且 temp 空间不足，未能转存为文件：{ex}]"
                 self.ref_map[res["ref"]] = res["file_name"]
                 return prefix + f"[{spent_msg}][工具调用完毕，返回文本过长已传为文件，可使用 \"check_file\" 工具传入 `file_ref` 预览。数据如下]：\n{res}"
 

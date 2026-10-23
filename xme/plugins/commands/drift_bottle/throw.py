@@ -189,8 +189,9 @@ async def _(session: CommandSession, user):
             logger.info("查重图片：" + str(check_image))
             return False
 
-    # 动图入库压缩阶梯：透明裁边 → 缩放 → 降色 → 抽帧（时长补偿不裁长度），
-    # 预算按动图数量均分并预留留言增长余量；超预算时拾取端仍有循环抽帧兜底
+    # 动图入库压缩阶梯：透明裁边 → 保留全帧缩放 → 降色 → 封顶后继续缩放/降色/抽帧
+    # （时长补偿不裁长度），预算按动图数量均分并预留留言增长余量；
+    # 超预算时拾取端仍有降色/抽帧兜底
     store_plans = {}
     anim_indexes = [i for i, s in enumerate(sequences) if s is not None]
     if anim_indexes:

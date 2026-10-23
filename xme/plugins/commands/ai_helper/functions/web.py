@@ -1,7 +1,9 @@
 # some are made by Deepseek-v4-flash-vison-exp at Deepseek Harness
 """网络类工具：url 下载、网页阅读、web 搜索与图片/视频/文档内容查看。"""
 import asyncio
+import hashlib
 import io
+import os
 from pathlib import Path
 import html
 import mimetypes
@@ -16,16 +18,18 @@ from PIL import Image
 from keys import DOMAIN, FILE_TOKENS
 from nonebot.log import logger
 from xme.xmetools.filetools import (
-    bytes_to_file, decode_text, detect_file_type, get_local_file_url, FileType,
+    bytes_to_file, decode_text, detect_file_type, get_local_file_url, FileType, register_temp_file,
 )
 from xme.xmetools.videotools import download_video, is_video_url, parse_video
 from xme.xmetools.videotools.probe import get_video_duration
 from xme.xmetools.msgtools import create_image_message
-from xme.xmetools.reqtools import assert_public_http_url, fetch_file_stream, glm_api_request
+from xme.xmetools.reqtools import (
+    assert_public_http_url, fetch_file_stream, fetch_file_to_path, glm_api_request,
+)
 from xme.xmetools.imgtools import chrome_screenshot_bytes, image_to_base64, limit_size, read_image, split_long_image
 from xme.xmetools.bottools import bot_call_action
-from ..constants import (MAX_DOWNLOAD_FILE_SIZE, SCREENSHOT_MAX_WAIT_MS,
-                         SCREENSHOT_MAX_WAIT_UNTIL_MS, VIDEO_URL_TTL)
+from ..constants import (MAX_DOWNLOAD_FILE_SIZE, DOWNLOAD_TIMEOUT, MAX_DOWNLOAD_TEXT_CONVERT_SIZE,
+                         SCREENSHOT_MAX_WAIT_MS, SCREENSHOT_MAX_WAIT_UNTIL_MS, VIDEO_URL_TTL)
 from xme.plugins.commands.ai_helper.llm import registry
 from config import IMAGE_TEMP_PATH, CONTAINER_BOT_PATH
 from ._common import exception_detail, ImageToolResult, render_url_guard
@@ -59,41 +63,79 @@ def _name_suffix(name: str) -> str:
     return ""
 
 
-def _save_received_bytes(data: bytes, url: str, content_type: str, agent,
-                         original_name: str = "") -> dict:
-    """探测后缀并写入用户 temp（download 与 get_received_files 共用的落盘单点）。
-
-    后缀探测顺序：原始文件名扩展名（用户发送的文件自带真实文件名，最可信）
-    → URL 扩展名 → Content-Type → 魔数探测；文本文件统一转 utf-8。
-    """
-    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
-    probe.write_bytes(data)
+def _detect_suffix(path: Path, url: str, content_type: str, original_name: str = "") -> str:
+    """探测文件后缀（探测顺序：原始文件名 → URL → Content-Type → 魔数）。"""
     suffix = _name_suffix(original_name) or _url_suffix(url)
     if not suffix:
         main_type = (content_type or "").split(";")[0].strip().lower()
         guessed = mimetypes.guess_extension(main_type, strict=False) if main_type else None
         suffix = guessed if guessed and main_type != "application/octet-stream" else ""
     if not suffix:
-        suffix = _TYPE_EXTENSIONS.get(detect_file_type(probe), ".bin")
-    if detect_file_type(probe) == FileType.TEXT:
-        data = decode_text(data).encode("utf-8")
-    probe.unlink(missing_ok=True)
+        suffix = _TYPE_EXTENSIONS.get(detect_file_type(path), ".bin")
+    return suffix
+
+
+def _save_received_bytes(data: bytes, url: str, content_type: str, agent,
+                         original_name: str = "") -> dict:
+    """探测后缀并写入用户 temp（get_received_files 的内存版落盘单点）。
+
+    后缀探测顺序：原始文件名扩展名（用户发送的文件自带真实文件名，最可信）
+    → URL 扩展名 → Content-Type → 魔数探测；文本文件统一转 utf-8。
+    """
+    probe = agent.get_temp_path() / f"{uuid4().hex}.part"
+    probe.write_bytes(data)
+    try:
+        suffix = _detect_suffix(probe, url, content_type, original_name)
+        if detect_file_type(probe) == FileType.TEXT:
+            data = decode_text(data).encode("utf-8")
+    finally:
+        probe.unlink(missing_ok=True)
     return bytes_to_file(data, agent.user_id, suffix, agent)
 
+
+def _register_downloaded(tmp_path: Path, digest: str, url: str, content_type: str,
+                         size: int, agent) -> dict:
+    """把流式下载完成的临时文件登记进 temp（后缀探测 + 小文本转 utf-8 + 按哈希去重）。
+
+    与内存版 _save_received_bytes 语义一致；内容哈希在下载过程中已算好。
+    去重命中时抛 FileExistsError（异常值为已存在文件名），由调用方反查既有引用。
+    """
+    suffix = _detect_suffix(tmp_path, url, content_type)
+    if detect_file_type(tmp_path) == FileType.TEXT and size <= MAX_DOWNLOAD_TEXT_CONVERT_SIZE:
+        raw = tmp_path.read_bytes()
+        encoded = decode_text(raw).encode("utf-8")
+        if encoded != raw:
+            tmp_path.write_bytes(encoded)
+            size = len(encoded)
+            digest = hashlib.sha256(encoded).hexdigest()
+    file_name = digest[:16] + (suffix or ".bin")
+    target = agent.get_temp_path() / file_name
+    if target.exists():
+        raise FileExistsError(file_name)
+    agent.ensure_temp_quota(size)
+    os.replace(tmp_path, target)
+    ref = register_temp_file(agent.user_id, file_name, agent)
+    return {"file_name": file_name, "ref": ref, "size": size, "path": str(target)}
+
+
 async def download(url: str, agent):
-    """异步下载 url 指向的文件到 temp 文件夹（上限 MAX_DOWNLOAD_FILE_SIZE）。
+    """异步下载 url 指向的文件到 temp 文件夹（单文件上限 MAX_DOWNLOAD_FILE_SIZE）。
+
+    流式落盘：边下边写临时文件，不把整个文件读进内存（大文件友好）。
     """
     # 网页里抄来的链接常带 HTML 实体（&amp; 等），还原成原始字符
     url = html.unescape((url or "").strip())
     if urlparse(url).scheme not in ("http", "https"):
         return "[下载失败：url 需要以 http:// 或 https:// 开头]"
+    dl_path = agent.get_temp_path() / f"{uuid4().hex}.dl"
     try:
-        data, content_type = await fetch_file_stream(url, max_size=MAX_DOWNLOAD_FILE_SIZE)
+        size, content_type, digest = await fetch_file_to_path(
+            url, dl_path, max_size=MAX_DOWNLOAD_FILE_SIZE, timeout=DOWNLOAD_TIMEOUT)
     except ValueError as ex:
         return f"[下载失败：{ex}]"
     except TimeoutError:
         logger.warning(f"下载超时: {url}")
-        return "[下载失败：连接/下载超时（60s），目标站点可能不可达（被墙）或响应过慢]"
+        return f"[下载失败：连接/下载超时（{DOWNLOAD_TIMEOUT}s），目标站点可能不可达（被墙）或响应过慢]"
     except aiohttp.ClientResponseError as ex:
         # 4xx/5xx 是链接本身的常见问题，报错附带排查方向，省去 AI 盲试下一轮
         logger.warning(f"下载 {url} 失败：HTTP {ex.status}")
@@ -112,20 +154,25 @@ async def download(url: str, agent):
     except Exception as ex:
         logger.exception(f"下载 {url} 失败")
         return f"[下载失败：{exception_detail(ex)}]"
-    if not data:
+    if size == 0:
+        dl_path.unlink(missing_ok=True)
         return "[下载失败：文件为空]"
 
-    # 后缀探测与落盘（与 get_received_files 共用单点）；落盘含整写与魔数探测，
-    # 最大 20MiB，放线程执行不卡事件循环
+    # 后缀探测与落盘（含小文本转码，放线程执行不卡事件循环）
     try:
-        res = await asyncio.to_thread(_save_received_bytes, data, url, content_type, agent)
+        res = await asyncio.to_thread(
+            _register_downloaded, dl_path, digest, url, content_type, size, agent)
     except FileExistsError as ex:
         # 查重命中：报错中止，不分配新 ref；反查已有引用供 AI 直接使用（不产生第二个引用）
         dup_name = str(ex)
         existing_ref = next((r for r, name in agent.ref_map.items() if name == dup_name), None)
         hint = f"，直接使用已有引用 {existing_ref} 即可" if existing_ref else "（无本会话引用，可能是之前会话遗留）"
         return {"result": f"[下载中止：相同内容的文件已存在于 temp（{dup_name}）{hint}]",
-                "ref": existing_ref, "file_name": dup_name, "size": len(data), "no_compress": True}
+                "ref": existing_ref, "file_name": dup_name, "size": size, "no_compress": True}
+    except ValueError as ex:
+        return f"[下载失败：{ex}]"
+    finally:
+        dl_path.unlink(missing_ok=True)   # 成功时已被移走，这里兜底清理残留
     result_text = (
         f"已下载到 temp：{res['file_name']}（{res['size'] / 1048576:.2f} MiB），"
         f"引用 {res['ref']}。文本文件可用 check_file 查看内容，"
@@ -752,6 +799,8 @@ async def screenshot_page(url: str = "", ref: str = "", width: int = 1280, heigh
         except FileExistsError as ex:
             # 同内容截图已存在：反查既有引用复用，不产生第二个引用
             ref = next((r for r, name in agent.ref_map.items() if name == str(ex)), "")
+        except ValueError as ex:
+            return f"[截图失败：{ex}]"
         tail = ("页面较长，用 view_image 查看该引用时会自动分片逐片读取。"
                 if phys_h > phys_w else "需要分析内容时可用 view_image 传入该引用。")
         return f"截图完成（{dims}），已保存到 temp（引用 {ref}）。{wait_note}\n{tail}"

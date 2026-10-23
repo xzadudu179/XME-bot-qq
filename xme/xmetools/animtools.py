@@ -13,20 +13,23 @@ from PIL import Image, ImageChops
 from xme.xmetools.imgtools import get_image, limit_size
 
 # 单个动图最大帧数：超出按时长补偿均匀抽帧（时间轴总长保持与原图一致）
-MAX_ANIM_FRAMES = 150
+MAX_ANIM_FRAMES = 300
 # 动图单边最大像素，超出统一缩放
 MAX_ANIM_DIM = 480
 # 合成卡片 GIF 的输出体积上限（约 1.8MB，低于 QQ 透传线 2MB）
 GIF_OUTPUT_MAX_BYTES = 1_887_436
+# 卡片合成超预算时的降色阶梯：先保帧率，降到最低色数仍超限才抽帧
+ANIM_CARD_COLORS = (256, 128, 64)
 # 入库校准的体积余量比例：按总预算的该比例校准，给后续留言增长留空间
 ANIM_STORE_MARGIN = 0.75
 # 入库压缩阶梯参数（按观感优先级排列）：
-# 先抽帧封顶 ANIM_STORE_MAX_FRAMES（时长补偿掉帧率不降清晰度），
-# 再缩放（目标较长边 ANIM_STORE_SCALE_TARGET px，下限 max(150px, 原尺寸 50%)），
-# 在该尺寸内降色量，最后才进一步抽帧
+# 优先保留全部帧逐级缩放（长边下限取 ANIM_STORE_SCALE_FLOOR 与
+# 原边长 × ANIM_STORE_SCALE_MIN_RATIO 的较大值），
+# 缩放下限内仍超预算才降色，之后才抽帧封顶 ANIM_STORE_MAX_FRAMES，
+# 封顶后仍有需要才进一步抽帧
 ANIM_STORE_MAX_FRAMES = 30
-ANIM_STORE_SCALE_TARGET = 200
-ANIM_STORE_SCALE_FLOOR = 150
+ANIM_STORE_SCALE_FLOOR = 200
+ANIM_STORE_SCALE_MIN_RATIO = 0.5
 ANIM_STORE_COLORS = (256, 128, 64, 32)
 # 二维码检测的最大抽样帧数
 QR_SAMPLE_FRAMES = 5
@@ -199,7 +202,8 @@ def assemble_composited_gif(base_card: Image.Image, paste_boxes: list[tuple[int,
     Args:
         base_card: 已完成静态渲染（含混乱效果）的卡片图
         paste_boxes: 每个槽位的 (left, top, right, bottom)，与 sequences 一一对应
-        frame_messy: 可选回调 (frame, boxes) -> frame，在每帧合成后做扰动
+        frame_messy: 可选回调 (frame, boxes, time_ms) -> frame，在每帧合成后做扰动；
+            time_ms 为该帧在主时间轴上的起始时间
         frame_stride: 帧采样步长，>1 时隔帧输出（用于压缩体积，不裁剪时长）
         quantize_colors: 每帧量化的颜色数
 
@@ -228,7 +232,7 @@ def assemble_composited_gif(base_card: Image.Image, paste_boxes: list[tuple[int,
                 # 带 alpha 蒙版合成：动图透明区域透出卡片背景
                 frame.paste(region, (box[0], box[1]), region)
             if frame_messy is not None:
-                frame = frame_messy(frame, paste_boxes)
+                frame = frame_messy(frame, paste_boxes, time_ms)
             yield _quantize_frame(frame, quantize_colors)
 
     return _encode_gif_bytes(_iter_frames(), durations, loop=0)
@@ -236,27 +240,39 @@ def assemble_composited_gif(base_card: Image.Image, paste_boxes: list[tuple[int,
 
 def assemble_composited_gif_within_size(base_card: Image.Image, paste_boxes: list[tuple[int, int, int, int]],
                                         sequences: list[AnimSequence], frame_messy=None,
-                                        max_bytes: int = GIF_OUTPUT_MAX_BYTES, min_frames: int = 2) -> tuple[bytes, int] | None:
-    """带体积预算的卡片动图合成：超过 max_bytes 时循环抽帧重编码并比对体积
+                                        max_bytes: int = GIF_OUTPUT_MAX_BYTES, min_frames: int = 2,
+                                        color_options: tuple[int, ...] = ANIM_CARD_COLORS) -> tuple[bytes, int, int] | None:
+    """带体积预算的卡片动图合成：先逐级降色保帧率，仍超限才循环抽帧重编码
 
-    每轮按"体积与帧数近似线性"估算抽帧步长快速收敛；抽帧时时长按步长
-    补偿，成片总时长不变。抽到不足 min_frames 帧仍超限返回 None。
+    降色优先于抽帧：相同帧率下先试 256/128/64 色，避免为了体积直接把帧率
+    砍半；降到最低色数仍超限时按"体积与帧数近似线性"估算抽帧步长快速收敛，
+    抽帧时时长按步长补偿，成片总时长不变。抽到不足 min_frames 帧仍超限返回 None。
 
     Returns:
-        tuple[bytes, int] | None: (GIF 数据, 实际使用的抽帧步长)，超限无法压缩为 None
+        tuple[bytes, int, int] | None: (GIF 数据, 实际使用的抽帧步长, 颜色数)，
+        超限无法压缩为 None
     """
+    if not color_options:
+        raise ValueError("color_options 不能为空")
     master_count = max(len(s.frames) for s in sequences)
     stride = 1
-    data = assemble_composited_gif(base_card=base_card, paste_boxes=paste_boxes,
-                                   sequences=sequences, frame_messy=frame_messy, frame_stride=stride)
+    data = None
+    for colors in color_options:
+        data = assemble_composited_gif(base_card=base_card, paste_boxes=paste_boxes,
+                                       sequences=sequences, frame_messy=frame_messy,
+                                       frame_stride=stride, quantize_colors=colors)
+        if len(data) <= max_bytes:
+            return data, stride, colors
+    colors = color_options[-1]
     while len(data) > max_bytes:
         next_stride = max(stride + 1, -(-stride * len(data) // max_bytes))
         if master_count // next_stride < min_frames:
             return None
         stride = next_stride
         data = assemble_composited_gif(base_card=base_card, paste_boxes=paste_boxes,
-                                       sequences=sequences, frame_messy=frame_messy, frame_stride=stride)
-    return data, stride
+                                       sequences=sequences, frame_messy=frame_messy,
+                                       frame_stride=stride, quantize_colors=colors)
+    return data, stride, colors
 
 
 def sample_sequence(sequence: AnimSequence, stride: int) -> AnimSequence:
@@ -298,11 +314,13 @@ def scale_sequence(sequence: AnimSequence, factor: float) -> AnimSequence:
 
 def compress_anim_sequence(sequence: AnimSequence, budget_bytes: int,
                            shell_size: tuple[int, int] = (640, 1200)) -> tuple[AnimSequence, int, int]:
-    """入库压缩阶梯：透明裁边（无损）→ 抽帧封顶 30 帧 → 缩放至约 200px → 在该尺寸内降色 → 最后进一步抽帧
+    """入库压缩阶梯：透明裁边（无损）→ 保留全帧逐级缩放（下限取
+    ANIM_STORE_SCALE_FLOOR 与原边长 × ANIM_STORE_SCALE_MIN_RATIO 的较大值）
+    → 缩放下限内降色 → 抽帧封顶 30 帧后重复缩放/降色 → 最后进一步抽帧
 
-    缩放下限为 max(ANIM_STORE_SCALE_FLOOR, 原尺寸 50%)（取大值，小图不过度缩小）。
-    每个候选用纯色壳合成实测体积（超 24 帧时按帧数比例探测估算，控制编码成本）；
-    所有抽帧均时长补偿，成片总时长与原图一致。
+    优先保帧数：全帧缩放到下限仍超预算时才封顶帧数，避免高帧率动图被直接
+    砍成低帧率。每个候选用纯色壳合成实测体积（超 24 帧时按帧数比例探测估算，
+    控制编码成本）；所有抽帧均时长补偿，成片总时长与原图一致。
 
     Returns:
         tuple[AnimSequence, int, int]: (处理后的序列, 缩放百分比, 颜色数)
@@ -323,31 +341,55 @@ def compress_anim_sequence(sequence: AnimSequence, budget_bytes: int,
     seq = trim_transparent_border(sequence)
     capped = sample_sequence(seq, -(-len(seq.frames) // ANIM_STORE_MAX_FRAMES))
     long_edge = max(seq.frames[0].size)
-    final_edge = max(ANIM_STORE_SCALE_TARGET, ANIM_STORE_SCALE_FLOOR, long_edge * 0.5)
+    final_edge = max(ANIM_STORE_SCALE_FLOOR, long_edge * ANIM_STORE_SCALE_MIN_RATIO)
     if long_edge > final_edge:
-        factors = [f for f in (1.0, 0.85, 0.7, 0.55, final_edge / long_edge)
+        factors = [f for f in (1.0, 0.85, 0.7, 0.55, 0.45, final_edge / long_edge)
                    if long_edge * f >= final_edge - 0.5]
     else:
         factors = [1.0]
     factors = sorted(set(round(f, 4) for f in factors), reverse=True)
-    scaled = {f: scale_sequence(capped, f) for f in factors}
     floor_factor = factors[-1]
+    frames_capped = len(capped.frames) < len(seq.frames)
 
-    # 阶梯：未处理原图 → 30 帧封顶 → 逐级缩放（256 色）→ 在缩放下限降色 → 进一步抽帧
-    candidates = [(seq, 1.0, 256)]
-    candidates += [(scaled[f], f, 256) for f in factors
-                   if not (f == 1.0 and len(capped.frames) == len(seq.frames))]
-    candidates += [(scaled[floor_factor], floor_factor, colors)
-                   for colors in ANIM_STORE_COLORS[1:]]
-    for frames_target in (20, 15, 10, 6):
-        candidates += [(sample_sequence(scaled[floor_factor], -(-len(scaled[floor_factor].frames) // frames_target)),
-                        floor_factor, colors) for colors in ANIM_STORE_COLORS]
+    def scale_at(candidate: AnimSequence, factor: float) -> AnimSequence:
+        return candidate if factor >= 0.999 else scale_sequence(candidate, factor)
 
-    for candidate, factor, colors in candidates:
+    def iter_candidates():
+        # 全帧阶梯：先只缩放不抽帧，尽量保留原帧率
+        yield seq, 1.0, 256
+        for factor in factors:
+            if factor < 0.999:
+                yield scale_at(seq, factor), factor, 256
+        floor_full = scale_at(seq, floor_factor)
+        for colors in ANIM_STORE_COLORS[1:]:
+            yield floor_full, floor_factor, colors
+        # 全帧缩放下限仍超预算：封顶帧数后重复缩放/降色阶梯
+        if not frames_capped:
+            floor_capped = floor_full
+        else:
+            # 全帧缩放下限用完即释放，避免和封顶序列同时占用内存
+            floor_full = None
+            yield capped, 1.0, 256
+            for factor in factors:
+                if factor < 0.999:
+                    yield scale_at(capped, factor), factor, 256
+            floor_capped = scale_at(capped, floor_factor)
+            for colors in ANIM_STORE_COLORS[1:]:
+                yield floor_capped, floor_factor, colors
+        # 最后进一步抽帧
+        for frames_target in (20, 15, 10, 6):
+            sampled = sample_sequence(floor_capped,
+                                      -(-len(floor_capped.frames) // frames_target))
+            for colors in ANIM_STORE_COLORS:
+                yield sampled, floor_factor, colors
+
+    last_candidate = (seq, 1.0, 256)
+    for candidate, factor, colors in iter_candidates():
+        last_candidate = (candidate, factor, colors)
         if measure(candidate, colors) <= budget_bytes:
             return candidate, int(factor * 100), colors
-    last = candidates[-1]
-    return last[0], int(last[1] * 100), last[2]
+    candidate, factor, colors = last_candidate
+    return candidate, int(factor * 100), colors
 
 
 def sample_frames(sequence: AnimSequence, count: int) -> list[Image.Image]:

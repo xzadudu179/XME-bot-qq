@@ -212,6 +212,9 @@ class Player:
             if self.region.value not in [SeekRegion.SHALLOW_SEA, SeekRegion.DEEP_SEA, SeekRegion.TRENCH, SeekRegion.ABYSS, SeekRegion.DEEPEST, SeekRegion.VOID]:
                 weight = 0.4
                 curr_region = sorted_regions[index][0]
+            # 深度已到最后一个区间，没有下一区域可插值
+            if index + 1 >= len(sorted_regions):
+                return sorted_regions[-1][0], 1.0 * weight
             d_last = depths.get(self.region.value, sorted_regions[index][1])
             logger.info(f"当前所属区域 {curr_region}")
             region_next, d_next = sorted_regions[[i for i, r in enumerate(sorted_regions) if r[0] == curr_region][0] + 1]

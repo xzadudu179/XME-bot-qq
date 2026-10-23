@@ -19,6 +19,9 @@ from keys import BOTTLE_IMAGE_KEY
 from nonebot.log import logger
 from xme.xmetools.debugtools import debug_msg
 
+# 整卡文字/背景重乱的间隔；单帧短于该值时攒到下一帧（如 0.1s/帧 → 每 2 帧）
+ANIM_CARD_MESSY_INTERVAL_MS = 200
+
 def get_card_item(item_name: str, skin_name="默认卡片") -> str | dict | int | bool:
     item = CARD_SKINS.get(skin_name, CARD_SKINS["默认卡片"]).get(item_name, CARD_SKINS["默认卡片"][item_name])
     return item
@@ -88,7 +91,7 @@ async def get_pickedup_bottle_card(bottle: DriftBottle, suffix="", skin_name="�
     """拾取卡片唯一入口：含动图的瓶子返回卡片 GIF bytes，否则返回静态卡片图
 
     动图在入库前已按体积预算校准抽帧，此处一般一次合成即可；
-    若留言增长导致超预算，合成内部仍会循环抽帧兜底
+    若留言增长导致超预算，合成内部会先降色、再抽帧兜底
     """
     from .. import __plugin_name__, get_messy_rate
     if str(bottle.bottle_id) == "-179" and not suffix:
@@ -125,8 +128,10 @@ async def get_animated_bottle_card(bottle: DriftBottle, messy_rate, messy_rate_s
 
     卡片壳静态渲染一次并做整卡混乱处理，动图槽位以总时长最长的序列为主轴
     逐帧贴图，槽位区域每帧单独做混乱扰动（rate>=100 时为逐帧全噪声）；
-    体积超限时循环抽帧并比对（时长补偿，长度不变），压不进预算返回 None
-    （调用方回退静态卡片）
+    整卡文字/背景按 ANIM_CARD_MESSY_INTERVAL_MS 重新混乱（不重跑 HTML 渲染，
+    单帧短于间隔时攒到下一帧），中间帧只替换图片槽位；
+    体积超限时先逐级降色保帧率，仍超限再抽帧并比对（时长补偿，长度不变），
+    压不进预算返回 None（调用方回退静态卡片）
     """
     sequences = []
     for name in bottle.images:
@@ -167,7 +172,11 @@ def _cover_slot_colors(shell: Image, boxes: list[tuple[int, int, int, int]]) -> 
         shell.paste(PIL.Image.new("RGB", (px2 - px1, py2 - py1), fill), (px1, py1))
 
 def _compose_animated_card(shell: Image, sequences, messy_rate, image_messy_magni) -> bytes | None:
-    """同步合成动图卡片：槽位定位、整卡混乱一次、逐帧贴图扰动与编码
+    """同步合成动图卡片：槽位定位、整卡混乱一次、逐帧贴图与整卡周期重乱
+
+    卡片位图只在第一次渲染时生成并混乱一次；图片槽位每帧混乱，文字/背景
+    按 ANIM_CARD_MESSY_INTERVAL_MS 重新混乱，中间帧复用缓存卡片层并只替换
+    图片槽位，避免重复做整卡混乱。
 
     CPU 密集（逐帧量化编码），必须经后台线程执行
     """
@@ -178,22 +187,55 @@ def _compose_animated_card(shell: Image, sequences, messy_rate, image_messy_magn
         return None
     _cover_slot_colors(shell, boxes)
     # 壳乱一次：与静态卡片同一参数，文字部分的混乱观感保持一致
-    shell = messy_image(shell, messy_rate * image_messy_magni)
+    card_messy_rate = messy_rate * image_messy_magni
+    if card_messy_rate > 0:
+        shell = messy_image(shell, card_messy_rate)
 
-    def frame_messy(frame, frame_boxes):
+    # 整卡重乱缓存：同一时间桶内复用同一张卡片层，只替换图片槽位
+    card_bucket = 0
+    card_layer = None
+
+    def frame_messy(frame, frame_boxes, time_ms):
+        nonlocal card_bucket, card_layer
+        if messy_rate > 0:
+            for box in frame_boxes:
+                region = frame.crop(box)
+                messy_region = messy_image(region, messy_rate, max_messy_break=True)
+                # 带 alpha 蒙版回贴，透明底动图的透明区域保持透出卡片背景
+                frame.paste(messy_region, box[:2], messy_region)
+        # 干净瓶子不做整卡周期重乱
+        if card_messy_rate <= 0:
+            return frame
+        bucket = time_ms // ANIM_CARD_MESSY_INTERVAL_MS
+        if card_layer is None:
+            # t=0 的卡片壳已经整卡混乱过一次，直接复用
+            card_layer = frame
+            card_bucket = bucket
+            return frame
+        if bucket != card_bucket:
+            messy_card = messy_image(frame, card_messy_rate)
+            # 图片槽位保持逐帧混乱的结果，整卡重乱只作用于文字/背景
+            for box in frame_boxes:
+                messy_card.paste(frame.crop(box), box[:2])
+            card_layer = messy_card
+            card_bucket = bucket
+            return card_layer
+        card_frame = card_layer.copy()
         for box in frame_boxes:
-            region = frame.crop(box)
-            messy_region = messy_image(region, messy_rate, max_messy_break=True)
-            # 带 alpha 蒙版回贴，透明底动图的透明区域保持透出卡片背景
-            frame.paste(messy_region, box[:2], messy_region)
-        return frame
+            card_frame.paste(frame.crop(box), box[:2])
+        return card_frame
 
     result = assemble_composited_gif_within_size(base_card=shell, paste_boxes=boxes,
                                                  sequences=sequences, frame_messy=frame_messy)
     if result is None:
         logger.warning("动图卡片体积超限，回退静态卡片")
         return None
-    return result[0]
+    data, stride, colors = result
+    frame_count = -(-max(len(s.frames) for s in sequences) // stride)
+    card_anim = f"；整卡每 {ANIM_CARD_MESSY_INTERVAL_MS}ms 重乱" if messy_rate > 0 else ""
+    logger.info(f"动图卡片合成：{len(data) / 1024:.1f}KB，抽帧步长 {stride}，"
+                f"{colors} 色，约 {frame_count} 帧{card_anim}")
+    return data
 
 def get_example_bottle(skin_name="默认卡片"):
     # from xme.plugins.commands.drift_bottle import EXAMPLE_BOTTLE

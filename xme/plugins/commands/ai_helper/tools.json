@@ -586,7 +586,7 @@
         "type": "function",
         "function": {
             "name": "download",
-            "description": "下载一个 url 指向的文件到 temp 文件夹（最大 20MiB，超出会失败）。\n文本文件自动转为 utf-8。\n返回文件引用 ref：文本文件用 check_file 查看内容，图片/PDF/视频等用 view_document_file / view_image / view_video 查看，需要长期保留时用 save_to_history 转存。",
+            "description": "下载一个 url 指向的文件到 temp 文件夹（单文件最大 200MiB，流式落盘不会整文件进内存）。temp 是单轮临时空间：单文件上限 200MiB、本轮总量上限 800MiB，每轮对话开始时会清空。\n文本文件自动转为 utf-8。\n返回文件引用 ref：文本文件用 check_file 查看内容，图片/PDF/视频等用 view_document_file / view_image / view_video 查看，需要长期保留时用 save_to_history 转存。",
             "parameters": {
                 "type": "object",
                 "properties": {

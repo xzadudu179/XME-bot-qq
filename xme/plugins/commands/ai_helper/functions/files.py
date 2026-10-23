@@ -45,8 +45,8 @@ async def send_local_file(session, path, name="") -> tuple[str, str]:
     """把本地文件以私聊文件消息发给当前用户（公共发送通道：send_file / record_page 共用）。
 
     name 为可选的展示文件名：非法时拒绝；为空或与原名一致直接发原文件，
-    否则复制到通用临时目录以该名上传（展示名需成为磁盘文件名，防路径注入），
-    发送后副本即删（超时除外，见下）。
+    否则复制进本次发送的独立子目录再以该名上传（展示名需成为磁盘文件名，防路径注入），
+    发送后副本与子目录一并删除（超时除外，见下）。
     返回 (状态, 说明信息)，状态见 SEND_OK / SEND_FAILED / SEND_UNKNOWN：
     超时返回 SEND_UNKNOWN 且**不删文件**——协议端可能仍在读该文件上传，
     删掉会打断它（残留文件由 temp 清理机制收尾）。
@@ -59,15 +59,17 @@ async def send_local_file(session, path, name="") -> tuple[str, str]:
     if session is None or getattr(session, "bot", None) is None:
         return SEND_FAILED, "无法获取会话上下文"
     send_path = path
+    send_dir: Path | None = None
     if name and name != path.name:
-        # 展示名需成为磁盘文件名：校验安全后复制到通用临时目录再上传，
-        # 防止路径穿越/绝对路径借 copy2 写到任意位置（is_safe_custom_name 拒绝 / 与 ..）
+        # 展示名需成为磁盘文件名：校验安全后复制进唯一的发送子目录再上传（上传名仍是 name），
+        # 防止路径穿越/绝对路径借 copy2 写到任意位置（is_safe_custom_name 拒绝 / 与 ..）；
+        # 独立子目录同时隔离并发发送：不同用户用同一展示名不会互相覆盖或误删
         if not is_safe_custom_name(name):
             return SEND_FAILED, f"文件名 {name} 不合法（仅允许中英文/数字/_-.，不含路径）"
-        temp_dir = Path("./data/temp")
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        send_path = safe_join(temp_dir, name)
+        send_dir = Path("./data/temp") / f"_send_{uuid4().hex}"
+        send_path = send_dir / name
         try:
+            send_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, send_path)
         except Exception as ex:
             logger.exception(f"准备发送文件失败: {path} -> {send_path}")
@@ -96,8 +98,10 @@ async def send_local_file(session, path, name="") -> tuple[str, str]:
         cleanup_copy = True
         return SEND_FAILED, exception_detail(ex)
     finally:
-        if cleanup_copy and send_path is not path:
-            send_path.unlink(missing_ok=True)  # 副本用完即删，不残留通用临时目录
+        if cleanup_copy and send_dir is not None:
+            # 副本用完即删：文件与本次发送的独立子目录一并清掉
+            send_path.unlink(missing_ok=True)
+            shutil.rmtree(send_dir, ignore_errors=True)
     return SEND_OK, f"{send_path.name}（{path.stat().st_size} 字节）"
 
 
@@ -423,7 +427,10 @@ def write_to_temp(content: str, ref: str = "", mode: str = "w", agent=None):
     if filename is None and ref != "":
         return f"[无效的引用名：{ref}（创建新文件请不要输入 ref）]"
     if filename is None:
-        res = text_to_file(content, agent.user_id, agent)
+        try:
+            res = text_to_file(content, agent.user_id, agent)
+        except ValueError as ex:
+            return f"[写入失败：{ex}]"
         agent.ref_map[res["ref"]] = res["file_name"]
     else:
         path = agent.resolve_ref(ref, False)

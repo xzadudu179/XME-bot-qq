@@ -1,3 +1,5 @@
+import base64
+from functools import lru_cache
 from itertools import groupby
 
 from xme.xmetools.templates import FONTS_STYLE
@@ -5,6 +7,9 @@ from xme.plugins.commands.xme_user.classes.user import User
 from xme.xmetools.loctools import short_region
 
 from .providers.base import FurEvent, FurProvider
+
+# 活动封面缺失或加载失败时的默认缩略图
+DEFAULT_THUMBNAIL_PATH = "static/img/desert.avif"
 
 STATE = {
     0: "活动结束",
@@ -39,6 +44,21 @@ def _check_cards_per_row(cards_per_row) -> int:
     if value < 1:
         raise ValueError(f"时间表列数必须大于 0，收到 {value}")
     return value
+
+
+@lru_cache(maxsize=1)
+def default_thumbnail_css() -> str:
+    """默认缩略图的 CSS 值：desert.avif 内嵌为 data URI，文件缺失时为 none。
+
+    渲染时 HTML 在临时目录由 Chrome 执行，相对路径不可用，故内嵌；
+    图片经 CSS 变量全局共用一份，不会按卡片重复膨胀 HTML。
+    """
+    try:
+        with open(DEFAULT_THUMBNAIL_PATH, "rb") as f:
+            data = f.read()
+    except OSError:
+        return "none"
+    return f'url("data:image/avif;base64,{base64.b64encode(data).decode()}")'
 
 
 def estimate_render_height(events: list[FurEvent], cards_per_row: int = DEFAULT_CARDS_PER_ROW) -> int:
@@ -115,7 +135,8 @@ def get_event_card(event: FurEvent, u: User, provider: FurProvider):
     main_title = event.org or event.title
     sub_title = event.title if event.org else ""
     thumb_url = provider.card_image_url(event.image)
-    thumb_style = f" style=\"background-image: url('{thumb_url}')\"" if thumb_url else ""
+    # 封面图叠在默认图上层：封面读取失败时自动露出默认缩略图
+    thumb_style = f" style=\"background-image: url('{thumb_url}'), var(--default-thumbnail)\"" if thumb_url else ""
     return f"""
         <section class="card {border_c}">
             <div class="img">
@@ -167,6 +188,7 @@ def get_countdown_cards(events: list[FurEvent], u: User, provider: FurProvider, 
                 --error-color: #ff7a85;
                 --about-begin-color: #8affff;
                 --on-event-color: #7bffb6;
+                --default-thumbnail: """ + default_thumbnail_css() + """;
             }
 
             * {
@@ -282,6 +304,7 @@ def get_countdown_cards(events: list[FurEvent], u: User, provider: FurProvider, 
 
             .thumbnail {
                 height: 140px;
+                background-image: var(--default-thumbnail);
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;

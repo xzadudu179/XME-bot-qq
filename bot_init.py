@@ -52,6 +52,7 @@ BOT_SETTINGS = {
     "deburst_groups": [
     ],
     "schtime_groups": [],
+    "welcome_disabled_groups": [],
     "ignore_member_count_groups": [],
 }
 

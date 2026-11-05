@@ -1,5 +1,5 @@
 from xme.xmetools.specialtips import SpecialTip
-from xme.xmetools.timetools import get_time_period, time_diff, TimeUnit
+from xme.xmetools.timetools import get_time_period, time_diff, TimeUnit, week_str
 from xme.xmetools.texttools import strip_cq
 import time
 
@@ -20,6 +20,11 @@ SPECIAL_TIPS: list[SpecialTip] = [
     SpecialTip(
         id="before_dawn",
         condition=lambda _: get_time_period() == "凌晨",
+        perc=0,
+    ),
+    SpecialTip(
+        id="thursday_v50",
+        condition=lambda _: week_str() == "星期四",
         perc=0,
     ),
     SpecialTip(

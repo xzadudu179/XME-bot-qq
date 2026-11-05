@@ -22,6 +22,8 @@ from xme.xmetools.debugtools import debug_msg
 from xme.xmetools.dicttools import get_value, set_value
 from xme.xmetools.timetools import TELIA_CLOCK
 from xme.xmetools.msgtools import aget_arg, send_session_msg
+from xme.xmetools.afdiantools import AFDIAN_CLIENT
+from xme.xmetools.afdiantools.plans import get_daily_sign_bonus
 
 alias = ['签到', 'register', 's']
 cmd_name = 'sign'
@@ -97,7 +99,11 @@ async def _(session: CommandSession, user: User):
     debug_msg("USER IS", user)
     append_coins = random.randint(0, 100)
     consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 2))
-    user.add_coins(append_coins + consecutive_award)
+    # 爱发电套餐权益：订阅期间每天签到额外星币（无绑定/无套餐/查询失败均为 0）
+    afdian_bonus, afdian_plan_name = (0, "")
+    if user.afdian_id:
+        afdian_bonus, afdian_plan_name = await get_daily_sign_bonus(AFDIAN_CLIENT, user.afdian_id)
+    user.add_coins(append_coins + consecutive_award + afdian_bonus)
     users: list[dict] = User.get_users()
     signed_users_count = count_signed_today(users, curr_date)
     macro_season, micro_season, _ = TELIA_CLOCK.get_current_state()
@@ -136,6 +142,7 @@ async def _(session: CommandSession, user: User):
             session,
             prompt="",
             rules=lambda r: remove_punctuation(r) in ['y', 'Y', 'n', 'N'],
+            max_times=8,
         )
         if reply in ['y', 'Y']:
             spend_result = await user.try_spend(session, make_up_cost)
@@ -150,7 +157,13 @@ async def _(session: CommandSession, user: User):
             )
     if not is_consecutive:
         consecutive_message = "\n" + get_message("plugins", __plugin_name__, cmd_name, 'consecutive_reset', days=consecutive_days)
-    message += consecutive_message + "\n" + sign_message + reaction
+    afdian_bonus_message = ""
+    if afdian_bonus > 0:
+        afdian_bonus_message = "\n" + get_message(
+            "plugins", "afdian", "plan", 'sign_bonus',
+            bonus=afdian_bonus, plan=afdian_plan_name,
+        )
+    message += consecutive_message + "\n" + sign_message + afdian_bonus_message + reaction
 
     if consecutive_days + 1 >= 30 and is_consecutive:
         await user.achieve_achievement(session, "沙漠探索者")

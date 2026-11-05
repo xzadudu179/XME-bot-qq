@@ -10,6 +10,7 @@ from typing import (NoReturn, Tuple, Union, Iterable, Any, Optional, List, Dict,
 from aiocqhttp import Event as CQEvent
 from aiocqhttp.message import Message
 
+
 from nonebot import NoneBot
 from nonebot.command.argfilter import ValidateError
 from nonebot.helpers import context_id, send, render_expression
@@ -765,11 +766,12 @@ def _notify_session_running(bot: NoneBot, event: CQEvent, ctx_id: str) -> None:
     if now - _busy_notice_at.get(ctx_id, 0.0) < SESSION_RUNNING_NOTICE_INTERVAL:
         return
     _busy_notice_at[ctx_id] = now
-    expression = bot.config.SESSION_RUNNING_EXPRESSION
+    from character import get_message
+    expression = get_message('config', bot.config.SESSION_RUNNING_EXPRESSION, default="")
     if not expression:
         return
     asyncio.ensure_future(
-        send(bot, event, render_expression(expression)))
+        send(bot, event, render_expression(expression), at=True))
 
 
 async def handle_command(bot: NoneBot, event: CQEvent,

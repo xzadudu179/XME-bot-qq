@@ -27,8 +27,6 @@ usage = {
     "alias": alias
 }
 
-# 排名前三的奖牌图标
-# MEDALS = ["🥇", "🥈", "🥉"]
 
 
 def _parse_count(arg: str) -> int:

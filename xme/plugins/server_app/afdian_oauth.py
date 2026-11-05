@@ -6,6 +6,7 @@
 import nonebot
 from nonebot.log import logger
 from quart import jsonify, request
+from xme.plugins.commands.afdian.rewards import settle_rewards
 from xme.plugins.commands.xme_user.classes.user import User, try_load
 from xme.xmetools.afdiantools import AFDIAN_CLIENT, AfdianApiError
 from xme.xmetools.mailtools import send_bot_email
@@ -13,9 +14,26 @@ from xme.xmetools.mailtools import send_bot_email
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 
 
-def _json_result(ok: bool, title: str, reason: str):
-    """统一的 JSON 结果体，跨域头由 cors 模块按白名单补上。"""
-    return jsonify({"success": ok, "title": title, "reason": reason})
+def _json_result(ok: bool, title: str, reason: str, rewards: list[str] | None = None):
+    """统一的 JSON 结果体，跨域头由 cors 模块按白名单补上。
+
+    rewards 为绑定成功时一并发放的发电奖励描述，没有时不输出该字段
+    （保持原有 {success,title,reason} 结构对老前端兼容）。
+    """
+    body = {"success": ok, "title": title, "reason": reason}
+    if rewards:
+        body["rewards"] = rewards
+    return jsonify(body)
+
+
+async def _settle_rewards_after_bind(user: User, qq: str) -> list[str]:
+    """绑定成功后立即结算历史发电奖励（补领）；任何失败只记日志，不影响绑定结果。"""
+    try:
+        result = await settle_rewards(user, force=True)
+        return result.granted
+    except Exception as e:
+        logger.warning(f"afdian 绑定后结算奖励失败 (qq={qq}): {e}")
+        return []
 
 
 @bot.server_app.route('/afdian/oauth')
@@ -51,4 +69,5 @@ async def afdian_oauth():
     user.afdian_id = afdian_user_id
     user.update("afdian_id")
     logger.info(f"用户 {qq} 已绑定爱发电账号 {afdian_user_id}")
-    return _json_result(True, "绑定成功", f"该账号已绑定至 qq {qq}")
+    rewards = await _settle_rewards_after_bind(user, qq)
+    return _json_result(True, "绑定成功", f"该账号已绑定至 qq {qq}", rewards=rewards)

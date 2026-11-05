@@ -13,14 +13,17 @@ import time
 from collections import deque
 
 import nonebot
+import config
+from character import get_message
 from nonebot.log import logger
 from quart import jsonify, request
 
 from keys import AFDIAN_WEBHOOK_TOKEN
+from xme.plugins.commands.afdian.rewards import settle_rewards
 from xme.xmetools.afdiantools import AFDIAN_CLIENT, AfdianApiError
 from xme.xmetools.texttools import escape_cq
 from xme.plugins.commands.xme_user.classes.user import User
-from xme.xmetools.msgtools import send_to_superusers
+from xme.xmetools.msgtools import send_to_superusers, send_to_user
 
 bot = nonebot.get_bot()  # 在此之前必须已经 init
 
@@ -55,7 +58,7 @@ class _NotifyGuard:
 _guard = _NotifyGuard()
 
 
-def _format_order_message(order: dict, bound_qq: int | None) -> str:
+def _format_order_message(order: dict, bound_qq: int | None, rewards: list[str] | None = None) -> str:
     """把（已核验的）订单格式化为通知文案，动态字段一律 CQ 转义；绑定用户附带 @。"""
     plan_title = escape_cq(str(order.get("plan_title") or "") or "无偿赞助")
     remark = escape_cq(str(order.get("remark") or "") or "无")
@@ -68,6 +71,9 @@ def _format_order_message(order: dict, bound_qq: int | None) -> str:
         f"方案：{plan_title}",
         f"备注：{remark}",
     ]
+    if rewards:
+        lines.append("已自动发放奖励：")
+        lines.extend(f"· {reward}" for reward in rewards)
     if bound_qq:
         lines.append(f"[CQ:at,qq={bound_qq}] 感谢发电！")
     return "\n".join(lines)
@@ -117,6 +123,11 @@ async def afdian_webhook(token: str):
         return jsonify({"ec": 200, "em": ""})
     data = await request.get_json(silent=True) or {}
     order = ((data.get("data") or {}).get("order")) or {}
+    # 记录到达的推送（含订单号），便于日后排查「后台是否真的投递了」这类问题
+    logger.info(
+        f"afdian webhook 收到订单推送: {order.get('out_trade_no') or '(无订单号)'} "
+        f"IP: {request.headers.get('X-Forwarded-For', request.remote_addr)}"
+    )
     try:
         if not (isinstance(order, dict) and order.get("status") == 2):
             return jsonify({"ec": 200, "em": ""})
@@ -131,7 +142,17 @@ async def afdian_webhook(token: str):
             return jsonify({"ec": 200, "em": ""})  # 重复推送：幂等，只通知一次
         user = User.load_by_afdian_id(str(verified.get("user_id") or ""))
         bound_qq = user.id if user else None
-        await send_to_superusers(bot, _format_order_message(verified, bound_qq))
+        rewards: list[str] = []
+        if user is not None:
+            # 新订单到达必须刷新缓存，否则可能读到旧订单列表而漏发
+            rewards = (await settle_rewards(user, force=True)).granted
+        await send_to_superusers(bot, _format_order_message(verified, bound_qq, rewards))
+        if bound_qq and rewards and bound_qq not in config.SUPERUSERS:
+            # SUPERUSER 已在上面收到通知，避免同一条奖励发两遍
+            await send_to_user(bot, bound_qq, get_message(
+                "plugins", "afdian", "reward", "webhook_notify",
+                rewards="\n".join(f"· {reward}" for reward in rewards),
+            ))
     except Exception as e:
         logger.warning(f"afdian webhook 通知失败: {e}")
     return jsonify({"ec": 200, "em": ""})

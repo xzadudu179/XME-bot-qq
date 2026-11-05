@@ -10,6 +10,16 @@ from xme.xmetools.afdiantools.client import (
     AfdianClient,
     parse_order_time,
 )
+from xme.xmetools.afdiantools.plans import (
+    PLAN_BENEFITS,
+    ActivePlan,
+    PlanBenefit,
+    find_benefit,
+    get_active_plan,
+    get_daily_sign_bonus,
+    is_plan_active,
+    parse_plan,
+)
 from xme.xmetools.afdiantools.stats import (
     MonthStats,
     OrderBrief,
@@ -32,6 +42,14 @@ __all__ = [
     "AfdianApiError",
     "AfdianClient",
     "parse_order_time",
+    "PLAN_BENEFITS",
+    "ActivePlan",
+    "PlanBenefit",
+    "find_benefit",
+    "get_active_plan",
+    "get_daily_sign_bonus",
+    "is_plan_active",
+    "parse_plan",
     "MonthStats",
     "OrderBrief",
     "PlanInfo",

@@ -7,6 +7,8 @@ CMD_UNBIND = "unbind"
 CMD_ME = 'me'
 CMD_STAT = 'stats'
 CMD_SEND = 'send'
+CMD_REWARD = 'reward'
+CMD_PLAN = 'plan'
 
 # 排行榜展示条数上限（.afd rank <数量>）
 RANK_DEFAULT_COUNT = 10

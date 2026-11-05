@@ -497,7 +497,10 @@ async def _(session: CommandSession, user: u.User):
         credits_use = tokens_use_dict["credits_use"]
         cached = tokens_use_dict["cached"]
         total = tokens_use_dict["total"]
-        cached_perc = cached / total * 100
+        if total <= 0:
+            cached_perc = 0
+        else:
+            cached_perc = cached / total * 100
         message = "\n".join([str(s) for s in pending_messages])
         ai_logger.info(f"msg {t}")
         t = t.replace("[", "&#91;").replace("]", "&#93;")

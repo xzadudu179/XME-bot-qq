@@ -1318,6 +1318,20 @@
                 "报时功能已激活{positive_punc}",
                 "报时功能已启用{positive_punc}"
             ]
+        },
+        "welcome": {
+            "desc": "入群欢迎开关",
+            "introduction": "切换本群的入群欢迎是否开启，关闭后新成员入群时不再发送欢迎消息",
+            "disabled": [
+                "本群的入群欢迎已关闭 {neutral}",
+                "好哦，本群入群欢迎关掉啦 {neutral}",
+                "入群欢迎已关闭，之后新成员进群就不再提示了 {neutral}"
+            ],
+            "activated": [
+                "本群的入群欢迎已开启{positive_punc}",
+                "好诶，本群入群欢迎重新开启啦{positive_punc}",
+                "入群欢迎已开启，新成员进群时会欢迎的{positive_punc}"
+            ]
         }
     }
 }

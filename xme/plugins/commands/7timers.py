@@ -1,4 +1,7 @@
+import traceback
+
 from nonebot import CommandSession
+from nonebot.log import logger
 from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 from character import get_message
@@ -26,7 +29,7 @@ async def _(session: CommandSession):
         _, user_location_info = await get_user_location(session.event.user_id)
         # print(len(locations), user_location_info)
         if not args and not user_location_info:
-            location = texttools.replace_chinese_punctuation(aget_session_msg(session, get_message("plugins", __plugin_name__, 'ask_location')))
+            location = texttools.replace_chinese_punctuation(await aget_session_msg(session, get_message("plugins", __plugin_name__, 'ask_location')))
             if "[CQ:location" in location:
                 location_info = location.split("[CQ:location,")[1].split(",title")[0].replace(",", "&")
         elif user_location_info and not args:
@@ -49,5 +52,6 @@ async def _(session: CommandSession):
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'outputing'))
         await send_session_msg(session, f"[CQ:image,file={astro_image_url}]" + get_message("plugins", __plugin_name__, 'output_suffix'), tips=True)
     except Exception as ex:
+        logger.exception(traceback.format_exc())
         await send_session_msg(session, get_message("plugins", __plugin_name__, 'error', ex=f"{type(ex)} {ex}"))
 

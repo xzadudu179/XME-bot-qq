@@ -1,6 +1,6 @@
 from nonebot import get_bot, NoneBot
 from nonebot import SenderRoles
-from xme.xmetools.jsontools import get_json_value
+from xme.xmetools.jsontools import change_json, get_json_value
 from nonebot.typing import PermissionPolicy_T
 from config import BOT_SETTINGS_PATH
 from nonebot.session import BaseSession
@@ -57,6 +57,25 @@ def is_group_member_count_legal(group):
     if group['member_count'] >= MIN_GROUP_MEMBER_COUNT or group['group_id'] in GROUPS_WHITELIST:
         return True
     return False
+
+WELCOME_DISABLED_GROUPS_KEY = "welcome_disabled_groups"
+
+def is_welcome_enabled(group_id: int | str, settings_path: str = BOT_SETTINGS_PATH) -> bool:
+    """判断指定群的入群欢迎是否开启：群号在关闭列表中时关闭，默认开启。"""
+    disabled_groups = get_json_value(settings_path, WELCOME_DISABLED_GROUPS_KEY, default=[]) or []
+    return str(group_id) not in {str(g) for g in disabled_groups}
+
+def toggle_welcome(group_id: int | str, settings_path: str = BOT_SETTINGS_PATH) -> bool:
+    """切换指定群的入群欢迎开关并写入设置，返回切换后是否开启。"""
+    group_key = str(group_id)
+    disabled_groups = [str(g) for g in (get_json_value(settings_path, WELCOME_DISABLED_GROUPS_KEY, default=[]) or [])]
+    enabled_before = group_key not in disabled_groups
+    if enabled_before:
+        disabled_groups.append(group_key)
+    else:
+        disabled_groups.remove(group_key)
+    change_json(settings_path, WELCOME_DISABLED_GROUPS_KEY, set_method=lambda _: disabled_groups)
+    return not enabled_before
 
 async def get_group_member_name(group_id, user_id, card=False, default=None):
     """得到群员名

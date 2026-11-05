@@ -209,20 +209,23 @@ async def get_ranking(client: AfdianClient) -> list[RankEntry]:
     return entries
 
 
-async def get_sponsor_profile(client: AfdianClient, user_id: str, days: int = 30) -> SponsorProfile | None:
+async def get_sponsor_profile(client: AfdianClient, user_id: str, days: int = 30,
+                              force: bool = False) -> SponsorProfile | None:
     """获取指定用户的发电画像，从未发电且不在赞助名单时返回 None。
 
     Args:
         client (AfdianClient): 爱发电客户端
         user_id (str): 被查询用户的爱发电 user_id
         days (int): 「最近」统计窗口天数，默认 30 天
+        force (bool): 是否绕过全量订单/赞助者缓存（新订单到达后结算奖励时必须为 True，
+            否则可能读到 5 分钟前的旧订单列表而漏发）
     """
-    sponsors, _ = await client.get_all_sponsors()
+    sponsors, _ = await client.get_all_sponsors(force=force)
     sponsor = next(
         (s for s in sponsors if str((s.get("user") or {}).get("user_id") or "") == str(user_id)),
         None,
     )
-    orders = await client.get_all_orders()
+    orders = await client.get_all_orders(force=force)
     now = datetime.now()
     month_start = datetime(now.year, now.month, 1)
     recent_start = now - timedelta(days=days)

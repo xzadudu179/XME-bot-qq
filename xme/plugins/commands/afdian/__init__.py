@@ -11,7 +11,7 @@ alias = ['afd', '爱发电', '发电']
 # 子模块依赖上面的 __plugin_name__，需在 import 前定义
 from xme.xmetools.moduletools import format_operation
 
-from . import constants, login, me, rank, stat, unbind  # noqa: F401,E402
+from . import constants, login, me, plan, rank, reward, stat, unbind  # noqa: F401,E402
 from nonebot import CommandSession  # noqa: E402
 from xme.xmetools.plugintools import on_command  # noqa: E402
 from xme.xmetools.msgtools import send_session_msg  # noqa: E402
@@ -19,7 +19,7 @@ from character import get_message  # noqa: E402
 from xme.xmetools.doctools import CommandDoc  # noqa: E402
 
 # 操作名/别名 -> 子模块
-sub_modules = [rank, login, me, stat, unbind]
+sub_modules = [rank, login, me, plan, reward, stat, unbind]
 alias_map: dict[str, object] = {}
 for module in sub_modules:
     alias_map[module.cmd_name] = module

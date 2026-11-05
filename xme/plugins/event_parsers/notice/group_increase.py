@@ -4,7 +4,7 @@ from character import get_message
 from xme.xmetools.msgtools import send_session_msg
 import asyncio
 from xme.xmetools.debugtools import debug_msg
-from xme.xmetools.bottools import is_group_member_count_legal
+from xme.xmetools.bottools import is_group_member_count_legal, is_welcome_enabled
 from nonebot.log import logger
 from xme.xmetools.plugintools import record_plugin_call
 
@@ -19,6 +19,8 @@ async def _(session: NoticeSession):
     if not is_group_member_count_legal(group_info):
         logger.info(f"退出群 {group_info} 因为人数过低")
         await session.bot.api.set_group_leave(group_id=group_info['group_id'])
+        return
+    if not is_welcome_enabled(session.event.group_id):
         return
     # 发送欢迎消息
     record_plugin_call(PLUGIN_NAME, session.event.user_id, session.event.group_id, True)

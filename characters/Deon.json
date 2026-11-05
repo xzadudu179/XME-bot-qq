@@ -68,6 +68,11 @@
             "中午好哦~",
             "中午好哇~"
         ],
+        "thursday_v50": [
+            "今天是疯狂星期四，v我50（？",
+            "疯狂星期四V我50——",
+            "V我50"
+        ],
         "before_dawn": [
             "还没睡嘛~ 还是已经醒啦？",
             "凌晨好呀~ 唔，还没睡觉嘛？还是已经醒了呀"
@@ -246,7 +251,11 @@
       "休息一会吧...{negative}",
       "{negative} 不要再叫{bot_name}了..."
     ],
-    "busy": "我还在处理指令哦...呜呜",
+    "busy": [
+        "我还在处理指令哦...{negative}",
+        "等一会啦，这里还在处理指令 {negative}",
+        "稍等哇，还有指令没运行完 {neutral}"
+    ],
     "default_validation_failure_expression": "发送内容格式出错啦 {negative_plus}，可以检查一下输入或问问 179 哦",
     "pid_prime": "我这次运行的 PID {pid} 是质数诶~",
     "anno_message": "{anno}",
@@ -1011,6 +1020,28 @@
         "not_bound": "你还没有绑定爱发电账号，发送 \"/afd login\" 绑定后就可以查看自己的发电状态啦",
         "no_record": "绑定的账号还没有发电记录哦，去爱发电看看 https://afdian.com/a/xzadudu179 吧{positive_punc}",
         "success": "======※我的发电状态※======\n昵称：{name}\n本月发电：{month_amount} 元（{month_count} 笔）\n最近{recent_days}天：{recent_amount} 元（{recent_count} 笔）\n累计发电：{total_amount} 元\n首次发电：{first_time}\n最近发电：{last_time}\n当前方案：{plan}\n=========="
+      },
+      "plan": {
+        "desc": "套餐权益",
+        "introduction": "查看自己当前有效的爱发电套餐及持续权益\n\n> 订阅期间每天签到可获得额外星币",
+        "not_bound": "你还没有绑定爱发电账号，发送 \"/afd bind\" 绑定后就可以查看套餐权益啦",
+        "none": "你当前没有有效的爱发电套餐哦 {neutral}\n\n可获得权益的套餐：\n{benefits}",
+        "active": "======※我的套餐※======\n套餐：{name}\n到期：{expire}\n权益：\n{benefits}\n==========",
+        "expire_permanent": "永久有效",
+        "expire_unknown": "长期有效",
+        "benefit_line": "· 每天签到额外获得 {bonus} 星币",
+        "plan_line": "· {name}：每天签到额外获得 {bonus} 星币",
+        "no_benefits": "暂无",
+        "sign_bonus": "爱发电套餐权益：签到额外获得 {bonus} 星币（{plan}）"
+      },
+      "reward": {
+        "desc": "领取发电奖励",
+        "introduction": "手动领取发电奖励（若没有自动发放，可使用这个指令）",
+        "not_bound": "你还没有绑定爱发电账号，发送 \"/afd bind\" 绑定后就可以领取发电奖励啦",
+        "success": "======※发电奖励※======\n本次发放：\n{rewards}\n\n累计发电：{total} 元\n下一档：\n{next_hints}\n==========",
+        "nothing": "本次没有新的奖励可以领取哦 {neutral}\n累计发电：{total} 元\n下一档：\n{next_hints}",
+        "no_more": "所有奖励都领取过啦 {positive}",
+        "webhook_notify": "感谢发电支持{positive_punc}\n本次获得：\n{rewards}\n发送 \"/afd reward\" 可以随时查看奖励进度哦"
       },
       "stats": {
         "desc": "发电统计（仅开发者）",
@@ -2526,6 +2557,20 @@
         "报时功能已启用{positive_punc}"
       ]
     },
+    "welcome": {
+      "desc": "入群欢迎开关",
+      "introduction": "切换本群的入群欢迎是否开启，关闭后新成员入群时不再发送欢迎消息",
+      "disabled": [
+        "本群的入群欢迎已关闭 {neutral}",
+        "好哦，本群入群欢迎关掉啦 {neutral}",
+        "入群欢迎已关闭，之后新成员进群就不再提示了 {neutral}"
+      ],
+      "activated": [
+        "本群的入群欢迎已开启{positive_punc}",
+        "好诶，本群入群欢迎重新开启啦{positive_punc}",
+        "入群欢迎已开启，新成员进群时会欢迎的{positive_punc}"
+      ]
+    },
     "count": {
       "desc": "查看字符串长度",
       "introduction": "检查一段文字所拥有的字符数量",
@@ -2666,7 +2711,7 @@
       "shared_clear_need_owner": "只有群主可以清空共享会话的历史哦 {neutral}",
       "shared_deleted": "已删除共享会话 {title}（{code}），清理了 {file_count} 个文件 {positive}",
       "shared_deleted_notify": "你所在/申请加入的共享会话 {title}（{code}）已被群主删除 {negative}",
-      "shared_insert_accepted": "成功插入消息{positive_punc} AI 将会开始一起处理这些消息 {positive}",
+      "shared_insert_accepted": "正在插入消息{positive_punc} AI 将会开始一起处理这些消息 {positive}",
       "session_other_chat": "你的 AI 对话不在这个聊天里哦{positive_punc}\n它正在 {place} 进行中，要插话或中断请回到那边（中断在那边发送 \"aistop\"）{neutral}",
       "no_shared_insert": "AI 正在思考中{positive_punc}\n想要插入消息的话 发送 \"/ai 插入内容\" 就好啦 {neutral}",
       "shared_insert_queue_full": "{negative} 插入队列已满（{max_pending} 条）",

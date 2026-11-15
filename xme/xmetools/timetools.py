@@ -433,6 +433,31 @@ def week_str(week_num, is_chinese: bool=True):
         }
     return week.get(week_num, "Error")
 
+def curr_week_str(is_chinese: bool=True):
+    week: dict = {}
+    week_num = datetime.now().weekday() + 1
+    if(is_chinese):
+        week = {
+            1: "星期一",
+            2: "星期二",
+            3: "星期三",
+            4: "星期四",
+            5: "星期五",
+            6: "星期六",
+            7: "星期日",
+        }
+    else:
+        week = {
+            1: "Monday",
+            2: "Tuesday",
+            3: "Wednesday",
+            4: "Thursday",
+            5: "Friday",
+            6: "Saturday",
+            7: "Sunday",
+        }
+    return week.get(week_num, "Error")
+
 def iso_format_time(time_str, format="%Y-%m-%d %H:%M:%S"):
     """将 ISO 时间转换为指定格式的 GMT+8 时间
 

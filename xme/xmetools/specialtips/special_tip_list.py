@@ -1,5 +1,5 @@
 from xme.xmetools.specialtips import SpecialTip
-from xme.xmetools.timetools import get_time_period, time_diff, TimeUnit, week_str
+from xme.xmetools.timetools import get_time_period, time_diff, TimeUnit, curr_week_str
 from xme.xmetools.texttools import strip_cq
 import time
 
@@ -24,7 +24,7 @@ SPECIAL_TIPS: list[SpecialTip] = [
     ),
     SpecialTip(
         id="thursday_v50",
-        condition=lambda _: week_str() == "星期四",
+        condition=lambda _: curr_week_str() == "星期四",
         perc=0,
     ),
     SpecialTip(
@@ -35,7 +35,7 @@ SPECIAL_TIPS: list[SpecialTip] = [
             get_time_period() not in ["凌晨", "早上", "上午"] and
             ctx.user is not None and
             ctx.user.get_sign_streak() > 1 and not ctx.user.is_signed_today(),
-        perc=20,
+        perc=40,
         times=3,
     ),
     SpecialTip(

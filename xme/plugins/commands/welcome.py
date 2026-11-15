@@ -5,7 +5,7 @@ from xme.xmetools.bottools import permission, toggle_welcome
 from xme.xmetools.msgtools import send_session_msg
 from character import get_message
 
-alias = ['入群欢迎', '群欢迎']
+alias = ['入群欢迎', '群欢迎', 'wel']
 permissions = ["在群聊内", "是管理员或群主"]
 __plugin_name__ = 'welcome'
 __plugin_usage__ = CommandDoc(

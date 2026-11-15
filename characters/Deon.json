@@ -85,7 +85,7 @@
         "forgot_sign": [
             "你今天还没有签到哦——",
             "记得用 /s 签到哦~",
-            "记得签到哦~"
+            "记得去签到哦，不要断签啦~"
         ],
         "noticed_179": [
             "注意到这句话里有 {count} 个 \"179\"...",
@@ -196,7 +196,8 @@
       "tip:",
       "如果有什么问题/BUG或者建议，可以使用 \"/rep 建议内容\" 指令来汇报给{author_nick}哦~",
       "你可以把平台视频链接发给 \"/ai\" 让 AI 下载下来给你哦~",
-      "奖金账户是一种特殊的账户~ 在它还有余额的时候，每天会自动往你的{coin_name}账户里发送{coin_name}，不过一天最多 2000 哦~"
+      "奖金账户是一种特殊的账户~ 在它还有余额的时候，每天会自动往你的{coin_name}账户里发送{coin_name}，不过一天最多 2000 哦~",
+      "如果不希望漠月入群欢迎，可以用 \"/wel\" 指令关掉哦，想再开启也是 \"/wel\" 指令"
     ]
   },
   "apis": {
@@ -882,9 +883,9 @@
       "{at} 欢迎呀{positive_punc}"
     ],
     "welcome_self": [
-      "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
-      "{happy}我来啦{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
-      "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}",
+      "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n使用 \"/wel\" 关闭入群欢迎\n群管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
+      "{happy}我来啦{positive_punc}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
+      "我来啦 {positive}\n使用 \"{cmd_sep}help\" 可以查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
       "{bot_name}来啦 {positive}\n使用 \"{cmd_sep}help\" 查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
       "{happy}{bot_name}来啦{positive_punc}\n使用 \"{cmd_sep}help\" 来查看帮助{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}",
       "{happy}我是{bot_name}{positive_punc}\n使用 \"{cmd_sep}help\" 可以查看帮助哦{positive_punc}\n管理可以使用 \"/stime\" 指令来开启 0 8 12 20 点报时功能哦{positive_punc}\n管理也可以输入 /bot_leave 来使{bot_name}自行退群 {neutral}"
@@ -2561,14 +2562,13 @@
       "desc": "入群欢迎开关",
       "introduction": "切换本群的入群欢迎是否开启，关闭后新成员入群时不再发送欢迎消息",
       "disabled": [
-        "本群的入群欢迎已关闭 {neutral}",
-        "好哦，本群入群欢迎关掉啦 {neutral}",
-        "入群欢迎已关闭，之后新成员进群就不再提示了 {neutral}"
+        "入群欢迎关闭啦 {neutral}",
+        "关闭入群欢迎啦 {neutral}",
+        "入群欢迎关掉啦 {neutral}"
       ],
       "activated": [
-        "本群的入群欢迎已开启{positive_punc}",
-        "好诶，本群入群欢迎重新开启啦{positive_punc}",
-        "入群欢迎已开启，新成员进群时会欢迎的{positive_punc}"
+        "入群欢迎已开启{positive_punc}",
+        "入群欢迎已开启{positive}"
       ]
     },
     "count": {

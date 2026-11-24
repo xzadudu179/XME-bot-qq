@@ -3,7 +3,7 @@ from xme.xmetools.plugintools import on_command
 from xme.xmetools.doctools import CommandDoc
 import jieba.posseg as pseg
 import random
-from xme.xmetools.texttools import FormatDict, replace_formatted, protect_special_word_and_quoted_text
+from xme.xmetools.texttools import FormatDict, replace_formatted, protect_special_word_and_quoted_text, t2s
 from xme.xmetools.bottools import get_group_member_name, get_stranger_name
 import re
 from xme.xmetools.debugtools import debug_msg
@@ -29,7 +29,7 @@ __plugin_usage__ = CommandDoc(
 @on_command(__plugin_name__, aliases=alias, only_to_me=False)
 async def _(session: CommandSession):
     random.seed()
-    args = session.current_arg_text.strip()
+    args = t2s(session.current_arg_text.strip())
     if not args:
         await send_session_msg(session, get_message("plugins", __plugin_name__, "no_args"),)
         return
@@ -40,6 +40,7 @@ async def _(session: CommandSession):
     # TODO: 分割英文
     split_str = " "
     choices = args.split(split_str)
+    choices = choices
     choice = ""
     can_choice = True
     # 只有一项选择

@@ -5,7 +5,7 @@ from itertools import groupby
 from xme.xmetools.templates import FONTS_STYLE
 from xme.plugins.commands.xme_user.classes.user import User
 from xme.xmetools.loctools import short_region
-
+from xme.xmetools.texttools import t2s
 from .providers.base import FurEvent, FurProvider
 
 # 活动封面缺失或加载失败时的默认缩略图
@@ -117,8 +117,8 @@ def get_event_card(event: FurEvent, u: User, provider: FurProvider):
     border_c = ""
     # 本地高亮：优先省份匹配（同城不同市也算本地），城市名互含作为兜底
     loc = u.plugin_datas.get("location", {})
-    user_province = short_region(loc.get("adm1") or "")
-    user_city = short_region(loc.get("adm2") or "")
+    user_province = t2s(short_region(loc.get("adm1") or ""))
+    user_city = t2s(short_region(loc.get("adm2") or ""))
     is_local = bool(user_province and event.province and user_province == event.province) \
         or bool(user_province and user_province in event.region) \
         or bool(user_city and event.region and (user_city in event.region or event.region in user_city))

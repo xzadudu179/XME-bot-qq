@@ -869,9 +869,9 @@ async def _(session: CommandSession, u: user.User, validate, count_tick):
     if tool_prices > 0:
         suffix += f'- {tool_prices}(道具价格) '
     if is_sim:
-        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value - tool_prices}"
     else:
-        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value}"
+        coins_str = f"{player.coins.name}: {player.coins.value} {suffix}结算:{result_value - tool_prices}"
     if not suffix:
         coins_str = f"{player.coins.name}: {player.coins.value}"
     if not is_sim and player.coins.value > 1000 and result_value == 0:

@@ -15,8 +15,6 @@ __plugin_usage__ = CommandDoc(
     alias=alias
 )
 
-
-
 @on_command(__plugin_name__, aliases=alias, only_to_me=False, permission=lambda _: True)
 async def _(session: CommandSession):
     tip = get_tips(session=session)

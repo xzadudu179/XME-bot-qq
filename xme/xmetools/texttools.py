@@ -12,6 +12,7 @@ import string
 import hashlib
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
+from opencc import OpenCC
 import enchant
 from nonebot.log import logger
 import cn2an
@@ -24,6 +25,9 @@ def pinyin_sort_key(text: str) -> str:
     """
     return "".join(lazy_pinyin(text)).lower()
 
+def t2s(text):
+    cc = OpenCC('t2s')
+    return cc.convert(text)
 
 def strip_cq(text: str) -> str:
     """去掉文本里的 CQ 码段（图片/文件/表情/at 等），只留纯文本。

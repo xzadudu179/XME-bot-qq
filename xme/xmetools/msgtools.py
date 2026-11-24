@@ -840,7 +840,7 @@ async def send_session_msg(session: BaseSession, message: Message, at=True, line
         "sender": await session.bot.api.get_group_member_info(group_id=session.event.group_id, user_id=session.self_id) if session.event.group_id else await session.bot.api.get_stranger_info(user_id=session.self_id)
     }
     send_msg = debug_prefix + ("\n" if msg[0] != "\n" and at and linebreak and session.event.group_id is not None else "") + msg + tip_suffix
-    # 太长的消息用聊天记录发送（群聊 1200、私聊 3000 起折；内容按 5000 字分块，不拆 CQ 码）
+    # 太长的消息用聊天记录发送（群聊 1200、私聊 3000；聊天记录内单条消息最多 5000 字）
     fold_len = GROUP_MSG_FOLD_LEN if session.event.group_id is not None else PRIVATE_MSG_FOLD_LEN
     try:
         if merge_long_msg and get_msg_len(list_msg) > fold_len:

@@ -100,7 +100,7 @@ async def _(session: CommandSession, user: User):
     append_coins = random.randint(0, 100)
     consecutive_award = int(min(consecutive_days * 0.02 * append_coins, append_coins * 2))
     if consecutive_days > 30:
-        consecutive_award += int(math.log2(consecutive_days) * 10)
+        consecutive_award += int(math.log2(consecutive_days) * 5)
     # TODO: 爱发电套餐权益：订阅期间每天签到额外星币（无绑定/无套餐/查询失败均为 0）
     afdian_bonus, afdian_plan_name = (0, "")
     if user.afdian_id:

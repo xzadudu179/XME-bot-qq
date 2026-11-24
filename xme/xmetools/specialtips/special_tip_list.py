@@ -29,8 +29,6 @@ SPECIAL_TIPS: list[SpecialTip] = [
     ),
     SpecialTip(
         id="forgot_sign",
-        # streak>1 且今天未签 ⇒ 最后签到必是昨天 ⇒ 今天签到即免费续签；
-        # 需付费补签的场景（最后签到是前天）streak 已归 0，天然不命中
         condition=lambda ctx:
             get_time_period() not in ["凌晨", "早上", "上午"] and
             ctx.user is not None and
